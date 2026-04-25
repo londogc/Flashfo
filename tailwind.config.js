@@ -1,33 +1,19 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    './app/**/*.{js,jsx}',
-    './components/**/*.{js,jsx}',
-  ],
+  content: ['./app/**/*.{js,jsx}','./components/**/*.{js,jsx}'],
   darkMode: 'class',
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'system-ui', 'sans-serif'],
-      },
+      fontFamily: { sans: ['-apple-system','BlinkMacSystemFont','"Segoe UI"','system-ui','sans-serif'] },
       colors: {
-        ff: {
-          bg: '#f4f6f9',
-          surface: '#ffffff',
-          border: '#eef0f4',
-          'border-hover': '#bfdbfe',
-          blue: '#1d4ed8',
-          'blue-light': '#eff6ff',
-          navy: '#0f172a',
-          slate: '#475569',
-          muted: '#94a3b8',
-          dark: '#0f172a',
-          'dark-surface': '#1e293b',
-          'dark-border': '#334155',
-        },
+        bg:      'var(--c-bg)',
+        surface: 'var(--c-surface)',
+        surface2:'var(--c-surface2)',
+        line:    'var(--c-line)',
+        t1:      'var(--c-t1)',
+        t2:      'var(--c-t2)',
+        t3:      'var(--c-t3)',
       },
-      height: { 13: '52px' },
-      width: { 52: '208px', 14: '56px' },
     },
   },
   plugins: [],
