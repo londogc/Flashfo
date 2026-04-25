@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Flashfo — AI Study &amp; Teaching Workspace</title>
+  <title>Flashfo â AI Study &amp; Teaching Workspace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -163,7 +163,7 @@
     .section.active { display: block; }
 
     /* Page wrappers */
-    .pg { padding: 32px 36px 80px; max-width: 1280px; }
+    .pg { padding: 32px 36px 80px; max-width: 1600px; margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box; }
     .pg-wide { padding: 32px 36px 80px; }
     .pg-tool { padding: 28px 36px 80px; }
 
@@ -675,7 +675,7 @@
           : `<div onclick="showSection('profile')" style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;">${name[0].toUpperCase()}</div>`;
         // Update dashboard welcome
         const welcome = document.getElementById('ffWelcome');
-        if (welcome) welcome.textContent = 'Welcome back, ' + name + ' 👋';
+        if (welcome) welcome.textContent = 'Welcome back, ' + name + ' ð';
       } else {
         authBtn.innerHTML = '<button class="btn btn-primary btn-sm" onclick="showAuthModal()">Sign in</button>';
       }
@@ -760,7 +760,7 @@
     <div class="sb-brand">
       <div class="ff-logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
       <div class="ff-name"><h2>Flashfo</h2><span>Study workspace</span></div>
-      <button class="sb-toggle" onclick="toggleSidebarCollapsed()" title="Collapse sidebar">‹</button>
+      <button class="sb-toggle" onclick="toggleSidebarCollapsed()" title="Collapse sidebar">â¹</button>
     </div>
     <nav class="sb-nav">
       <button class="nav-item active" data-section="dashboard" onclick="showSection('dashboard')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="nav-lbl">Dashboard</span></button>
@@ -769,10 +769,10 @@
       <button class="nav-item" data-section="teach-dashboard" onclick="showSection('teach-dashboard')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span><span class="nav-lbl">Teach</span></button>
       <button class="nav-item" data-section="my-stuff-dashboard" onclick="showSection('my-stuff-dashboard')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></span><span class="nav-lbl">My Stuff</span></button>
       <div class="sb-label">Tools</div>
-      <button class="nav-item" data-section="summarize" onclick="showSection('summarize')"><span class="nav-ic">✦</span><span class="nav-lbl">Summarize</span></button>
+      <button class="nav-item" data-section="summarize" onclick="showSection('summarize')"><span class="nav-ic">â¦</span><span class="nav-lbl">Summarize</span></button>
       <button class="nav-item" data-section="flashcards" onclick="showSection('flashcards')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span><span class="nav-lbl">Flashcards</span></button>
       <button class="nav-item" data-section="quiz" onclick="showSection('quiz')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="nav-lbl">Quiz</span></button>
-      <button class="nav-item" data-section="lesson-builder" onclick="showSection('lesson-builder')"><span class="nav-ic">📋</span><span class="nav-lbl">Lesson Builder</span></button>
+      <button class="nav-item" data-section="lesson-builder" onclick="showSection('lesson-builder')"><span class="nav-ic">ð</span><span class="nav-lbl">Lesson Builder</span></button>
       <button class="nav-item" data-section="search" onclick="showSection('search')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="nav-lbl">Search</span></button>
       <div class="sb-label">Advanced</div>
       <button class="nav-item" data-section="ai-tutor" onclick="showSection('ai-tutor')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M12 11V3"/><circle cx="12" cy="3" r="1"/><line x1="8" y1="15" x2="8" y2="15"/><line x1="16" y1="15" x2="16" y2="15"/><line x1="9" y1="19" x2="15" y2="19"/></svg></span><span class="nav-lbl">AI Tutor</span></button>
@@ -793,12 +793,12 @@
 <header class="topbar">
   <div class="search-bar">
     <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-    <input id="topGlobalSearch" class="search-input" placeholder="Search any topic, question, or keyword…" onkeydown="handleTopSearchKey(event)" />
+    <input id="topGlobalSearch" class="search-input" placeholder="Search any topic, question, or keywordâ¦" onkeydown="handleTopSearchKey(event)" />
     <button class="search-btn" onclick="runTopGlobalSearch()">Search</button>
   </div>
   <div class="topbar-right">
     <select id="siteLanguageSelect" class="lang-sel" onchange="changeSiteLanguage(this.value)">
-      <option value="English">🌐 English</option><option value="Spanish">Español</option><option value="French">Français</option><option value="German">Deutsch</option><option value="Italian">Italiano</option><option value="Portuguese">Português</option><option value="Chinese (Simplified)">中文</option><option value="Japanese">日本語</option><option value="Korean">한국어</option><option value="Arabic">العربية</option><option value="Hindi">हिन्दी</option><option value="Russian">Русский</option><option value="Vietnamese">Tiếng Việt</option><option value="Tagalog">Tagalog</option><option value="Polish">Polski</option><option value="Dutch">Nederlands</option>
+      <option value="English">ð English</option><option value="Spanish">EspaÃ±ol</option><option value="French">FranÃ§ais</option><option value="German">Deutsch</option><option value="Italian">Italiano</option><option value="Portuguese">PortuguÃªs</option><option value="Chinese (Simplified)">ä¸­æ</option><option value="Japanese">æ¥æ¬èª</option><option value="Korean">íêµ­ì´</option><option value="Arabic">Ø§ÙØ¹Ø±Ø¨ÙØ©</option><option value="Hindi">à¤¹à¤¿à¤¨à¥à¤¦à¥</option><option value="Russian">Ð ÑÑÑÐºÐ¸Ð¹</option><option value="Vietnamese">Tiáº¿ng Viá»t</option><option value="Tagalog">Tagalog</option><option value="Polish">Polski</option><option value="Dutch">Nederlands</option>
     </select>
   </div>
 </header>
@@ -812,9 +812,9 @@
   <div class="home-grid">
     <div class="hero-card">
       <div>
-        <div class="kicker">✦ Your study workspace</div>
+        <div class="kicker">â¦ Your study workspace</div>
         <h1 class="hero-title" style="letter-spacing:0.01em">Learn <span class="accent">faster</span> without juggling a dozen tools.</h1>
-        <p class="hero-copy">Flashfo organizes your prompts, sources, saved work, and classroom tools in one calm workspace — so students keep learning and teachers create faster.</p>
+        <p class="hero-copy">Flashfo organizes your prompts, sources, saved work, and classroom tools in one calm workspace â so students keep learning and teachers create faster.</p>
         <div class="hero-actions">
           <button class="btn btn-primary btn-lg" onclick="showSection('create-dashboard')">Start creating</button>
           <button class="btn btn-secondary btn-lg" onclick="showSection('study-dashboard')">Study something</button>
@@ -824,23 +824,23 @@
       <div class="hero-panel">
         <h3>Choose the path that fits what you need.</h3>
         <p>No more guessing which button to hit first.</p>
-        <div class="panel-row" onclick="showSection('create-dashboard')"><div class="panel-ic">✨</div><div><strong>Create learning material</strong><small>Summaries, cards, quizzes, lessons, worksheets</small></div></div>
-        <div class="panel-row" onclick="showSection('study-dashboard')"><div class="panel-ic">📖</div><div><strong>Continue learning</strong><small>Study mode, AI tutor, missed questions, guides</small></div></div>
-        <div class="panel-row" onclick="showSection('my-stuff-dashboard')"><div class="panel-ic">📁</div><div><strong>Open saved work</strong><small>Folders, decks, quizzes, lessons, history</small></div></div>
+        <div class="panel-row" onclick="showSection('create-dashboard')"><div class="panel-ic">â¨</div><div><strong>Create learning material</strong><small>Summaries, cards, quizzes, lessons, worksheets</small></div></div>
+        <div class="panel-row" onclick="showSection('study-dashboard')"><div class="panel-ic">ð</div><div><strong>Continue learning</strong><small>Study mode, AI tutor, missed questions, guides</small></div></div>
+        <div class="panel-row" onclick="showSection('my-stuff-dashboard')"><div class="panel-ic">ð</div><div><strong>Open saved work</strong><small>Folders, decks, quizzes, lessons, history</small></div></div>
       </div>
     </div>
     <div class="path-grid">
-      <div class="path-card" onclick="showSection('create-dashboard')"><div class="path-ic">✨</div><h3>Create</h3><p>Turn a topic, file, URL, or source into study or teaching material.</p><div class="path-more">Open Create →</div></div>
-      <div class="path-card" onclick="showSection('study-dashboard')"><div class="path-ic">📖</div><h3>Study</h3><p>Review, ask the AI tutor, make study guides, and keep learning at home.</p><div class="path-more">Open Study →</div></div>
-      <div class="path-card" onclick="showSection('teach-dashboard')"><div class="path-ic">🎓</div><h3>Teach</h3><p>Create lesson plans, rubrics, handouts, assignments, and live review plans.</p><div class="path-more">Open Teach →</div></div>
-      <div class="path-card" onclick="showSection('my-stuff-dashboard')"><div class="path-ic">📁</div><h3>My Stuff</h3><p>Find saved folders, decks, quizzes, lesson plans, sources, and recent work.</p><div class="path-more">Open My Stuff →</div></div>
+      <div class="path-card" onclick="showSection('create-dashboard')"><div class="path-ic">â¨</div><h3>Create</h3><p>Turn a topic, file, URL, or source into study or teaching material.</p><div class="path-more">Open Create â</div></div>
+      <div class="path-card" onclick="showSection('study-dashboard')"><div class="path-ic">ð</div><h3>Study</h3><p>Review, ask the AI tutor, make study guides, and keep learning at home.</p><div class="path-more">Open Study â</div></div>
+      <div class="path-card" onclick="showSection('teach-dashboard')"><div class="path-ic">ð</div><h3>Teach</h3><p>Create lesson plans, rubrics, handouts, assignments, and live review plans.</p><div class="path-more">Open Teach â</div></div>
+      <div class="path-card" onclick="showSection('my-stuff-dashboard')"><div class="path-ic">ð</div><h3>My Stuff</h3><p>Find saved folders, decks, quizzes, lesson plans, sources, and recent work.</p><div class="path-more">Open My Stuff â</div></div>
     </div>
     <div class="dash-lower">
       <div class="dash-panel">
         <div class="dash-ph"><h2>Jump back in</h2><button class="btn btn-secondary btn-sm" onclick="showSection('history')">View all history</button></div>
-        <div class="dash-row" onclick="showSection('folders')"><div class="dash-row-l"><div class="dash-ic">📁</div><div><div class="dash-row-title">Folders & collections</div><div class="dash-row-meta">Open grouped summaries, cards, quizzes, and lessons.</div></div></div><span class="dash-tag">My Stuff</span></div>
-        <div class="dash-row" onclick="showSection('source-library')"><div class="dash-row-l"><div class="dash-ic" style="background:rgba(22,163,74,.10);color:#16a34a;">📚</div><div><div class="dash-row-title">Saved sources</div><div class="dash-row-meta">Reuse URLs, notes, files, and research without starting over.</div></div></div><span class="dash-tag" style="background:rgba(22,163,74,.10);color:#16a34a;">Sources</span></div>
-        <div class="dash-row" onclick="showSection('missed-review')"><div class="dash-row-l"><div class="dash-ic" style="background:rgba(124,58,237,.10);color:#7c3aed;">❓</div><div><div class="dash-row-title">Missed questions</div><div class="dash-row-meta">Review weak spots and turn mistakes into practice.</div></div></div><span class="dash-tag" style="background:rgba(124,58,237,.10);color:#7c3aed;">Study</span></div>
+        <div class="dash-row" onclick="showSection('folders')"><div class="dash-row-l"><div class="dash-ic">ð</div><div><div class="dash-row-title">Folders & collections</div><div class="dash-row-meta">Open grouped summaries, cards, quizzes, and lessons.</div></div></div><span class="dash-tag">My Stuff</span></div>
+        <div class="dash-row" onclick="showSection('source-library')"><div class="dash-row-l"><div class="dash-ic" style="background:rgba(22,163,74,.10);color:#16a34a;">ð</div><div><div class="dash-row-title">Saved sources</div><div class="dash-row-meta">Reuse URLs, notes, files, and research without starting over.</div></div></div><span class="dash-tag" style="background:rgba(22,163,74,.10);color:#16a34a;">Sources</span></div>
+        <div class="dash-row" onclick="showSection('missed-review')"><div class="dash-row-l"><div class="dash-ic" style="background:rgba(124,58,237,.10);color:#7c3aed;">â</div><div><div class="dash-row-title">Missed questions</div><div class="dash-row-meta">Review weak spots and turn mistakes into practice.</div></div></div><span class="dash-tag" style="background:rgba(124,58,237,.10);color:#7c3aed;">Study</span></div>
       </div>
       <div class="dash-panel">
         <div class="dash-ph"><h2>Quick actions</h2></div>
@@ -853,74 +853,74 @@
 
 <!-- CREATE DASHBOARD -->
 <div id="section-create-dashboard" class="section"><div class="pg">
-  <div class="pg-head"><div class="kicker">✨ Create</div><h1 class="pg-title">Make the exact learning material you need.</h1><p class="pg-sub">Start with a topic, notes, a URL, a file, a saved source, or search result — then turn it into the right output.</p></div>
+  <div class="pg-head"><div class="kicker">â¨ Create</div><h1 class="pg-title">Make the exact learning material you need.</h1><p class="pg-sub">Start with a topic, notes, a URL, a file, a saved source, or search result â then turn it into the right output.</p></div>
   <div class="path-grid" style="margin-bottom:14px;">
-    <div class="path-card" onclick="showSection('summarize')"><div class="path-ic">✦</div><h3>Summarize</h3><p>Turn dense material into clear notes you can reuse anywhere.</p><div class="path-more">Open Summarize →</div></div>
-    <div class="path-card" onclick="showSection('search')"><div class="path-ic">🔍</div><h3>Search & Source</h3><p>Find a topic, pull useful links, and send results into Flashfo.</p><div class="path-more">Open Search →</div></div>
-    <div class="path-card" onclick="showSection('flashcards')"><div class="path-ic">🃏</div><h3>Flashcards</h3><p>Create, edit, save, and study cards from any source.</p><div class="path-more">Make Cards →</div></div>
-    <div class="path-card" onclick="showSection('quiz')"><div class="path-ic">❓</div><h3>Quiz</h3><p>Generate quizzes, review answers, and save practice sets.</p><div class="path-more">Make Quiz →</div></div>
+    <div class="path-card" onclick="showSection('summarize')"><div class="path-ic">â¦</div><h3>Summarize</h3><p>Turn dense material into clear notes you can reuse anywhere.</p><div class="path-more">Open Summarize â</div></div>
+    <div class="path-card" onclick="showSection('search')"><div class="path-ic">ð</div><h3>Search & Source</h3><p>Find a topic, pull useful links, and send results into Flashfo.</p><div class="path-more">Open Search â</div></div>
+    <div class="path-card" onclick="showSection('flashcards')"><div class="path-ic">ð</div><h3>Flashcards</h3><p>Create, edit, save, and study cards from any source.</p><div class="path-more">Make Cards â</div></div>
+    <div class="path-card" onclick="showSection('quiz')"><div class="path-ic">â</div><h3>Quiz</h3><p>Generate quizzes, review answers, and save practice sets.</p><div class="path-more">Make Quiz â</div></div>
   </div>
   <div class="mini-grid">
-    <div class="mini-card" onclick="showSection('lesson-builder')"><div class="mini-ic">📋</div><div><strong>Lesson Plan</strong><small>Create structured teacher-ready lessons.</small></div></div>
-    <div class="mini-card" onclick="openLearningFeature('worksheet_generator')"><div class="mini-ic">📄</div><div><strong>Worksheet Generator</strong><small>Build printable worksheets and answer keys.</small></div></div>
-    <div class="mini-card" onclick="openLearningFeature('one_click_transform')"><div class="mini-ic">↗</div><div><strong>Turn this into…</strong><small>Create a full learning bundle from one source.</small></div></div>
+    <div class="mini-card" onclick="showSection('lesson-builder')"><div class="mini-ic">ð</div><div><strong>Lesson Plan</strong><small>Create structured teacher-ready lessons.</small></div></div>
+    <div class="mini-card" onclick="openLearningFeature('worksheet_generator')"><div class="mini-ic">ð</div><div><strong>Worksheet Generator</strong><small>Build printable worksheets and answer keys.</small></div></div>
+    <div class="mini-card" onclick="openLearningFeature('one_click_transform')"><div class="mini-ic">â</div><div><strong>Turn this intoâ¦</strong><small>Create a full learning bundle from one source.</small></div></div>
   </div>
 </div></div>
 
 <!-- STUDY DASHBOARD -->
 <div id="section-study-dashboard" class="section"><div class="pg">
-  <div class="pg-head"><div class="kicker">📖 Study</div><h1 class="pg-title">Know what to review next.</h1><p class="pg-sub">A guided place to keep learning at home: ask questions, review weak spots, generate guides, and practice from saved material.</p></div>
+  <div class="pg-head"><div class="kicker">ð Study</div><h1 class="pg-title">Know what to review next.</h1><p class="pg-sub">A guided place to keep learning at home: ask questions, review weak spots, generate guides, and practice from saved material.</p></div>
   <div class="path-grid" style="margin-bottom:14px;">
-    <div class="path-card" onclick="showSection('study-mode')"><div class="path-ic">📖</div><h3>Study Mode</h3><p>Review due cards, missed questions, and recent weak spots.</p><div class="path-more">Start Study Mode →</div></div>
-    <div class="path-card" onclick="showSection('ai-tutor')"><div class="path-ic">🤖</div><h3>AI Tutor</h3><p>Ask questions about saved sources, folders, or pasted notes.</p><div class="path-more">Ask Tutor →</div></div>
-    <div class="path-card" onclick="showSection('study-guide')"><div class="path-ic">📝</div><h3>Study Guide</h3><p>Turn material into key terms, concepts, and review lists.</p><div class="path-more">Make Guide →</div></div>
-    <div class="path-card" onclick="showSection('missed-review')"><div class="path-ic">❓</div><h3>Missed Questions</h3><p>Review what you missed and practice similar questions.</p><div class="path-more">Review Misses →</div></div>
+    <div class="path-card" onclick="showSection('study-mode')"><div class="path-ic">ð</div><h3>Study Mode</h3><p>Review due cards, missed questions, and recent weak spots.</p><div class="path-more">Start Study Mode â</div></div>
+    <div class="path-card" onclick="showSection('ai-tutor')"><div class="path-ic">ð¤</div><h3>AI Tutor</h3><p>Ask questions about saved sources, folders, or pasted notes.</p><div class="path-more">Ask Tutor â</div></div>
+    <div class="path-card" onclick="showSection('study-guide')"><div class="path-ic">ð</div><h3>Study Guide</h3><p>Turn material into key terms, concepts, and review lists.</p><div class="path-more">Make Guide â</div></div>
+    <div class="path-card" onclick="showSection('missed-review')"><div class="path-ic">â</div><h3>Missed Questions</h3><p>Review what you missed and practice similar questions.</p><div class="path-more">Review Misses â</div></div>
   </div>
   <div class="mini-grid">
-    <div class="mini-card" onclick="openLearningFeature('memory_tricks')"><div class="mini-ic">⚡</div><div><strong>Memory Tricks</strong><small>Mnemonics, analogies, and quick examples.</small></div></div>
-    <div class="mini-card" onclick="openLearningFeature('explain_mistake')"><div class="mini-ic">💡</div><div><strong>Explain My Mistake</strong><small>Understand why an answer was wrong.</small></div></div>
-    <div class="mini-card" onclick="openLearningFeature('audio_study_mode')"><div class="mini-ic">🎵</div><div><strong>Audio Study Mode</strong><small>Generate a listenable review script.</small></div></div>
+    <div class="mini-card" onclick="openLearningFeature('memory_tricks')"><div class="mini-ic">â¡</div><div><strong>Memory Tricks</strong><small>Mnemonics, analogies, and quick examples.</small></div></div>
+    <div class="mini-card" onclick="openLearningFeature('explain_mistake')"><div class="mini-ic">ð¡</div><div><strong>Explain My Mistake</strong><small>Understand why an answer was wrong.</small></div></div>
+    <div class="mini-card" onclick="openLearningFeature('audio_study_mode')"><div class="mini-ic">ðµ</div><div><strong>Audio Study Mode</strong><small>Generate a listenable review script.</small></div></div>
   </div>
 </div></div>
 
 <!-- TEACH DASHBOARD -->
 <div id="section-teach-dashboard" class="section"><div class="pg">
-  <div class="pg-head"><div class="kicker">🎓 Teach</div><h1 class="pg-title">From source material to classroom-ready resources.</h1><p class="pg-sub">Plan lessons, build assignments, create rubrics, prepare handouts, and design live classroom review sessions from the same material.</p></div>
+  <div class="pg-head"><div class="kicker">ð Teach</div><h1 class="pg-title">From source material to classroom-ready resources.</h1><p class="pg-sub">Plan lessons, build assignments, create rubrics, prepare handouts, and design live classroom review sessions from the same material.</p></div>
   <div class="path-grid" style="margin-bottom:14px;">
-    <div class="path-card" onclick="showSection('lesson-builder')"><div class="path-ic">📋</div><h3>Lesson Builder</h3><p>Create structured teacher-ready lessons with education level control.</p><div class="path-more">Build Lesson →</div></div>
-    <div class="path-card" onclick="showSection('classroom-suite')"><div class="path-ic">🏫</div><h3>Classroom Tools</h3><p>Prototype classes, assignments, live reviews, and analytics.</p><div class="path-more">Open Classroom →</div></div>
-    <div class="path-card" onclick="openLearningFeature('assignment_builder_ai')"><div class="path-ic">✅</div><h3>Assignment Builder</h3><p>Generate directions, expectations, grading notes, and student steps.</p><div class="path-more">Build Assignment →</div></div>
-    <div class="path-card" onclick="openLearningFeature('live_game_mode_ai')"><div class="path-ic">▶</div><h3>Live Review</h3><p>Plan quiz/game sessions with rounds, timing, and review prompts.</p><div class="path-more">Plan Live Session →</div></div>
+    <div class="path-card" onclick="showSection('lesson-builder')"><div class="path-ic">ð</div><h3>Lesson Builder</h3><p>Create structured teacher-ready lessons with education level control.</p><div class="path-more">Build Lesson â</div></div>
+    <div class="path-card" onclick="showSection('classroom-suite')"><div class="path-ic">ð«</div><h3>Classroom Tools</h3><p>Prototype classes, assignments, live reviews, and analytics.</p><div class="path-more">Open Classroom â</div></div>
+    <div class="path-card" onclick="openLearningFeature('assignment_builder_ai')"><div class="path-ic">â</div><h3>Assignment Builder</h3><p>Generate directions, expectations, grading notes, and student steps.</p><div class="path-more">Build Assignment â</div></div>
+    <div class="path-card" onclick="openLearningFeature('live_game_mode_ai')"><div class="path-ic">â¶</div><h3>Live Review</h3><p>Plan quiz/game sessions with rounds, timing, and review prompts.</p><div class="path-more">Plan Live Session â</div></div>
   </div>
   <div class="mini-grid">
-    <div class="mini-card" onclick="openLearningFeature('rubric_generator')"><div class="mini-ic">✓</div><div><strong>Rubric Generator</strong><small>Build clear grading rubrics.</small></div></div>
-    <div class="mini-card" onclick="openLearningFeature('differentiation')"><div class="mini-ic">⇄</div><div><strong>Differentiation</strong><small>Simplify, extend, or adapt material.</small></div></div>
-    <div class="mini-card" onclick="openLearningFeature('handout_generator')"><div class="mini-ic">📄</div><div><strong>Handout Generator</strong><small>Create student or parent-facing handouts.</small></div></div>
+    <div class="mini-card" onclick="openLearningFeature('rubric_generator')"><div class="mini-ic">â</div><div><strong>Rubric Generator</strong><small>Build clear grading rubrics.</small></div></div>
+    <div class="mini-card" onclick="openLearningFeature('differentiation')"><div class="mini-ic">â</div><div><strong>Differentiation</strong><small>Simplify, extend, or adapt material.</small></div></div>
+    <div class="mini-card" onclick="openLearningFeature('handout_generator')"><div class="mini-ic">ð</div><div><strong>Handout Generator</strong><small>Create student or parent-facing handouts.</small></div></div>
   </div>
 </div></div>
 
 <!-- MY STUFF DASHBOARD -->
 <div id="section-my-stuff-dashboard" class="section"><div class="pg">
-  <div class="pg-head"><div class="kicker">📁 My Stuff</div><h1 class="pg-title">Your saved work, organized.</h1><p class="pg-sub">Saved folders, sources, decks, quizzes, lessons, history, and exports all live together here.</p></div>
+  <div class="pg-head"><div class="kicker">ð My Stuff</div><h1 class="pg-title">Your saved work, organized.</h1><p class="pg-sub">Saved folders, sources, decks, quizzes, lessons, history, and exports all live together here.</p></div>
   <div class="path-grid" style="margin-bottom:14px;">
-    <div class="path-card" onclick="showSection('folders')"><div class="path-ic">📁</div><h3>Folders</h3><p>Group summaries, decks, quizzes, lessons, and guides into one collection.</p><div class="path-more">Open Folders →</div></div>
-    <div class="path-card" onclick="showSection('saved-flashcards')"><div class="path-ic">🃏</div><h3>Saved Decks</h3><p>Study and manage saved flashcard decks.</p><div class="path-more">Open Decks →</div></div>
-    <div class="path-card" onclick="showSection('saved-quizzes')"><div class="path-ic">❓</div><h3>Saved Quizzes</h3><p>Retake, print, review, or organize saved quizzes.</p><div class="path-more">Open Quizzes →</div></div>
-    <div class="path-card" onclick="showSection('saved-lessons')"><div class="path-ic">📋</div><h3>Saved Lessons</h3><p>Reopen and edit lesson plans later.</p><div class="path-more">Open Lessons →</div></div>
+    <div class="path-card" onclick="showSection('folders')"><div class="path-ic">ð</div><h3>Folders</h3><p>Group summaries, decks, quizzes, lessons, and guides into one collection.</p><div class="path-more">Open Folders â</div></div>
+    <div class="path-card" onclick="showSection('saved-flashcards')"><div class="path-ic">ð</div><h3>Saved Decks</h3><p>Study and manage saved flashcard decks.</p><div class="path-more">Open Decks â</div></div>
+    <div class="path-card" onclick="showSection('saved-quizzes')"><div class="path-ic">â</div><h3>Saved Quizzes</h3><p>Retake, print, review, or organize saved quizzes.</p><div class="path-more">Open Quizzes â</div></div>
+    <div class="path-card" onclick="showSection('saved-lessons')"><div class="path-ic">ð</div><h3>Saved Lessons</h3><p>Reopen and edit lesson plans later.</p><div class="path-more">Open Lessons â</div></div>
   </div>
   <div class="mini-grid">
-    <div class="mini-card" onclick="showSection('source-library')"><div class="mini-ic">📚</div><div><strong>Source Library</strong><small>Save URLs, notes, docs, and file sources.</small></div></div>
-    <div class="mini-card" onclick="showSection('history')"><div class="mini-ic">🕒</div><div><strong>History</strong><small>Find recent work and favorite items.</small></div></div>
-    <div class="mini-card" onclick="exportSourceLibraryToDrive()"><div class="mini-ic">⬆</div><div><strong>Export to Drive</strong><small>Save source library data to Google Drive.</small></div></div>
+    <div class="mini-card" onclick="showSection('source-library')"><div class="mini-ic">ð</div><div><strong>Source Library</strong><small>Save URLs, notes, docs, and file sources.</small></div></div>
+    <div class="mini-card" onclick="showSection('history')"><div class="mini-ic">ð</div><div><strong>History</strong><small>Find recent work and favorite items.</small></div></div>
+    <div class="mini-card" onclick="exportSourceLibraryToDrive()"><div class="mini-ic">â¬</div><div><strong>Export to Drive</strong><small>Save source library data to Google Drive.</small></div></div>
   </div>
 </div></div>
 
 <!-- SEARCH -->
 <div id="section-search" class="section"><div class="pg">
-  <div class="pg-head"><div class="kicker">🔍 Search</div><h1 class="pg-title">Find useful sources, then turn them into study materials.</h1><p class="pg-sub">Search a topic and pull up helpful web links. Send any result into summaries, flashcards, quizzes, or lesson plans.</p></div>
+  <div class="pg-head"><div class="kicker">ð Search</div><h1 class="pg-title">Find useful sources, then turn them into study materials.</h1><p class="pg-sub">Search a topic and pull up helpful web links. Send any result into summaries, flashcards, quizzes, or lesson plans.</p></div>
   <div class="card cp">
-    <div class="field"><label for="webSearchInput">Search topic</label><input id="webSearchInput" class="input" placeholder="Example: photosynthesis, Iran War, quadratic formula…" /></div>
-    <div class="btn-row"><button class="btn btn-primary" onclick="runWebSearch()">🔍 Search</button><button class="btn btn-secondary" onclick="clearWebSearch()">Clear</button></div>
+    <div class="field"><label for="webSearchInput">Search topic</label><input id="webSearchInput" class="input" placeholder="Example: photosynthesis, Iran War, quadratic formulaâ¦" /></div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="runWebSearch()">ð Search</button><button class="btn btn-secondary" onclick="clearWebSearch()">Clear</button></div>
     <div id="webSearchStatus" class="status"></div>
     <div id="webSearchResults" class="search-results"></div>
   </div>
@@ -941,7 +941,7 @@
           <div id="thisDayDesc" style="font-size:12px;color:var(--text-2);margin-bottom:10px;line-height:1.6;"></div>
           <div style="display:flex;align-items:center;gap:8px;">
             <span id="thisDayTag" style="background:var(--primary-lt);color:var(--primary);font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;"></span>
-            <span onclick="thisDayLearnMore()" style="font-size:11px;color:var(--primary);cursor:pointer;font-weight:500;">Learn more →</span>
+            <span onclick="thisDayLearnMore()" style="font-size:11px;color:var(--primary);cursor:pointer;font-weight:500;">Learn more â</span>
           </div>
         </div>
       </div>
@@ -953,12 +953,12 @@
           <div style="padding:12px 14px;background:var(--bg);border-radius:10px;border:0.5px solid var(--border);">
             <div style="font-size:12px;font-weight:600;color:var(--title);margin-bottom:3px;">Generate your first flashcard deck</div>
             <div style="font-size:11px;color:var(--text-2);margin-bottom:8px;">Paste any topic or notes and Flashfo turns it into a study deck in seconds</div>
-            <span onclick="showSection('flashcards')" style="font-size:11px;color:var(--primary);font-weight:600;cursor:pointer;">Get started →</span>
+            <span onclick="showSection('flashcards')" style="font-size:11px;color:var(--primary);font-weight:600;cursor:pointer;">Get started â</span>
           </div>
           <div style="padding:12px 14px;background:var(--bg);border-radius:10px;border:0.5px solid var(--border);">
             <div style="font-size:12px;font-weight:600;color:var(--title);margin-bottom:3px;">Try the AI Tutor</div>
-            <div style="font-size:11px;color:var(--text-2);margin-bottom:8px;">Paste your notes and ask anything — it explains, quizzes, and adapts to you</div>
-            <span onclick="showSection('ai-tutor')" style="font-size:11px;color:var(--primary);font-weight:600;cursor:pointer;">Open AI Tutor →</span>
+            <div style="font-size:11px;color:var(--text-2);margin-bottom:8px;">Paste your notes and ask anything â it explains, quizzes, and adapts to you</div>
+            <span onclick="showSection('ai-tutor')" style="font-size:11px;color:var(--primary);font-weight:600;cursor:pointer;">Open AI Tutor â</span>
           </div>
         </div>
       </div>
@@ -966,8 +966,8 @@
 <!-- SUMMARIZE -->
 <div id="section-summarize" class="section"><div class="pg-tool">
   <div class="tool-header">
-    <div><div class="kicker">✦ Summarize</div><h1 class="pg-title">Turn dense material into something clear.</h1><p class="pg-sub">Paste content, add a URL, import a file, or start from a search result.</p></div>
-    <div class="ai-badge">✦ AI built for learning</div>
+    <div><div class="kicker">â¦ Summarize</div><h1 class="pg-title">Turn dense material into something clear.</h1><p class="pg-sub">Paste content, add a URL, import a file, or start from a search result.</p></div>
+    <div class="ai-badge">â¦ AI built for learning</div>
   </div>
   <div class="tool-3">
     <div style="display:grid;gap:15px;">
@@ -975,18 +975,18 @@
         <div class="card-title">Add a source</div>
         <div class="card-help">Choose the source type, then generate a summary you can reuse anywhere.</div>
         <div class="chip-row">
-          <button class="chip active" type="button">💡 Topic</button>
-          <button class="chip" type="button">📝 Notes</button>
-          <button class="chip" type="button">🔗 URL</button>
-          <button id="importBtn" class="chip" type="button" onclick="openImport()">⬆ File</button>
-          <button class="chip" type="button" onclick="showSection('search')">🔍 Search</button>
+          <button class="chip active" type="button">ð¡ Topic</button>
+          <button class="chip" type="button">ð Notes</button>
+          <button class="chip" type="button">ð URL</button>
+          <button id="importBtn" class="chip" type="button" onclick="openImport()">â¬ File</button>
+          <button class="chip" type="button" onclick="showSection('search')">ð Search</button>
         </div>
-        <input id="url" class="input" placeholder="Paste a webpage, Google Doc, or Slides URL…" style="margin-bottom:10px;" />
-        <input id="topicSearch" class="input" placeholder="Or enter a topic to summarize…" />
+        <input id="url" class="input" placeholder="Paste a webpage, Google Doc, or Slides URLâ¦" style="margin-bottom:10px;" />
+        <input id="topicSearch" class="input" placeholder="Or enter a topic to summarizeâ¦" />
         <input id="fileInput" class="hidden-file" type="file" accept=".txt,.csv,.json,.md,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg" />
         <div class="settings-row">
           <div class="sett-field"><label for="summaryFormat">Format</label><select id="summaryFormat" class="select"><option value="paragraph">Balanced paragraph</option><option value="bullets">Key bullet points</option></select></div>
-          <button id="summarizeBtn" class="btn btn-primary btn-lg" onclick="runSummary()" style="flex:1;">✦ Generate Summary</button>
+          <button id="summarizeBtn" class="btn btn-primary btn-lg" onclick="runSummary()" style="flex:1;">â¦ Generate Summary</button>
         </div>
         <div id="status" class="status"></div>
         <div style="display:flex;justify-content:space-between;margin-top:9px;font-size:12px;color:var(--text-muted);"><span id="fileLabel">Built for students and teachers</span><span id="wordCount">0 words</span></div>
@@ -996,11 +996,11 @@
           <button class="chip active">Summary</button>
           <button class="chip" onclick="giveEssayOutline()">Essay Outline</button>
           <button class="chip" onclick="explainCurrentSummarySimply()">Explain Simply</button>
-          <button class="chip" onclick="speakSummary()">🔊 Read</button>
+          <button class="chip" onclick="speakSummary()">ð Read</button>
         </div>
         <div class="result-body">
           <div class="result-title">Summary</div>
-          <textarea id="result" class="out-field lg" readonly placeholder="Your Flashfo summary will appear here as a clean reading canvas…"></textarea>
+          <textarea id="result" class="out-field lg" readonly placeholder="Your Flashfo summary will appear here as a clean reading canvasâ¦"></textarea>
           <div id="summaryExplainOutput" class="explain-output" style="display:none;margin-top:13px;"></div>
         </div>
       </div>
@@ -1010,12 +1010,12 @@
       <div class="act-card">
         <h3>Quick actions</h3>
         <div class="act-list">
-          <button class="act-btn" onclick="copySummary()"><span>Copy<small>Copy the summary</small></span><span class="act-arrow">›</span></button>
-          <button class="act-btn" onclick="exportCurrentSummaryToDrive()"><span>Save to Drive<small>Create a Google Doc</small></span><span class="act-arrow">›</span></button>
-          <button class="act-btn" onclick="sendSummaryToFlashcards()"><span>Flashcards<small>Turn into study cards</small></span><span class="act-arrow">›</span></button>
-          <button class="act-btn" onclick="sendSummaryToQuiz()"><span>Quiz<small>Create questions</small></span><span class="act-arrow">›</span></button>
-          <button class="act-btn" onclick="sendSummaryToLessonBuilder()"><span>Lesson Plan<small>Use for teaching</small></span><span class="act-arrow">›</span></button>
-          <button class="act-btn" onclick="clearAll()"><span>Clear<small>Reset this workspace</small></span><span class="act-arrow">›</span></button>
+          <button class="act-btn" onclick="copySummary()"><span>Copy<small>Copy the summary</small></span><span class="act-arrow">âº</span></button>
+          <button class="act-btn" onclick="exportCurrentSummaryToDrive()"><span>Save to Drive<small>Create a Google Doc</small></span><span class="act-arrow">âº</span></button>
+          <button class="act-btn" onclick="sendSummaryToFlashcards()"><span>Flashcards<small>Turn into study cards</small></span><span class="act-arrow">âº</span></button>
+          <button class="act-btn" onclick="sendSummaryToQuiz()"><span>Quiz<small>Create questions</small></span><span class="act-arrow">âº</span></button>
+          <button class="act-btn" onclick="sendSummaryToLessonBuilder()"><span>Lesson Plan<small>Use for teaching</small></span><span class="act-arrow">âº</span></button>
+          <button class="act-btn" onclick="clearAll()"><span>Clear<small>Reset this workspace</small></span><span class="act-arrow">âº</span></button>
         </div>
       </div>
       <div class="act-card">
@@ -1038,19 +1038,19 @@
 <!-- FLASHCARDS -->
 <div id="section-flashcards" class="section"><div class="pg-tool">
   <div class="tool-header">
-    <div><div class="kicker">🃏 Flashcards</div><h1 class="pg-title">Turn any source into beautiful flashcards.</h1><p class="pg-sub">Generate, edit, save, and study cards without leaving the flow.</p></div>
-    <div class="ai-badge">✦ AI built for learning</div>
+    <div><div class="kicker">ð Flashcards</div><h1 class="pg-title">Turn any source into beautiful flashcards.</h1><p class="pg-sub">Generate, edit, save, and study cards without leaving the flow.</p></div>
+    <div class="ai-badge">â¦ AI built for learning</div>
   </div>
   <div class="tool-2">
     <div class="card cp">
       <div class="card-title">1. Source</div>
       <div class="card-help">Add content and Flashfo will turn it into a deck.</div>
-      <textarea id="flashcardsTopic" class="input textarea" placeholder="Type or paste notes, a lesson, or study material…" style="margin-bottom:10px;"></textarea>
-      <input id="flashcardsUrl" class="input" placeholder="Or paste a webpage / Google file URL…" style="margin-bottom:10px;" />
+      <textarea id="flashcardsTopic" class="input textarea" placeholder="Type or paste notes, a lesson, or study materialâ¦" style="margin-bottom:10px;"></textarea>
+      <input id="flashcardsUrl" class="input" placeholder="Or paste a webpage / Google file URLâ¦" style="margin-bottom:10px;" />
       <input id="flashcardsFileInput" class="hidden-file" type="file" accept=".txt,.csv,.json,.md,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg" />
       <div class="chip-row">
-        <button class="chip" type="button" onclick="openFlashcardsImport()">⬆ Import File</button>
-        <button class="chip" type="button" onclick="showSection('search')">🔍 Search</button>
+        <button class="chip" type="button" onclick="openFlashcardsImport()">â¬ Import File</button>
+        <button class="chip" type="button" onclick="showSection('search')">ð Search</button>
         <button class="chip" type="button" onclick="useCurrentSummaryForFlashcards()">Use Summary</button>
         <button class="chip" type="button" onclick="useCurrentLessonForFlashcards()">Use Lesson</button>
       </div>
@@ -1060,7 +1060,7 @@
         <input id="flashcardCount" type="range" min="5" max="25" step="1" value="5" oninput="updateFlashcardCountLabel()" />
         <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-top:5px;"><span>Selected</span><span id="flashcardCountLabel">5 cards</span></div>
       </div>
-      <button class="btn btn-primary btn-full" onclick="generateFlashcards()">✦ Generate Flashcards</button>
+      <button class="btn btn-primary btn-full" onclick="generateFlashcards()">â¦ Generate Flashcards</button>
       <button class="btn btn-danger btn-full" style="margin-top:7px;" onclick="clearFlashcards()">Clear</button>
       <div id="flashcardsStatus" class="status"></div>
     </div>
@@ -1069,7 +1069,7 @@
         <div class="result-tb">
           <strong>Generated flashcards</strong><div class="tb-sp"></div>
           <span onclick="toggleFlashcardEditor()" style="font-size:12px;color:var(--text-2);cursor:pointer;">Edit cards</span>
-          <span style="color:var(--border-strong);margin:0 6px;">·</span>
+          <span style="color:var(--border-strong);margin:0 6px;">Â·</span>
           <span onclick="addBlankFlashcard()" style="font-size:12px;color:var(--text-2);cursor:pointer;">Add card</span>
           <button class="btn btn-primary btn-sm" onclick="openSaveFlashcardDeckModal()">Save to Deck</button>
         </div>
@@ -1085,7 +1085,7 @@
             <span style="color:var(--border-strong);margin:0 4px;">|</span>
             <span onclick="speakCurrentFlashcard()" style="font-size:12px;color:var(--text-2);cursor:pointer;">Read aloud</span>
             <span onclick="stopSpeaking()" style="font-size:12px;color:var(--text-muted);cursor:pointer;margin-left:12px;">Stop</span>
-            <div style="margin-left:auto;"><span onclick="showSection('quiz')" style="font-size:12px;color:var(--primary);cursor:pointer;font-weight:500;">Use as Source →</span></div>
+            <div style="margin-left:auto;"><span onclick="showSection('quiz')" style="font-size:12px;color:var(--primary);cursor:pointer;font-weight:500;">Use as Source â</span></div>
           </div>
         </div>
       </div>
@@ -1100,7 +1100,7 @@
 <!-- AI TUTOR -->
 <div id="section-ai-tutor" class="section"><div class="pg-tool">
   <div class="tool-header">
-    <div><div class="kicker">🤖 AI Tutor</div><h1 class="pg-title">Ask questions. Get help tied to your material.</h1><p class="pg-sub">A real back-and-forth tutor that remembers your session, adapts to your confidence, and helps you actually learn.</p></div>
+    <div><div class="kicker">ð¤ AI Tutor</div><h1 class="pg-title">Ask questions. Get help tied to your material.</h1><p class="pg-sub">A real back-and-forth tutor that remembers your session, adapts to your confidence, and helps you actually learn.</p></div>
     <div style="display:flex;gap:8px;align-items:center;">
       <span id="tutorTimer" style="font-size:12px;color:var(--text-muted);font-variant-numeric:tabular-nums;">0:00</span>
       <div class="ai-badge" id="tutorModeLabel">Explain Simply</div>
@@ -1128,7 +1128,7 @@
     <div id="tutorSourcePanel" class="card cp">
       <div class="card-title">What should the tutor use?</div>
       <div class="card-help">Add material first so the tutor stays focused instead of giving generic answers.</div>
-      <textarea id="tutorSourceText" class="input textarea" placeholder="Paste notes, a saved summary, lesson material, or source content…"></textarea>
+      <textarea id="tutorSourceText" class="input textarea" placeholder="Paste notes, a saved summary, lesson material, or source contentâ¦"></textarea>
       <div class="chip-row">
         <button class="chip" type="button" onclick="tutorUseCurrentSummary()">Use Summary</button>
         <button class="chip" type="button" onclick="tutorUseCurrentLesson()">Use Lesson</button>
@@ -1146,18 +1146,18 @@
         <strong>Tutor session</strong>
         <div class="tb-sp"></div>
         <span onclick="generateTutorSummary()" style="font-size:12px;color:var(--text-2);cursor:pointer;">Session summary</span>
-        <span style="color:var(--border-strong);margin:0 6px;">·</span>
+        <span style="color:var(--border-strong);margin:0 6px;">Â·</span>
         <span onclick="copyAiTutorOutput()" style="font-size:12px;color:var(--text-2);cursor:pointer;">Copy</span>
-        <span style="color:var(--border-strong);margin:0 6px;">·</span>
-        <span onclick="speakAiTutorOutput()" style="font-size:12px;color:var(--text-2);cursor:pointer;">🔊 Read</span>
-        <span style="color:var(--border-strong);margin:0 6px;">·</span>
+        <span style="color:var(--border-strong);margin:0 6px;">Â·</span>
+        <span onclick="speakAiTutorOutput()" style="font-size:12px;color:var(--text-2);cursor:pointer;">ð Read</span>
+        <span style="color:var(--border-strong);margin:0 6px;">Â·</span>
         <span onclick="clearAiTutor()" style="font-size:12px;color:var(--text-muted);cursor:pointer;">Clear</span>
       </div>
 
       <!-- Chat messages area -->
       <div id="tutorChatMessages" style="flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;min-height:300px;">
         <div style="text-align:center;padding:32px 0;">
-          <div style="font-size:32px;margin-bottom:10px;">🤖</div>
+          <div style="font-size:32px;margin-bottom:10px;">ð¤</div>
           <p style="font-size:14px;color:var(--text-muted);margin:0;">Add material on the left and ask your first question below.</p>
         </div>
       </div>
@@ -1173,7 +1173,7 @@
 
       <!-- Input bar fixed at bottom -->
       <div style="padding:14px 18px;border-top:0.5px solid var(--border);display:flex;gap:10px;align-items:center;background:var(--surface);">
-        <input id="tutorQuestionInput" class="input" placeholder="Ask anything about your material…" style="flex:1;margin:0;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();runAiTutor();}" />
+        <input id="tutorQuestionInput" class="input" placeholder="Ask anything about your materialâ¦" style="flex:1;margin:0;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();runAiTutor();}" />
         <button class="btn btn-primary" onclick="runAiTutor()" style="white-space:nowrap;flex-shrink:0;">Ask Tutor</button>
       </div>
     </div>
@@ -1183,7 +1183,7 @@
 <!-- AI SUITE -->
 <div id="section-learning-suite" class="section"><div class="pg-tool">
   <div class="tool-header">
-    <div><div class="kicker">⚡ AI Suite</div><h1 class="pg-title">Specialized tools without the clutter.</h1><p class="pg-sub">Worksheets, rubrics, study paths, handouts, and exam prep — all from the same source material.</p></div>
+    <div><div class="kicker">â¡ AI Suite</div><h1 class="pg-title">Specialized tools without the clutter.</h1><p class="pg-sub">Worksheets, rubrics, study paths, handouts, and exam prep â all from the same source material.</p></div>
     <div class="ai-badge">Focused workbench</div>
   </div>
   <div style="margin-bottom:18px;">
@@ -1200,7 +1200,7 @@
       <select id="suiteFeatureSelect" class="select" onchange="renderSuiteFeatureDetails()"></select>
       <div id="suiteFeatureDetails" class="suite-detail"></div>
       <div class="card-title" style="margin-top:18px;">2. Add source material</div>
-      <textarea id="suiteSourceText" class="input textarea" placeholder="Paste notes, source material, quiz misses, or lesson content…"></textarea>
+      <textarea id="suiteSourceText" class="input textarea" placeholder="Paste notes, source material, quiz misses, or lesson contentâ¦"></textarea>
       <div class="chip-row">
         <button class="chip" onclick="suiteUseCurrentSummary()">Use Summary</button>
         <button class="chip" onclick="suiteUseCurrentLesson()">Use Lesson</button>
@@ -1222,12 +1222,12 @@
         <button class="btn btn-secondary btn-sm" onclick="saveSuiteOutputToDrive()">Save to Drive</button>
       </div>
       <div style="padding:9px 16px 11px;border-bottom:1px solid var(--border);" class="btn-row">
-        <button class="btn btn-secondary btn-sm" onclick="suiteSendToSummary()">→ Summary</button>
-        <button class="btn btn-secondary btn-sm" onclick="suiteSendToFlashcards()">→ Flashcards</button>
-        <button class="btn btn-secondary btn-sm" onclick="suiteSendToQuiz()">→ Quiz</button>
-        <button class="btn btn-secondary btn-sm" onclick="suiteSendToLesson()">→ Lesson</button>
+        <button class="btn btn-secondary btn-sm" onclick="suiteSendToSummary()">â Summary</button>
+        <button class="btn btn-secondary btn-sm" onclick="suiteSendToFlashcards()">â Flashcards</button>
+        <button class="btn btn-secondary btn-sm" onclick="suiteSendToQuiz()">â Quiz</button>
+        <button class="btn btn-secondary btn-sm" onclick="suiteSendToLesson()">â Lesson</button>
       </div>
-      <div class="result-body"><textarea id="suiteOutput" class="out-field xl" placeholder="Your generated study path, worksheet, rubric, handout, or classroom tool will appear here…"></textarea></div>
+      <div class="result-body"><textarea id="suiteOutput" class="out-field xl" placeholder="Your generated study path, worksheet, rubric, handout, or classroom tool will appear hereâ¦"></textarea></div>
     </div>
   </div>
 </div></div>
@@ -1235,7 +1235,7 @@
 <!-- CLASSROOM TOOLS -->
 <div id="section-classroom-suite" class="section"><div class="pg-tool">
   <div class="tool-header">
-    <div><div class="kicker">🏫 Classroom Tools</div><h1 class="pg-title">Create classes, assignments, and live review sessions.</h1><p class="pg-sub">Prototype classroom items stored in the browser. When Flashfo moves to full accounts, this becomes class codes, student submissions, and analytics.</p></div>
+    <div><div class="kicker">ð« Classroom Tools</div><h1 class="pg-title">Create classes, assignments, and live review sessions.</h1><p class="pg-sub">Prototype classroom items stored in the browser. When Flashfo moves to full accounts, this becomes class codes, student submissions, and analytics.</p></div>
     <div class="ai-badge">Teacher workspace</div>
   </div>
   <div class="suite-2">
@@ -1243,7 +1243,7 @@
       <div class="card-title">Classroom setup</div>
       <input id="classroomNameInput" class="input" placeholder="Class name, e.g. Period 2 Biology" style="margin-bottom:9px;" />
       <input id="assignmentTitleInput" class="input" placeholder="Assignment title" style="margin-bottom:9px;" />
-      <textarea id="assignmentInstructionsInput" class="input textarea sm" placeholder="Assignment instructions, source material, or goals…"></textarea>
+      <textarea id="assignmentInstructionsInput" class="input textarea sm" placeholder="Assignment instructions, source material, or goalsâ¦"></textarea>
       <div class="btn-row" style="margin-top:13px;">
         <button class="btn btn-primary" onclick="createClassroomPrototype()">Create Class</button>
         <button class="btn btn-secondary" onclick="createAssignmentPrototype()">Create Assignment</button>
@@ -1262,15 +1262,15 @@
 <!-- SOURCE LIBRARY -->
 <div id="section-source-library" class="section"><div class="pg-tool">
   <div class="tool-header">
-    <div><div class="kicker">📚 Source Library</div><h1 class="pg-title">Save sources once. Generate from them anytime.</h1><p class="pg-sub">Build a library of URLs, notes, Google Docs, or topic sources that can feed summaries, flashcards, quizzes, and lesson plans.</p></div>
-    <div class="ai-badge">Sources → everything</div>
+    <div><div class="kicker">ð Source Library</div><h1 class="pg-title">Save sources once. Generate from them anytime.</h1><p class="pg-sub">Build a library of URLs, notes, Google Docs, or topic sources that can feed summaries, flashcards, quizzes, and lesson plans.</p></div>
+    <div class="ai-badge">Sources â everything</div>
   </div>
   <div class="suite-2">
     <div class="card cp">
       <div class="card-title">Add source</div>
       <input id="sourceLibraryTitle" class="input" placeholder="Source title" style="margin-bottom:9px;" />
       <input id="sourceLibraryUrl" class="input" placeholder="Optional URL or Google Doc link" style="margin-bottom:9px;" />
-      <textarea id="sourceLibraryNotes" class="input textarea sm" placeholder="Optional notes, pasted content, or context…"></textarea>
+      <textarea id="sourceLibraryNotes" class="input textarea sm" placeholder="Optional notes, pasted content, or contextâ¦"></textarea>
       <div class="btn-row" style="margin-top:13px;">
         <button class="btn btn-primary" onclick="addSourceLibraryItem()">Add Source</button>
         <button class="btn btn-secondary" onclick="sendSourceLibraryToSuite()">Use in Suite</button>
@@ -1287,7 +1287,7 @@
 
 <!-- SAVED FLASHCARD DECKS -->
 <div id="section-saved-flashcards" class="section"><div class="pg">
-  <div class="pg-head"><div class="kicker">🃏 Saved Decks</div><h1 class="pg-title">Save and organize your flashcard sets.</h1><p class="pg-sub">Create groups, rename them, study saved sets later, and print when needed.</p></div>
+  <div class="pg-head"><div class="kicker">ð Saved Decks</div><h1 class="pg-title">Save and organize your flashcard sets.</h1><p class="pg-sub">Create groups, rename them, study saved sets later, and print when needed.</p></div>
   <div class="card cp">
     <div class="btn-row" style="margin-bottom:15px;">
       <button class="btn btn-secondary" onclick="openCreateFlashcardGroupModal()">New Group</button>
@@ -1297,7 +1297,7 @@
       <button class="btn btn-danger" onclick="clearSelectedFlashcardDeckSets()">Clear Selected</button>
     </div>
     <input id="flashcardDeckImportInput" class="hidden-file" type="file" accept=".json,application/json" />
-    <div class="field"><input id="flashcardDeckSearchInput" class="input" placeholder="Search saved deck groups or set names…" /></div>
+    <div class="field"><input id="flashcardDeckSearchInput" class="input" placeholder="Search saved deck groups or set namesâ¦" /></div>
     <div id="flashcardDeckGroups" class="lib-list"></div>
     <div id="savedFlashcardStudyPanel" style="display:none;margin-top:18px;">
       <div class="card cp">
@@ -1309,8 +1309,8 @@
         </div>
         <div class="btn-row" style="margin-top:13px;">
           <button class="btn btn-primary" onclick="toggleSavedFlashcardAnswer()" id="savedFlashcardToggleBtn">View Answer</button>
-          <button class="btn btn-secondary" onclick="prevSavedFlashcardCard()" id="savedFlashcardPrevBtn">← Back</button>
-          <button class="btn btn-secondary" onclick="nextSavedFlashcardCard()" id="savedFlashcardNextBtn">Next →</button>
+          <button class="btn btn-secondary" onclick="prevSavedFlashcardCard()" id="savedFlashcardPrevBtn">â Back</button>
+          <button class="btn btn-secondary" onclick="nextSavedFlashcardCard()" id="savedFlashcardNextBtn">Next â</button>
           <button class="btn btn-secondary" onclick="closeSavedFlashcardStudy()">Close</button>
         </div>
       </div>
@@ -1321,19 +1321,19 @@
 <!-- QUIZ -->
 <div id="section-quiz" class="section"><div class="pg-tool">
   <div class="tool-header">
-    <div><div class="kicker">❓ Quiz</div><h1 class="pg-title">Create quizzes that feel polished and easy to take.</h1><p class="pg-sub">Add your source, choose the question mix, preview, edit, save, print, and review missed questions.</p></div>
-    <div class="ai-badge">✦ AI built for learning</div>
+    <div><div class="kicker">â Quiz</div><h1 class="pg-title">Create quizzes that feel polished and easy to take.</h1><p class="pg-sub">Add your source, choose the question mix, preview, edit, save, print, and review missed questions.</p></div>
+    <div class="ai-badge">â¦ AI built for learning</div>
   </div>
   <div class="tool-2">
     <div class="card cp quiz-builder-shell" id="quizBuilderShell">
       <div class="quiz-builder-form" id="quizBuilderForm">
         <div class="card-title">1. Add your source</div>
-        <textarea id="quizInput" class="input textarea" placeholder="Paste notes, a summary, or a lesson plan…" style="margin-bottom:9px;"></textarea>
-        <input id="quizUrl" class="input" placeholder="Or paste a webpage / Google file URL…" style="margin-bottom:9px;" />
+        <textarea id="quizInput" class="input textarea" placeholder="Paste notes, a summary, or a lesson planâ¦" style="margin-bottom:9px;"></textarea>
+        <input id="quizUrl" class="input" placeholder="Or paste a webpage / Google file URLâ¦" style="margin-bottom:9px;" />
         <input id="quizFileInput" class="hidden-file" type="file" accept=".txt,.csv,.json,.md,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg" />
         <div class="chip-row">
-          <button class="chip" onclick="openQuizImport()" type="button">⬆ Import</button>
-          <button class="chip" onclick="showSection('search')" type="button">🔍 Search</button>
+          <button class="chip" onclick="openQuizImport()" type="button">â¬ Import</button>
+          <button class="chip" onclick="showSection('search')" type="button">ð Search</button>
           <button class="chip" onclick="useCurrentSummaryForQuiz()" type="button">Use Summary</button>
           <button class="chip" onclick="useCurrentLessonForQuiz()" type="button">Use Lesson</button>
         </div>
@@ -1350,7 +1350,7 @@
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:7px;font-size:12px;color:var(--text-muted);"><span>Mix total</span><span id="quizMixTotalLabel">0 / 5</span></div>
         <div class="btn-row" style="margin-top:14px;">
-          <button class="btn btn-primary" onclick="generateQuiz()">✦ Generate Quiz</button>
+          <button class="btn btn-primary" onclick="generateQuiz()">â¦ Generate Quiz</button>
           <button class="btn btn-secondary" onclick="openSaveQuizModal()">Save Quiz</button>
           <button class="btn btn-danger" onclick="clearQuiz()">Clear</button>
         </div>
@@ -1375,7 +1375,7 @@
           <div id="quizSessionArea" class="card cp" style="min-height:260px;"><div class="empty-box">Your quiz session will appear here.</div></div>
           <div class="tts-row" style="margin-top:13px;">
             <select id="quizTtsVoiceSelect" class="select" style="max-width:175px;"></select>
-            <button class="btn btn-secondary btn-sm" onclick="speakCurrentQuizQuestion()">🔊 Read</button>
+            <button class="btn btn-secondary btn-sm" onclick="speakCurrentQuizQuestion()">ð Read</button>
             <button class="btn btn-secondary btn-sm" onclick="stopSpeaking()">Stop</button>
             <button class="btn btn-secondary btn-sm" onclick="explainCurrentQuizQuestionSimply()">Explain Simply</button>
           </div>
@@ -1398,7 +1398,7 @@
 
 <!-- SAVED QUIZZES -->
 <div id="section-saved-quizzes" class="section"><div class="pg">
-  <div class="pg-head"><div class="kicker">❓ Saved Quizzes</div><h1 class="pg-title">Save quizzes and reopen them later.</h1><p class="pg-sub">Group quiz sets, reopen them, print them, and organize for later study.</p></div>
+  <div class="pg-head"><div class="kicker">â Saved Quizzes</div><h1 class="pg-title">Save quizzes and reopen them later.</h1><p class="pg-sub">Group quiz sets, reopen them, print them, and organize for later study.</p></div>
   <div class="card cp">
     <div class="btn-row" style="margin-bottom:15px;">
       <button class="btn btn-secondary" onclick="openCreateQuizGroupModal()">New Group</button>
@@ -1408,7 +1408,7 @@
       <button class="btn btn-danger" onclick="clearSelectedSavedQuizSets()">Clear Selected</button>
     </div>
     <input id="savedQuizImportInput" class="hidden-file" type="file" accept=".json,application/json" />
-    <div class="field"><input id="savedQuizSearchInput" class="input" placeholder="Search saved quiz groups or quiz names…" /></div>
+    <div class="field"><input id="savedQuizSearchInput" class="input" placeholder="Search saved quiz groups or quiz namesâ¦" /></div>
     <div id="savedQuizGroups" class="lib-list"></div>
     <div id="savedQuizPanel" style="display:none;margin-top:18px;">
       <div class="card cp">
@@ -1427,13 +1427,13 @@
 <!-- LESSON BUILDER -->
 <div id="section-lesson-builder" class="section"><div class="pg-tool">
   <div class="tool-header">
-    <div><div class="kicker">📋 Lesson Plan</div><h1 class="pg-title">Create a lesson plan that feels ready to teach.</h1><p class="pg-sub">Add sources, choose the education level, and edit the full plan in one calm document-style workspace.</p></div>
-    <div class="ai-badge">✦ Teacher-ready</div>
+    <div><div class="kicker">ð Lesson Plan</div><h1 class="pg-title">Create a lesson plan that feels ready to teach.</h1><p class="pg-sub">Add sources, choose the education level, and edit the full plan in one calm document-style workspace.</p></div>
+    <div class="ai-badge">â¦ Teacher-ready</div>
   </div>
   <div class="tool-2">
     <div class="card cp">
       <div class="card-title">1. Add sources or topics</div>
-      <div style="display:flex;gap:7px;margin-bottom:11px;"><input id="lessonBuilderInput" class="input" placeholder="Enter a topic, phrase, or URL…" style="flex:1;" /><button class="btn btn-primary" onclick="addLessonBuilderItem()">Add</button></div>
+      <div style="display:flex;gap:7px;margin-bottom:11px;"><input id="lessonBuilderInput" class="input" placeholder="Enter a topic, phrase, or URLâ¦" style="flex:1;" /><button class="btn btn-primary" onclick="addLessonBuilderItem()">Add</button></div>
       <div class="chip-row">
         <button class="chip" onclick="addCurrentSummaryToLessonBuilder()">Use Summary</button>
         <button class="chip" onclick="addCurrentFlashcardsTopicToLessonBuilder()">Use Flashcards</button>
@@ -1441,11 +1441,11 @@
       </div>
       <div id="lessonBuilderItems" class="premium-chip-list"><div class="empty-box">No lesson plan items added yet.</div></div>
       <div class="card-title" style="margin-top:18px;">2. Education level</div>
-      <select id="lessonEducationLevel" class="select" style="margin-bottom:15px;"><option value="Grade 6–8">Grade 6–8</option><option value="Grade 9–12" selected>Grade 9–12</option><option value="College/University level">College / University</option></select>
-      <button class="btn btn-primary btn-full" onclick="generateLessonPlan()">✦ Generate Lesson Plan</button>
+      <select id="lessonEducationLevel" class="select" style="margin-bottom:15px;"><option value="Grade 6â8">Grade 6â8</option><option value="Grade 9â12" selected>Grade 9â12</option><option value="College/University level">College / University</option></select>
+      <button class="btn btn-primary btn-full" onclick="generateLessonPlan()">â¦ Generate Lesson Plan</button>
       <div class="btn-row" style="margin-top:9px;">
-        <button class="btn btn-secondary btn-sm" onclick="sendLessonPlanToFlashcards()">→ Flashcards</button>
-        <button class="btn btn-secondary btn-sm" onclick="sendLessonPlanToQuiz()">→ Quiz</button>
+        <button class="btn btn-secondary btn-sm" onclick="sendLessonPlanToFlashcards()">â Flashcards</button>
+        <button class="btn btn-secondary btn-sm" onclick="sendLessonPlanToQuiz()">â Quiz</button>
         <button class="btn btn-secondary btn-sm" onclick="copyLessonPlan()">Copy</button>
         <button class="btn btn-danger btn-sm" onclick="clearLessonBuilder()">Clear</button>
       </div>
@@ -1461,8 +1461,8 @@
       </div>
       <div class="result-body">
         <div class="lesson-doc-title">Generated lesson plan</div>
-        <div class="lesson-doc-meta">Objective • Materials • Warm-Up • Instruction • Guided Practice • Independent Practice • Assessment</div>
-        <textarea id="lessonPlanOutput" class="out-field xl lesson-ta" placeholder="Your generated lesson plan will appear here as an editable document…"></textarea>
+        <div class="lesson-doc-meta">Objective â¢ Materials â¢ Warm-Up â¢ Instruction â¢ Guided Practice â¢ Independent Practice â¢ Assessment</div>
+        <textarea id="lessonPlanOutput" class="out-field xl lesson-ta" placeholder="Your generated lesson plan will appear here as an editable documentâ¦"></textarea>
       </div>
     </div>
   </div>
@@ -1470,7 +1470,7 @@
 
 <!-- SAVED LESSONS -->
 <div id="section-saved-lessons" class="section"><div class="pg">
-  <div class="pg-head"><div class="kicker">📋 Saved Lesson Plans</div><h1 class="pg-title">Save and organize lesson plans for later use.</h1><p class="pg-sub">Group lesson plans, rename them, reopen them, copy them, and print whenever needed.</p></div>
+  <div class="pg-head"><div class="kicker">ð Saved Lesson Plans</div><h1 class="pg-title">Save and organize lesson plans for later use.</h1><p class="pg-sub">Group lesson plans, rename them, reopen them, copy them, and print whenever needed.</p></div>
   <div class="card cp">
     <div class="btn-row" style="margin-bottom:15px;">
       <button class="btn btn-secondary" onclick="openCreateLessonGroupModal()">New Group</button>
@@ -1480,7 +1480,7 @@
       <button class="btn btn-danger" onclick="clearSelectedSavedLessonSets()">Clear Selected</button>
     </div>
     <input id="savedLessonImportInput" class="hidden-file" type="file" accept=".json,application/json" />
-    <div class="field"><input id="savedLessonSearchInput" class="input" placeholder="Search saved lesson plan groups or lesson names…" /></div>
+    <div class="field"><input id="savedLessonSearchInput" class="input" placeholder="Search saved lesson plan groups or lesson namesâ¦" /></div>
     <div id="savedLessonGroups" class="lib-list"></div>
     <div id="savedLessonPanel" style="display:none;margin-top:18px;">
       <div class="card cp">
@@ -1499,7 +1499,7 @@
 
 <!-- STUDY MODE -->
 <div id="section-study-mode" class="section"><div class="pg">
-  <div class="pg-head"><div class="kicker">📖 Study Mode</div><h1 class="pg-title">Know what to study next.</h1><p class="pg-sub">Review due flashcards, missed quiz questions, and recent weak spots without digging through every saved item.</p></div>
+  <div class="pg-head"><div class="kicker">ð Study Mode</div><h1 class="pg-title">Know what to study next.</h1><p class="pg-sub">Review due flashcards, missed quiz questions, and recent weak spots without digging through every saved item.</p></div>
   <div class="stat-grid" id="studyStatsGrid"></div>
   <div class="split-grid">
     <div class="tool-block"><h3>Daily Review</h3><p>Flashfo uses your card ratings and missed questions to surface what needs attention.</p><div class="btn-row"><button class="btn btn-primary" onclick="startDueFlashcardReview()">Review Due Flashcards</button><button class="btn btn-secondary" onclick="showSection('missed-review')">Review Missed Questions</button><button class="btn btn-secondary btn-sm" onclick="renderStudyMode()">Refresh</button></div><div id="dueFlashcardList"></div></div>
@@ -1509,26 +1509,26 @@
 
 <!-- STUDY GUIDE -->
 <div id="section-study-guide" class="section"><div class="pg">
-  <div class="pg-head"><div class="kicker">📝 Study Guide</div><h1 class="pg-title">Turn anything into a student review sheet.</h1><p class="pg-sub">Create key terms, major concepts, memory tips, likely test questions, and a short review checklist.</p></div>
+  <div class="pg-head"><div class="kicker">ð Study Guide</div><h1 class="pg-title">Turn anything into a student review sheet.</h1><p class="pg-sub">Create key terms, major concepts, memory tips, likely test questions, and a short review checklist.</p></div>
   <div class="split-grid">
     <div>
-      <div class="field"><label for="studyGuideInput">Study guide source</label><textarea id="studyGuideInput" class="input textarea" placeholder="Paste notes, a summary, flashcards, quiz questions, or a lesson plan…"></textarea></div>
+      <div class="field"><label for="studyGuideInput">Study guide source</label><textarea id="studyGuideInput" class="input textarea" placeholder="Paste notes, a summary, flashcards, quiz questions, or a lesson planâ¦"></textarea></div>
       <div class="btn-row">
         <button class="btn btn-primary" onclick="generateStudyGuide()">Generate Study Guide</button>
         <button class="btn btn-secondary" onclick="seedStudyGuideFromCurrentWork()">Use Current Work</button>
-        <button class="btn btn-secondary btn-sm" onclick="sendStudyGuideToFlashcards()">→ Flashcards</button>
-        <button class="btn btn-secondary btn-sm" onclick="sendStudyGuideToQuiz()">→ Quiz</button>
+        <button class="btn btn-secondary btn-sm" onclick="sendStudyGuideToFlashcards()">â Flashcards</button>
+        <button class="btn btn-secondary btn-sm" onclick="sendStudyGuideToQuiz()">â Quiz</button>
         <button class="btn btn-danger btn-sm" onclick="clearStudyGuide()">Clear</button>
       </div>
       <div id="studyGuideStatus" class="status"></div>
     </div>
-    <div><div class="field"><label for="studyGuideOutput">Study guide</label><textarea id="studyGuideOutput" class="input textarea" placeholder="Your generated study guide will appear here…"></textarea></div></div>
+    <div><div class="field"><label for="studyGuideOutput">Study guide</label><textarea id="studyGuideOutput" class="input textarea" placeholder="Your generated study guide will appear hereâ¦"></textarea></div></div>
   </div>
 </div></div>
 
 <!-- MISSED REVIEW -->
 <div id="section-missed-review" class="section"><div class="pg">
-  <div class="pg-head"><div class="kicker">❓ Missed Questions</div><h1 class="pg-title">Turn mistakes into a review session.</h1><p class="pg-sub">Missed quiz questions are saved here automatically so you can retry only what you got wrong.</p></div>
+  <div class="pg-head"><div class="kicker">â Missed Questions</div><h1 class="pg-title">Turn mistakes into a review session.</h1><p class="pg-sub">Missed quiz questions are saved here automatically so you can retry only what you got wrong.</p></div>
   <div class="card cp">
     <div class="btn-row" style="margin-bottom:15px;">
       <button class="btn btn-primary" onclick="openWeakAreasAsQuiz()">Retry All Missed</button>
@@ -1541,7 +1541,7 @@
 
 <!-- FOLDERS -->
 <div id="section-folders" class="section"><div class="pg">
-  <div class="pg-head"><div class="kicker">📁 Folders</div><h1 class="pg-title">Keep related study materials together.</h1><p class="pg-sub">Group saved flashcard decks, quizzes, and lesson plans into one folder so everything for a topic stays organized.</p></div>
+  <div class="pg-head"><div class="kicker">ð Folders</div><h1 class="pg-title">Keep related study materials together.</h1><p class="pg-sub">Group saved flashcard decks, quizzes, and lesson plans into one folder so everything for a topic stays organized.</p></div>
   <div class="split-grid">
     <div>
       <div class="field"><label for="folderNameInput">Folder name</label><input id="folderNameInput" class="input" placeholder="Example: Iran War Unit or Biology Midterm Review" /></div>
@@ -1555,10 +1555,10 @@
 
 <!-- HISTORY -->
 <div id="section-history" class="section"><div class="pg">
-  <div class="pg-head"><div class="kicker">🕒 History</div><h1 class="pg-title">Review, reuse, and organize your previous outputs.</h1><p class="pg-sub">Search by topic, type, or date. Reopen, reuse, pin, rename, and manage past work.</p></div>
+  <div class="pg-head"><div class="kicker">ð History</div><h1 class="pg-title">Review, reuse, and organize your previous outputs.</h1><p class="pg-sub">Search by topic, type, or date. Reopen, reuse, pin, rename, and manage past work.</p></div>
   <div class="card cp">
     <div class="history-toolbar">
-      <div class="history-search-row"><input id="historySearchInput" class="input" placeholder="Search history by keyword or date…" /><button class="btn btn-danger" onclick="clearHistory()">Clear All History</button></div>
+      <div class="history-search-row"><input id="historySearchInput" class="input" placeholder="Search history by keyword or dateâ¦" /><button class="btn btn-danger" onclick="clearHistory()">Clear All History</button></div>
       <div class="history-controls">
         <div class="filter-bar">
           <button class="filter-btn active" data-history-filter="all" onclick="setHistoryFilter('all')">All</button>
@@ -1585,11 +1585,11 @@
 
 <!-- Mobile nav -->
 <nav class="mobile-nav">
-  <button onclick="showSection('dashboard')">🏠<br>Home</button>
-  <button onclick="showSection('search')">🔍<br>Search</button>
-  <button class="mobile-plus" onclick="showSection('summarize')">✦</button>
-  <button onclick="showSection('my-stuff-dashboard')">📁<br>My Stuff</button>
-  <button onclick="showSection('study-mode')">📖<br>Study</button>
+  <button onclick="showSection('dashboard')">ð <br>Home</button>
+  <button onclick="showSection('search')">ð<br>Search</button>
+  <button class="mobile-plus" onclick="showSection('summarize')">â¦</button>
+  <button onclick="showSection('my-stuff-dashboard')">ð<br>My Stuff</button>
+  <button onclick="showSection('study-mode')">ð<br>Study</button>
 </nav>
 
 </div><!-- /shell -->
@@ -1600,25 +1600,25 @@
     <h3 id="modalTitle" class="modal-title">Modal</h3>
     <p id="modalSubtext" class="modal-sub"></p>
     <div id="saveFlashcardModalFields" class="modal-row" style="display:none;">
-      <div class="field"><label for="flashcardSetNameInput">Set Name</label><input id="flashcardSetNameInput" class="input" placeholder="Enter a name for this flashcard set…" /></div>
+      <div class="field"><label for="flashcardSetNameInput">Set Name</label><input id="flashcardSetNameInput" class="input" placeholder="Enter a name for this flashcard setâ¦" /></div>
       <div class="field"><label for="flashcardGroupSelect">Choose Group</label><select id="flashcardGroupSelect" class="select"></select></div>
-      <div class="field"><label for="newFlashcardGroupNameInput">Or Create New Group</label><input id="newFlashcardGroupNameInput" class="input" placeholder="Optional new group name…" /></div>
+      <div class="field"><label for="newFlashcardGroupNameInput">Or Create New Group</label><input id="newFlashcardGroupNameInput" class="input" placeholder="Optional new group nameâ¦" /></div>
     </div>
     <div id="saveQuizModalFields" class="modal-row" style="display:none;">
-      <div class="field"><label for="quizSetNameInput">Quiz Name</label><input id="quizSetNameInput" class="input" placeholder="Enter a name for this quiz…" /></div>
+      <div class="field"><label for="quizSetNameInput">Quiz Name</label><input id="quizSetNameInput" class="input" placeholder="Enter a name for this quizâ¦" /></div>
       <div class="field"><label for="quizGroupSelect">Choose Group</label><select id="quizGroupSelect" class="select"></select></div>
-      <div class="field"><label for="newQuizGroupNameInput">Or Create New Group</label><input id="newQuizGroupNameInput" class="input" placeholder="Optional new group name…" /></div>
+      <div class="field"><label for="newQuizGroupNameInput">Or Create New Group</label><input id="newQuizGroupNameInput" class="input" placeholder="Optional new group nameâ¦" /></div>
     </div>
     <div id="saveLessonModalFields" class="modal-row" style="display:none;">
-      <div class="field"><label for="lessonSetNameInput">Lesson Plan Name</label><input id="lessonSetNameInput" class="input" placeholder="Enter a name for this lesson plan…" /></div>
+      <div class="field"><label for="lessonSetNameInput">Lesson Plan Name</label><input id="lessonSetNameInput" class="input" placeholder="Enter a name for this lesson planâ¦" /></div>
       <div class="field"><label for="lessonGroupSelect">Choose Group</label><select id="lessonGroupSelect" class="select"></select></div>
-      <div class="field"><label for="newLessonGroupNameInput">Or Create New Group</label><input id="newLessonGroupNameInput" class="input" placeholder="Optional new group name…" /></div>
+      <div class="field"><label for="newLessonGroupNameInput">Or Create New Group</label><input id="newLessonGroupNameInput" class="input" placeholder="Optional new group nameâ¦" /></div>
     </div>
     <div id="groupModalFields" class="modal-row" style="display:none;">
-      <div class="field"><label for="groupNameInput">Group Name</label><input id="groupNameInput" class="input" placeholder="Enter group name…" /></div>
+      <div class="field"><label for="groupNameInput">Group Name</label><input id="groupNameInput" class="input" placeholder="Enter group nameâ¦" /></div>
     </div>
     <div id="renameHistoryModalFields" class="modal-row" style="display:none;">
-      <div class="field"><label for="historyRenameInput">History Title</label><input id="historyRenameInput" class="input" placeholder="Rename this history item…" /></div>
+      <div class="field"><label for="historyRenameInput">History Title</label><input id="historyRenameInput" class="input" placeholder="Rename this history itemâ¦" /></div>
     </div>
     <div class="btn-row">
       <button id="modalPrimaryBtn" class="btn btn-primary">Save</button>
@@ -1966,14 +1966,14 @@
         const isCollapsed = document.body.classList.contains('sidebar-collapsed');
         localStorage.setItem('flashfo-sidebar-collapsed', isCollapsed ? 'true' : 'false');
         const btn = document.querySelector('.sidebar-collapse-toggle');
-        if (btn) btn.textContent = isCollapsed ? '›' : '‹';
+        if (btn) btn.textContent = isCollapsed ? 'âº' : 'â¹';
       }
 
       function loadSidebarState() {
         const collapsed = localStorage.getItem('flashfo-sidebar-collapsed') === 'true';
         document.body.classList.toggle('sidebar-collapsed', collapsed);
         const btn = document.querySelector('.sidebar-collapse-toggle');
-        if (btn) btn.textContent = collapsed ? '›' : '‹';
+        if (btn) btn.textContent = collapsed ? 'âº' : 'â¹';
       }
 
       function openLearningFeature(featureId) {
@@ -2190,7 +2190,7 @@
       function getHistoryPreview(item, expanded) {
         let raw = '';
         if (item.kind === 'summary' || item.kind === 'essay-outline') raw = item.payload.summary || '';
-        else if (item.kind === 'flashcards') raw = (item.payload.cards || []).map(c => `${c.front} — ${c.back}`).join(' | ');
+        else if (item.kind === 'flashcards') raw = (item.payload.cards || []).map(c => `${c.front} â ${c.back}`).join(' | ');
         else if (item.kind === 'quiz') raw = (item.payload.questions || []).map(q => q.question).join(' | ');
         else if (item.kind === 'lesson-plan') raw = item.payload.lessonPlan || '';
         return expanded ? raw : shortenText(raw, 260);
@@ -3531,7 +3531,7 @@
               setStatus('Summary complete.', 'success');
               setBusy(false);
               const title = getDisplayTitleFromSource(url, 'Web Summary');
-              addHistoryItem(createHistoryItem('summary', title, 'url · ' + format, { summary: output || '', format, sourceText: url }));
+              addHistoryItem(createHistoryItem('summary', title, 'url Â· ' + format, { summary: output || '', format, sourceText: url }));
             })
             .withFailureHandler(function(err) {
               setBusy(false);
@@ -3553,7 +3553,7 @@
             setStatus('Topic summary complete.', 'success');
             setBusy(false);
             const title = getDisplayTitleFromSource(topic, 'Topic Summary');
-            addHistoryItem(createHistoryItem('summary', title, 'topic · ' + format, { summary: output || '', format, sourceText: topic }));
+            addHistoryItem(createHistoryItem('summary', title, 'topic Â· ' + format, { summary: output || '', format, sourceText: topic }));
           })
           .withFailureHandler(function(err) {
             setBusy(false);
@@ -3589,7 +3589,7 @@
               setBusy(false);
               setStatus('Summary complete.', 'success');
               const title = getDisplayTitleFromSource(file.name, 'Imported Summary');
-              addHistoryItem(createHistoryItem('summary', title, 'import · ' + format, { summary: output || '', format, sourceText: file.name }));
+              addHistoryItem(createHistoryItem('summary', title, 'import Â· ' + format, { summary: output || '', format, sourceText: file.name }));
             })
             .withFailureHandler(function(err) {
               setBusy(false);
@@ -3699,7 +3699,7 @@
         renderFlashcardsViewer();
         setFlashcardsStatus('Flashcards ready.', 'success');
         const title = getDisplayTitleFromSource(sourceLabel, 'Flashcards');
-        addHistoryItem(createHistoryItem('flashcards', title, count + ' cards · ' + mode, { sourceText: sourceLabel, cards: latestFlashcards }));
+        addHistoryItem(createHistoryItem('flashcards', title, count + ' cards Â· ' + mode, { sourceText: sourceLabel, cards: latestFlashcards }));
       }
 
       function handleFlashcardsImportedFile(file) {
@@ -3725,7 +3725,7 @@
               renderFlashcardsViewer();
               setFlashcardsStatus('Flashcards ready.', 'success');
               const title = getDisplayTitleFromSource(file.name, 'Imported Flashcards');
-              addHistoryItem(createHistoryItem('flashcards', title, count + ' cards · import', { sourceText: file.name, cards: latestFlashcards }));
+              addHistoryItem(createHistoryItem('flashcards', title, count + ' cards Â· import', { sourceText: file.name, cards: latestFlashcards }));
             })
             .withFailureHandler(function(err) {
               document.getElementById('flashcardsViewer').innerHTML = '<div class="empty-box">Could not generate flashcards.</div>';
@@ -3766,26 +3766,26 @@
         viewer.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
             <span style="font-size:12px;color:var(--text-muted);">${tr('Card')} ${currentCardIndex + 1} ${tr('of')} ${total}</span>
-            <span style="font-size:11px;color:var(--text-muted);">${gotItCount > 0 || stillCount > 0 ? `✓ ${gotItCount} got it &nbsp;·&nbsp; ↺ ${stillCount} still learning` : ''}</span>
+            <span style="font-size:11px;color:var(--text-muted);">${gotItCount > 0 || stillCount > 0 ? `â ${gotItCount} got it &nbsp;Â·&nbsp; âº ${stillCount} still learning` : ''}</span>
           </div>
           <div class="study-card ff-flip-card ${showingAnswer ? 'answer' : ''}"
                onclick="toggleFlashcardAnswer()"
                style="cursor:pointer;position:relative;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 48px;text-align:center;user-select:none;">
-            <div style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:20px;color:${showingAnswer ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.2)'};pointer-events:none;">‹</div>
-            <div style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:20px;color:${showingAnswer ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.2)'};pointer-events:none;">›</div>
+            <div style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:20px;color:${showingAnswer ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.2)'};pointer-events:none;">â¹</div>
+            <div style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:20px;color:${showingAnswer ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.2)'};pointer-events:none;">âº</div>
             <div style="font-size:11px;letter-spacing:0.06em;text-transform:uppercase;opacity:0.45;margin-bottom:12px;">${showingAnswer ? tr('Answer') : tr('Question')}</div>
             <div style="font-size:18px;font-weight:700;line-height:1.5;">${escapeHtml(cardText || '')}</div>
             ${!showingAnswer ? `<div style="font-size:11px;opacity:0.3;margin-top:16px;">tap to reveal answer</div>` : ''}
           </div>
           ${showingAnswer ? `
           <div style="display:flex;justify-content:center;gap:12px;margin-top:18px;">
-            <button onclick="flashGotIt()" style="flex:1;max-width:180px;background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:12px;padding:11px;font-size:13px;font-weight:600;color:#16a34a;cursor:pointer;">Got it ✓</button>
-            <button onclick="flashStillLearning()" style="flex:1;max-width:180px;background:#fff7ed;border:0.5px solid #fed7aa;border-radius:12px;padding:11px;font-size:13px;font-weight:600;color:#ea580c;cursor:pointer;">Still learning ↺</button>
+            <button onclick="flashGotIt()" style="flex:1;max-width:180px;background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:12px;padding:11px;font-size:13px;font-weight:600;color:#16a34a;cursor:pointer;">Got it â</button>
+            <button onclick="flashStillLearning()" style="flex:1;max-width:180px;background:#fff7ed;border:0.5px solid #fed7aa;border-radius:12px;padding:11px;font-size:13px;font-weight:600;color:#ea580c;cursor:pointer;">Still learning âº</button>
           </div>` : `
           <div style="display:flex;justify-content:center;align-items:center;gap:24px;margin-top:18px;">
-            <span onclick="prevFlashcard()" style="font-size:13px;color:var(--text-muted);cursor:pointer;${currentCardIndex === 0 ? 'opacity:0.3;pointer-events:none;' : ''}">← ${tr('Go Back')}</span>
+            <span onclick="prevFlashcard()" style="font-size:13px;color:var(--text-muted);cursor:pointer;${currentCardIndex === 0 ? 'opacity:0.3;pointer-events:none;' : ''}">â ${tr('Go Back')}</span>
             <button class="btn btn-primary" onclick="toggleFlashcardAnswer()" style="padding:9px 28px;">${tr('View Answer')}</button>
-            <span onclick="nextFlashcard()" style="font-size:13px;color:var(--text-muted);cursor:pointer;">${tr('Go To Next')} →</span>
+            <span onclick="nextFlashcard()" style="font-size:13px;color:var(--text-muted);cursor:pointer;">${tr('Go To Next')} â</span>
           </div>`}
         `;
 
@@ -4609,7 +4609,7 @@
         root.innerHTML = items.map(item => `
           <label class="folder-item-row simple-check">
             <input type="checkbox" class="folder-pick-checkbox" value="${escapeHtml(item.id)}" />
-            <span><strong>${escapeHtml(item.title)}</strong><br><span class="muted-note">${escapeHtml(item.groupName)} • ${escapeHtml(item.type.replace('-', ' '))} • ${escapeHtml(item.count)}</span></span>
+            <span><strong>${escapeHtml(item.title)}</strong><br><span class="muted-note">${escapeHtml(item.groupName)} â¢ ${escapeHtml(item.type.replace('-', ' '))} â¢ ${escapeHtml(item.count)}</span></span>
           </label>
         `).join('');
       }
@@ -4663,7 +4663,7 @@
               ${(folder.items || []).map(item => `
                 <div class="folder-item-row">
                   <div class="study-meta"><div class="history-title">${escapeHtml(item.title)}</div><div class="pill">${escapeHtml(item.type.replace('-', ' '))}</div></div>
-                  <div class="muted-note">${escapeHtml(item.groupName || '')} • ${escapeHtml(item.count || '')}</div>
+                  <div class="muted-note">${escapeHtml(item.groupName || '')} â¢ ${escapeHtml(item.count || '')}</div>
                   <div class="btn-row" style="margin-top:10px;">
                     <button class="btn btn-secondary" onclick="openFolderItem('${escapeHtml(item.type)}','${escapeHtml(item.groupId)}','${escapeHtml(item.setId)}')">Open</button>
                     <button class="btn btn-danger" onclick="removeFolderItem('${folder.id}','${escapeHtml(item.id)}')">Remove</button>
@@ -4732,21 +4732,21 @@
       }
 
       const QUICK_TRANSLATIONS = {
-        Spanish: {'Dashboard':'Panel','Summarize':'Resumir','Flashcards':'Tarjetas','Quiz':'Cuestionario','Lesson Plan Builder':'Creador de lecciones','Saved Flashcard Decks':'Tarjetas guardadas','Saved Quizzes':'Cuestionarios guardados','Saved Lesson Plans':'Planes guardados','Folders':'Carpetas','History':'Historial','Workspace':'Espacio de trabajo','Library':'Biblioteca','Light':'Claro','Dark':'Oscuro','Blue':'Azul','Generate Flashcards':'Generar tarjetas','Save to Deck':'Guardar en mazo','Edit Cards':'Editar tarjetas','Add Custom Card':'Agregar tarjeta','Generate Quiz':'Generar cuestionario','Save Quiz':'Guardar cuestionario','Generate Lesson Plan':'Generar plan','View & Edit':'Ver y editar','Read Summary':'Leer resumen','Read Card':'Leer tarjeta','Read Question':'Leer pregunta','Stop':'Detener','Clear':'Limpiar','Import':'Importar','Copy':'Copiar','Use Current Summary':'Usar resumen actual','Study Mode':'Modo de estudio','Study Guide':'Guía de estudio','Study Mode':'Modo repaso rápido','Explain Simply':'Explicar simple'},
-        French: {'Dashboard':'Tableau de bord','Summarize':'Résumer','Flashcards':'Cartes mémoire','Quiz':'Quiz','Lesson Plan Builder':'Créateur de leçons','Saved Flashcard Decks':'Cartes enregistrées','Saved Quizzes':'Quiz enregistrés','Saved Lesson Plans':'Plans enregistrés','Folders':'Dossiers','History':'Historique','Workspace':'Espace de travail','Library':'Bibliothèque','Light':'Clair','Dark':'Sombre','Blue':'Bleu','Generate Flashcards':'Créer des cartes','Save to Deck':'Enregistrer','Edit Cards':'Modifier les cartes','Add Custom Card':'Ajouter une carte','Generate Quiz':'Créer un quiz','Save Quiz':'Enregistrer le quiz','Generate Lesson Plan':'Créer un plan','View & Edit':'Voir et modifier','Read Summary':'Lire le résumé','Read Card':'Lire la carte','Read Question':'Lire la question','Stop':'Arrêter','Clear':'Effacer','Import':'Importer','Copy':'Copier','Use Current Summary':'Utiliser le résumé','Study Mode':'Mode étude','Study Guide':'Guide d’étude','Study Mode':'Révision rapide','Explain Simply':'Expliquer simplement'},
-        German: {'Dashboard':'Übersicht','Summarize':'Zusammenfassen','Flashcards':'Karteikarten','Quiz':'Quiz','Lesson Plan Builder':'Unterrichtsplaner','Saved Flashcard Decks':'Gespeicherte Karten','Saved Quizzes':'Gespeicherte Quizze','Saved Lesson Plans':'Gespeicherte Pläne','Folders':'Ordner','History':'Verlauf','Workspace':'Arbeitsbereich','Library':'Bibliothek','Light':'Hell','Dark':'Dunkel','Blue':'Blau','Generate Flashcards':'Karten erstellen','Save to Deck':'Im Stapel speichern','Edit Cards':'Karten bearbeiten','Add Custom Card':'Karte hinzufügen','Generate Quiz':'Quiz erstellen','Save Quiz':'Quiz speichern','Generate Lesson Plan':'Plan erstellen','View & Edit':'Ansehen & bearbeiten','Read Summary':'Zusammenfassung lesen','Read Card':'Karte lesen','Read Question':'Frage lesen','Stop':'Stopp','Clear':'Löschen','Import':'Importieren','Copy':'Kopieren','Use Current Summary':'Aktuelle Zusammenfassung nutzen','Study Mode':'Lernmodus','Study Guide':'Lernhilfe','Study Mode':'Paukmodus','Explain Simply':'Einfach erklären'},
-        Italian: {'Dashboard':'Dashboard','Summarize':'Riassumi','Flashcards':'Flashcard','Quiz':'Quiz','Lesson Plan Builder':'Pianificatore lezioni','Saved Flashcard Decks':'Mazzi salvati','Saved Quizzes':'Quiz salvati','Saved Lesson Plans':'Lezioni salvate','Folders':'Cartelle','History':'Cronologia','Workspace':'Area di lavoro','Library':'Libreria','Light':'Chiaro','Dark':'Scuro','Blue':'Blu','Generate Flashcards':'Genera flashcard','Save to Deck':'Salva nel mazzo','Edit Cards':'Modifica carte','Add Custom Card':'Aggiungi carta','Generate Quiz':'Genera quiz','Save Quiz':'Salva quiz','Generate Lesson Plan':'Genera lezione','View & Edit':'Visualizza e modifica','Read Summary':'Leggi riassunto','Read Card':'Leggi carta','Read Question':'Leggi domanda','Stop':'Ferma','Clear':'Cancella','Import':'Importa','Copy':'Copia','Use Current Summary':'Usa riassunto attuale','Study Mode':'Modalità studio','Study Guide':'Guida di studio','Study Mode':'Ripasso rapido','Explain Simply':'Spiega semplice'},
-        Portuguese: {'Dashboard':'Painel','Summarize':'Resumir','Flashcards':'Cartões','Quiz':'Quiz','Lesson Plan Builder':'Criador de aulas','Saved Flashcard Decks':'Cartões salvos','Saved Quizzes':'Quizzes salvos','Saved Lesson Plans':'Planos salvos','Folders':'Pastas','History':'Histórico','Workspace':'Área de trabalho','Library':'Biblioteca','Light':'Claro','Dark':'Escuro','Blue':'Azul','Generate Flashcards':'Gerar cartões','Save to Deck':'Salvar no baralho','Edit Cards':'Editar cartões','Add Custom Card':'Adicionar cartão','Generate Quiz':'Gerar quiz','Save Quiz':'Salvar quiz','Generate Lesson Plan':'Gerar plano','View & Edit':'Ver e editar','Read Summary':'Ler resumo','Read Card':'Ler cartão','Read Question':'Ler pergunta','Stop':'Parar','Clear':'Limpar','Import':'Importar','Copy':'Copiar','Use Current Summary':'Usar resumo atual','Study Mode':'Modo de estudo','Study Guide':'Guia de estudo','Study Mode':'Revisão rápida','Explain Simply':'Explicar simples'},
-        'Chinese (Simplified)': {'Dashboard':'仪表板','Summarize':'总结','Flashcards':'抽认卡','Quiz':'测验','Lesson Plan Builder':'课程计划生成器','Saved Flashcard Decks':'已保存抽认卡','Saved Quizzes':'已保存测验','Saved Lesson Plans':'已保存课程计划','Folders':'文件夹','History':'历史','Workspace':'工作区','Library':'资料库','Light':'浅色','Dark':'深色','Blue':'蓝色','Generate Flashcards':'生成抽认卡','Save to Deck':'保存到卡组','Edit Cards':'编辑卡片','Add Custom Card':'添加卡片','Generate Quiz':'生成测验','Save Quiz':'保存测验','Generate Lesson Plan':'生成课程计划','View & Edit':'查看并编辑','Read Summary':'朗读总结','Read Card':'朗读卡片','Read Question':'朗读问题','Stop':'停止','Clear':'清除','Import':'导入','Copy':'复制','Use Current Summary':'使用当前总结','Study Mode':'学习模式','Study Guide':'学习指南','Study Mode':'冲刺复习','Explain Simply':'简单解释'},
-        Japanese: {'Dashboard':'ダッシュボード','Summarize':'要約','Flashcards':'フラッシュカード','Quiz':'クイズ','Lesson Plan Builder':'授業計画作成','Saved Flashcard Decks':'保存済みカード','Saved Quizzes':'保存済みクイズ','Saved Lesson Plans':'保存済み授業計画','Folders':'フォルダー','History':'履歴','Workspace':'ワークスペース','Library':'ライブラリ','Light':'ライト','Dark':'ダーク','Blue':'ブルー','Generate Flashcards':'カードを生成','Save to Deck':'デッキに保存','Edit Cards':'カード編集','Add Custom Card':'カード追加','Generate Quiz':'クイズ生成','Save Quiz':'クイズ保存','Generate Lesson Plan':'授業計画生成','View & Edit':'表示と編集','Read Summary':'要約を読む','Read Card':'カードを読む','Read Question':'質問を読む','Stop':'停止','Clear':'クリア','Import':'インポート','Copy':'コピー','Use Current Summary':'現在の要約を使用','Study Mode':'学習モード','Study Guide':'学習ガイド','Study Mode':'集中復習','Explain Simply':'簡単に説明'},
-        Korean: {'Dashboard':'대시보드','Summarize':'요약','Flashcards':'플래시카드','Quiz':'퀴즈','Lesson Plan Builder':'수업 계획 생성기','Saved Flashcard Decks':'저장된 카드','Saved Quizzes':'저장된 퀴즈','Saved Lesson Plans':'저장된 수업 계획','Folders':'폴더','History':'기록','Workspace':'작업 공간','Library':'라이브러리','Light':'라이트','Dark':'다크','Blue':'블루','Generate Flashcards':'카드 생성','Save to Deck':'덱에 저장','Edit Cards':'카드 편집','Add Custom Card':'카드 추가','Generate Quiz':'퀴즈 생성','Save Quiz':'퀴즈 저장','Generate Lesson Plan':'수업 계획 생성','View & Edit':'보기 및 편집','Read Summary':'요약 읽기','Read Card':'카드 읽기','Read Question':'질문 읽기','Stop':'중지','Clear':'지우기','Import':'가져오기','Copy':'복사','Use Current Summary':'현재 요약 사용','Study Mode':'학습 모드','Study Guide':'학습 가이드','Study Mode':'벼락치기 모드','Explain Simply':'쉽게 설명'},
-        Arabic: {'Dashboard':'لوحة التحكم','Summarize':'تلخيص','Flashcards':'بطاقات تعليمية','Quiz':'اختبار','Lesson Plan Builder':'منشئ خطة الدرس','Saved Flashcard Decks':'بطاقات محفوظة','Saved Quizzes':'اختبارات محفوظة','Saved Lesson Plans':'خطط محفوظة','Folders':'مجلدات','History':'السجل','Workspace':'مساحة العمل','Library':'المكتبة','Light':'فاتح','Dark':'داكن','Blue':'أزرق','Generate Flashcards':'إنشاء بطاقات','Save to Deck':'حفظ في المجموعة','Edit Cards':'تعديل البطاقات','Add Custom Card':'إضافة بطاقة','Generate Quiz':'إنشاء اختبار','Save Quiz':'حفظ الاختبار','Generate Lesson Plan':'إنشاء خطة','View & Edit':'عرض وتعديل','Read Summary':'قراءة الملخص','Read Card':'قراءة البطاقة','Read Question':'قراءة السؤال','Stop':'إيقاف','Clear':'مسح','Import':'استيراد','Copy':'نسخ','Use Current Summary':'استخدام الملخص الحالي','Study Mode':'وضع الدراسة','Study Guide':'دليل الدراسة','Study Mode':'مراجعة سريعة','Explain Simply':'اشرح ببساطة'},
-        Hindi: {'Dashboard':'डैशबोर्ड','Summarize':'सारांश','Flashcards':'फ्लैशकार्ड','Quiz':'क्विज़','Lesson Plan Builder':'पाठ योजना निर्माता','Saved Flashcard Decks':'सहेजे गए कार्ड','Saved Quizzes':'सहेजे गए क्विज़','Saved Lesson Plans':'सहेजी गई योजनाएँ','Folders':'फ़ोल्डर','History':'इतिहास','Workspace':'कार्यस्थल','Library':'लाइब्रेरी','Light':'लाइट','Dark':'डार्क','Blue':'नीला','Generate Flashcards':'फ्लैशकार्ड बनाएं','Save to Deck':'डेक में सहेजें','Edit Cards':'कार्ड संपादित करें','Add Custom Card':'कार्ड जोड़ें','Generate Quiz':'क्विज़ बनाएं','Save Quiz':'क्विज़ सहेजें','Generate Lesson Plan':'पाठ योजना बनाएं','View & Edit':'देखें और संपादित करें','Read Summary':'सारांश पढ़ें','Read Card':'कार्ड पढ़ें','Read Question':'प्रश्न पढ़ें','Stop':'रोकें','Clear':'साफ़ करें','Import':'आयात','Copy':'कॉपी','Use Current Summary':'वर्तमान सारांश उपयोग करें','Study Mode':'अध्ययन मोड','Study Guide':'अध्ययन गाइड','Study Mode':'त्वरित समीक्षा','Explain Simply':'सरल समझाएँ'},
-        Russian: {'Dashboard':'Панель','Summarize':'Резюме','Flashcards':'Карточки','Quiz':'Тест','Lesson Plan Builder':'План урока','Saved Flashcard Decks':'Сохраненные карточки','Saved Quizzes':'Сохраненные тесты','Saved Lesson Plans':'Сохраненные планы','Folders':'Папки','History':'История','Workspace':'Рабочая область','Library':'Библиотека','Light':'Светлая','Dark':'Темная','Blue':'Синяя','Generate Flashcards':'Создать карточки','Save to Deck':'Сохранить в набор','Edit Cards':'Редактировать','Add Custom Card':'Добавить карточку','Generate Quiz':'Создать тест','Save Quiz':'Сохранить тест','Generate Lesson Plan':'Создать план','View & Edit':'Просмотр и правка','Read Summary':'Читать резюме','Read Card':'Читать карточку','Read Question':'Читать вопрос','Stop':'Стоп','Clear':'Очистить','Import':'Импорт','Copy':'Копировать','Use Current Summary':'Использовать резюме','Study Mode':'Режим учебы','Study Guide':'Учебное пособие','Study Mode':'Быстрая подготовка','Explain Simply':'Объяснить проще'},
-        Vietnamese: {'Dashboard':'Bảng điều khiển','Summarize':'Tóm tắt','Flashcards':'Thẻ học','Quiz':'Bài kiểm tra','Lesson Plan Builder':'Tạo giáo án','Saved Flashcard Decks':'Bộ thẻ đã lưu','Saved Quizzes':'Quiz đã lưu','Saved Lesson Plans':'Giáo án đã lưu','Folders':'Thư mục','History':'Lịch sử','Workspace':'Không gian làm việc','Library':'Thư viện','Light':'Sáng','Dark':'Tối','Blue':'Xanh','Generate Flashcards':'Tạo thẻ học','Save to Deck':'Lưu vào bộ','Edit Cards':'Sửa thẻ','Add Custom Card':'Thêm thẻ','Generate Quiz':'Tạo quiz','Save Quiz':'Lưu quiz','Generate Lesson Plan':'Tạo giáo án','View & Edit':'Xem và sửa','Read Summary':'Đọc tóm tắt','Read Card':'Đọc thẻ','Read Question':'Đọc câu hỏi','Stop':'Dừng','Clear':'Xóa','Import':'Nhập','Copy':'Sao chép','Use Current Summary':'Dùng tóm tắt hiện tại','Study Mode':'Chế độ học','Study Guide':'Hướng dẫn học','Study Mode':'Ôn nhanh','Explain Simply':'Giải thích đơn giản'},
+        Spanish: {'Dashboard':'Panel','Summarize':'Resumir','Flashcards':'Tarjetas','Quiz':'Cuestionario','Lesson Plan Builder':'Creador de lecciones','Saved Flashcard Decks':'Tarjetas guardadas','Saved Quizzes':'Cuestionarios guardados','Saved Lesson Plans':'Planes guardados','Folders':'Carpetas','History':'Historial','Workspace':'Espacio de trabajo','Library':'Biblioteca','Light':'Claro','Dark':'Oscuro','Blue':'Azul','Generate Flashcards':'Generar tarjetas','Save to Deck':'Guardar en mazo','Edit Cards':'Editar tarjetas','Add Custom Card':'Agregar tarjeta','Generate Quiz':'Generar cuestionario','Save Quiz':'Guardar cuestionario','Generate Lesson Plan':'Generar plan','View & Edit':'Ver y editar','Read Summary':'Leer resumen','Read Card':'Leer tarjeta','Read Question':'Leer pregunta','Stop':'Detener','Clear':'Limpiar','Import':'Importar','Copy':'Copiar','Use Current Summary':'Usar resumen actual','Study Mode':'Modo de estudio','Study Guide':'GuÃ­a de estudio','Study Mode':'Modo repaso rÃ¡pido','Explain Simply':'Explicar simple'},
+        French: {'Dashboard':'Tableau de bord','Summarize':'RÃ©sumer','Flashcards':'Cartes mÃ©moire','Quiz':'Quiz','Lesson Plan Builder':'CrÃ©ateur de leÃ§ons','Saved Flashcard Decks':'Cartes enregistrÃ©es','Saved Quizzes':'Quiz enregistrÃ©s','Saved Lesson Plans':'Plans enregistrÃ©s','Folders':'Dossiers','History':'Historique','Workspace':'Espace de travail','Library':'BibliothÃ¨que','Light':'Clair','Dark':'Sombre','Blue':'Bleu','Generate Flashcards':'CrÃ©er des cartes','Save to Deck':'Enregistrer','Edit Cards':'Modifier les cartes','Add Custom Card':'Ajouter une carte','Generate Quiz':'CrÃ©er un quiz','Save Quiz':'Enregistrer le quiz','Generate Lesson Plan':'CrÃ©er un plan','View & Edit':'Voir et modifier','Read Summary':'Lire le rÃ©sumÃ©','Read Card':'Lire la carte','Read Question':'Lire la question','Stop':'ArrÃªter','Clear':'Effacer','Import':'Importer','Copy':'Copier','Use Current Summary':'Utiliser le rÃ©sumÃ©','Study Mode':'Mode Ã©tude','Study Guide':'Guide dâÃ©tude','Study Mode':'RÃ©vision rapide','Explain Simply':'Expliquer simplement'},
+        German: {'Dashboard':'Ãbersicht','Summarize':'Zusammenfassen','Flashcards':'Karteikarten','Quiz':'Quiz','Lesson Plan Builder':'Unterrichtsplaner','Saved Flashcard Decks':'Gespeicherte Karten','Saved Quizzes':'Gespeicherte Quizze','Saved Lesson Plans':'Gespeicherte PlÃ¤ne','Folders':'Ordner','History':'Verlauf','Workspace':'Arbeitsbereich','Library':'Bibliothek','Light':'Hell','Dark':'Dunkel','Blue':'Blau','Generate Flashcards':'Karten erstellen','Save to Deck':'Im Stapel speichern','Edit Cards':'Karten bearbeiten','Add Custom Card':'Karte hinzufÃ¼gen','Generate Quiz':'Quiz erstellen','Save Quiz':'Quiz speichern','Generate Lesson Plan':'Plan erstellen','View & Edit':'Ansehen & bearbeiten','Read Summary':'Zusammenfassung lesen','Read Card':'Karte lesen','Read Question':'Frage lesen','Stop':'Stopp','Clear':'LÃ¶schen','Import':'Importieren','Copy':'Kopieren','Use Current Summary':'Aktuelle Zusammenfassung nutzen','Study Mode':'Lernmodus','Study Guide':'Lernhilfe','Study Mode':'Paukmodus','Explain Simply':'Einfach erklÃ¤ren'},
+        Italian: {'Dashboard':'Dashboard','Summarize':'Riassumi','Flashcards':'Flashcard','Quiz':'Quiz','Lesson Plan Builder':'Pianificatore lezioni','Saved Flashcard Decks':'Mazzi salvati','Saved Quizzes':'Quiz salvati','Saved Lesson Plans':'Lezioni salvate','Folders':'Cartelle','History':'Cronologia','Workspace':'Area di lavoro','Library':'Libreria','Light':'Chiaro','Dark':'Scuro','Blue':'Blu','Generate Flashcards':'Genera flashcard','Save to Deck':'Salva nel mazzo','Edit Cards':'Modifica carte','Add Custom Card':'Aggiungi carta','Generate Quiz':'Genera quiz','Save Quiz':'Salva quiz','Generate Lesson Plan':'Genera lezione','View & Edit':'Visualizza e modifica','Read Summary':'Leggi riassunto','Read Card':'Leggi carta','Read Question':'Leggi domanda','Stop':'Ferma','Clear':'Cancella','Import':'Importa','Copy':'Copia','Use Current Summary':'Usa riassunto attuale','Study Mode':'ModalitÃ  studio','Study Guide':'Guida di studio','Study Mode':'Ripasso rapido','Explain Simply':'Spiega semplice'},
+        Portuguese: {'Dashboard':'Painel','Summarize':'Resumir','Flashcards':'CartÃµes','Quiz':'Quiz','Lesson Plan Builder':'Criador de aulas','Saved Flashcard Decks':'CartÃµes salvos','Saved Quizzes':'Quizzes salvos','Saved Lesson Plans':'Planos salvos','Folders':'Pastas','History':'HistÃ³rico','Workspace':'Ãrea de trabalho','Library':'Biblioteca','Light':'Claro','Dark':'Escuro','Blue':'Azul','Generate Flashcards':'Gerar cartÃµes','Save to Deck':'Salvar no baralho','Edit Cards':'Editar cartÃµes','Add Custom Card':'Adicionar cartÃ£o','Generate Quiz':'Gerar quiz','Save Quiz':'Salvar quiz','Generate Lesson Plan':'Gerar plano','View & Edit':'Ver e editar','Read Summary':'Ler resumo','Read Card':'Ler cartÃ£o','Read Question':'Ler pergunta','Stop':'Parar','Clear':'Limpar','Import':'Importar','Copy':'Copiar','Use Current Summary':'Usar resumo atual','Study Mode':'Modo de estudo','Study Guide':'Guia de estudo','Study Mode':'RevisÃ£o rÃ¡pida','Explain Simply':'Explicar simples'},
+        'Chinese (Simplified)': {'Dashboard':'ä»ªè¡¨æ¿','Summarize':'æ»ç»','Flashcards':'æ½è®¤å¡','Quiz':'æµéª','Lesson Plan Builder':'è¯¾ç¨è®¡åçæå¨','Saved Flashcard Decks':'å·²ä¿å­æ½è®¤å¡','Saved Quizzes':'å·²ä¿å­æµéª','Saved Lesson Plans':'å·²ä¿å­è¯¾ç¨è®¡å','Folders':'æä»¶å¤¹','History':'åå²','Workspace':'å·¥ä½åº','Library':'èµæåº','Light':'æµè²','Dark':'æ·±è²','Blue':'èè²','Generate Flashcards':'çææ½è®¤å¡','Save to Deck':'ä¿å­å°å¡ç»','Edit Cards':'ç¼è¾å¡ç','Add Custom Card':'æ·»å å¡ç','Generate Quiz':'çææµéª','Save Quiz':'ä¿å­æµéª','Generate Lesson Plan':'çæè¯¾ç¨è®¡å','View & Edit':'æ¥çå¹¶ç¼è¾','Read Summary':'æè¯»æ»ç»','Read Card':'æè¯»å¡ç','Read Question':'æè¯»é®é¢','Stop':'åæ­¢','Clear':'æ¸é¤','Import':'å¯¼å¥','Copy':'å¤å¶','Use Current Summary':'ä½¿ç¨å½åæ»ç»','Study Mode':'å­¦ä¹ æ¨¡å¼','Study Guide':'å­¦ä¹ æå','Study Mode':'å²åºå¤ä¹ ','Explain Simply':'ç®åè§£é'},
+        Japanese: {'Dashboard':'ããã·ã¥ãã¼ã','Summarize':'è¦ç´','Flashcards':'ãã©ãã·ã¥ã«ã¼ã','Quiz':'ã¯ã¤ãº','Lesson Plan Builder':'ææ¥­è¨ç»ä½æ','Saved Flashcard Decks':'ä¿å­æ¸ã¿ã«ã¼ã','Saved Quizzes':'ä¿å­æ¸ã¿ã¯ã¤ãº','Saved Lesson Plans':'ä¿å­æ¸ã¿ææ¥­è¨ç»','Folders':'ãã©ã«ãã¼','History':'å±¥æ­´','Workspace':'ã¯ã¼ã¯ã¹ãã¼ã¹','Library':'ã©ã¤ãã©ãª','Light':'ã©ã¤ã','Dark':'ãã¼ã¯','Blue':'ãã«ã¼','Generate Flashcards':'ã«ã¼ããçæ','Save to Deck':'ããã­ã«ä¿å­','Edit Cards':'ã«ã¼ãç·¨é','Add Custom Card':'ã«ã¼ãè¿½å ','Generate Quiz':'ã¯ã¤ãºçæ','Save Quiz':'ã¯ã¤ãºä¿å­','Generate Lesson Plan':'ææ¥­è¨ç»çæ','View & Edit':'è¡¨ç¤ºã¨ç·¨é','Read Summary':'è¦ç´ãèª­ã','Read Card':'ã«ã¼ããèª­ã','Read Question':'è³ªåãèª­ã','Stop':'åæ­¢','Clear':'ã¯ãªã¢','Import':'ã¤ã³ãã¼ã','Copy':'ã³ãã¼','Use Current Summary':'ç¾å¨ã®è¦ç´ãä½¿ç¨','Study Mode':'å­¦ç¿ã¢ã¼ã','Study Guide':'å­¦ç¿ã¬ã¤ã','Study Mode':'éä¸­å¾©ç¿','Explain Simply':'ç°¡åã«èª¬æ'},
+        Korean: {'Dashboard':'ëìë³´ë','Summarize':'ìì½','Flashcards':'íëìì¹´ë','Quiz':'í´ì¦','Lesson Plan Builder':'ìì ê³í ìì±ê¸°','Saved Flashcard Decks':'ì ì¥ë ì¹´ë','Saved Quizzes':'ì ì¥ë í´ì¦','Saved Lesson Plans':'ì ì¥ë ìì ê³í','Folders':'í´ë','History':'ê¸°ë¡','Workspace':'ìì ê³µê°','Library':'ë¼ì´ë¸ë¬ë¦¬','Light':'ë¼ì´í¸','Dark':'ë¤í¬','Blue':'ë¸ë£¨','Generate Flashcards':'ì¹´ë ìì±','Save to Deck':'ë±ì ì ì¥','Edit Cards':'ì¹´ë í¸ì§','Add Custom Card':'ì¹´ë ì¶ê°','Generate Quiz':'í´ì¦ ìì±','Save Quiz':'í´ì¦ ì ì¥','Generate Lesson Plan':'ìì ê³í ìì±','View & Edit':'ë³´ê¸° ë° í¸ì§','Read Summary':'ìì½ ì½ê¸°','Read Card':'ì¹´ë ì½ê¸°','Read Question':'ì§ë¬¸ ì½ê¸°','Stop':'ì¤ì§','Clear':'ì§ì°ê¸°','Import':'ê°ì ¸ì¤ê¸°','Copy':'ë³µì¬','Use Current Summary':'íì¬ ìì½ ì¬ì©','Study Mode':'íìµ ëª¨ë','Study Guide':'íìµ ê°ì´ë','Study Mode':'ë²¼ë½ì¹ê¸° ëª¨ë','Explain Simply':'ì½ê² ì¤ëª'},
+        Arabic: {'Dashboard':'ÙÙØ­Ø© Ø§ÙØªØ­ÙÙ','Summarize':'ØªÙØ®ÙØµ','Flashcards':'Ø¨Ø·Ø§ÙØ§Øª ØªØ¹ÙÙÙÙØ©','Quiz':'Ø§Ø®ØªØ¨Ø§Ø±','Lesson Plan Builder':'ÙÙØ´Ø¦ Ø®Ø·Ø© Ø§ÙØ¯Ø±Ø³','Saved Flashcard Decks':'Ø¨Ø·Ø§ÙØ§Øª ÙØ­ÙÙØ¸Ø©','Saved Quizzes':'Ø§Ø®ØªØ¨Ø§Ø±Ø§Øª ÙØ­ÙÙØ¸Ø©','Saved Lesson Plans':'Ø®Ø·Ø· ÙØ­ÙÙØ¸Ø©','Folders':'ÙØ¬ÙØ¯Ø§Øª','History':'Ø§ÙØ³Ø¬Ù','Workspace':'ÙØ³Ø§Ø­Ø© Ø§ÙØ¹ÙÙ','Library':'Ø§ÙÙÙØªØ¨Ø©','Light':'ÙØ§ØªØ­','Dark':'Ø¯Ø§ÙÙ','Blue':'Ø£Ø²Ø±Ù','Generate Flashcards':'Ø¥ÙØ´Ø§Ø¡ Ø¨Ø·Ø§ÙØ§Øª','Save to Deck':'Ø­ÙØ¸ ÙÙ Ø§ÙÙØ¬ÙÙØ¹Ø©','Edit Cards':'ØªØ¹Ø¯ÙÙ Ø§ÙØ¨Ø·Ø§ÙØ§Øª','Add Custom Card':'Ø¥Ø¶Ø§ÙØ© Ø¨Ø·Ø§ÙØ©','Generate Quiz':'Ø¥ÙØ´Ø§Ø¡ Ø§Ø®ØªØ¨Ø§Ø±','Save Quiz':'Ø­ÙØ¸ Ø§ÙØ§Ø®ØªØ¨Ø§Ø±','Generate Lesson Plan':'Ø¥ÙØ´Ø§Ø¡ Ø®Ø·Ø©','View & Edit':'Ø¹Ø±Ø¶ ÙØªØ¹Ø¯ÙÙ','Read Summary':'ÙØ±Ø§Ø¡Ø© Ø§ÙÙÙØ®Øµ','Read Card':'ÙØ±Ø§Ø¡Ø© Ø§ÙØ¨Ø·Ø§ÙØ©','Read Question':'ÙØ±Ø§Ø¡Ø© Ø§ÙØ³Ø¤Ø§Ù','Stop':'Ø¥ÙÙØ§Ù','Clear':'ÙØ³Ø­','Import':'Ø§Ø³ØªÙØ±Ø§Ø¯','Copy':'ÙØ³Ø®','Use Current Summary':'Ø§Ø³ØªØ®Ø¯Ø§Ù Ø§ÙÙÙØ®Øµ Ø§ÙØ­Ø§ÙÙ','Study Mode':'ÙØ¶Ø¹ Ø§ÙØ¯Ø±Ø§Ø³Ø©','Study Guide':'Ø¯ÙÙÙ Ø§ÙØ¯Ø±Ø§Ø³Ø©','Study Mode':'ÙØ±Ø§Ø¬Ø¹Ø© Ø³Ø±ÙØ¹Ø©','Explain Simply':'Ø§Ø´Ø±Ø­ Ø¨Ø¨Ø³Ø§Ø·Ø©'},
+        Hindi: {'Dashboard':'à¤¡à¥à¤¶à¤¬à¥à¤°à¥à¤¡','Summarize':'à¤¸à¤¾à¤°à¤¾à¤à¤¶','Flashcards':'à¤«à¥à¤²à¥à¤¶à¤à¤¾à¤°à¥à¤¡','Quiz':'à¤à¥à¤µà¤¿à¤à¤¼','Lesson Plan Builder':'à¤ªà¤¾à¤  à¤¯à¥à¤à¤¨à¤¾ à¤¨à¤¿à¤°à¥à¤®à¤¾à¤¤à¤¾','Saved Flashcard Decks':'à¤¸à¤¹à¥à¤à¥ à¤à¤ à¤à¤¾à¤°à¥à¤¡','Saved Quizzes':'à¤¸à¤¹à¥à¤à¥ à¤à¤ à¤à¥à¤µà¤¿à¤à¤¼','Saved Lesson Plans':'à¤¸à¤¹à¥à¤à¥ à¤à¤ à¤¯à¥à¤à¤¨à¤¾à¤à¤','Folders':'à¤«à¤¼à¥à¤²à¥à¤¡à¤°','History':'à¤à¤¤à¤¿à¤¹à¤¾à¤¸','Workspace':'à¤à¤¾à¤°à¥à¤¯à¤¸à¥à¤¥à¤²','Library':'à¤²à¤¾à¤à¤¬à¥à¤°à¥à¤°à¥','Light':'à¤²à¤¾à¤à¤','Dark':'à¤¡à¤¾à¤°à¥à¤','Blue':'à¤¨à¥à¤²à¤¾','Generate Flashcards':'à¤«à¥à¤²à¥à¤¶à¤à¤¾à¤°à¥à¤¡ à¤¬à¤¨à¤¾à¤à¤','Save to Deck':'à¤¡à¥à¤ à¤®à¥à¤ à¤¸à¤¹à¥à¤à¥à¤','Edit Cards':'à¤à¤¾à¤°à¥à¤¡ à¤¸à¤à¤ªà¤¾à¤¦à¤¿à¤¤ à¤à¤°à¥à¤','Add Custom Card':'à¤à¤¾à¤°à¥à¤¡ à¤à¥à¤¡à¤¼à¥à¤','Generate Quiz':'à¤à¥à¤µà¤¿à¤à¤¼ à¤¬à¤¨à¤¾à¤à¤','Save Quiz':'à¤à¥à¤µà¤¿à¤à¤¼ à¤¸à¤¹à¥à¤à¥à¤','Generate Lesson Plan':'à¤ªà¤¾à¤  à¤¯à¥à¤à¤¨à¤¾ à¤¬à¤¨à¤¾à¤à¤','View & Edit':'à¤¦à¥à¤à¥à¤ à¤à¤° à¤¸à¤à¤ªà¤¾à¤¦à¤¿à¤¤ à¤à¤°à¥à¤','Read Summary':'à¤¸à¤¾à¤°à¤¾à¤à¤¶ à¤ªà¤¢à¤¼à¥à¤','Read Card':'à¤à¤¾à¤°à¥à¤¡ à¤ªà¤¢à¤¼à¥à¤','Read Question':'à¤ªà¥à¤°à¤¶à¥à¤¨ à¤ªà¤¢à¤¼à¥à¤','Stop':'à¤°à¥à¤à¥à¤','Clear':'à¤¸à¤¾à¤«à¤¼ à¤à¤°à¥à¤','Import':'à¤à¤¯à¤¾à¤¤','Copy':'à¤à¥à¤ªà¥','Use Current Summary':'à¤µà¤°à¥à¤¤à¤®à¤¾à¤¨ à¤¸à¤¾à¤°à¤¾à¤à¤¶ à¤à¤ªà¤¯à¥à¤ à¤à¤°à¥à¤','Study Mode':'à¤à¤§à¥à¤¯à¤¯à¤¨ à¤®à¥à¤¡','Study Guide':'à¤à¤§à¥à¤¯à¤¯à¤¨ à¤à¤¾à¤à¤¡','Study Mode':'à¤¤à¥à¤µà¤°à¤¿à¤¤ à¤¸à¤®à¥à¤à¥à¤·à¤¾','Explain Simply':'à¤¸à¤°à¤² à¤¸à¤®à¤à¤¾à¤à¤'},
+        Russian: {'Dashboard':'ÐÐ°Ð½ÐµÐ»Ñ','Summarize':'Ð ÐµÐ·ÑÐ¼Ðµ','Flashcards':'ÐÐ°ÑÑÐ¾ÑÐºÐ¸','Quiz':'Ð¢ÐµÑÑ','Lesson Plan Builder':'ÐÐ»Ð°Ð½ ÑÑÐ¾ÐºÐ°','Saved Flashcard Decks':'Ð¡Ð¾ÑÑÐ°Ð½ÐµÐ½Ð½ÑÐµ ÐºÐ°ÑÑÐ¾ÑÐºÐ¸','Saved Quizzes':'Ð¡Ð¾ÑÑÐ°Ð½ÐµÐ½Ð½ÑÐµ ÑÐµÑÑÑ','Saved Lesson Plans':'Ð¡Ð¾ÑÑÐ°Ð½ÐµÐ½Ð½ÑÐµ Ð¿Ð»Ð°Ð½Ñ','Folders':'ÐÐ°Ð¿ÐºÐ¸','History':'ÐÑÑÐ¾ÑÐ¸Ñ','Workspace':'Ð Ð°Ð±Ð¾ÑÐ°Ñ Ð¾Ð±Ð»Ð°ÑÑÑ','Library':'ÐÐ¸Ð±Ð»Ð¸Ð¾ÑÐµÐºÐ°','Light':'Ð¡Ð²ÐµÑÐ»Ð°Ñ','Dark':'Ð¢ÐµÐ¼Ð½Ð°Ñ','Blue':'Ð¡Ð¸Ð½ÑÑ','Generate Flashcards':'Ð¡Ð¾Ð·Ð´Ð°ÑÑ ÐºÐ°ÑÑÐ¾ÑÐºÐ¸','Save to Deck':'Ð¡Ð¾ÑÑÐ°Ð½Ð¸ÑÑ Ð² Ð½Ð°Ð±Ð¾Ñ','Edit Cards':'Ð ÐµÐ´Ð°ÐºÑÐ¸ÑÐ¾Ð²Ð°ÑÑ','Add Custom Card':'ÐÐ¾Ð±Ð°Ð²Ð¸ÑÑ ÐºÐ°ÑÑÐ¾ÑÐºÑ','Generate Quiz':'Ð¡Ð¾Ð·Ð´Ð°ÑÑ ÑÐµÑÑ','Save Quiz':'Ð¡Ð¾ÑÑÐ°Ð½Ð¸ÑÑ ÑÐµÑÑ','Generate Lesson Plan':'Ð¡Ð¾Ð·Ð´Ð°ÑÑ Ð¿Ð»Ð°Ð½','View & Edit':'ÐÑÐ¾ÑÐ¼Ð¾ÑÑ Ð¸ Ð¿ÑÐ°Ð²ÐºÐ°','Read Summary':'Ð§Ð¸ÑÐ°ÑÑ ÑÐµÐ·ÑÐ¼Ðµ','Read Card':'Ð§Ð¸ÑÐ°ÑÑ ÐºÐ°ÑÑÐ¾ÑÐºÑ','Read Question':'Ð§Ð¸ÑÐ°ÑÑ Ð²Ð¾Ð¿ÑÐ¾Ñ','Stop':'Ð¡ÑÐ¾Ð¿','Clear':'ÐÑÐ¸ÑÑÐ¸ÑÑ','Import':'ÐÐ¼Ð¿Ð¾ÑÑ','Copy':'ÐÐ¾Ð¿Ð¸ÑÐ¾Ð²Ð°ÑÑ','Use Current Summary':'ÐÑÐ¿Ð¾Ð»ÑÐ·Ð¾Ð²Ð°ÑÑ ÑÐµÐ·ÑÐ¼Ðµ','Study Mode':'Ð ÐµÐ¶Ð¸Ð¼ ÑÑÐµÐ±Ñ','Study Guide':'Ð£ÑÐµÐ±Ð½Ð¾Ðµ Ð¿Ð¾ÑÐ¾Ð±Ð¸Ðµ','Study Mode':'ÐÑÑÑÑÐ°Ñ Ð¿Ð¾Ð´Ð³Ð¾ÑÐ¾Ð²ÐºÐ°','Explain Simply':'ÐÐ±ÑÑÑÐ½Ð¸ÑÑ Ð¿ÑÐ¾ÑÐµ'},
+        Vietnamese: {'Dashboard':'Báº£ng Äiá»u khiá»n','Summarize':'TÃ³m táº¯t','Flashcards':'Tháº» há»c','Quiz':'BÃ i kiá»m tra','Lesson Plan Builder':'Táº¡o giÃ¡o Ã¡n','Saved Flashcard Decks':'Bá» tháº» ÄÃ£ lÆ°u','Saved Quizzes':'Quiz ÄÃ£ lÆ°u','Saved Lesson Plans':'GiÃ¡o Ã¡n ÄÃ£ lÆ°u','Folders':'ThÆ° má»¥c','History':'Lá»ch sá»­','Workspace':'KhÃ´ng gian lÃ m viá»c','Library':'ThÆ° viá»n','Light':'SÃ¡ng','Dark':'Tá»i','Blue':'Xanh','Generate Flashcards':'Táº¡o tháº» há»c','Save to Deck':'LÆ°u vÃ o bá»','Edit Cards':'Sá»­a tháº»','Add Custom Card':'ThÃªm tháº»','Generate Quiz':'Táº¡o quiz','Save Quiz':'LÆ°u quiz','Generate Lesson Plan':'Táº¡o giÃ¡o Ã¡n','View & Edit':'Xem vÃ  sá»­a','Read Summary':'Äá»c tÃ³m táº¯t','Read Card':'Äá»c tháº»','Read Question':'Äá»c cÃ¢u há»i','Stop':'Dá»«ng','Clear':'XÃ³a','Import':'Nháº­p','Copy':'Sao chÃ©p','Use Current Summary':'DÃ¹ng tÃ³m táº¯t hiá»n táº¡i','Study Mode':'Cháº¿ Äá» há»c','Study Guide':'HÆ°á»ng dáº«n há»c','Study Mode':'Ãn nhanh','Explain Simply':'Giáº£i thÃ­ch ÄÆ¡n giáº£n'},
         Tagalog: {'Dashboard':'Dashboard','Summarize':'Ibuod','Flashcards':'Flashcards','Quiz':'Pagsusulit','Lesson Plan Builder':'Gumawa ng Lesson Plan','Saved Flashcard Decks':'Naka-save na Flashcards','Saved Quizzes':'Naka-save na Quiz','Saved Lesson Plans':'Naka-save na Lesson Plans','Folders':'Mga Folder','History':'Kasaysayan','Workspace':'Workspace','Library':'Library','Light':'Maliwanag','Dark':'Madilim','Blue':'Asul','Generate Flashcards':'Gumawa ng Flashcards','Save to Deck':'I-save sa Deck','Edit Cards':'I-edit ang Cards','Add Custom Card':'Magdagdag ng Card','Generate Quiz':'Gumawa ng Quiz','Save Quiz':'I-save ang Quiz','Generate Lesson Plan':'Gumawa ng Lesson Plan','View & Edit':'Tingnan at I-edit','Read Summary':'Basahin ang Buod','Read Card':'Basahin ang Card','Read Question':'Basahin ang Tanong','Stop':'Itigil','Clear':'Burahin','Import':'Mag-import','Copy':'Kopyahin','Use Current Summary':'Gamitin ang Buod','Study Mode':'Study Mode','Study Guide':'Gabay sa Pag-aaral','Study Mode':'Mabilisang Review','Explain Simply':'Ipaliwanag nang simple'},
-        Polish: {'Dashboard':'Panel','Summarize':'Podsumuj','Flashcards':'Fiszki','Quiz':'Quiz','Lesson Plan Builder':'Kreator lekcji','Saved Flashcard Decks':'Zapisane fiszki','Saved Quizzes':'Zapisane quizy','Saved Lesson Plans':'Zapisane plany','Folders':'Foldery','History':'Historia','Workspace':'Obszar pracy','Library':'Biblioteka','Light':'Jasny','Dark':'Ciemny','Blue':'Niebieski','Generate Flashcards':'Utwórz fiszki','Save to Deck':'Zapisz w zestawie','Edit Cards':'Edytuj fiszki','Add Custom Card':'Dodaj fiszkę','Generate Quiz':'Utwórz quiz','Save Quiz':'Zapisz quiz','Generate Lesson Plan':'Utwórz plan','View & Edit':'Zobacz i edytuj','Read Summary':'Czytaj podsumowanie','Read Card':'Czytaj fiszkę','Read Question':'Czytaj pytanie','Stop':'Stop','Clear':'Wyczyść','Import':'Importuj','Copy':'Kopiuj','Use Current Summary':'Użyj podsumowania','Study Mode':'Tryb nauki','Study Guide':'Przewodnik nauki','Study Mode':'Szybka powtórka','Explain Simply':'Wyjaśnij prosto'},
-        Dutch: {'Dashboard':'Dashboard','Summarize':'Samenvatten','Flashcards':'Flashcards','Quiz':'Quiz','Lesson Plan Builder':'Lesplanmaker','Saved Flashcard Decks':'Opgeslagen kaarten','Saved Quizzes':'Opgeslagen quizzen','Saved Lesson Plans':'Opgeslagen lesplannen','Folders':'Mappen','History':'Geschiedenis','Workspace':'Werkruimte','Library':'Bibliotheek','Light':'Licht','Dark':'Donker','Blue':'Blauw','Generate Flashcards':'Flashcards maken','Save to Deck':'Opslaan in deck','Edit Cards':'Kaarten bewerken','Add Custom Card':'Kaart toevoegen','Generate Quiz':'Quiz maken','Save Quiz':'Quiz opslaan','Generate Lesson Plan':'Lesplan maken','View & Edit':'Bekijken en bewerken','Read Summary':'Samenvatting lezen','Read Card':'Kaart lezen','Read Question':'Vraag lezen','Stop':'Stop','Clear':'Wissen','Import':'Importeren','Copy':'Kopiëren','Use Current Summary':'Gebruik huidige samenvatting','Study Mode':'Studiemodus','Study Guide':'Studiegids','Study Mode':'Snel leren','Explain Simply':'Simpel uitleggen'}
+        Polish: {'Dashboard':'Panel','Summarize':'Podsumuj','Flashcards':'Fiszki','Quiz':'Quiz','Lesson Plan Builder':'Kreator lekcji','Saved Flashcard Decks':'Zapisane fiszki','Saved Quizzes':'Zapisane quizy','Saved Lesson Plans':'Zapisane plany','Folders':'Foldery','History':'Historia','Workspace':'Obszar pracy','Library':'Biblioteka','Light':'Jasny','Dark':'Ciemny','Blue':'Niebieski','Generate Flashcards':'UtwÃ³rz fiszki','Save to Deck':'Zapisz w zestawie','Edit Cards':'Edytuj fiszki','Add Custom Card':'Dodaj fiszkÄ','Generate Quiz':'UtwÃ³rz quiz','Save Quiz':'Zapisz quiz','Generate Lesson Plan':'UtwÃ³rz plan','View & Edit':'Zobacz i edytuj','Read Summary':'Czytaj podsumowanie','Read Card':'Czytaj fiszkÄ','Read Question':'Czytaj pytanie','Stop':'Stop','Clear':'WyczyÅÄ','Import':'Importuj','Copy':'Kopiuj','Use Current Summary':'UÅ¼yj podsumowania','Study Mode':'Tryb nauki','Study Guide':'Przewodnik nauki','Study Mode':'Szybka powtÃ³rka','Explain Simply':'WyjaÅnij prosto'},
+        Dutch: {'Dashboard':'Dashboard','Summarize':'Samenvatten','Flashcards':'Flashcards','Quiz':'Quiz','Lesson Plan Builder':'Lesplanmaker','Saved Flashcard Decks':'Opgeslagen kaarten','Saved Quizzes':'Opgeslagen quizzen','Saved Lesson Plans':'Opgeslagen lesplannen','Folders':'Mappen','History':'Geschiedenis','Workspace':'Werkruimte','Library':'Bibliotheek','Light':'Licht','Dark':'Donker','Blue':'Blauw','Generate Flashcards':'Flashcards maken','Save to Deck':'Opslaan in deck','Edit Cards':'Kaarten bewerken','Add Custom Card':'Kaart toevoegen','Generate Quiz':'Quiz maken','Save Quiz':'Quiz opslaan','Generate Lesson Plan':'Lesplan maken','View & Edit':'Bekijken en bewerken','Read Summary':'Samenvatting lezen','Read Card':'Kaart lezen','Read Question':'Vraag lezen','Stop':'Stop','Clear':'Wissen','Import':'Importeren','Copy':'KopiÃ«ren','Use Current Summary':'Gebruik huidige samenvatting','Study Mode':'Studiemodus','Study Guide':'Studiegids','Study Mode':'Snel leren','Explain Simply':'Simpel uitleggen'}
       };
 
       function collectTranslatableNodes() {
@@ -4794,20 +4794,20 @@
       }
 
       const EXTRA_TRANSLATIONS = {
-        Spanish: {'Search':'Buscar','Hide Editor':'Ocultar editor','Card':'Tarjeta','of':'de','Answer side':'Lado de respuesta','Question side':'Lado de pregunta','Show Question':'Mostrar pregunta','View Answer':'Ver respuesta','Go Back':'Atrás','Go To Next':'Siguiente','No search results yet.':'Aún no hay resultados de búsqueda.','Searching...':'Buscando...','Search ready.':'Búsqueda lista.','Open Source':'Abrir fuente','To Flashcards':'A tarjetas','To Quiz':'A cuestionario','To Lesson Plan':'A plan de lección'},
-        French: {'Search':'Rechercher','Hide Editor':'Masquer l’éditeur','Card':'Carte','of':'sur','Answer side':'Côté réponse','Question side':'Côté question','Show Question':'Afficher la question','View Answer':'Voir la réponse','Go Back':'Retour','Go To Next':'Suivant','No search results yet.':'Aucun résultat pour le moment.','Searching...':'Recherche...','Search ready.':'Recherche prête.','Open Source':'Ouvrir la source','To Flashcards':'Vers les cartes','To Quiz':'Vers le quiz','To Lesson Plan':'Vers le plan'},
-        German: {'Search':'Suchen','Hide Editor':'Editor ausblenden','Card':'Karte','of':'von','Answer side':'Antwortseite','Question side':'Frageseite','Show Question':'Frage anzeigen','View Answer':'Antwort anzeigen','Go Back':'Zurück','Go To Next':'Weiter','No search results yet.':'Noch keine Suchergebnisse.','Searching...':'Suche...','Search ready.':'Suche bereit.','Open Source':'Quelle öffnen','To Flashcards':'Zu Karteikarten','To Quiz':'Zum Quiz','To Lesson Plan':'Zum Unterrichtsplan'},
+        Spanish: {'Search':'Buscar','Hide Editor':'Ocultar editor','Card':'Tarjeta','of':'de','Answer side':'Lado de respuesta','Question side':'Lado de pregunta','Show Question':'Mostrar pregunta','View Answer':'Ver respuesta','Go Back':'AtrÃ¡s','Go To Next':'Siguiente','No search results yet.':'AÃºn no hay resultados de bÃºsqueda.','Searching...':'Buscando...','Search ready.':'BÃºsqueda lista.','Open Source':'Abrir fuente','To Flashcards':'A tarjetas','To Quiz':'A cuestionario','To Lesson Plan':'A plan de lecciÃ³n'},
+        French: {'Search':'Rechercher','Hide Editor':'Masquer lâÃ©diteur','Card':'Carte','of':'sur','Answer side':'CÃ´tÃ© rÃ©ponse','Question side':'CÃ´tÃ© question','Show Question':'Afficher la question','View Answer':'Voir la rÃ©ponse','Go Back':'Retour','Go To Next':'Suivant','No search results yet.':'Aucun rÃ©sultat pour le moment.','Searching...':'Recherche...','Search ready.':'Recherche prÃªte.','Open Source':'Ouvrir la source','To Flashcards':'Vers les cartes','To Quiz':'Vers le quiz','To Lesson Plan':'Vers le plan'},
+        German: {'Search':'Suchen','Hide Editor':'Editor ausblenden','Card':'Karte','of':'von','Answer side':'Antwortseite','Question side':'Frageseite','Show Question':'Frage anzeigen','View Answer':'Antwort anzeigen','Go Back':'ZurÃ¼ck','Go To Next':'Weiter','No search results yet.':'Noch keine Suchergebnisse.','Searching...':'Suche...','Search ready.':'Suche bereit.','Open Source':'Quelle Ã¶ffnen','To Flashcards':'Zu Karteikarten','To Quiz':'Zum Quiz','To Lesson Plan':'Zum Unterrichtsplan'},
         Italian: {'Search':'Cerca','Hide Editor':'Nascondi editor','Card':'Carta','of':'di','Answer side':'Lato risposta','Question side':'Lato domanda','Show Question':'Mostra domanda','View Answer':'Vedi risposta','Go Back':'Indietro','Go To Next':'Avanti','No search results yet.':'Nessun risultato ancora.','Searching...':'Ricerca...','Search ready.':'Ricerca pronta.','Open Source':'Apri fonte','To Flashcards':'A flashcard','To Quiz':'A quiz','To Lesson Plan':'A lezione'},
-        Portuguese: {'Search':'Pesquisar','Hide Editor':'Ocultar editor','Card':'Cartão','of':'de','Answer side':'Lado da resposta','Question side':'Lado da pergunta','Show Question':'Mostrar pergunta','View Answer':'Ver resposta','Go Back':'Voltar','Go To Next':'Próximo','No search results yet.':'Ainda não há resultados.','Searching...':'Pesquisando...','Search ready.':'Pesquisa pronta.','Open Source':'Abrir fonte','To Flashcards':'Para cartões','To Quiz':'Para quiz','To Lesson Plan':'Para plano de aula'},
-        'Chinese (Simplified)': {'Search':'搜索','Hide Editor':'隐藏编辑器','Card':'卡片','of':'共','Answer side':'答案面','Question side':'问题面','Show Question':'显示问题','View Answer':'查看答案','Go Back':'返回','Go To Next':'下一个','No search results yet.':'还没有搜索结果。','Searching...':'正在搜索...','Search ready.':'搜索完成。','Open Source':'打开来源','To Flashcards':'转为抽认卡','To Quiz':'转为测验','To Lesson Plan':'转为课程计划'},
-        Japanese: {'Search':'検索','Hide Editor':'エディターを非表示','Card':'カード','of':'/','Answer side':'答え側','Question side':'質問側','Show Question':'質問を表示','View Answer':'答えを見る','Go Back':'戻る','Go To Next':'次へ','No search results yet.':'検索結果はまだありません。','Searching...':'検索中...','Search ready.':'検索完了。','Open Source':'ソースを開く','To Flashcards':'カードへ','To Quiz':'クイズへ','To Lesson Plan':'授業計画へ'},
-        Korean: {'Search':'검색','Hide Editor':'편집기 숨기기','Card':'카드','of':'/','Answer side':'답변 면','Question side':'질문 면','Show Question':'질문 보기','View Answer':'답변 보기','Go Back':'뒤로','Go To Next':'다음','No search results yet.':'아직 검색 결과가 없습니다.','Searching...':'검색 중...','Search ready.':'검색 완료.','Open Source':'소스 열기','To Flashcards':'카드로','To Quiz':'퀴즈로','To Lesson Plan':'수업 계획으로'},
-        Arabic: {'Search':'بحث','Hide Editor':'إخفاء المحرر','Card':'بطاقة','of':'من','Answer side':'جانب الإجابة','Question side':'جانب السؤال','Show Question':'إظهار السؤال','View Answer':'عرض الإجابة','Go Back':'رجوع','Go To Next':'التالي','No search results yet.':'لا توجد نتائج بحث بعد.','Searching...':'جارٍ البحث...','Search ready.':'البحث جاهز.','Open Source':'فتح المصدر','To Flashcards':'إلى البطاقات','To Quiz':'إلى الاختبار','To Lesson Plan':'إلى خطة الدرس'},
-        Hindi: {'Search':'खोजें','Hide Editor':'संपादक छिपाएँ','Card':'कार्ड','of':'में से','Answer side':'उत्तर पक्ष','Question side':'प्रश्न पक्ष','Show Question':'प्रश्न दिखाएँ','View Answer':'उत्तर देखें','Go Back':'पीछे','Go To Next':'अगला','No search results yet.':'अभी कोई खोज परिणाम नहीं।','Searching...':'खोज रहे हैं...','Search ready.':'खोज तैयार।','Open Source':'स्रोत खोलें','To Flashcards':'फ्लैशकार्ड में','To Quiz':'क्विज़ में','To Lesson Plan':'पाठ योजना में'},
-        Russian: {'Search':'Поиск','Hide Editor':'Скрыть редактор','Card':'Карточка','of':'из','Answer side':'Сторона ответа','Question side':'Сторона вопроса','Show Question':'Показать вопрос','View Answer':'Показать ответ','Go Back':'Назад','Go To Next':'Далее','No search results yet.':'Пока нет результатов поиска.','Searching...':'Поиск...','Search ready.':'Поиск готов.','Open Source':'Открыть источник','To Flashcards':'В карточки','To Quiz':'В тест','To Lesson Plan':'В план урока'},
-        Vietnamese: {'Search':'Tìm kiếm','Hide Editor':'Ẩn trình chỉnh sửa','Card':'Thẻ','of':'trên','Answer side':'Mặt trả lời','Question side':'Mặt câu hỏi','Show Question':'Hiện câu hỏi','View Answer':'Xem đáp án','Go Back':'Quay lại','Go To Next':'Tiếp theo','No search results yet.':'Chưa có kết quả tìm kiếm.','Searching...':'Đang tìm...','Search ready.':'Tìm kiếm xong.','Open Source':'Mở nguồn','To Flashcards':'Sang thẻ học','To Quiz':'Sang quiz','To Lesson Plan':'Sang giáo án'},
+        Portuguese: {'Search':'Pesquisar','Hide Editor':'Ocultar editor','Card':'CartÃ£o','of':'de','Answer side':'Lado da resposta','Question side':'Lado da pergunta','Show Question':'Mostrar pergunta','View Answer':'Ver resposta','Go Back':'Voltar','Go To Next':'PrÃ³ximo','No search results yet.':'Ainda nÃ£o hÃ¡ resultados.','Searching...':'Pesquisando...','Search ready.':'Pesquisa pronta.','Open Source':'Abrir fonte','To Flashcards':'Para cartÃµes','To Quiz':'Para quiz','To Lesson Plan':'Para plano de aula'},
+        'Chinese (Simplified)': {'Search':'æç´¢','Hide Editor':'éèç¼è¾å¨','Card':'å¡ç','of':'å±','Answer side':'ç­æ¡é¢','Question side':'é®é¢é¢','Show Question':'æ¾ç¤ºé®é¢','View Answer':'æ¥çç­æ¡','Go Back':'è¿å','Go To Next':'ä¸ä¸ä¸ª','No search results yet.':'è¿æ²¡ææç´¢ç»æã','Searching...':'æ­£å¨æç´¢...','Search ready.':'æç´¢å®æã','Open Source':'æå¼æ¥æº','To Flashcards':'è½¬ä¸ºæ½è®¤å¡','To Quiz':'è½¬ä¸ºæµéª','To Lesson Plan':'è½¬ä¸ºè¯¾ç¨è®¡å'},
+        Japanese: {'Search':'æ¤ç´¢','Hide Editor':'ã¨ãã£ã¿ã¼ãéè¡¨ç¤º','Card':'ã«ã¼ã','of':'/','Answer side':'ç­ãå´','Question side':'è³ªåå´','Show Question':'è³ªåãè¡¨ç¤º','View Answer':'ç­ããè¦ã','Go Back':'æ»ã','Go To Next':'æ¬¡ã¸','No search results yet.':'æ¤ç´¢çµæã¯ã¾ã ããã¾ããã','Searching...':'æ¤ç´¢ä¸­...','Search ready.':'æ¤ç´¢å®äºã','Open Source':'ã½ã¼ã¹ãéã','To Flashcards':'ã«ã¼ãã¸','To Quiz':'ã¯ã¤ãºã¸','To Lesson Plan':'ææ¥­è¨ç»ã¸'},
+        Korean: {'Search':'ê²ì','Hide Editor':'í¸ì§ê¸° ì¨ê¸°ê¸°','Card':'ì¹´ë','of':'/','Answer side':'ëµë³ ë©´','Question side':'ì§ë¬¸ ë©´','Show Question':'ì§ë¬¸ ë³´ê¸°','View Answer':'ëµë³ ë³´ê¸°','Go Back':'ë¤ë¡','Go To Next':'ë¤ì','No search results yet.':'ìì§ ê²ì ê²°ê³¼ê° ììµëë¤.','Searching...':'ê²ì ì¤...','Search ready.':'ê²ì ìë£.','Open Source':'ìì¤ ì´ê¸°','To Flashcards':'ì¹´ëë¡','To Quiz':'í´ì¦ë¡','To Lesson Plan':'ìì ê³íì¼ë¡'},
+        Arabic: {'Search':'Ø¨Ø­Ø«','Hide Editor':'Ø¥Ø®ÙØ§Ø¡ Ø§ÙÙØ­Ø±Ø±','Card':'Ø¨Ø·Ø§ÙØ©','of':'ÙÙ','Answer side':'Ø¬Ø§ÙØ¨ Ø§ÙØ¥Ø¬Ø§Ø¨Ø©','Question side':'Ø¬Ø§ÙØ¨ Ø§ÙØ³Ø¤Ø§Ù','Show Question':'Ø¥Ø¸ÙØ§Ø± Ø§ÙØ³Ø¤Ø§Ù','View Answer':'Ø¹Ø±Ø¶ Ø§ÙØ¥Ø¬Ø§Ø¨Ø©','Go Back':'Ø±Ø¬ÙØ¹','Go To Next':'Ø§ÙØªØ§ÙÙ','No search results yet.':'ÙØ§ ØªÙØ¬Ø¯ ÙØªØ§Ø¦Ø¬ Ø¨Ø­Ø« Ø¨Ø¹Ø¯.','Searching...':'Ø¬Ø§Ø±Ù Ø§ÙØ¨Ø­Ø«...','Search ready.':'Ø§ÙØ¨Ø­Ø« Ø¬Ø§ÙØ².','Open Source':'ÙØªØ­ Ø§ÙÙØµØ¯Ø±','To Flashcards':'Ø¥ÙÙ Ø§ÙØ¨Ø·Ø§ÙØ§Øª','To Quiz':'Ø¥ÙÙ Ø§ÙØ§Ø®ØªØ¨Ø§Ø±','To Lesson Plan':'Ø¥ÙÙ Ø®Ø·Ø© Ø§ÙØ¯Ø±Ø³'},
+        Hindi: {'Search':'à¤à¥à¤à¥à¤','Hide Editor':'à¤¸à¤à¤ªà¤¾à¤¦à¤ à¤à¤¿à¤ªà¤¾à¤à¤','Card':'à¤à¤¾à¤°à¥à¤¡','of':'à¤®à¥à¤ à¤¸à¥','Answer side':'à¤à¤¤à¥à¤¤à¤° à¤ªà¤à¥à¤·','Question side':'à¤ªà¥à¤°à¤¶à¥à¤¨ à¤ªà¤à¥à¤·','Show Question':'à¤ªà¥à¤°à¤¶à¥à¤¨ à¤¦à¤¿à¤à¤¾à¤à¤','View Answer':'à¤à¤¤à¥à¤¤à¤° à¤¦à¥à¤à¥à¤','Go Back':'à¤ªà¥à¤à¥','Go To Next':'à¤à¤à¤²à¤¾','No search results yet.':'à¤à¤­à¥ à¤à¥à¤ à¤à¥à¤ à¤ªà¤°à¤¿à¤£à¤¾à¤® à¤¨à¤¹à¥à¤à¥¤','Searching...':'à¤à¥à¤ à¤°à¤¹à¥ à¤¹à¥à¤...','Search ready.':'à¤à¥à¤ à¤¤à¥à¤¯à¤¾à¤°à¥¤','Open Source':'à¤¸à¥à¤°à¥à¤¤ à¤à¥à¤²à¥à¤','To Flashcards':'à¤«à¥à¤²à¥à¤¶à¤à¤¾à¤°à¥à¤¡ à¤®à¥à¤','To Quiz':'à¤à¥à¤µà¤¿à¤à¤¼ à¤®à¥à¤','To Lesson Plan':'à¤ªà¤¾à¤  à¤¯à¥à¤à¤¨à¤¾ à¤®à¥à¤'},
+        Russian: {'Search':'ÐÐ¾Ð¸ÑÐº','Hide Editor':'Ð¡ÐºÑÑÑÑ ÑÐµÐ´Ð°ÐºÑÐ¾Ñ','Card':'ÐÐ°ÑÑÐ¾ÑÐºÐ°','of':'Ð¸Ð·','Answer side':'Ð¡ÑÐ¾ÑÐ¾Ð½Ð° Ð¾ÑÐ²ÐµÑÐ°','Question side':'Ð¡ÑÐ¾ÑÐ¾Ð½Ð° Ð²Ð¾Ð¿ÑÐ¾ÑÐ°','Show Question':'ÐÐ¾ÐºÐ°Ð·Ð°ÑÑ Ð²Ð¾Ð¿ÑÐ¾Ñ','View Answer':'ÐÐ¾ÐºÐ°Ð·Ð°ÑÑ Ð¾ÑÐ²ÐµÑ','Go Back':'ÐÐ°Ð·Ð°Ð´','Go To Next':'ÐÐ°Ð»ÐµÐµ','No search results yet.':'ÐÐ¾ÐºÐ° Ð½ÐµÑ ÑÐµÐ·ÑÐ»ÑÑÐ°ÑÐ¾Ð² Ð¿Ð¾Ð¸ÑÐºÐ°.','Searching...':'ÐÐ¾Ð¸ÑÐº...','Search ready.':'ÐÐ¾Ð¸ÑÐº Ð³Ð¾ÑÐ¾Ð².','Open Source':'ÐÑÐºÑÑÑÑ Ð¸ÑÑÐ¾ÑÐ½Ð¸Ðº','To Flashcards':'Ð ÐºÐ°ÑÑÐ¾ÑÐºÐ¸','To Quiz':'Ð ÑÐµÑÑ','To Lesson Plan':'Ð Ð¿Ð»Ð°Ð½ ÑÑÐ¾ÐºÐ°'},
+        Vietnamese: {'Search':'TÃ¬m kiáº¿m','Hide Editor':'áº¨n trÃ¬nh chá»nh sá»­a','Card':'Tháº»','of':'trÃªn','Answer side':'Máº·t tráº£ lá»i','Question side':'Máº·t cÃ¢u há»i','Show Question':'Hiá»n cÃ¢u há»i','View Answer':'Xem ÄÃ¡p Ã¡n','Go Back':'Quay láº¡i','Go To Next':'Tiáº¿p theo','No search results yet.':'ChÆ°a cÃ³ káº¿t quáº£ tÃ¬m kiáº¿m.','Searching...':'Äang tÃ¬m...','Search ready.':'TÃ¬m kiáº¿m xong.','Open Source':'Má» nguá»n','To Flashcards':'Sang tháº» há»c','To Quiz':'Sang quiz','To Lesson Plan':'Sang giÃ¡o Ã¡n'},
         Tagalog: {'Search':'Maghanap','Hide Editor':'Itago ang Editor','Card':'Card','of':'ng','Answer side':'Sagot na bahagi','Question side':'Tanong na bahagi','Show Question':'Ipakita ang Tanong','View Answer':'Tingnan ang Sagot','Go Back':'Bumalik','Go To Next':'Susunod','No search results yet.':'Wala pang resulta.','Searching...':'Naghahanap...','Search ready.':'Handa na ang search.','Open Source':'Buksan ang Source','To Flashcards':'Sa Flashcards','To Quiz':'Sa Quiz','To Lesson Plan':'Sa Lesson Plan'},
-        Polish: {'Search':'Szukaj','Hide Editor':'Ukryj edytor','Card':'Fiszka','of':'z','Answer side':'Strona odpowiedzi','Question side':'Strona pytania','Show Question':'Pokaż pytanie','View Answer':'Zobacz odpowiedź','Go Back':'Wstecz','Go To Next':'Dalej','No search results yet.':'Brak wyników wyszukiwania.','Searching...':'Szukam...','Search ready.':'Wyszukiwanie gotowe.','Open Source':'Otwórz źródło','To Flashcards':'Do fiszek','To Quiz':'Do quizu','To Lesson Plan':'Do planu lekcji'},
+        Polish: {'Search':'Szukaj','Hide Editor':'Ukryj edytor','Card':'Fiszka','of':'z','Answer side':'Strona odpowiedzi','Question side':'Strona pytania','Show Question':'PokaÅ¼ pytanie','View Answer':'Zobacz odpowiedÅº','Go Back':'Wstecz','Go To Next':'Dalej','No search results yet.':'Brak wynikÃ³w wyszukiwania.','Searching...':'Szukam...','Search ready.':'Wyszukiwanie gotowe.','Open Source':'OtwÃ³rz ÅºrÃ³dÅo','To Flashcards':'Do fiszek','To Quiz':'Do quizu','To Lesson Plan':'Do planu lekcji'},
         Dutch: {'Search':'Zoeken','Hide Editor':'Editor verbergen','Card':'Kaart','of':'van','Answer side':'Antwoordzijde','Question side':'Vraagzijde','Show Question':'Vraag tonen','View Answer':'Antwoord bekijken','Go Back':'Terug','Go To Next':'Volgende','No search results yet.':'Nog geen zoekresultaten.','Searching...':'Zoeken...','Search ready.':'Zoeken klaar.','Open Source':'Bron openen','To Flashcards':'Naar flashcards','To Quiz':'Naar quiz','To Lesson Plan':'Naar lesplan'}
       };
       Object.keys(EXTRA_TRANSLATIONS).forEach(lang => { QUICK_TRANSLATIONS[lang] = Object.assign({}, QUICK_TRANSLATIONS[lang] || {}, EXTRA_TRANSLATIONS[lang]); });
@@ -5359,7 +5359,7 @@
 
       function startTutorTimer(){if(window._tutorTimerInterval)return;window._tutorTimerInterval=setInterval(()=>{window._tutorSeconds++;const m=Math.floor(window._tutorSeconds/60);const s=window._tutorSeconds%60;const el=document.getElementById('tutorTimer');if(el)el.textContent=m+':'+String(s).padStart(2,'0');},1000);}
 
-      function appendTutorBubble(text,type,showConfidence){const chat=document.getElementById('tutorChatMessages');if(!chat)return;const bubble=document.createElement('div');bubble.style.cssText=type==='user'?'max-width:82%;padding:12px 16px;border-radius:16px 16px 4px 16px;background:var(--primary);color:#fff;align-self:flex-end;font-size:14px;line-height:1.65;white-space:pre-wrap;':'max-width:82%;padding:12px 16px;border-radius:16px 16px 16px 4px;background:var(--surface);border:0.5px solid var(--border);color:var(--text);align-self:flex-start;font-size:14px;line-height:1.65;white-space:pre-wrap;';bubble.textContent=text;chat.appendChild(bubble);if(type==='ai'&&showConfidence){const conf=document.createElement('div');conf.style.cssText='display:flex;gap:8px;margin-top:8px;align-self:flex-start;flex-wrap:wrap;';conf.innerHTML=`<button onclick="tutorConfidence('got')" style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:600;color:#16a34a;cursor:pointer;">Got it ✓</button><button onclick="tutorConfidence('still')" style="background:#fff7ed;border:0.5px solid #fed7aa;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:600;color:#ea580c;cursor:pointer;">Still confused ↺</button><button onclick="tutorToFlashcards()" style="background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:6px 14px;font-size:12px;color:var(--text-2);cursor:pointer;">→ Flashcards</button>`;chat.appendChild(conf);}chat.scrollTop=chat.scrollHeight;}
+      function appendTutorBubble(text,type,showConfidence){const chat=document.getElementById('tutorChatMessages');if(!chat)return;const bubble=document.createElement('div');bubble.style.cssText=type==='user'?'max-width:82%;padding:12px 16px;border-radius:16px 16px 4px 16px;background:var(--primary);color:#fff;align-self:flex-end;font-size:14px;line-height:1.65;white-space:pre-wrap;':'max-width:82%;padding:12px 16px;border-radius:16px 16px 16px 4px;background:var(--surface);border:0.5px solid var(--border);color:var(--text);align-self:flex-start;font-size:14px;line-height:1.65;white-space:pre-wrap;';bubble.textContent=text;chat.appendChild(bubble);if(type==='ai'&&showConfidence){const conf=document.createElement('div');conf.style.cssText='display:flex;gap:8px;margin-top:8px;align-self:flex-start;flex-wrap:wrap;';conf.innerHTML=`<button onclick="tutorConfidence('got')" style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:600;color:#16a34a;cursor:pointer;">Got it â</button><button onclick="tutorConfidence('still')" style="background:#fff7ed;border:0.5px solid #fed7aa;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:600;color:#ea580c;cursor:pointer;">Still confused âº</button><button onclick="tutorToFlashcards()" style="background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:6px 14px;font-size:12px;color:var(--text-2);cursor:pointer;">â Flashcards</button>`;chat.appendChild(conf);}chat.scrollTop=chat.scrollHeight;}
 
       function showTutorTyping(){const chat=document.getElementById('tutorChatMessages');if(!chat)return;const typing=document.createElement('div');typing.id='tutorTypingIndicator';typing.className='tutor-typing';typing.innerHTML='<span></span><span></span><span></span>';chat.appendChild(typing);chat.scrollTop=chat.scrollHeight;}
       function hideTutorTyping(){const el=document.getElementById('tutorTypingIndicator');if(el)el.remove();}
@@ -5377,7 +5377,7 @@
         appendTutorBubble(question,'user',false);
         if(document.getElementById('tutorQuestionInput'))document.getElementById('tutorQuestionInput').value='';
         showTutorTyping();
-        const modeMap={explain:'Explain concepts clearly and simply.',quiz:'Quiz the student with a question then evaluate their answer.',socratic:'Use the Socratic method — ask thought-provoking questions instead of giving answers.',coach:'Be a strict study coach. Be direct and challenge the student.'};
+        const modeMap={explain:'Explain concepts clearly and simply.',quiz:'Quiz the student with a question then evaluate their answer.',socratic:'Use the Socratic method â ask thought-provoking questions instead of giving answers.',coach:'Be a strict study coach. Be direct and challenge the student.'};
         const personaMap={patient:'You are a patient, warm, encouraging teacher.',coach:'You are a strict, no-nonsense study coach.',buddy:'You are a friendly, casual study buddy.'};
         window._tutorHistory.push({role:'user',content:question});
         const instructions=(personaMap[window._tutorPersona]||'')+' '+(modeMap[window._tutorMode]||'')+' Keep responses focused and conversational. Reference source material when possible.';
@@ -5386,7 +5386,7 @@
       }
 
       function generateTutorSummary(){if(!window._tutorHistory.length)return;const input=document.getElementById('tutorQuestionInput');if(input)input.value='Summarize everything we have covered in this session in a clear organized way.';runAiTutor();}
-      function clearAiTutor(){window._tutorHistory=[];window._tutorGotIt=0;window._tutorStill=0;window._tutorSeconds=0;window._tutorSessionStarted=false;clearInterval(window._tutorTimerInterval);window._tutorTimerInterval=null;const timer=document.getElementById('tutorTimer');if(timer)timer.textContent='0:00';const chat=document.getElementById('tutorChatMessages');if(chat)chat.innerHTML='<div style="text-align:center;padding:32px 0;"><div style="font-size:32px;margin-bottom:10px;">🤖</div><p style="font-size:14px;color:var(--text-muted);margin:0;">Add material on the left and ask your first question below.</p></div>';['tutorSourceText','tutorQuestionInput'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});setTutorStatus('','');}
+      function clearAiTutor(){window._tutorHistory=[];window._tutorGotIt=0;window._tutorStill=0;window._tutorSeconds=0;window._tutorSessionStarted=false;clearInterval(window._tutorTimerInterval);window._tutorTimerInterval=null;const timer=document.getElementById('tutorTimer');if(timer)timer.textContent='0:00';const chat=document.getElementById('tutorChatMessages');if(chat)chat.innerHTML='<div style="text-align:center;padding:32px 0;"><div style="font-size:32px;margin-bottom:10px;">ð¤</div><p style="font-size:14px;color:var(--text-muted);margin:0;">Add material on the left and ask your first question below.</p></div>';['tutorSourceText','tutorQuestionInput'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});setTutorStatus('','');}
       function copyAiTutorOutput(){const msgs=window._tutorHistory.map(m=>m.role.toUpperCase()+': '+m.content).join('\n\n');if(msgs){navigator.clipboard.writeText(msgs);setTutorStatus('Copied.','success');}}
       function saveAiTutorToDrive(){const msgs=window._tutorHistory.map(m=>m.role.toUpperCase()+': '+m.content).join('\n\n');if(msgs){google.script.run.withSuccessHandler(r=>setTutorStatus('Saved.','success')).exportTextToGoogleDoc('Flashfo - AI Tutor Session',msgs);}}
       function speakAiTutorOutput(){const last=window._tutorHistory.filter(m=>m.role==='assistant').pop();if(last)playPremiumTts(last.content,getSelectedPremiumVoice());}
@@ -5408,8 +5408,8 @@
       function suiteUseCurrentLesson(){document.getElementById('suiteSourceText').value=document.getElementById('lessonPlanOutput')?.value||'';}
       function suiteUseSelectedFolder(){const t=getAllFolderContentText();document.getElementById('suiteSourceText').value=t||'';if(!t)setSuiteStatus('No folder content found yet.','error');}
       function getAllFolderContentText(){try{const f=loadFolders?loadFolders():[];return f.map(x=>'Folder: '+x.name+'\n'+(x.items||[]).map(it=>JSON.stringify(it)).join('\n')).join('\n\n');}catch(e){return '';}}
-      const UNIVERSAL_ACTION_POOL=[{title:'Use this as source',detail:'Send any content into another generator.',icon:'↗',section:'summarize'},{title:'AI Tutor',detail:'Ask a question about saved material.',icon:'?',section:'ai-tutor',feature:'folder_tutor'},{title:'Smart Study Path',detail:'Get a guided study sequence.',icon:'✦',section:'learning-suite',feature:'smart_study_path'},{title:'Worksheet Generator',detail:'Create a printable worksheet.',icon:'□',section:'learning-suite',feature:'worksheet_generator'},{title:'Rubric Generator',detail:'Build teacher-ready rubrics.',icon:'✓',section:'learning-suite',feature:'rubric_generator'},{title:'Folder AI',detail:'Ask or generate from folder contents.',icon:'▣',section:'learning-suite',feature:'folder_ai'},{title:'Source Library',detail:'Save sources once and reuse them.',icon:'▧',section:'source-library'}];
-      let universalActionOffset=0;function buildUniversalActionHtml(items){return items.map(a=>'<div class="v5-action-row" onclick="openUniversalAction(\''+a.section+'\',\''+(a.feature||'')+'\')"><div style="display:flex;gap:12px;align-items:center;"><div class="v5-feature-icon" style="width:42px;height:42px;background:#eef4ff;color:#2563eb;">'+escapeHtml(a.icon)+'</div><div><strong>'+escapeHtml(a.title)+'</strong><small>'+escapeHtml(a.detail)+'</small></div></div><span>›</span></div>').join('');}function getNextUniversalActions(){const v=[];for(let i=0;i<3;i++)v.push(UNIVERSAL_ACTION_POOL[(universalActionOffset+i)%UNIVERSAL_ACTION_POOL.length]);universalActionOffset=(universalActionOffset+1)%UNIVERSAL_ACTION_POOL.length;return v;}function renderUniversalActions(){const box=document.getElementById('rotatingUniversalActions');if(!box)return;const nextItems=getNextUniversalActions();const swap=function(){box.innerHTML=buildUniversalActionHtml(nextItems);requestAnimationFrame(()=>box.classList.remove('is-fading'));};if(!box.innerHTML.trim()){swap();return;}box.classList.add('is-fading');setTimeout(swap,260);}function openUniversalAction(section,feature){showSection(section);if(section==='ai-tutor')return;if(feature){setTimeout(()=>{const s=document.getElementById('suiteFeatureSelect');if(s){s.value=feature;renderSuiteFeatureDetails();}},50);}}
+      const UNIVERSAL_ACTION_POOL=[{title:'Use this as source',detail:'Send any content into another generator.',icon:'â',section:'summarize'},{title:'AI Tutor',detail:'Ask a question about saved material.',icon:'?',section:'ai-tutor',feature:'folder_tutor'},{title:'Smart Study Path',detail:'Get a guided study sequence.',icon:'â¦',section:'learning-suite',feature:'smart_study_path'},{title:'Worksheet Generator',detail:'Create a printable worksheet.',icon:'â¡',section:'learning-suite',feature:'worksheet_generator'},{title:'Rubric Generator',detail:'Build teacher-ready rubrics.',icon:'â',section:'learning-suite',feature:'rubric_generator'},{title:'Folder AI',detail:'Ask or generate from folder contents.',icon:'â£',section:'learning-suite',feature:'folder_ai'},{title:'Source Library',detail:'Save sources once and reuse them.',icon:'â§',section:'source-library'}];
+      let universalActionOffset=0;function buildUniversalActionHtml(items){return items.map(a=>'<div class="v5-action-row" onclick="openUniversalAction(\''+a.section+'\',\''+(a.feature||'')+'\')"><div style="display:flex;gap:12px;align-items:center;"><div class="v5-feature-icon" style="width:42px;height:42px;background:#eef4ff;color:#2563eb;">'+escapeHtml(a.icon)+'</div><div><strong>'+escapeHtml(a.title)+'</strong><small>'+escapeHtml(a.detail)+'</small></div></div><span>âº</span></div>').join('');}function getNextUniversalActions(){const v=[];for(let i=0;i<3;i++)v.push(UNIVERSAL_ACTION_POOL[(universalActionOffset+i)%UNIVERSAL_ACTION_POOL.length]);universalActionOffset=(universalActionOffset+1)%UNIVERSAL_ACTION_POOL.length;return v;}function renderUniversalActions(){const box=document.getElementById('rotatingUniversalActions');if(!box)return;const nextItems=getNextUniversalActions();const swap=function(){box.innerHTML=buildUniversalActionHtml(nextItems);requestAnimationFrame(()=>box.classList.remove('is-fading'));};if(!box.innerHTML.trim()){swap();return;}box.classList.add('is-fading');setTimeout(swap,260);}function openUniversalAction(section,feature){showSection(section);if(section==='ai-tutor')return;if(feature){setTimeout(()=>{const s=document.getElementById('suiteFeatureSelect');if(s){s.value=feature;renderSuiteFeatureDetails();}},50);}}
       const SOURCE_LIBRARY_KEY='flashfo_source_library_v1';function loadSourceLibrary(){try{return JSON.parse(localStorage.getItem(SOURCE_LIBRARY_KEY)||'[]')}catch(e){return[]}}function saveSourceLibrary(i){localStorage.setItem(SOURCE_LIBRARY_KEY,JSON.stringify(i||[]));}
       function addSourceLibraryItem(){const title=document.getElementById('sourceLibraryTitle')?.value.trim();const url=document.getElementById('sourceLibraryUrl')?.value.trim();const notes=document.getElementById('sourceLibraryNotes')?.value.trim();if(!title&&!url&&!notes)return setSourceLibraryStatus('Add a title, URL, or notes first.','error');const items=loadSourceLibrary();items.unshift({id:'src_'+Date.now(),title:title||url||'Untitled source',url,notes,createdAt:new Date().toISOString(),selected:false});saveSourceLibrary(items);['sourceLibraryTitle','sourceLibraryUrl','sourceLibraryNotes'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});renderSourceLibrary();setSourceLibraryStatus('Source saved.','success');}
       function setSourceLibraryStatus(m,t){const e=document.getElementById('sourceLibraryStatus');if(e){e.textContent=m||'';e.className='status '+(t||'');}}
@@ -5423,7 +5423,7 @@
       function createAssignmentPrototype(){const title=document.getElementById('assignmentTitleInput')?.value.trim();const instructions=document.getElementById('assignmentInstructionsInput')?.value.trim();if(!title&&!instructions)return setClassroomStatus('Add an assignment title or instructions first.','error');const d=loadClassroomPrototype();d.assignments.unshift({id:'asg_'+Date.now(),title:title||'Untitled assignment',instructions,createdAt:new Date().toISOString(),status:'Draft'});saveClassroomPrototype(d);renderClassroomPrototype();setClassroomStatus('Assignment created.','success');}
       function createLiveQuizPrototype(){const d=loadClassroomPrototype();const code=('LIVE'+Math.random().toString(36).slice(2,6)).toUpperCase();d.live.unshift({id:'live_'+Date.now(),code,title:document.getElementById('assignmentTitleInput')?.value.trim()||'Live Review',createdAt:new Date().toISOString()});saveClassroomPrototype(d);renderClassroomPrototype();setClassroomStatus('Live quiz session created: '+code+'.','success');}
       function renderTeacherAnalyticsPrototype(){const d=loadClassroomPrototype();const o=document.getElementById('classroomPrototypeOutput');if(!o)return;const q=(quizSessionState&&quizSessionState.answers?quizSessionState.answers:[]);o.innerHTML='<h3 style="margin-top:0;color:var(--title)">Teacher Analytics</h3><div class="classroom-card-row"><strong>Classes</strong><div class="muted-note">'+d.classes.length+' created</div></div><div class="classroom-card-row"><strong>Assignments</strong><div class="muted-note">'+d.assignments.length+' drafted</div></div><div class="classroom-card-row"><strong>Live sessions</strong><div class="muted-note">'+d.live.length+' started</div></div><div class="classroom-card-row"><strong>Current quiz activity</strong><div class="muted-note">'+q.length+' answers captured locally in this browser session.</div></div>';}
-      function renderClassroomPrototype(){const out=document.getElementById('classroomPrototypeOutput');if(!out)return;const d=loadClassroomPrototype();const h=['<h3 style="margin-top:0;color:var(--title)">Prototype items</h3>'];if(!d.classes.length&&!d.assignments.length&&!d.live.length)h.push('<div class="empty-box">No classroom items yet.</div>');d.classes.forEach(c=>h.push('<div class="classroom-card-row"><strong>'+escapeHtml(c.name)+'</strong><div class="muted-note">Join code: '+escapeHtml(c.code)+'</div></div>'));d.assignments.forEach(a=>h.push('<div class="classroom-card-row"><strong>'+escapeHtml(a.title)+'</strong><div class="muted-note">'+escapeHtml(a.status)+' · '+escapeHtml((a.instructions||'').slice(0,130))+'</div></div>'));d.live.forEach(l=>h.push('<div class="classroom-card-row"><strong>'+escapeHtml(l.title)+'</strong><div class="muted-note">Live code: '+escapeHtml(l.code)+'</div></div>'));out.innerHTML=h.join('');}
+      function renderClassroomPrototype(){const out=document.getElementById('classroomPrototypeOutput');if(!out)return;const d=loadClassroomPrototype();const h=['<h3 style="margin-top:0;color:var(--title)">Prototype items</h3>'];if(!d.classes.length&&!d.assignments.length&&!d.live.length)h.push('<div class="empty-box">No classroom items yet.</div>');d.classes.forEach(c=>h.push('<div class="classroom-card-row"><strong>'+escapeHtml(c.name)+'</strong><div class="muted-note">Join code: '+escapeHtml(c.code)+'</div></div>'));d.assignments.forEach(a=>h.push('<div class="classroom-card-row"><strong>'+escapeHtml(a.title)+'</strong><div class="muted-note">'+escapeHtml(a.status)+' Â· '+escapeHtml((a.instructions||'').slice(0,130))+'</div></div>'));d.live.forEach(l=>h.push('<div class="classroom-card-row"><strong>'+escapeHtml(l.title)+'</strong><div class="muted-note">Live code: '+escapeHtml(l.code)+'</div></div>'));out.innerHTML=h.join('');}
       function clearClassroomPrototype(){if(confirm('Clear classroom prototype data?')){saveClassroomPrototype({classes:[],assignments:[],live:[]});renderClassroomPrototype();}}
       document.addEventListener('DOMContentLoaded', initLearningSuite);
       document.addEventListener('DOMContentLoaded', loadSidebarState);
@@ -5450,7 +5450,7 @@
 <!-- Auth Modal -->
 <div id="ffAuthModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
   <div style="background:var(--surface);border-radius:20px;padding:32px;width:360px;max-width:90vw;box-shadow:0 24px 64px rgba(0,0,0,0.18);position:relative;">
-    <button onclick="closeAuthModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;color:var(--text-muted);cursor:pointer;">×</button>
+    <button onclick="closeAuthModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;color:var(--text-muted);cursor:pointer;">Ã</button>
     <div style="text-align:center;margin-bottom:24px;">
       <div style="width:40px;height:40px;background:var(--primary);border-radius:12px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
@@ -5764,17 +5764,21 @@ async function loadThisDayInHistory() {
     
     // Pick a notable event
     const notable = events.filter(e => e.year && e.text && e.text.length > 40);
+    // Filter out morbid/tragic events — show only positive milestones
+    const morbidPattern = /\b(killed|kill|dead|died|dies|death|deaths|crash|crashed|disaster|war|battle|attack|attacked|bombing|bomb|terrorist|terrorism|earthquake|hurricane|flood|fire|explosion|exploded|murder|murdered|executed|execution|sentenced|convicted|derail|derailed|sank|sunk|collapsed|massacre|genocide|assassination|assassinated|tragedy|fatal|fatalities|casualties|wounded|hijack|hijacked|hostage|riot|riots|coup|famine|plague|epidemic|pandemic|destroyed|devastated|burned|stabbed|shot|hanged|poisoned|drowned)\b/i;
+    const positive = notable.filter(e => !morbidPattern.test(e.text));
+    const filtered = positive.length > 0 ? positive : notable;
     if (!notable.length) return;
     
     // Pick one from history (not too recent)
-    const historical = notable.filter(e => e.year < (now.getFullYear() - 10));
+    const historical = filtered.filter(e => e.year < (now.getFullYear() - 10));
     const pick = historical[Math.floor(Math.random() * Math.min(5, historical.length))] || notable[0];
     
     const titleEl = document.getElementById('thisDayTitle');
     const descEl = document.getElementById('thisDayDesc');
     const tagEl = document.getElementById('thisDayTag');
     
-    if (titleEl) titleEl.textContent = pick.year + ' — ' + pick.text.split('.')[0];
+    if (titleEl) titleEl.textContent = pick.year + ' â ' + pick.text.split('.')[0];
     if (descEl) descEl.textContent = pick.text.length > 150 ? pick.text.slice(0, 150) + '...' : pick.text;
     if (tagEl) tagEl.textContent = 'History';
     
