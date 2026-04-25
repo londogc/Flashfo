@@ -3,44 +3,64 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+const Icon = ({ d, size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d={d} />
+  </svg>
+)
+
+const ICONS = {
+  dashboard: 'M1 1h6v6H1zm8 0h6v6H9zM1 9h6v6H1zm8 3h2m2 0h-2m0 0v-2m0 2v2',
+  create:    'M8 1l1.8 5H15l-4.4 3.2 1.7 5.2L8 11.2 3.7 14.4l1.7-5.2L1 6h5.2z',
+  study:     'M2 4h12M2 8h8M2 12h10',
+  teach:     'M8 1a4 4 0 100 8 4 4 0 000-8zm-6 14c0-3.3 2.7-6 6-6s6 2.7 6 6',
+  mystuff:   'M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm2 3h6m-6 3h4',
+  summarize: 'M2 3h12v2.5H2zm0 4h8v2.5H2zm0 4h10v2H2',
+  flashcards:'M1 2h6v5H1zm8 0h6v5H9zM1 9h6v5H1zm8 2h2m2 0h-2m0-2v2m0 2v-2',
+  quiz:      'M8 1a7 7 0 100 14A7 7 0 008 1zm0 10.5v.5m0-7c1.1 0 2 .9 2 2s-.9 2-2 2',
+  lesson:    'M13 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V2a1 1 0 00-1-1zM5 5h6m-6 3h6m-6 3h4',
+  search:    'M7 1a6 6 0 100 12A6 6 0 007 1zm7 14l-3-3',
+  tutor:     'M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6zm0-9v2m0 10v-2m7-5h-2M3 8H1',
+  suite:     'M8 1l1.5 4H14l-3.7 2.7 1.4 4.3L8 9.5 4.3 12 5.7 7.7 2 5h4.5z',
+  sources:   'M3 1h2v14H3zm4 0h2v14H7zm4 0h2v14h-2z',
+  sun:       'M8 1v2m0 10v2M1 8h2m10 0h2M3.5 3.5l1.5 1.5m6 6l1.5 1.5M3.5 12.5l1.5-1.5m6-6l1.5-1.5M8 5a3 3 0 100 6 3 3 0 000-6z',
+  moon:      'M12 3A6 6 0 006 15a7 7 0 006-12z',
+  chevronL:  'M10 3L5 8l5 5',
+  chevronR:  'M6 3l5 5-5 5',
+}
+
 const NAV = [
-  { href: '/', label: 'Dashboard' },
-  { href: '/create', label: 'Create' },
-  { href: '/study', label: 'Study' },
-  { href: '/teach', label: 'Teach' },
-  { href: '/my-stuff', label: 'My Stuff' },
+  { href: '/', label: 'Dashboard', icon: 'dashboard' },
+  { href: '/create', label: 'Create', icon: 'create' },
+  { href: '/study', label: 'Study', icon: 'study' },
+  { href: '/teach', label: 'Teach', icon: 'teach' },
+  { href: '/my-stuff', label: 'My Stuff', icon: 'mystuff' },
 ]
 const TOOLS = [
-  { href: '/summarize', label: 'Summarize' },
-  { href: '/flashcards', label: 'Flashcards' },
-  { href: '/quiz', label: 'Quiz' },
-  { href: '/lesson-builder', label: 'Lesson Builder' },
-  { href: '/search', label: 'Search' },
+  { href: '/summarize', label: 'Summarize', icon: 'summarize' },
+  { href: '/flashcards', label: 'Flashcards', icon: 'flashcards' },
+  { href: '/quiz', label: 'Quiz', icon: 'quiz' },
+  { href: '/lesson-builder', label: 'Lesson Builder', icon: 'lesson' },
+  { href: '/search', label: 'Search', icon: 'search' },
 ]
 const ADVANCED = [
-  { href: '/ai-tutor', label: 'AI Tutor' },
-  { href: '/ai-suite', label: 'AI Suite' },
-  { href: '/source-library', label: 'Source Library' },
+  { href: '/ai-tutor', label: 'AI Tutor', icon: 'tutor' },
+  { href: '/ai-suite', label: 'AI Suite', icon: 'suite' },
+  { href: '/source-library', label: 'Source Library', icon: 'sources' },
 ]
 
 function NavItem({ item, collapsed, active }) {
   return (
-    <Link
-      href={item.href}
-      className={[
-        'flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm font-medium transition-colors',
-        active ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700',
-      ].join(' ')}
-    >
-      <span className="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0 opacity-60" />
-      {!collapsed && <span className="truncate">{item.label}</span>}
+    <Link href={item.href} title={collapsed ? item.label : undefined}
+      className={`flex items-center gap-2.5 px-2 py-[7px] rounded-lg text-[13px] font-medium transition-all ${
+        active ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+      }`}>
+      <span className="flex-shrink-0 opacity-90">
+        <Icon d={ICONS[item.icon]} />
+      </span>
+      {!collapsed && <span className="truncate leading-none">{item.label}</span>}
     </Link>
   )
-}
-
-function SectionLabel({ label, collapsed }) {
-  if (collapsed) return <div className="my-2 border-t border-slate-100" />
-  return <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2 pt-4 pb-1">{label}</div>
 }
 
 export default function Shell({ children }) {
@@ -49,100 +69,72 @@ export default function Shell({ children }) {
   const [dark, setDark] = useState(false)
 
   const toggleDark = () => {
-    setDark(!dark)
-    document.documentElement.classList.toggle('dark', !dark)
+    setDark(d => !d)
+    document.documentElement.classList.toggle('dark')
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100">
-      <aside
-        style={{ width: collapsed ? 56 : 208 }}
-        className="bg-white border-r border-slate-100 flex flex-col flex-shrink-0 transition-all duration-200"
-      >
-        <div className="flex items-center gap-2.5 px-3.5 py-3.5 border-b border-slate-100 flex-shrink-0">
+    <div className="flex h-screen overflow-hidden" style={{background:'#f1f5f9'}}>
+      <aside style={{width: collapsed ? 56 : 210, transition:'width 0.2s'}}
+        className="bg-white border-r border-slate-100 flex flex-col flex-shrink-0 overflow-hidden">
+
+        <div className="flex items-center gap-2.5 px-3.5 h-[52px] border-b border-slate-100 flex-shrink-0">
           <div className="w-7 h-7 bg-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 14 14" fill="currentColor">
-              <polygon points="7 1 2 8 7 8 6 13 12 6 7 6" />
-            </svg>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-slate-900 leading-none">Flashfo</div>
-              <div className="text-[10px] text-slate-400 mt-0.5">Study workspace</div>
+              <div className="text-[13px] font-bold text-slate-900 leading-none tracking-tight">Flashfo</div>
+              <div className="text-[10px] text-slate-400 mt-0.5 font-normal">Study workspace</div>
             </div>
           )}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="text-slate-300 hover:text-slate-500 transition-colors flex-shrink-0"
-          >
-            <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
-              {collapsed
-                ? <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                : <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>}
-            </svg>
+          <button onClick={() => setCollapsed(c => !c)}
+            className="text-slate-300 hover:text-slate-500 flex-shrink-0 transition-colors p-0.5 rounded">
+            <Icon d={collapsed ? ICONS.chevronR : ICONS.chevronL} size={13} />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-0.5">
           {NAV.map(item => <NavItem key={item.href} item={item} collapsed={collapsed} active={pathname === item.href} />)}
-          <SectionLabel label="Tools" collapsed={collapsed} />
+          {!collapsed
+            ? <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2 pt-4 pb-1">Tools</div>
+            : <div className="my-2 border-t border-slate-100"/>}
           {TOOLS.map(item => <NavItem key={item.href} item={item} collapsed={collapsed} active={pathname === item.href} />)}
-          <SectionLabel label="Advanced" collapsed={collapsed} />
+          {!collapsed
+            ? <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2 pt-4 pb-1">Advanced</div>
+            : <div className="my-2 border-t border-slate-100"/>}
           {ADVANCED.map(item => <NavItem key={item.href} item={item} collapsed={collapsed} active={pathname === item.href} />)}
         </nav>
 
-        <div className="p-2 border-t border-slate-100">
-          <button
-            onClick={toggleDark}
-            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs text-slate-400 hover:bg-slate-50 transition-colors"
-          >
-            <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 12a4 4 0 100-8 4 4 0 000 8zm0-10V1m0 14v-1M1 8H0m16 0h-1M3.5 3.5l-.7-.7m9.9 9.9-.7-.7M3.5 12.5l-.7.7m9.9-9.9-.7.7" stroke="currentColor" strokeWidth="1.2" fill="none"/>
-            </svg>
+        <div className="p-2 border-t border-slate-100 flex-shrink-0">
+          <button onClick={toggleDark}
+            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-xs text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors">
+            <Icon d={dark ? ICONS.moon : ICONS.sun} size={14} />
             {!collapsed && <span>{dark ? 'Dark mode' : 'Light mode'}</span>}
           </button>
         </div>
       </aside>
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <header className="h-13 bg-white border-b border-slate-100 flex items-center px-5 gap-3 flex-shrink-0">
-          <div className="flex-1 max-w-md h-8 bg-slate-50 border border-slate-100 rounded-lg flex items-center px-3 gap-2">
-            <svg className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="6.5" cy="6.5" r="5" /><path d="M12 12l2.5 2.5" strokeLinecap="round"/>
-            </svg>
-            <span className="text-xs text-slate-400 flex-1">Search any topic, question, or keyword...</span>
-            <span className="text-[10px] text-slate-300 bg-white border border-slate-100 px-1.5 py-0.5 rounded">⌘K</span>
+        <header className="h-[52px] bg-white border-b border-slate-100 flex items-center px-5 gap-3 flex-shrink-0">
+          <div className="flex-1 max-w-md h-8 bg-slate-50 border border-slate-200 rounded-lg flex items-center px-3 gap-2 hover:border-slate-300 transition-colors cursor-text">
+            <Icon d={ICONS.search} size={13} />
+            <span className="text-[12px] text-slate-400 flex-1 select-none">Search any topic, question, or keyword...</span>
+            <span className="text-[10px] text-slate-300 bg-white border border-slate-100 px-1.5 py-0.5 rounded font-mono">⌘K</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <button className="h-8 px-3 text-xs font-medium bg-slate-50 border border-slate-100 text-slate-500 rounded-lg hover:bg-slate-100 transition-colors">
+            <button className="h-8 px-3 text-[12px] font-medium bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors">
               Upgrade
             </button>
-            <div className="w-7 h-7 rounded-full bg-blue-700 flex items-center justify-center text-white text-[11px] font-semibold">
+            <div className="w-7 h-7 rounded-full bg-blue-700 flex items-center justify-center text-white text-[11px] font-bold select-none">
               GL
             </div>
           </div>
         </header>
-
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>
       </div>
-
-      <nav className="hidden fixed bottom-3 left-3 right-3 z-50 bg-white border border-slate-100 rounded-2xl px-2 py-1.5 shadow-lg" style={{display:'none'}}>
-        {NAV.slice(0, 5).map(item => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={[
-              'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-[10px] font-medium transition-colors',
-              pathname === item.href ? 'text-blue-700 bg-blue-50' : 'text-slate-400',
-            ].join(' ')}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-current" />
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </nav>
     </div>
   )
 }
