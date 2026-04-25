@@ -1559,7 +1559,474 @@
       .suite-feature-details { min-height:auto!important; }
       @media(max-width:1180px){.tutor-layout,.suite-workbench,.suite-calm-grid{grid-template-columns:1fr;}}
 
-    </style>
+    
+
+      /* =====================================================
+         Flashfo Vercel Premium UI Pass
+         Cleaner website shell, unified search, compact language selector,
+         softer sidebar collapse control, fluid panels, field typography,
+         and gentle reveal motion.
+      ===================================================== */
+      :root {
+        --ff-radius-xl: 32px;
+        --ff-radius-lg: 24px;
+        --ff-radius-md: 18px;
+        --ff-hairline: rgba(15,23,42,.08);
+        --ff-soft-shadow: 0 22px 70px rgba(15, 23, 42, .07);
+        --ff-hover-shadow: 0 28px 90px rgba(15, 23, 42, .11);
+        --ff-page-pad: clamp(24px, 3vw, 48px);
+      }
+
+      html { scroll-behavior: smooth; }
+      body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important; }
+
+      /* Real website top bar: one unified search object + compact controls */
+      .top-utility-bar {
+        grid-template-columns: minmax(420px, 760px) auto !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: clamp(18px, 2.5vw, 36px) !important;
+        padding: 18px clamp(22px, 3vw, 42px) !important;
+        background: color-mix(in srgb, var(--v5-bg) 74%, white 18%) !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--v5-line) 84%, transparent) !important;
+        box-shadow: 0 12px 40px rgba(15, 23, 42, .035) !important;
+      }
+
+      body.theme-black .top-utility-bar {
+        background: rgba(3, 7, 18, .72) !important;
+        box-shadow: 0 12px 44px rgba(0,0,0,.28) !important;
+      }
+
+      body.theme-blue .top-utility-bar {
+        background: rgba(226, 239, 255, .72) !important;
+      }
+
+      .top-search-wrap {
+        grid-column: 1 !important;
+        justify-self: start !important;
+        width: min(100%, 760px) !important;
+        max-width: 760px !important;
+        display: grid !important;
+        grid-template-columns: 20px minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 12px !important;
+        padding: 7px 8px 7px 18px !important;
+        border-radius: 999px !important;
+        background: rgba(255,255,255,.88) !important;
+        border: 1px solid rgba(15,23,42,.075) !important;
+        box-shadow: 0 10px 32px rgba(15, 23, 42, .065) !important;
+        backdrop-filter: blur(18px) !important;
+      }
+
+      body.theme-black .top-search-wrap {
+        background: rgba(15, 23, 42, .82) !important;
+        border-color: rgba(255,255,255,.10) !important;
+      }
+
+      body.theme-blue .top-search-wrap {
+        background: rgba(255,255,255,.82) !important;
+        border-color: rgba(37, 99, 235, .13) !important;
+        box-shadow: 0 18px 42px rgba(37,99,235,.10) !important;
+      }
+
+      .top-search-wrap span {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 20px !important;
+        height: 20px !important;
+        color: #8ca0bd !important;
+        font-size: 15px !important;
+        line-height: 1 !important;
+      }
+
+      .top-search-input,
+      .top-search-input.input,
+      .top-search-wrap .top-search-input {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 13px 0 !important;
+        min-height: auto !important;
+        color: var(--title) !important;
+        font-size: 14px !important;
+        font-family: inherit !important;
+      }
+
+      .top-search-input::placeholder { color: #7f8ea8 !important; }
+      body.theme-black .top-search-input::placeholder { color: #94a3b8 !important; }
+
+      .top-search-action {
+        border-radius: 999px !important;
+        min-height: 42px !important;
+        padding: 0 20px !important;
+        box-shadow: 0 12px 26px rgba(37,99,235,.24) !important;
+        letter-spacing: -0.01em !important;
+      }
+
+      .top-actions {
+        grid-column: 2 !important;
+        justify-self: end !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        flex-wrap: nowrap !important;
+        min-width: 0 !important;
+      }
+
+      .language-select {
+        appearance: auto !important;
+        width: auto !important;
+        min-width: 116px !important;
+        max-width: 140px !important;
+        height: 42px !important;
+        padding: 0 12px !important;
+        border-radius: 999px !important;
+        background: rgba(255,255,255,.86) !important;
+        border: 1px solid rgba(15,23,42,.08) !important;
+        box-shadow: 0 10px 24px rgba(15,23,42,.045) !important;
+        font-size: 13px !important;
+        font-family: inherit !important;
+        color: var(--title) !important;
+      }
+
+      body.theme-black .language-select {
+        background: rgba(15,23,42,.82) !important;
+        border-color: rgba(255,255,255,.10) !important;
+      }
+
+      /* Sidebar: collapse control becomes a subtle rail handle, not a random floating button */
+      .sidebar-card { position: relative !important; overflow: visible !important; }
+      .sidebar-brand { padding-right: 0 !important; gap: 12px !important; }
+      .sidebar-collapse-toggle {
+        position: absolute !important;
+        top: 20px !important;
+        right: -15px !important;
+        width: 28px !important;
+        height: 48px !important;
+        border-radius: 999px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        background: color-mix(in srgb, var(--v5-surface-solid) 90%, white 10%) !important;
+        border: 1px solid var(--v5-line) !important;
+        color: var(--muted) !important;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, .10) !important;
+        z-index: 10 !important;
+        font-size: 0 !important;
+        transform: none !important;
+      }
+
+      .sidebar-collapse-toggle::before {
+        content: '‹';
+        font-size: 18px;
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      body.sidebar-collapsed .sidebar-collapse-toggle {
+        top: 20px !important;
+        right: -15px !important;
+        transform: none !important;
+      }
+
+      body.sidebar-collapsed .sidebar-collapse-toggle::before { content: '›'; }
+      .sidebar-collapse-toggle:hover {
+        background: var(--primary) !important;
+        color: #fff !important;
+        transform: none !important;
+      }
+
+      body.sidebar-collapsed .sidebar-brand {
+        margin-bottom: 28px !important;
+        padding-right: 0 !important;
+      }
+
+      body.sidebar-collapsed .brand-mark.flashfo-logo-mark,
+      body.sidebar-collapsed .flashfo-logo-mark {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+      }
+
+      .nav-icon {
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.24) !important;
+      }
+
+      /* Website layout: more breathing room and less boxy page rhythm */
+      .content-area {
+        padding-left: clamp(28px, 3vw, 56px) !important;
+        padding-right: clamp(22px, 3vw, 42px) !important;
+      }
+
+      .section { padding-bottom: 72px !important; }
+      .premium-page {
+        padding: clamp(28px, 4vw, 56px) 0 72px !important;
+        max-width: 1240px !important;
+      }
+
+      .premium-hero {
+        margin-bottom: clamp(28px, 4vw, 48px) !important;
+        align-items: center !important;
+      }
+
+      .premium-page-title {
+        letter-spacing: -0.035em !important;
+        line-height: 1.06 !important;
+      }
+
+      .premium-page-subtitle,
+      .premium-source-help,
+      .premium-muted,
+      .v5-hero-copy {
+        line-height: 1.8 !important;
+      }
+
+      /* Softer surfaces: blend controls into the UI instead of boxing everything */
+      .premium-card,
+      .premium-result-card,
+      .premium-canvas,
+      .premium-side-card,
+      .suite-choice-card,
+      .v5-actions-card,
+      .v5-recent-list,
+      .v5-feature-rail {
+        border-color: color-mix(in srgb, var(--v5-line) 72%, transparent) !important;
+        box-shadow: var(--ff-soft-shadow) !important;
+        border-radius: var(--ff-radius-xl) !important;
+      }
+
+      .premium-card {
+        background: color-mix(in srgb, var(--v5-surface-solid) 70%, transparent) !important;
+        padding: clamp(22px, 2.4vw, 30px) !important;
+      }
+
+      body.theme-black .premium-card {
+        background: rgba(15,23,42,.58) !important;
+      }
+
+      .premium-result-card,
+      .premium-canvas {
+        background: color-mix(in srgb, var(--v5-surface-solid) 78%, transparent) !important;
+        overflow: hidden !important;
+      }
+
+      body.theme-black .premium-result-card,
+      body.theme-black .premium-canvas {
+        background: rgba(15,23,42,.66) !important;
+      }
+
+      .premium-toolbar,
+      .premium-result-tabs {
+        padding: 22px 26px 10px !important;
+        background: transparent !important;
+        border-bottom: 0 !important;
+      }
+
+      .premium-toolbar strong {
+        color: var(--title) !important;
+        letter-spacing: -0.02em !important;
+      }
+
+      .premium-result-content {
+        padding: 16px 26px 28px !important;
+      }
+
+      /* Unified form typography: no robotic monospace in text areas or output panes */
+      input,
+      textarea,
+      select,
+      .input,
+      .textarea,
+      .output,
+      .premium-input,
+      .premium-textarea,
+      .suite-output-textarea,
+      .tutor-output {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+        letter-spacing: -0.01em !important;
+      }
+
+      textarea::placeholder,
+      input::placeholder,
+      .premium-textarea::placeholder,
+      .premium-input::placeholder,
+      .output::placeholder {
+        font-family: inherit !important;
+        color: color-mix(in srgb, var(--muted) 78%, transparent) !important;
+      }
+
+      .premium-input,
+      .premium-textarea,
+      .textarea,
+      .output {
+        border-radius: 22px !important;
+        border: 1px solid color-mix(in srgb, var(--v5-line) 78%, transparent) !important;
+        background: rgba(255,255,255,.68) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.45) !important;
+      }
+
+      body.theme-black .premium-input,
+      body.theme-black .premium-textarea,
+      body.theme-black .textarea,
+      body.theme-black .output {
+        background: rgba(2,6,23,.24) !important;
+        border-color: rgba(255,255,255,.10) !important;
+        box-shadow: none !important;
+      }
+
+      body.theme-blue .premium-input,
+      body.theme-blue .premium-textarea,
+      body.theme-blue .textarea,
+      body.theme-blue .output {
+        background: rgba(255,255,255,.58) !important;
+        border-color: rgba(37,99,235,.13) !important;
+      }
+
+      /* Tutor and suite: make panels feel like modern flowing pages */
+      .tutor-layout,
+      .suite-workbench,
+      .suite-layout,
+      .premium-two-col {
+        gap: clamp(22px, 3vw, 34px) !important;
+      }
+
+      .tutor-chat-card,
+      .suite-output-card,
+      #section-learning-suite .premium-result-card {
+        min-height: min(720px, calc(100vh - 180px)) !important;
+      }
+
+      .tutor-output,
+      .suite-output-textarea {
+        min-height: 520px !important;
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 18px 22px 28px !important;
+        color: var(--text) !important;
+        line-height: 1.72 !important;
+        resize: vertical !important;
+      }
+
+      .tutor-chat-card .premium-toolbar + .tutor-output {
+        border-top: 1px solid color-mix(in srgb, var(--v5-line) 40%, transparent) !important;
+        border-radius: 0 0 var(--ff-radius-xl) var(--ff-radius-xl) !important;
+      }
+
+      .suite-output-textarea {
+        border-radius: 0 0 var(--ff-radius-xl) var(--ff-radius-xl) !important;
+      }
+
+      /* Buttons: make secondary actions quieter and primary actions more intentional */
+      .btn,
+      .premium-tab,
+      .premium-source-pill,
+      .suite-choice-card {
+        transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease, opacity .18s ease !important;
+      }
+
+      .btn:hover,
+      .premium-tab:hover,
+      .suite-choice-card:hover {
+        transform: translateY(-1px) !important;
+      }
+
+      .btn-secondary,
+      .premium-tab {
+        background: rgba(255,255,255,.56) !important;
+        border-color: color-mix(in srgb, var(--v5-line) 82%, transparent) !important;
+        box-shadow: none !important;
+      }
+
+      body.theme-black .btn-secondary,
+      body.theme-black .premium-tab {
+        background: rgba(255,255,255,.055) !important;
+      }
+
+      .premium-action-row {
+        gap: 10px !important;
+      }
+
+      /* AI suite path cards become a natural selector instead of hard boxes */
+      .suite-calm-grid {
+        gap: 12px !important;
+      }
+
+      .suite-choice-card {
+        background: rgba(255,255,255,.42) !important;
+        border-color: color-mix(in srgb, var(--v5-line) 70%, transparent) !important;
+        box-shadow: none !important;
+      }
+
+      .suite-choice-card:hover {
+        background: var(--primary-soft) !important;
+        border-color: var(--primary-border) !important;
+      }
+
+      /* Search and language responsive behavior */
+      @media (max-width: 1180px) {
+        .top-utility-bar {
+          grid-template-columns: minmax(0, 1fr) auto !important;
+          gap: 16px !important;
+        }
+        .top-search-wrap { max-width: none !important; width: 100% !important; }
+      }
+
+      @media (max-width: 760px) {
+        .top-utility-bar {
+          grid-template-columns: 1fr !important;
+          align-items: stretch !important;
+          padding: 12px 14px !important;
+        }
+        .top-actions {
+          grid-column: 1 !important;
+          justify-self: stretch !important;
+          justify-content: flex-end !important;
+        }
+        .language-select { max-width: none !important; width: 100% !important; }
+        .content-area { padding-left: 16px !important; padding-right: 16px !important; }
+        .premium-page { padding-top: 24px !important; }
+        .top-search-wrap { grid-template-columns: 18px minmax(0,1fr) auto !important; }
+        .top-search-action { padding: 0 14px !important; }
+      }
+
+      @media (max-width: 520px) {
+        .top-search-wrap {
+          grid-template-columns: 18px minmax(0,1fr) !important;
+          border-radius: 24px !important;
+        }
+        .top-search-action {
+          grid-column: 1 / -1 !important;
+          width: 100% !important;
+        }
+      }
+
+      /* Subtle website motion */
+      @keyframes flashfoRiseIn {
+        from { opacity: 0; transform: translateY(18px); filter: blur(2px); }
+        to { opacity: 1; transform: translateY(0); filter: blur(0); }
+      }
+
+      .section.active .premium-hero,
+      .section.active .v5-hero-card,
+      .section.active .premium-card,
+      .section.active .premium-result-card,
+      .section.active .premium-canvas,
+      .section.active .v5-feature-rail,
+      .section.active .v5-recent-list,
+      .section.active .v5-actions-card {
+        animation: flashfoRiseIn .48s cubic-bezier(.2,.75,.25,1) both;
+      }
+
+      .section.active .premium-card:nth-of-type(2),
+      .section.active .premium-result-card:nth-of-type(2) { animation-delay: .05s; }
+
+      @media (prefers-reduced-motion: reduce) {
+        * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+      }
+</style>
   </head>
   <body class="theme-blue">
     <div class="shell">

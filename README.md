@@ -22,3 +22,16 @@ OPENAI_API_KEY=your OpenAI key
 - Core AI features now run through Next.js API routes instead of Apps Script `Code.gs`.
 - Google Drive export is temporarily converted to local downloadable data URLs. Real Drive sync should be added later after Google OAuth/login is implemented.
 - Supabase is not included yet. Add it later for real user accounts, saved work syncing, classes, and analytics.
+
+
+## Flashfo Premium UI Patch
+
+This build includes the Vercel UI cleanup pass:
+- unified top search bar and compact language selector
+- cleaner collapsed sidebar handle
+- softer, less box-heavy generator layouts
+- standardized sans-serif typography in textareas and output panels
+- smoother section fade/rise transitions
+- more breathable page spacing for the real website version
+
+Redeploy on Vercel after uploading these files. Keep `OPENAI_API_KEY` set in Environment Variables.
