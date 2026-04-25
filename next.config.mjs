@@ -1,1 +1,5 @@
-OPENAI_API_KEY=your_openai_api_key_here
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: false,
+};
+export default nextConfig;
