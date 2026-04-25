@@ -1,3 +1,2 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {};
-export default nextConfig;
+OPENAI_API_KEY=sk-your-key-here
+# Optional: OPENAI_MODEL=gpt-4.1-mini
