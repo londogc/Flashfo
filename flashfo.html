@@ -485,9 +485,9 @@
       .tool-2,.tool-3,.tutor-2,.suite-2,.split-grid { grid-template-columns: 1fr; }
       .path-grid,.mini-grid { grid-template-columns: 1fr 1fr; }
       .stat-grid,.quiz-type-grid { grid-template-columns: 1fr 1fr; }
-      .pg,.pg-tool,.pg-wide { padding: 18px 16px 80px; }
-      .mobile-nav { position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 80; display: grid; grid-template-columns: repeat(5,1fr); gap: 4px; padding: 6px; border-radius: var(--r-xl); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--sh-xl); backdrop-filter: blur(20px); }
-      .mobile-nav button { border: none; background: transparent; border-radius: var(--r-md); padding: 8px 4px; color: var(--text-2); font-family: var(--font); font-size: 11px; font-weight: 800; cursor: pointer; transition: background .12s, color .12s; }
+      .pg,.pg-tool,.pg-wide { padding: 18px 16px 140px; }
+      .mobile-nav { position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 80; display: flex; justify-content: center; align-items: center; gap: 4px; padding: 6px; border-radius: var(--r-xl); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--sh-xl); backdrop-filter: blur(20px); }
+      .mobile-nav button { border: none; background: transparent; border-radius: var(--r-md); padding: 8px 10px; min-width: 56px; max-width: 72px; color: var(--text-2); font-family: var(--font); font-size: 11px; font-weight: 800; cursor: pointer; transition: background .12s, color .12s; }
       .mobile-nav button.active,.mobile-nav button:hover { background: var(--primary-lt); color: var(--primary); }
       .mobile-plus { background: var(--primary) !important; color: #fff !important; font-size: 18px !important; border-radius: var(--r-md); }
     }
