@@ -5760,7 +5760,7 @@ async function loadThisDayInHistory() {
     
     // Pick a notable event
     const notable = events.filter(e => e.year && e.text && e.text.length > 40);
-    const morbidRx = /\b(kill(ed|ing|s)?|dead|d(ied|ies|eath|eaths)|crash(ed|es|ing)?|disaster|battle|attack(ed|s)?|bomb(ing|ed|s)?|terrorist|earthquake|hurricane|flood(ed|ing|s)?|explo(sion|sions|ded|ding)|murder(ed|s)?|execut(ed|ion|ions)|sentenced|derail(ed|s|ing)?|sank|sunk|collaps(ed|es)|massacre|genocide|assassinat(ed|ion|ions)|fatal(ities)?|casualt(y|ies)|hijack(ed|ing)?|riot(s|ed)?|famine|plague|epidemic|pandemic|destroy(ed|s)?|stabb(ed|ing)|shot|hang(ed|ing)|drown(ed|ing))\b/i;
+    const morbidRx = /\b(kill(ed|ing|s)?|dead|d(ied|ies|eath|eaths)|crash(ed|es|ing)?|disaster|battle|attack(ed|s)?|bomb(ing|ed|s)?|terrorist|earthquake|hurricane|flood(ed|ing|s)?|explo(sion|sions|ded|ding)|murder(ed|s)?|execut(ed|ion|ions)|sentenced|derail(ed|s|ing)?|sank|sunk|collaps(ed|es)|massacre|genocide|assassinat(ed|ion|ions)|fatal(ities)?|casualt(y|ies)|hijack(ed|ing)?|riot(s|ed)?|famine|plague|epidemic|pandemic|destroy(ed|s)?|stabb(ed|ing)|shot|hang(ed|ing)|drown(ed|ing)|funeral|funerals|war\b|wars\b|conflict|wounded|siege|coup|beheaded|lynched|perished|perish|victims|victim|tragedy|tragic|catastroph|militant|insurgent|genocide|atrocit)\b/i;
     const positive = notable.filter(e => !morbidRx.test(e.text));
     const filtered = positive.length > 0 ? positive : notable;
     if (!notable.length) return;
