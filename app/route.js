@@ -4,7 +4,7 @@ import path from 'node:path';
 export const runtime = 'nodejs';
 
 export async function GET() {
-  const filePath = path.join(process.cwd(), 'src', 'flashfo.html');
+  const filePath = path.join(process.cwd(), 'flashfo.html');
   const html = await readFile(filePath, 'utf8');
   return new Response(html, {
     headers: {
