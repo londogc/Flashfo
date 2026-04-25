@@ -5,7 +5,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const filePath = path.join(process.cwd(), 'src', 'flashfo.html');
+  const filePath = path.join(process.cwd(), 'flashfo.html');
   const buf = await readFile(filePath);
   return new Response(buf, {
     headers: {
