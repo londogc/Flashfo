@@ -317,9 +317,9 @@
     .meta-row span { color: var(--text-2); } .meta-row strong { color: var(--title); font-weight: 700; }
 
     /* Flashcard surface */
-    .flash-surface { background: linear-gradient(135deg,#dbeafe,#e0e7ff 60%,#ede9fe); border-radius: var(--r-lg); min-height: 360px; display: flex; flex-direction: column; justify-content: center; padding: 22px; }
+    .flash-surface { background: linear-gradient(135deg,#dbeafe,#e0e7ff 60%,#ede9fe); border-radius: var(--r-lg); min-height: 280px; display: flex; flex-direction: column; justify-content: stretch; padding: 18px; position: relative; overflow: hidden; }
     body.theme-black .flash-surface { background: linear-gradient(135deg,#172554,#1e1b4b); }
-    .flash-stage { background: var(--surface); border-radius: var(--r-lg); min-height: 210px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 30px; box-shadow: var(--sh-lg); font-size: 21px; font-weight: 800; color: var(--title); line-height: 1.35; letter-spacing: -.025em; }
+    .flash-stage { background: var(--surface); border-radius: var(--r-lg); min-height: 210px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 30px; box-shadow: var(--sh-lg); font-size: 21px; font-weight: 800; color: var(--title); line-height: 1.35; letter-spacing: -.025em; width: 100%; box-sizing: border-box; position: relative; overflow: hidden; }
     .flash-stage .empty-box { width: 100%; background: transparent; border: none; font-size: 14px; font-weight: 500; color: var(--text-muted); }
     .flash-dots { display: flex; justify-content: center; gap: 5px; margin-top: 14px; }
     .flash-dot { width: 6px; height: 6px; border-radius: var(--r-full); background: rgba(15,23,42,.18); transition: width .18s, background .18s; }
@@ -504,7 +504,252 @@
       #printArea { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; }
       .print-card { border: 1px solid #ccc; border-radius: 8px; padding: 13px; margin-bottom: 13px; break-inside: avoid; }
     }
-  </style>
+  
+    /* ===== MOBILE RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .sidebar { display: none !important; }
+      .main { padding-bottom: 70px; }
+      
+      /* Bottom nav */
+      .mobile-nav { display: flex !important; }
+      
+      /* Full width layouts */
+      .tutor-2, .pg-2col, [style*="grid-template-columns: minmax"] {
+        grid-template-columns: 1fr !important;
+      }
+      
+      /* Flash card full width */
+      .flash-surface { min-height: 220px; padding: 14px; }
+      
+      /* Topbar */
+      .topbar { padding: 10px 16px; }
+      .topbar-search { display: none; }
+      
+      /* Page padding */
+      .pg-tool { padding: 16px 16px 80px !important; }
+      
+      /* Cards full width */
+      .path-grid { grid-template-columns: 1fr 1fr !important; }
+      
+      /* AI Tutor chat */
+      .tutor-out-card { min-height: 400px; }
+      
+      /* Hero */
+      .hero-card { padding: 20px !important; }
+      .hero-card h1 { font-size: 20px !important; }
+      
+      /* Result tb */
+      .result-tb { flex-wrap: wrap; gap: 6px; }
+      
+      /* Buttons */
+      .btn { padding: 9px 14px; font-size: 13px; }
+      
+      /* Font size reductions */
+      .pg-title { font-size: 22px !important; }
+      h1 { font-size: 20px; }
+    }
+
+    /* Mobile bottom nav */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      z-index: 100;
+      padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    }
+    .mobile-nav-inner {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .mobile-nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      padding: 6px 12px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 500;
+      font-family: var(--font);
+      transition: color .15s;
+      min-width: 56px;
+    }
+    .mobile-nav-btn.active { color: var(--primary); }
+    .mobile-nav-btn svg { width: 22px; height: 22px; }
+
+    /* Cross platform font smoothing */
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* Windows vs Mac font fixes */
+    @supports (-webkit-appearance: none) and (not (-moz-appearance: none)) {
+      body { font-size: 14.5px; }
+    }
+
+    </style>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://bcorruwcwkajvkifjkmp.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_HnrxHlbCu8ABfU7zOgKNpg_k7nqM8kg';
+    const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Auth state
+    window._ffUser = null;
+    window._ffProfile = null;
+
+    async function ffInit() {
+      const { data: { session } } = await _sb.auth.getSession();
+      if (session) {
+        window._ffUser = session.user;
+        await loadProfile(session.user.id);
+        renderAuthUI();
+      } else {
+        renderAuthUI();
+      }
+
+      _sb.auth.onAuthStateChange(async (event, session) => {
+        if (session) {
+          window._ffUser = session.user;
+          await loadProfile(session.user.id);
+        } else {
+          window._ffUser = null;
+          window._ffProfile = null;
+        }
+        renderAuthUI();
+      });
+    }
+
+    async function loadProfile(userId) {
+      const { data } = await _sb.from('profiles').select('*').eq('id', userId).single();
+      if (data) {
+        window._ffProfile = data;
+        // Apply saved preferences
+        if (data.default_theme) setTheme(data.default_theme);
+        if (data.preferred_language) {
+          const sel = document.getElementById('langSelect');
+          if (sel) sel.value = data.preferred_language;
+        }
+      } else {
+        // Create profile on first login
+        const meta = window._ffUser.user_metadata || {};
+        const newProfile = {
+          id: userId,
+          display_name: meta.full_name || meta.name || window._ffUser.email?.split('@')[0] || 'User',
+          username: (window._ffUser.email?.split('@')[0] || 'user') + Math.floor(Math.random()*1000),
+          avatar_url: meta.avatar_url || meta.picture || null,
+          role: 'student',
+          default_theme: 'blue',
+          preferred_language: 'English',
+          preferred_voice: 'Female Voice',
+          teacher_mode: false,
+        };
+        await _sb.from('profiles').insert(newProfile);
+        window._ffProfile = newProfile;
+      }
+    }
+
+    function renderAuthUI() {
+      const authBtn = document.getElementById('ffAuthBtn');
+      const avatarEl = document.getElementById('ffNavAvatar');
+      if (!authBtn) return;
+      if (window._ffUser) {
+        const p = window._ffProfile;
+        const name = p?.display_name || window._ffUser.email?.split('@')[0] || 'User';
+        const avatarUrl = p?.avatar_url;
+        authBtn.innerHTML = avatarUrl 
+          ? `<img src="${avatarUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;cursor:pointer;" onclick="showSection('profile')" title="${name}" />`
+          : `<div onclick="showSection('profile')" style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;">${name[0].toUpperCase()}</div>`;
+        // Update dashboard welcome
+        const welcome = document.getElementById('ffWelcome');
+        if (welcome) welcome.textContent = 'Welcome back, ' + name + ' 👋';
+      } else {
+        authBtn.innerHTML = '<button class="btn btn-primary btn-sm" onclick="showAuthModal()">Sign in</button>';
+      }
+    }
+
+    async function signInWithGoogle() {
+      await _sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin }
+      });
+    }
+
+    async function signInWithEmail(email, password) {
+      const { error } = await _sb.auth.signInWithPassword({ email, password });
+      if (error) return error.message;
+      closeAuthModal();
+      return null;
+    }
+
+    async function signUpWithEmail(email, password, name) {
+      const { error } = await _sb.auth.signUp({ email, password, options: { data: { full_name: name } } });
+      if (error) return error.message;
+      closeAuthModal();
+      return null;
+    }
+
+    async function signOut() {
+      await _sb.auth.signOut();
+      window._ffUser = null;
+      window._ffProfile = null;
+      renderAuthUI();
+    }
+
+    function showAuthModal() {
+      const modal = document.getElementById('ffAuthModal');
+      if (modal) modal.style.display = 'flex';
+    }
+    function closeAuthModal() {
+      const modal = document.getElementById('ffAuthModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function saveProfile(updates) {
+      if (!window._ffUser) return;
+      const { error } = await _sb.from('profiles').update(updates).eq('id', window._ffUser.id);
+      if (!error) {
+        window._ffProfile = { ...window._ffProfile, ...updates };
+        renderAuthUI();
+      }
+      return error;
+    }
+
+    async function uploadAvatar(file) {
+      if (!window._ffUser) return null;
+      const ext = file.name.split('.').pop();
+      const path = `avatars/${window._ffUser.id}.${ext}`;
+      const { error } = await _sb.storage.from('avatars').upload(path, file, { upsert: true });
+      if (error) return null;
+      const { data } = _sb.storage.from('avatars').getPublicUrl(path);
+      return data.publicUrl;
+    }
+
+    async function uploadBanner(file) {
+      if (!window._ffUser) return null;
+      const ext = file.name.split('.').pop();
+      const path = `banners/${window._ffUser.id}.${ext}`;
+      const { error } = await _sb.storage.from('banners').upload(path, file, { upsert: true });
+      if (error) return null;
+      const { data } = _sb.storage.from('banners').getPublicUrl(path);
+      return data.publicUrl;
+    }
+
+    window.addEventListener('DOMContentLoaded', ffInit);
+  </script>
 </head>
 <body class="theme-blue">
 <div class="shell">
@@ -513,26 +758,26 @@
 <aside class="sidebar">
   <div class="sb-inner">
     <div class="sb-brand">
-      <div class="ff-logo">⚡</div>
+      <div class="ff-logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
       <div class="ff-name"><h2>Flashfo</h2><span>Study workspace</span></div>
       <button class="sb-toggle" onclick="toggleSidebarCollapsed()" title="Collapse sidebar">‹</button>
     </div>
     <nav class="sb-nav">
-      <button class="nav-item active" data-section="dashboard" onclick="showSection('dashboard')"><span class="nav-ic">🏠</span><span class="nav-lbl">Dashboard</span></button>
-      <button class="nav-item" data-section="create-dashboard" onclick="showSection('create-dashboard')"><span class="nav-ic">✨</span><span class="nav-lbl">Create</span></button>
-      <button class="nav-item" data-section="study-dashboard" onclick="showSection('study-dashboard')"><span class="nav-ic">📖</span><span class="nav-lbl">Study</span></button>
-      <button class="nav-item" data-section="teach-dashboard" onclick="showSection('teach-dashboard')"><span class="nav-ic">🎓</span><span class="nav-lbl">Teach</span></button>
-      <button class="nav-item" data-section="my-stuff-dashboard" onclick="showSection('my-stuff-dashboard')"><span class="nav-ic">📁</span><span class="nav-lbl">My Stuff</span></button>
+      <button class="nav-item active" data-section="dashboard" onclick="showSection('dashboard')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="nav-lbl">Dashboard</span></button>
+      <button class="nav-item" data-section="create-dashboard" onclick="showSection('create-dashboard')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span><span class="nav-lbl">Create</span></button>
+      <button class="nav-item" data-section="study-dashboard" onclick="showSection('study-dashboard')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></span><span class="nav-lbl">Study</span></button>
+      <button class="nav-item" data-section="teach-dashboard" onclick="showSection('teach-dashboard')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span><span class="nav-lbl">Teach</span></button>
+      <button class="nav-item" data-section="my-stuff-dashboard" onclick="showSection('my-stuff-dashboard')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></span><span class="nav-lbl">My Stuff</span></button>
       <div class="sb-label">Tools</div>
       <button class="nav-item" data-section="summarize" onclick="showSection('summarize')"><span class="nav-ic">✦</span><span class="nav-lbl">Summarize</span></button>
-      <button class="nav-item" data-section="flashcards" onclick="showSection('flashcards')"><span class="nav-ic">🃏</span><span class="nav-lbl">Flashcards</span></button>
-      <button class="nav-item" data-section="quiz" onclick="showSection('quiz')"><span class="nav-ic">❓</span><span class="nav-lbl">Quiz</span></button>
+      <button class="nav-item" data-section="flashcards" onclick="showSection('flashcards')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span><span class="nav-lbl">Flashcards</span></button>
+      <button class="nav-item" data-section="quiz" onclick="showSection('quiz')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="nav-lbl">Quiz</span></button>
       <button class="nav-item" data-section="lesson-builder" onclick="showSection('lesson-builder')"><span class="nav-ic">📋</span><span class="nav-lbl">Lesson Builder</span></button>
-      <button class="nav-item" data-section="search" onclick="showSection('search')"><span class="nav-ic">🔍</span><span class="nav-lbl">Search</span></button>
+      <button class="nav-item" data-section="search" onclick="showSection('search')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="nav-lbl">Search</span></button>
       <div class="sb-label">Advanced</div>
-      <button class="nav-item" data-section="ai-tutor" onclick="showSection('ai-tutor')"><span class="nav-ic">🤖</span><span class="nav-lbl">AI Tutor</span></button>
-      <button class="nav-item" data-section="learning-suite" onclick="showSection('learning-suite')"><span class="nav-ic">⚡</span><span class="nav-lbl">AI Suite</span></button>
-      <button class="nav-item" data-section="source-library" onclick="showSection('source-library')"><span class="nav-ic">📚</span><span class="nav-lbl">Source Library</span></button>
+      <button class="nav-item" data-section="ai-tutor" onclick="showSection('ai-tutor')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M12 11V3"/><circle cx="12" cy="3" r="1"/><line x1="8" y1="15" x2="8" y2="15"/><line x1="16" y1="15" x2="16" y2="15"/><line x1="9" y1="19" x2="15" y2="19"/></svg></span><span class="nav-lbl">AI Tutor</span></button>
+      <button class="nav-item" data-section="learning-suite" onclick="showSection('learning-suite')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="nav-lbl">AI Suite</span></button>
+      <button class="nav-item" data-section="source-library" onclick="showSection('source-library')"><span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span><span class="nav-lbl">Source Library</span></button>
     </nav>
     <div class="sb-footer">
       <div class="sb-label" style="padding-top:0;padding-bottom:7px;">Theme</div>
@@ -547,7 +792,7 @@
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="search-bar">
-    <span class="search-icon">🔍</span>
+    <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
     <input id="topGlobalSearch" class="search-input" placeholder="Search any topic, question, or keyword…" onkeydown="handleTopSearchKey(event)" />
     <button class="search-btn" onclick="runTopGlobalSearch()">Search</button>
   </div>
@@ -568,7 +813,7 @@
     <div class="hero-card">
       <div>
         <div class="kicker">✦ Your study workspace</div>
-        <h1 class="hero-title">Learn <span class="accent">faster</span> without juggling a dozen tools.</h1>
+        <h1 class="hero-title" style="letter-spacing:0.01em">Learn <span class="accent">faster</span> without juggling a dozen tools.</h1>
         <p class="hero-copy">Flashfo organizes your prompts, sources, saved work, and classroom tools in one calm workspace — so students keep learning and teachers create faster.</p>
         <div class="hero-actions">
           <button class="btn btn-primary btn-lg" onclick="showSection('create-dashboard')">Start creating</button>
@@ -680,6 +925,43 @@
     <div id="webSearchResults" class="search-results"></div>
   </div>
 </div></div>
+
+
+      <!-- This Day in History -->
+      <div id="thisDayCard" class="result-card" style="margin-top:18px;overflow:hidden;">
+        <div id="thisDayBg" style="height:80px;background:linear-gradient(135deg,#0f172a,#1e3a8a);display:flex;align-items:flex-end;padding:12px 18px;position:relative;">
+          <div style="position:absolute;inset:0;opacity:0.15;background:repeating-linear-gradient(135deg,transparent,transparent 8px,rgba(255,255,255,0.08) 8px,rgba(255,255,255,0.09) 9px);"></div>
+          <div>
+            <div style="font-size:9px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:2px;">This day in history</div>
+            <div id="thisDayDate" style="font-size:14px;font-weight:700;color:#fff;"></div>
+          </div>
+        </div>
+        <div style="padding:14px 18px;">
+          <div id="thisDayTitle" style="font-size:13px;font-weight:600;color:var(--title);margin-bottom:5px;line-height:1.4;">Loading today's event...</div>
+          <div id="thisDayDesc" style="font-size:12px;color:var(--text-2);margin-bottom:10px;line-height:1.6;"></div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span id="thisDayTag" style="background:var(--primary-lt);color:var(--primary);font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;"></span>
+            <span onclick="thisDayLearnMore()" style="font-size:11px;color:var(--primary);cursor:pointer;font-weight:500;">Learn more →</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Smart Suggestions -->
+      <div class="result-card" style="margin-top:18px;">
+        <div class="result-tb"><strong>Smart suggestions</strong></div>
+        <div id="smartSuggestions" style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+          <div style="padding:12px 14px;background:var(--bg);border-radius:10px;border:0.5px solid var(--border);">
+            <div style="font-size:12px;font-weight:600;color:var(--title);margin-bottom:3px;">Generate your first flashcard deck</div>
+            <div style="font-size:11px;color:var(--text-2);margin-bottom:8px;">Paste any topic or notes and Flashfo turns it into a study deck in seconds</div>
+            <span onclick="showSection('flashcards')" style="font-size:11px;color:var(--primary);font-weight:600;cursor:pointer;">Get started →</span>
+          </div>
+          <div style="padding:12px 14px;background:var(--bg);border-radius:10px;border:0.5px solid var(--border);">
+            <div style="font-size:12px;font-weight:600;color:var(--title);margin-bottom:3px;">Try the AI Tutor</div>
+            <div style="font-size:11px;color:var(--text-2);margin-bottom:8px;">Paste your notes and ask anything — it explains, quizzes, and adapts to you</div>
+            <span onclick="showSection('ai-tutor')" style="font-size:11px;color:var(--primary);font-weight:600;cursor:pointer;">Open AI Tutor →</span>
+          </div>
+        </div>
+      </div>
 
 <!-- SUMMARIZE -->
 <div id="section-summarize" class="section"><div class="pg-tool">
@@ -5164,5 +5446,375 @@
       // ---- End patch ----
 
     </script>
-  </body>
+  
+<!-- Auth Modal -->
+<div id="ffAuthModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:20px;padding:32px;width:360px;max-width:90vw;box-shadow:0 24px 64px rgba(0,0,0,0.18);position:relative;">
+    <button onclick="closeAuthModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;color:var(--text-muted);cursor:pointer;">×</button>
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:40px;height:40px;background:var(--primary);border-radius:12px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <h2 style="font-size:20px;font-weight:700;color:var(--title);margin:0 0 4px;">Welcome to Flashfo</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin:0;">Sign in to save your work and access it anywhere.</p>
+    </div>
+
+    <!-- Google button -->
+    <button onclick="signInWithGoogle()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:11px;font-size:14px;font-weight:600;color:#0f172a;cursor:pointer;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+      <span style="font-size:12px;color:var(--text-muted);">or</span>
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+    </div>
+
+    <!-- Tab switcher -->
+    <div id="authTabs" style="display:flex;gap:0;background:var(--bg);border-radius:8px;padding:3px;margin-bottom:16px;">
+      <button onclick="switchAuthTab('signin')" id="tabSignin" style="flex:1;padding:7px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;background:var(--surface);color:var(--primary);">Sign in</button>
+      <button onclick="switchAuthTab('signup')" id="tabSignup" style="flex:1;padding:7px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text-muted);">Create account</button>
+    </div>
+
+    <div id="authSignin">
+      <input id="authEmail" type="email" placeholder="Email address" class="input" style="margin-bottom:10px;width:100%;box-sizing:border-box;" />
+      <input id="authPassword" type="password" placeholder="Password" class="input" style="margin-bottom:16px;width:100%;box-sizing:border-box;" />
+      <button onclick="handleSignIn()" class="btn btn-primary" style="width:100%;">Sign in</button>
+    </div>
+    <div id="authSignup" style="display:none;">
+      <input id="authName" type="text" placeholder="Your name" class="input" style="margin-bottom:10px;width:100%;box-sizing:border-box;" />
+      <input id="authEmailUp" type="email" placeholder="Email address" class="input" style="margin-bottom:10px;width:100%;box-sizing:border-box;" />
+      <input id="authPasswordUp" type="password" placeholder="Password (min 6 chars)" class="input" style="margin-bottom:16px;width:100%;box-sizing:border-box;" />
+      <button onclick="handleSignUp()" class="btn btn-primary" style="width:100%;">Create account</button>
+    </div>
+    <div id="authError" style="color:#ef4444;font-size:12px;margin-top:10px;text-align:center;"></div>
+  </div>
+</div>
+
+<script>
+  function switchAuthTab(tab) {
+    document.getElementById('authSignin').style.display = tab === 'signin' ? 'block' : 'none';
+    document.getElementById('authSignup').style.display = tab === 'signup' ? 'block' : 'none';
+    document.getElementById('tabSignin').style.background = tab === 'signin' ? 'var(--surface)' : 'transparent';
+    document.getElementById('tabSignin').style.color = tab === 'signin' ? 'var(--primary)' : 'var(--text-muted)';
+    document.getElementById('tabSignup').style.background = tab === 'signup' ? 'var(--surface)' : 'transparent';
+    document.getElementById('tabSignup').style.color = tab === 'signup' ? 'var(--primary)' : 'var(--text-muted)';
+  }
+  async function handleSignIn() {
+    const email = document.getElementById('authEmail').value;
+    const pass = document.getElementById('authPassword').value;
+    const err = await signInWithEmail(email, pass);
+    if (err) document.getElementById('authError').textContent = err;
+  }
+  async function handleSignUp() {
+    const name = document.getElementById('authName').value;
+    const email = document.getElementById('authEmailUp').value;
+    const pass = document.getElementById('authPasswordUp').value;
+    const err = await signUpWithEmail(email, pass, name);
+    if (err) document.getElementById('authError').textContent = err;
+  }
+</script>
+
+<!-- PROFILE -->
+<div id="section-profile" class="section"><div class="pg-tool">
+
+  <!-- Banner -->
+  <div id="profileBanner" style="height:160px;background:linear-gradient(135deg,#1e3a8a,#2563eb);border-radius:16px;margin-bottom:0;position:relative;overflow:hidden;cursor:pointer;" onclick="document.getElementById('bannerUpload').click()">
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;">
+      <span style="background:rgba(0,0,0,0.5);color:#fff;padding:6px 14px;border-radius:8px;font-size:12px;">Change banner</span>
+    </div>
+    <div id="bannerHoverHint" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);opacity:0;transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+      <span style="color:#fff;font-size:12px;font-weight:500;">Click to change banner</span>
+    </div>
+  </div>
+  <input type="file" id="bannerUpload" accept="image/*" style="display:none;" onchange="handleBannerUpload(event)" />
+
+  <!-- Avatar + name row -->
+  <div style="display:flex;align-items:flex-end;gap:16px;padding:0 24px;margin-top:-36px;margin-bottom:20px;position:relative;z-index:2;">
+    <div id="profileAvatarWrap" style="position:relative;cursor:pointer;" onclick="document.getElementById('avatarUpload').click()">
+      <div id="profileAvatar" style="width:72px;height:72px;border-radius:50%;background:var(--primary);border:3px solid var(--surface);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;overflow:hidden;"></div>
+      <div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+    </div>
+    <input type="file" id="avatarUpload" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)" />
+    <div style="padding-bottom:6px;">
+      <div id="profileDisplayName" style="font-size:20px;font-weight:700;color:var(--title);">Loading...</div>
+      <div id="profileUsername" style="font-size:13px;color:var(--text-muted);">@username</div>
+    </div>
+    <div style="margin-left:auto;padding-bottom:6px;">
+      <button class="btn btn-secondary btn-sm" onclick="showSection('settings')">Account settings</button>
+      <button class="btn btn-secondary btn-sm" onclick="signOut()" style="margin-left:8px;">Sign out</button>
+    </div>
+  </div>
+
+  <!-- Profile content -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:0 0 32px;">
+
+    <!-- Edit profile card -->
+    <div class="card cp">
+      <div class="card-title">Profile info</div>
+      <label style="font-size:12px;color:var(--text-2);font-weight:500;">Display name</label>
+      <input id="editDisplayName" class="input" style="margin-bottom:12px;" />
+      <label style="font-size:12px;color:var(--text-2);font-weight:500;">Username</label>
+      <input id="editUsername" class="input" style="margin-bottom:12px;" placeholder="@username" />
+      <label style="font-size:12px;color:var(--text-2);font-weight:500;">Role</label>
+      <select id="editRole" class="select" style="margin-bottom:12px;">
+        <option value="student">Student</option>
+        <option value="teacher">Teacher</option>
+        <option value="admin">Admin</option>
+      </select>
+      <label style="font-size:12px;color:var(--text-2);font-weight:500;">School / Institution</label>
+      <input id="editSchool" class="input" style="margin-bottom:12px;" placeholder="Your school or institution" />
+      <label style="font-size:12px;color:var(--text-2);font-weight:500;">Grade level / Subject interests</label>
+      <input id="editGrade" class="input" style="margin-bottom:12px;" placeholder="e.g. Grade 10, Biology, History" />
+      <label style="font-size:12px;color:var(--text-2);font-weight:500;">Bio</label>
+      <textarea id="editBio" class="input textarea" placeholder="Tell us a bit about yourself..." style="height:80px;margin-bottom:16px;"></textarea>
+      <button class="btn btn-primary" onclick="saveProfileForm()">Save profile</button>
+      <div id="profileSaveStatus" class="status"></div>
+    </div>
+
+    <!-- Account settings card -->
+    <div class="card cp">
+      <div class="card-title">Preferences</div>
+      <label style="font-size:12px;color:var(--text-2);font-weight:500;">Default theme</label>
+      <select id="prefTheme" class="select" style="margin-bottom:12px;" onchange="setTheme(this.value)">
+        <option value="blue">Light</option>
+        <option value="black">Dark</option>
+      </select>
+      <label style="font-size:12px;color:var(--text-2);font-weight:500;">Preferred language</label>
+      <select id="prefLanguage" class="select" style="margin-bottom:12px;">
+        <option>English</option><option>Spanish</option><option>French</option><option>German</option>
+        <option>Portuguese</option><option>Chinese</option><option>Japanese</option><option>Arabic</option>
+      </select>
+      <label style="font-size:12px;color:var(--text-2);font-weight:500;">Preferred AI voice</label>
+      <select id="prefVoice" class="select" style="margin-bottom:12px;">
+        <option>Female Voice</option><option>Male Voice</option>
+      </select>
+      <label style="font-size:12px;color:var(--text-2);font-weight:500;">Mode</label>
+      <select id="prefMode" class="select" style="margin-bottom:16px;">
+        <option value="student">Student mode</option>
+        <option value="teacher">Teacher mode</option>
+      </select>
+      <button class="btn btn-primary" onclick="savePreferencesForm()">Save preferences</button>
+      <div id="prefSaveStatus" class="status"></div>
+
+      <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);">
+        <div class="card-title" style="margin-bottom:8px;">Danger zone</div>
+        <button class="btn btn-secondary btn-sm" onclick="signOut()" style="border-color:#fecaca;color:#ef4444;">Sign out</button>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<script>
+  function renderProfileSection() {
+    const p = window._ffProfile;
+    const u = window._ffUser;
+    if (!p && !u) return;
+    const name = p?.display_name || u?.email?.split('@')[0] || 'User';
+    const username = p?.username || '';
+    const avatarUrl = p?.avatar_url;
+
+    // Banner
+    const banner = document.getElementById('profileBanner');
+    if (banner && p?.banner_url) banner.style.backgroundImage = `url(${p.banner_url})`;
+
+    // Avatar
+    const av = document.getElementById('profileAvatar');
+    if (av) {
+      if (avatarUrl) av.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;" />`;
+      else av.textContent = name[0].toUpperCase();
+    }
+
+    document.getElementById('profileDisplayName').textContent = name;
+    document.getElementById('profileUsername').textContent = '@' + username;
+
+    // Form fields
+    const fields = {
+      editDisplayName: p?.display_name || '',
+      editUsername: p?.username || '',
+      editSchool: p?.school || '',
+      editGrade: p?.grade_level || '',
+      editBio: p?.bio || '',
+    };
+    for (const [id, val] of Object.entries(fields)) {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    }
+    const roleEl = document.getElementById('editRole');
+    if (roleEl && p?.role) roleEl.value = p.role;
+    const themeEl = document.getElementById('prefTheme');
+    if (themeEl && p?.default_theme) themeEl.value = p.default_theme;
+    const langEl = document.getElementById('prefLanguage');
+    if (langEl && p?.preferred_language) langEl.value = p.preferred_language;
+    const modeEl = document.getElementById('prefMode');
+    if (modeEl && p?.teacher_mode !== undefined) modeEl.value = p.teacher_mode ? 'teacher' : 'student';
+  }
+
+  async function saveProfileForm() {
+    const updates = {
+      display_name: document.getElementById('editDisplayName').value,
+      username: document.getElementById('editUsername').value,
+      role: document.getElementById('editRole').value,
+      school: document.getElementById('editSchool').value,
+      grade_level: document.getElementById('editGrade').value,
+      bio: document.getElementById('editBio').value,
+    };
+    const err = await saveProfile(updates);
+    const status = document.getElementById('profileSaveStatus');
+    if (status) { status.textContent = err ? 'Error saving.' : 'Saved!'; status.className = 'status ' + (err ? 'error' : 'success'); }
+  }
+
+  async function savePreferencesForm() {
+    const updates = {
+      default_theme: document.getElementById('prefTheme').value,
+      preferred_language: document.getElementById('prefLanguage').value,
+      preferred_voice: document.getElementById('prefVoice').value,
+      teacher_mode: document.getElementById('prefMode').value === 'teacher',
+    };
+    const err = await saveProfile(updates);
+    if (!err && updates.default_theme) setTheme(updates.default_theme);
+    const status = document.getElementById('prefSaveStatus');
+    if (status) { status.textContent = err ? 'Error saving.' : 'Saved!'; status.className = 'status ' + (err ? 'error' : 'success'); }
+  }
+
+  async function handleAvatarUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = await uploadAvatar(file);
+    if (url) {
+      await saveProfile({ avatar_url: url });
+      renderProfileSection();
+      renderAuthUI();
+    }
+  }
+
+  async function handleBannerUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = await uploadBanner(file);
+    if (url) {
+      await saveProfile({ banner_url: url });
+      renderProfileSection();
+    }
+  }
+
+  // Re-render profile when navigating to it
+  const _origShowSection = showSection;
+  function showSection(s) {
+    _origShowSection(s);
+    if (s === 'profile') renderProfileSection();
+  }
+</script>
+
+<!-- Mobile bottom nav -->
+<nav class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav-inner">
+    <button class="mobile-nav-btn active" onclick="showSection('dashboard');updateMobileNav('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </button>
+    <button class="mobile-nav-btn" onclick="showSection('flashcards');updateMobileNav('flashcards')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Cards
+    </button>
+    <button class="mobile-nav-btn" onclick="showSection('ai-tutor');updateMobileNav('ai-tutor')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M12 11V3"/><circle cx="12" cy="3" r="1"/></svg>
+      Tutor
+    </button>
+    <button class="mobile-nav-btn" onclick="showSection('teach-dashboard');updateMobileNav('teach-dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      Teach
+    </button>
+    <button class="mobile-nav-btn" onclick="window._ffUser ? showSection('profile') : showAuthModal();updateMobileNav('profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </button>
+  </div>
+</nav>
+
+<script>
+function updateMobileNav(section) {
+  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+  const btns = document.querySelectorAll('.mobile-nav-btn');
+  const map = { dashboard: 0, flashcards: 1, 'ai-tutor': 2, 'teach-dashboard': 3, profile: 4 };
+  if (map[section] !== undefined) btns[map[section]]?.classList.add('active');
+}
+</script>
+
+<script>
+// This Day in History
+async function loadThisDayInHistory() {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dateStr = months[now.getMonth()] + ' ' + day;
+  
+  const dateEl = document.getElementById('thisDayDate');
+  if (dateEl) dateEl.textContent = dateStr + ', ' + now.getFullYear();
+
+  try {
+    // Use Wikipedia's "On this day" API
+    const resp = await fetch(`https://en.wikipedia.org/api/rest_v1/feed/onthisday/events/${month}/${day}`);
+    const data = await resp.json();
+    const events = data.events || [];
+    
+    // Pick a notable event
+    const notable = events.filter(e => e.year && e.text && e.text.length > 40);
+    if (!notable.length) return;
+    
+    // Pick one from history (not too recent)
+    const historical = notable.filter(e => e.year < (now.getFullYear() - 10));
+    const pick = historical[Math.floor(Math.random() * Math.min(5, historical.length))] || notable[0];
+    
+    const titleEl = document.getElementById('thisDayTitle');
+    const descEl = document.getElementById('thisDayDesc');
+    const tagEl = document.getElementById('thisDayTag');
+    
+    if (titleEl) titleEl.textContent = pick.year + ' — ' + pick.text.split('.')[0];
+    if (descEl) descEl.textContent = pick.text.length > 150 ? pick.text.slice(0, 150) + '...' : pick.text;
+    if (tagEl) tagEl.textContent = 'History';
+    
+    // Store for learn more
+    window._thisDayUrl = pick.pages?.[0]?.content_urls?.desktop?.page || null;
+    window._thisDayText = pick.text;
+    
+  } catch(e) {
+    // Fallback
+    const titleEl = document.getElementById('thisDayTitle');
+    if (titleEl) titleEl.textContent = 'On this day in history...';
+  }
+}
+
+function thisDayLearnMore() {
+  if (window._thisDayUrl) window.open(window._thisDayUrl, '_blank');
+  else if (window._thisDayText) {
+    const q = encodeURIComponent(window._thisDayText.split('.')[0]);
+    window.open('https://en.wikipedia.org/w/index.php?search=' + q, '_blank');
+  }
+}
+
+// Load on page ready
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(loadThisDayInHistory, 500);
+});
+</script>
+
+<script>
+// Ensure Supabase profiles table exists (run once)
+async function ensureSupabaseTables() {
+  // The profiles table needs to be created in Supabase dashboard with these columns:
+  // id (uuid, PK, references auth.users), display_name (text), username (text),
+  // role (text, default student), school (text), grade_level (text), bio (text),
+  // avatar_url (text), banner_url (text), default_theme (text, default blue),
+  // preferred_language (text, default English), preferred_voice (text),
+  // teacher_mode (boolean, default false), created_at (timestamptz, default now())
+  console.log('Flashfo: Supabase auth initialized');
+}
+document.addEventListener('DOMContentLoaded', ensureSupabaseTables);
+</script>
+</body>
 </html>
