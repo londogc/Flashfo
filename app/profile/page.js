@@ -104,9 +104,31 @@ function CropModal({ file, cropW, cropH, title, onApply, onCancel }) {
   }
 
   function apply() {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    canvas.toBlob(blob => {
+    const img = imgRef.current
+    if (!img) return
+    const s  = scaleRef.current
+    const px = posRef.current.x  // always ≤ 0 (image shifted left)
+    const py = posRef.current.y  // always ≤ 0 (image shifted up)
+
+    // Compute the exact source region in original image pixels:
+    // The crop's top-left corresponds to source position (-px/s, -py/s)
+    // The crop covers (cropW/s) x (cropH/s) source pixels
+    const sx = -px / s
+    const sy = -py / s
+    const sw = cropW / s
+    const sh = cropH / s
+
+    // Use a fresh offscreen canvas — completely independent of the display canvas
+    const out = document.createElement('canvas')
+    out.width  = cropW
+    out.height = cropH
+    const ctx  = out.getContext('2d')
+
+    // 9-arg drawImage: pull exactly (sx,sy,sw,sh) from source → fill entire output
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cropW, cropH)
+
+    out.toBlob(blob => {
+      if (!blob) return
       onApply(new File([blob], 'cropped.jpg', { type: 'image/jpeg' }))
     }, 'image/jpeg', 0.92)
   }
