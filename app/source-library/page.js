@@ -1,10 +1,15 @@
-export default function SourceLibraryPage(){
-  return(
+
+export default function SourceLibraryPage() {
+  return (
     <div className="p-6 max-w-4xl mx-auto w-full">
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Source Library</h1>
       <p className="text-sm text-t2 mb-6">Save URLs, files, and notes to reuse across all your study materials.</p>
-      <div className="bg-surface border border-line rounded-2xl p-6 text-center">
-        <div className="w-14 h-14 bg-blue-500/10 rounded-2xl mx-auto mb-4"/>
+      <div className="bg-surface border border-line rounded-2xl p-12 text-center">
+        <div className="w-14 h-14 bg-blue-500/10 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+          <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
+            <path d="M3 1h2v14H3zm4 0h2v14H7zm4 0h2v14h-2z"/>
+          </svg>
+        </div>
         <h2 className="text-base font-bold text-t1 mb-2">Your source library is empty</h2>
         <p className="text-sm text-t2 mb-6 max-w-sm mx-auto">Add URLs, paste text, or upload files to build a reusable library of research and notes.</p>
         <div className="flex gap-2 justify-center">
