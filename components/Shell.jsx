@@ -132,11 +132,33 @@ export default function Shell({ children }) {
           {ADV.map(item => <NavItem key={item.href} item={item} collapsed={collapsed} active={pathname === item.href} />)}
         </nav>
 
-        <div className="p-2 border-t border-line flex-shrink-0">
+        <div className="p-3 border-t border-line flex-shrink-0">
           <button onClick={toggleDark}
-            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-xs text-t3 hover:bg-surface2 hover:text-t2 transition-colors">
-            <I d={dark ? ICONS.moon : ICONS.sun} s={14} />
-            {!collapsed && <span>{dark ? 'Dark mode' : 'Light mode'}</span>}
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface2 transition-colors group">
+            {!collapsed && (
+              <span className="text-[12px] font-medium text-t2 group-hover:text-t1 transition-colors">
+                {dark ? 'Dark' : 'Light'}
+              </span>
+            )}
+            <div className="ml-auto flex-shrink-0" style={{
+              width: 36, height: 20,
+              background: dark ? '#1d4ed8' : '#e2e8f0',
+              borderRadius: 10,
+              position: 'relative',
+              transition: 'background 0.2s',
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: 3,
+                left: dark ? 19 : 3,
+                width: 14,
+                height: 14,
+                background: '#fff',
+                borderRadius: '50%',
+                transition: 'left 0.2s',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              }}/>
+            </div>
           </button>
         </div>
       </aside>
