@@ -1,3 +1,4 @@
+import Shell from '@/components/Shell'
 
 const I = ({ d, cls }) => (
   <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
@@ -16,6 +17,7 @@ const TOOLS = [
 
 export default function AISuitePage() {
   return (
+    <Shell>
     <div className="p-6 max-w-4xl mx-auto w-full">
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">AI Suite</h1>
       <p className="text-sm text-t2 mb-6">Your complete collection of AI-powered study and teaching tools.</p>
