@@ -205,7 +205,7 @@ function CropModal({ file, dispW, dispH, outW, outH, title, onApply, onCancel })
 // Profile Page
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ProfilePage() {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, refreshProfile } = useAuth()
   const [form, setForm]           = useState({ full_name: '', username: '', bio: '' })
   const [saving, setSaving]       = useState(false)
   const [error,  setError]        = useState('')
@@ -238,6 +238,7 @@ export default function ProfilePage() {
       setUrl(data.publicUrl + '?t=' + Date.now())
       const field = bucket==='avatars' ? 'avatar_url' : 'banner_url'
       await supabase.from('profiles').update({ [field]: data.publicUrl }).eq('id', user.id)
+      if (bucket === 'avatars') await refreshProfile()
     } catch(e) { setError(e.message||'Upload failed') }
     finally { setUploading(false) }
   }
