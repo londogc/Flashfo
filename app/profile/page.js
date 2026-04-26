@@ -103,16 +103,16 @@ export default function ProfilePage() {
           onClick={() => !bannerUploading && bannerRef.current?.click()}
           style={{
             position:'relative', height:160, borderRadius:16, overflow:'hidden', cursor:'pointer',
-            background: bannerUrl ? 'none' : 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #3b82f6 100%)',
+            background: bannerUrl ? 'none' : 'var(--c-surface2)',
             backgroundImage: bannerUrl ? `url(${bannerUrl})` : undefined,
             backgroundSize:'cover', backgroundPosition:'center',
             border:'1px solid var(--c-line)',
           }}>
           {!bannerUrl && !bannerUploading && (
             <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8 }}>
-              <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round"><path d="M8 11V1m-4 4l4-4 4 4M1 14h14"/></svg>
-              <span style={{ fontSize:13, color:'rgba(255,255,255,0.8)', fontWeight:600 }}>Upload banner photo</span>
-              <span style={{ fontSize:11, color:'rgba(255,255,255,0.5)' }}>Recommended: 1500×500px · Max 5MB</span>
+              <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="var(--c-t2)" strokeWidth="1.5" strokeLinecap="round"><path d="M8 11V1m-4 4l4-4 4 4M1 14h14"/></svg>
+              <span style={{ fontSize:13, color:'var(--c-t1)', fontWeight:600 }}>Upload banner photo</span>
+              <span style={{ fontSize:11, color:'var(--c-t3)' }}>Recommended: 1500×500px · Max 5MB</span>
             </div>
           )}
           {bannerUploading && (
