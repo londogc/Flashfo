@@ -1,6 +1,8 @@
+import Shell from '@/components/Shell'
 
 export default function SourceLibraryPage() {
   return (
+    <Shell>
     <div className="p-6 max-w-4xl mx-auto w-full">
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Source Library</h1>
       <p className="text-sm text-t2 mb-6">Save URLs, files, and notes to reuse across all your study materials.</p>
