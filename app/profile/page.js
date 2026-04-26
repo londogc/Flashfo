@@ -39,7 +39,6 @@ export default function ProfilePage() {
       const { data } = supabase.storage.from(bucket).getPublicUrl(path)
       const url = data.publicUrl + '?t=' + Date.now()
       onUrl(url)
-      // Save URL to profile immediately
       const field = bucket === 'avatars' ? 'avatar_url' : 'banner_url'
       await supabase.from('profiles').update({ [field]: data.publicUrl }).eq('id', user.id)
     } catch (e) { setError(e.message || 'Upload failed') }
@@ -66,11 +65,27 @@ export default function ProfilePage() {
   const inp = { width:'100%', height:44, padding:'0 14px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:12, fontSize:14, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', transition:'border-color 0.2s', boxSizing:'border-box' }
   const initials = (form.full_name || user?.email || 'U').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()
 
-  return (
-    <div style={{ maxWidth:680, margin:'0 auto', paddingBottom:40 }}>
+  const UploadOverlay = ({ uploading, label }) => (
+    <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:6, opacity:0, transition:'opacity 0.2s', borderRadius:'inherit' }}
+      className="upload-overlay">
+      {uploading
+        ? <span style={{ fontSize:12, color:'white', fontWeight:600 }}>Uploading...</span>
+        : <>
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"><path d="M8 11V1m-4 4l4-4 4 4M1 14h14"/></svg>
+            <span style={{ fontSize:11, color:'white', fontWeight:600 }}>{label}</span>
+          </>
+      }
+    </div>
+  )
 
-      {/* Header */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'24px 20px 16px' }}>
+  return (
+    <div style={{ maxWidth:660, margin:'0 auto', paddingBottom:40 }}>
+      <style>{`
+        .upload-hover:hover .upload-overlay { opacity: 1 !important; }
+      `}</style>
+
+      {/* Top bar */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'24px 20px 20px' }}>
         <div>
           <h1 style={{ fontSize:22, fontWeight:800, color:'var(--c-t1)', marginBottom:4, letterSpacing:'-0.3px' }}>Profile</h1>
           <p style={{ fontSize:13, color:'var(--c-t2)' }}>Manage your Flashfo account.</p>
@@ -80,72 +95,73 @@ export default function ProfilePage() {
         </a>
       </div>
 
-      {/* Banner */}
-      <div style={{ position:'relative', margin:'0 20px', borderRadius:18, overflow:'hidden', marginBottom:0 }}>
+      {/* ── Banner ── */}
+      <div style={{ margin:'0 20px 12px' }}>
+        <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Banner Photo</div>
         <div
+          className="upload-hover"
           onClick={() => !bannerUploading && bannerRef.current?.click()}
           style={{
-            height:140, background: bannerUrl ? 'none' : 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #3b82f6 100%)',
+            position:'relative', height:160, borderRadius:16, overflow:'hidden', cursor:'pointer',
+            background: bannerUrl ? 'none' : 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #3b82f6 100%)',
             backgroundImage: bannerUrl ? `url(${bannerUrl})` : undefined,
             backgroundSize:'cover', backgroundPosition:'center',
-            cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
             border:'1px solid var(--c-line)',
-            transition:'opacity 0.2s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.opacity='0.85'}
-          onMouseLeave={e => e.currentTarget.style.opacity='1'}
-        >
-          <div style={{ background:'rgba(0,0,0,0.35)', borderRadius:10, padding:'8px 14px', display:'flex', alignItems:'center', gap:8 }}>
-            {bannerUploading
-              ? <span style={{ fontSize:12, color:'white', fontWeight:600 }}>Uploading...</span>
-              : <><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"><path d="M8 1v10m-4-4l4 4 4-4M1 14h14"/></svg>
-                <span style={{ fontSize:12, color:'white', fontWeight:600 }}>{bannerUrl ? 'Change banner' : 'Upload banner'}</span></>
-            }
-          </div>
+          }}>
+          {!bannerUrl && !bannerUploading && (
+            <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8 }}>
+              <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round"><path d="M8 11V1m-4 4l4-4 4 4M1 14h14"/></svg>
+              <span style={{ fontSize:13, color:'rgba(255,255,255,0.8)', fontWeight:600 }}>Upload banner photo</span>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.5)' }}>Recommended: 1500×500px · Max 5MB</span>
+            </div>
+          )}
+          {bannerUploading && (
+            <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.4)' }}>
+              <span style={{ fontSize:13, color:'white', fontWeight:600 }}>Uploading...</span>
+            </div>
+          )}
+          {bannerUrl && <UploadOverlay uploading={bannerUploading} label="Change banner" />}
         </div>
         <input ref={bannerRef} type="file" accept="image/*" style={{ display:'none' }}
-          onChange={e => uploadFile(e.target.files[0], 'banners', setBannerUrl, setBannerUploading)} />
+          onChange={e => { uploadFile(e.target.files[0], 'banners', setBannerUrl, setBannerUploading); e.target.value = '' }} />
+      </div>
 
-        {/* Avatar overlapping banner */}
-        <div style={{ position:'absolute', bottom:-44, left:20, display:'flex', alignItems:'flex-end', gap:12 }}>
-          <div style={{ position:'relative' }}>
-            <div
+      {/* ── Avatar ── */}
+      <div style={{ margin:'0 20px 20px' }}>
+        <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Profile Photo</div>
+        <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+          <div
+            className="upload-hover"
+            onClick={() => !avatarUploading && avatarRef.current?.click()}
+            style={{
+              position:'relative', width:88, height:88, borderRadius:'50%', overflow:'hidden',
+              cursor:'pointer', flexShrink:0,
+              background: avatarUrl ? 'none' : '#1d4ed8',
+              backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined,
+              backgroundSize:'cover', backgroundPosition:'center',
+              border:'3px solid var(--c-line)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              color:'white', fontSize:28, fontWeight:800,
+            }}>
+            {!avatarUrl && initials}
+            <UploadOverlay uploading={avatarUploading} label="Change" />
+          </div>
+          <div>
+            <div style={{ fontSize:15, fontWeight:700, color:'var(--c-t1)' }}>{form.full_name || 'Your Name'}</div>
+            <div style={{ fontSize:12, color:'var(--c-t3)', marginTop:2 }}>{user?.email}</div>
+            <button
               onClick={() => !avatarUploading && avatarRef.current?.click()}
-              style={{
-                width:80, height:80, borderRadius:'50%',
-                background: avatarUrl ? 'none' : '#1d4ed8',
-                backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined,
-                backgroundSize:'cover', backgroundPosition:'center',
-                border:'3px solid var(--c-surface)',
-                display:'flex', alignItems:'center', justifyContent:'center',
-                color:'white', fontSize:26, fontWeight:800,
-                cursor:'pointer', position:'relative', overflow:'hidden',
-              }}>
-              {!avatarUrl && initials}
-              <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.35)', display:'flex', alignItems:'center', justifyContent:'center', opacity:0, transition:'opacity 0.2s' }}
-                onMouseEnter={e => e.currentTarget.style.opacity='1'}
-                onMouseLeave={e => e.currentTarget.style.opacity='0'}>
-                {avatarUploading
-                  ? <span style={{ fontSize:10, color:'white' }}>...</span>
-                  : <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"><path d="M8 1v10m-4-4l4 4 4-4M1 14h14"/></svg>
-                }
-              </div>
-            </div>
-            <input ref={avatarRef} type="file" accept="image/*" style={{ display:'none' }}
-              onChange={e => uploadFile(e.target.files[0], 'avatars', setAvatarUrl, setAvatarUploading)} />
+              style={{ marginTop:8, height:30, padding:'0 12px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:8, fontSize:12, fontWeight:500, cursor:'pointer' }}>
+              {avatarUploading ? 'Uploading...' : avatarUrl ? 'Change photo' : 'Upload photo'}
+            </button>
           </div>
         </div>
+        <input ref={avatarRef} type="file" accept="image/*" style={{ display:'none' }}
+          onChange={e => { uploadFile(e.target.files[0], 'avatars', setAvatarUrl, setAvatarUploading); e.target.value = '' }} />
       </div>
 
-      {/* Info below avatar */}
-      <div style={{ padding:'56px 20px 0' }}>
-        <div style={{ fontSize:16, fontWeight:700, color:'var(--c-t1)' }}>{form.full_name || 'Your Name'}</div>
-        <div style={{ fontSize:12, color:'var(--c-t3)', marginTop:2 }}>{user?.email}</div>
-        <div style={{ fontSize:11, color:'var(--c-t3)', marginTop:4 }}>Click your avatar or banner to upload a photo</div>
-      </div>
-
-      {/* Form */}
-      <form onSubmit={save} style={{ margin:'20px 20px 0', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:20 }}>
+      {/* ── Form ── */}
+      <form onSubmit={save} style={{ margin:'0 20px 16px', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:20 }}>
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
           {[
             { k:'full_name', label:'Full Name', ph:'Your full name' },
@@ -179,8 +195,8 @@ export default function ProfilePage() {
         </div>
       </form>
 
-      {/* Sign out */}
-      <div style={{ margin:'16px 20px 0', background:'var(--c-surface)', border:'1px solid #fecaca', borderRadius:18, padding:20 }}>
+      {/* ── Sign out ── */}
+      <div style={{ margin:'0 20px', background:'var(--c-surface)', border:'1px solid #fecaca', borderRadius:18, padding:20 }}>
         <div style={{ fontSize:13, fontWeight:700, color:'#dc2626', marginBottom:4 }}>Sign out</div>
         <p style={{ fontSize:12, color:'var(--c-t2)', marginBottom:12 }}>You will be signed out on this device.</p>
         <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/auth' }}
