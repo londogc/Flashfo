@@ -1,8 +1,6 @@
 'use client'
 import { useState } from 'react'
 
-const COUNTS = [5, 10, 15, 20]
-
 export default function FlashcardsPage() {
   const [topic, setTopic]   = useState('')
   const [count, setCount]   = useState(10)
@@ -35,7 +33,7 @@ export default function FlashcardsPage() {
   if (!cards.length) return (
     <div className="p-6 max-w-2xl mx-auto w-full">
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Flashcards</h1>
-      <p className="text-sm text-t2 mb-6">Enter any topic and get AI-generated study cards instantly.</p>
+      <p className="text-sm text-t2 mb-6">Enter any topic and get study cards instantly.</p>
       <div className="bg-surface border border-line rounded-2xl p-5">
         <textarea value={topic} onChange={e => setTopic(e.target.value)}
           placeholder="Enter a topic or paste notes to generate flashcards from..."
@@ -43,14 +41,20 @@ export default function FlashcardsPage() {
         
         {/* Count selector */}
         <div className="mb-4">
-          <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-2">Number of cards</div>
-          <div className="flex gap-2">
-            {COUNTS.map(n => (
-              <button key={n} onClick={() => setCount(n)}
-                className={`h-8 px-4 rounded-lg text-[13px] font-semibold border transition-all ${count === n ? 'bg-blue-700 text-white border-blue-700' : 'bg-surface2 text-t2 border-line hover:border-blue-300'}`}>
-                {n}
-              </button>
-            ))}
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider">Number of Cards</div>
+            <div className="text-[18px] font-bold text-blue-600 leading-none">{count}</div>
+          </div>
+          <input
+            type="range"
+            min={5} max={30} step={1}
+            value={count}
+            onChange={e => setCount(Number(e.target.value))}
+            className="w-full accent-blue-600 cursor-pointer"
+            style={{ height: 4 }}
+          />
+          <div className="flex justify-between text-[10px] text-t3 mt-1.5">
+            <span>5</span><span>10</span><span>20</span><span>30</span>
           </div>
         </div>
 
