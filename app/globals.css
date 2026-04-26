@@ -11,7 +11,6 @@
   --c-t2:      #475569;
   --c-t3:      #94a3b8;
 }
-
 .dark {
   --c-bg:      #0d1117;
   --c-surface: #161b22;
@@ -31,3 +30,4 @@ button { cursor: pointer; font-family: inherit; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--c-line); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--c-t3); }
+.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
