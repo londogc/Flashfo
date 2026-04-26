@@ -1,30 +1,34 @@
 'use client'
 import { useState } from 'react'
 
+const COUNTS = [5, 10, 15, 20]
+
 export default function FlashcardsPage() {
-  const [topic, setTopic] = useState('')
-  const [cards, setCards] = useState([])
+  const [topic, setTopic]   = useState('')
+  const [count, setCount]   = useState(10)
+  const [cards, setCards]   = useState([])
   const [loading, setLoading] = useState(false)
   const [current, setCurrent] = useState(0)
   const [flipped, setFlipped] = useState(false)
-  const [done, setDone] = useState([])
+  const [done, setDone]     = useState([])
+  const [error, setError]   = useState('')
 
   async function generate() {
     if (!topic.trim()) return
-    setLoading(true); setCards([]); setDone([]); setCurrent(0); setFlipped(false)
+    setLoading(true); setCards([]); setDone([]); setCurrent(0); setFlipped(false); setError('')
     try {
       const res = await fetch('/api/rpc', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fn: 'generateFlashcardsFromText', args: [topic.trim(), 10, 'English'] })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fn: 'generateFlashcardsFromText', args: [topic.trim(), count, 'English'] })
       })
       const data = await res.json()
       const raw = data.result
       let parsed = []
       if (raw?.cards) parsed = raw.cards
       else if (Array.isArray(raw)) parsed = raw
-      setCards(parsed.length ? parsed : [{ front: 'Could not generate cards', back: 'Try a more specific topic' }])
-    } catch { setCards([{ front: 'Error', back: 'Please try again' }]) }
+      if (!parsed.length) setError('Could not generate cards. Try adding more detail to your topic.')
+      else setCards(parsed)
+    } catch { setError('Something went wrong. Please try again.') }
     finally { setLoading(false) }
   }
 
@@ -35,16 +39,31 @@ export default function FlashcardsPage() {
       <div className="bg-surface border border-line rounded-2xl p-5">
         <textarea value={topic} onChange={e => setTopic(e.target.value)}
           placeholder="Enter a topic or paste notes to generate flashcards from..."
-          className="w-full h-28 text-sm text-t1 bg-transparent resize-none outline-none placeholder:text-t3 mb-4" />
+          className="w-full h-28 text-sm text-t1 bg-transparent resize-none outline-none placeholder:text-t3 mb-4"/>
+        
+        {/* Count selector */}
+        <div className="mb-4">
+          <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-2">Number of cards</div>
+          <div className="flex gap-2">
+            {COUNTS.map(n => (
+              <button key={n} onClick={() => setCount(n)}
+                className={`h-8 px-4 rounded-lg text-[13px] font-semibold border transition-all ${count === n ? 'bg-blue-700 text-white border-blue-700' : 'bg-surface2 text-t2 border-line hover:border-blue-300'}`}>
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
         <button onClick={generate} disabled={loading || !topic.trim()}
           className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 transition-colors disabled:opacity-40 flex items-center gap-2">
-          {loading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</> : 'Generate Flashcards'}
+          {loading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>Generating {count} cards...</> : `Generate ${count} Flashcards`}
         </button>
       </div>
     </div>
   )
 
-  const card = cards[current]
+  const card     = cards[current]
   const progress = Math.round((done.length / cards.length) * 100)
 
   return (
@@ -58,11 +77,11 @@ export default function FlashcardsPage() {
       </div>
 
       <div className="w-full bg-line rounded-full h-1.5 mb-6">
-        <div className="bg-blue-600 h-1.5 rounded-full transition-all" style={{ width: progress + '%' }} />
+        <div className="bg-blue-600 h-1.5 rounded-full transition-all" style={{ width: progress + '%' }}/>
       </div>
 
       <div onClick={() => setFlipped(f => !f)}
-        className="bg-surface border border-line rounded-2xl p-10 text-center cursor-pointer hover:border-blue-300 transition-all min-h-[240px] flex flex-col items-center justify-center gap-4">
+        className="bg-surface border border-line rounded-2xl p-10 text-center cursor-pointer hover:border-blue-300 transition-all min-h-[220px] flex flex-col items-center justify-center gap-4">
         <div className="text-[10px] font-bold text-t3 uppercase tracking-widest">
           {flipped ? 'Answer' : 'Question'} · {current + 1} of {cards.length}
         </div>
