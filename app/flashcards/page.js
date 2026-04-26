@@ -1,15 +1,48 @@
 'use client'
 import { useState } from 'react'
 
+function SpeakerBtn({ text }) {
+  const [busy, setBusy] = useState(false)
+  async function speak() {
+    if (busy || !text) return
+    setBusy(true)
+    try {
+      const res = await fetch('/api/rpc', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fn: 'generateOpenAITtsAudio', args: [text, 'nova', 1] })
+      })
+      const data = await res.json()
+      const audio = new Audio('data:audio/mp3;base64,' + data.result.audio)
+      audio.onended = () => setBusy(false)
+      audio.play()
+    } catch { setBusy(false) }
+  }
+  return (
+    <button onClick={e => { e.stopPropagation(); speak() }} title="Listen"
+      className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-blue-500/10 transition-colors"
+      style={{ color: busy ? '#93c5fd' : '#3b82f6', opacity: busy ? 0.6 : 1 }}>
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M3 6h2.5L8 4v8L5.5 10H3V6z"/>
+        {busy
+          ? <path d="M10 6.5a2 2 0 010 3"/>
+          : <><path d="M10 5a4 4 0 010 6"/><path d="M12 3a7 7 0 010 10"/></>}
+      </svg>
+    </button>
+  )
+}
+
 export default function FlashcardsPage() {
-  const [topic, setTopic]   = useState('')
-  const [count, setCount]   = useState(10)
-  const [cards, setCards]   = useState([])
-  const [loading, setLoading] = useState(false)
-  const [current, setCurrent] = useState(0)
-  const [flipped, setFlipped] = useState(false)
-  const [done, setDone]     = useState([])
-  const [error, setError]   = useState('')
+  const [topic, setTopic]       = useState('')
+  const [count, setCount]       = useState(10)
+  const [cards, setCards]       = useState([])
+  const [loading, setLoading]   = useState(false)
+  const [current, setCurrent]   = useState(0)
+  const [flipped, setFlipped]   = useState(false)
+  const [done, setDone]         = useState([])
+  const [error, setError]       = useState('')
+  const [showEdit, setShowEdit] = useState(false)
+  const [editIdx, setEditIdx]   = useState(null)
+  const [editVals, setEditVals] = useState({ front: '', back: '' })
 
   async function generate() {
     if (!topic.trim()) return
@@ -30,6 +63,27 @@ export default function FlashcardsPage() {
     finally { setLoading(false) }
   }
 
+  function startEdit(i) {
+    setEditIdx(i)
+    setEditVals({ front: cards[i].front || cards[i].question || '', back: cards[i].back || cards[i].answer || '' })
+  }
+  function saveEdit() {
+    if (editIdx === null) return
+    setCards(cs => cs.map((c, i) => i === editIdx ? { front: editVals.front, back: editVals.back } : c))
+    setEditIdx(null)
+  }
+  function addCard() {
+    const newCard = { front: 'New question', back: 'New answer' }
+    setCards(cs => [...cs, newCard])
+    setTimeout(() => startEdit(cards.length), 0)
+  }
+  function deleteCard(i) {
+    setCards(cs => cs.filter((_, ci) => ci !== i))
+    if (current >= i && current > 0) setCurrent(c => c - 1)
+    setDone(d => d.filter(di => di !== i).map(di => di > i ? di - 1 : di))
+    if (editIdx === i) setEditIdx(null)
+  }
+
   if (!cards.length) return (
     <div className="p-6 max-w-2xl mx-auto w-full">
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Flashcards</h1>
@@ -38,26 +92,18 @@ export default function FlashcardsPage() {
         <textarea value={topic} onChange={e => setTopic(e.target.value)}
           placeholder="Enter a topic or paste notes to generate flashcards from..."
           className="w-full h-28 text-sm text-t1 bg-transparent resize-none outline-none placeholder:text-t3 mb-4"/>
-        
-        {/* Count selector */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider">Number of Cards</div>
             <div className="text-[18px] font-bold text-blue-600 leading-none">{count}</div>
           </div>
-          <input
-            type="range"
-            min={5} max={30} step={1}
-            value={count}
+          <input type="range" min={5} max={30} step={1} value={count}
             onChange={e => setCount(Number(e.target.value))}
-            className="w-full accent-blue-600 cursor-pointer"
-            style={{ height: 4 }}
-          />
+            className="w-full accent-blue-600 cursor-pointer" style={{ height: 4 }}/>
           <div className="flex justify-between text-[10px] text-t3 mt-1.5">
             <span>5</span><span>10</span><span>20</span><span>30</span>
           </div>
         </div>
-
         {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
         <button onClick={generate} disabled={loading || !topic.trim()}
           className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 transition-colors disabled:opacity-40 flex items-center gap-2">
@@ -70,6 +116,54 @@ export default function FlashcardsPage() {
   const card     = cards[current]
   const progress = Math.round((done.length / cards.length) * 100)
 
+  if (showEdit) return (
+    <div className="p-6 max-w-2xl mx-auto w-full">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-xl font-bold text-t1">Edit Deck <span className="text-sm font-normal text-t3">({cards.length} cards)</span></h2>
+        <div className="flex gap-2">
+          <button onClick={addCard}
+            className="h-8 px-3 bg-blue-700 text-white text-[12px] font-semibold rounded-lg hover:bg-blue-800 transition-colors">+ Add Card</button>
+          <button onClick={() => { setShowEdit(false); setEditIdx(null) }}
+            className="h-8 px-3 bg-surface border border-line text-t2 text-[12px] font-medium rounded-lg hover:bg-surface2 transition-colors">Done</button>
+        </div>
+      </div>
+      <div className="space-y-3">
+        {cards.map((c, i) => (
+          <div key={i} className="bg-surface border border-line rounded-xl p-4">
+            {editIdx === i ? (
+              <div className="space-y-2">
+                <div className="text-[10px] font-semibold text-t3 uppercase">Question</div>
+                <textarea value={editVals.front} onChange={e => setEditVals(v => ({ ...v, front: e.target.value }))}
+                  className="w-full text-sm text-t1 bg-surface2 border border-line rounded-lg p-2 resize-none outline-none focus:border-blue-400" rows={2}/>
+                <div className="text-[10px] font-semibold text-t3 uppercase mt-1">Answer</div>
+                <textarea value={editVals.back} onChange={e => setEditVals(v => ({ ...v, back: e.target.value }))}
+                  className="w-full text-sm text-t2 bg-surface2 border border-line rounded-lg p-2 resize-none outline-none focus:border-blue-400" rows={2}/>
+                <div className="flex gap-2 pt-1">
+                  <button onClick={saveEdit} className="h-7 px-3 bg-blue-700 text-white text-[11px] font-semibold rounded-lg">Save</button>
+                  <button onClick={() => setEditIdx(null)} className="h-7 px-3 bg-surface2 text-t2 text-[11px] rounded-lg border border-line">Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start gap-3">
+                <span className="text-[11px] font-bold text-t3 mt-0.5 w-5 flex-shrink-0">{i+1}.</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-t1 mb-1">{c.front || c.question}</p>
+                  <p className="text-[12px] text-t2">{c.back || c.answer}</p>
+                </div>
+                <div className="flex gap-1 flex-shrink-0">
+                  <button onClick={() => startEdit(i)}
+                    className="h-7 px-2 text-[11px] text-t2 border border-line rounded-lg hover:bg-surface2 transition-colors">Edit</button>
+                  <button onClick={() => deleteCard(i)}
+                    className="h-7 px-2 text-[11px] text-red-500 border border-red-200 dark:border-red-500/30 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">✕</button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
   return (
     <div className="p-6 max-w-2xl mx-auto w-full">
       <div className="flex items-center justify-between mb-6">
@@ -77,7 +171,11 @@ export default function FlashcardsPage() {
           <h1 className="text-2xl font-bold text-t1 tracking-tight">Flashcards</h1>
           <p className="text-sm text-t2">{cards.length} cards · {done.length} learned</p>
         </div>
-        <button onClick={() => setCards([])} className="text-sm text-blue-500 font-medium hover:underline">New deck</button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => { setShowEdit(true); setEditIdx(null) }}
+            className="h-8 px-3 text-[12px] text-t2 border border-line rounded-lg hover:bg-surface2 transition-colors">Edit Deck</button>
+          <button onClick={() => setCards([])} className="text-sm text-blue-500 font-medium hover:underline">New deck</button>
+        </div>
       </div>
 
       <div className="w-full bg-line rounded-full h-1.5 mb-6">
@@ -85,7 +183,7 @@ export default function FlashcardsPage() {
       </div>
 
       <div onClick={() => setFlipped(f => !f)}
-        className="bg-surface border border-line rounded-2xl p-10 text-center cursor-pointer hover:border-blue-300 transition-all min-h-[220px] flex flex-col items-center justify-center gap-4">
+        className="bg-surface border border-line rounded-2xl p-10 text-center cursor-pointer hover:border-blue-300 transition-all min-h-[220px] flex flex-col items-center justify-center gap-4 relative">
         <div className="text-[10px] font-bold text-t3 uppercase tracking-widest">
           {flipped ? 'Answer' : 'Question'} · {current + 1} of {cards.length}
         </div>
@@ -93,6 +191,11 @@ export default function FlashcardsPage() {
           {flipped ? (card.back || card.answer) : (card.front || card.question)}
         </div>
         <div className="text-[11px] text-t3">Tap to {flipped ? 'see question' : 'reveal answer'}</div>
+        {flipped && (
+          <div className="absolute bottom-3 right-3" onClick={e => e.stopPropagation()}>
+            <SpeakerBtn text={card.back || card.answer || ''} />
+          </div>
+        )}
       </div>
 
       <div className="flex gap-3 mt-4 justify-center">
