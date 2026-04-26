@@ -51,9 +51,8 @@ export default function HeroCard() {
             Flashfo organizes your prompts, sources, saved work, and classroom tools in one calm workspace.
           </p>
 
-          {/* Search bar */}
           <form onSubmit={handleSearch} style={{ display:'flex', gap:8, marginBottom:16, maxWidth: mobile ? '100%' : 480 }}>
-            <div style={{ flex:1, display:'flex', alignItems:'center', gap:8, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:12, padding:'0 14px', height:44, transition:'border-color 0.2s' }}>
+            <div style={{ flex:1, display:'flex', alignItems:'center', gap:8, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:12, padding:'0 14px', height:44 }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ color:'var(--c-t3)', flexShrink:0 }}>
                 <path d="M7 1a6 6 0 100 12A6 6 0 007 1zm7 14l-3-3"/>
               </svg>
@@ -61,7 +60,8 @@ export default function HeroCard() {
                 placeholder="Search any topic, question, or keyword..."
                 style={{ flex:1, background:'transparent', border:'none', outline:'none', fontSize:13, color:'var(--c-t1)' }}/>
             </div>
-            <button type="submit" style={{ height:44, padding:'0 18px', background:'#1d4ed8', color:'white', fontSize:13, fontWeight:700, borderRadius:12, border:'none', cursor:'pointer', flexShrink:0 }}>
+            <button type="submit"
+              style={{ height:44, padding:'0 18px', background:'#1d4ed8', color:'white', fontSize:13, fontWeight:700, borderRadius:12, border:'none', cursor:'pointer', flexShrink:0 }}>
               Search
             </button>
           </form>
@@ -73,13 +73,12 @@ export default function HeroCard() {
           </div>
         </div>
 
-        {/* Right panel — desktop only */}
         {!mobile && (
           <div style={{ background:'#1e3a8a', borderRadius:18, padding:16, display:'flex', flexDirection:'column', gap:8 }}>
             <p style={{ fontSize:12, fontWeight:600, color:'white', marginBottom:4, lineHeight:1.4 }}>Choose the path that fits<br/>what you need.</p>
             <Opt href="/create" icon={<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"><path d="M8 1l1.8 5H15l-4.4 3.2 1.7 5.2L8 11.2 3.7 14.4l1.7-5.2L1 6h5.2z"/></svg>} label="Create learning material" sub="Summaries, cards, quizzes, lessons"/>
-            <Opt href="/study"  icon={<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"><path d="M2 4h12M2 8h8M2 12h10"/></svg>}                                                          label="Continue learning"       sub="Study mode, AI tutor, missed questions"/>
-            <Opt href="/my-stuff" icon={<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z"/></svg>}              label="Open saved work"         sub="Folders, decks, quizzes, history"/>
+            <Opt href="/study"  icon={<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"><path d="M2 4h12M2 8h8M2 12h10"/></svg>} label="Continue learning" sub="Nova AI tutor, missed questions, guides"/>
+            <Opt href="/my-stuff" icon={<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z"/></svg>} label="Open saved work" sub="Folders, decks, quizzes, history"/>
           </div>
         )}
       </div>
