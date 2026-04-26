@@ -149,10 +149,10 @@ export default function Shell({ children }) {
               <span style={{ fontSize:14, fontWeight:700, color:'var(--c-t1)' }}>Flashfo</span>
             </div>
           )}
-          {/* Welcome message â desktop only, reserved space */}
+          {/* Welcome message — desktop only, reserved space */}
           {!isMobile && !authLoading && user && firstName && (
             <span style={{ fontSize:13, color:'var(--c-t2)', fontWeight:500 }}>
-              Welcome back, <span style={{ color:'var(--c-t1)', fontWeight:700 }}>{firstName}</span> ð
+              Welcome back, <span style={{ color:'var(--c-t1)', fontWeight:700 }}>{firstName}</span> 👋
             </span>
           )}
           <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
