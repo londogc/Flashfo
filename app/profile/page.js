@@ -26,36 +26,27 @@ export default function ProfilePage() {
     e.preventDefault()
     setSaving(true); setError(''); setSuccess(false)
 
-    const payload = {
-      id: user.id,
-      full_name: form.full_name,
-      username: form.username || null,
-      bio: form.bio || null,
-      updated_at: new Date().toISOString(),
-    }
-
-    // Try update first, then insert if not exists
     const { error: updateErr } = await supabase
       .from('profiles')
-      .update({ full_name: payload.full_name, username: payload.username, bio: payload.bio, updated_at: payload.updated_at })
+      .update({
+        full_name: form.full_name,
+        username: form.username || null,
+        bio: form.bio || null,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', user.id)
 
     if (updateErr) {
-      // If update fails (no row), try insert
       const { error: insertErr } = await supabase
         .from('profiles')
-        .insert(payload)
-
-      if (insertErr) {
-        setError(insertErr.message)
-        setSaving(false)
-        return
-      }
+        .insert({ id: user.id, full_name: form.full_name, username: form.username || null, bio: form.bio || null })
+      if (insertErr) { setError(insertErr.message); setSaving(false); return }
     }
 
-    setSuccess(true)
     setSaving(false)
-    setTimeout(() => router.push('/'), 1200)
+    setSuccess(true)
+    // Redirect to dashboard after 1 second
+    setTimeout(() => { router.push('/') }, 1000)
   }
 
   if (loading) return (
@@ -77,7 +68,6 @@ export default function ProfilePage() {
         <div>
           <div style={{ fontSize:15, fontWeight:700, color:'var(--c-t1)' }}>{form.full_name || 'Your Name'}</div>
           <div style={{ fontSize:12, color:'var(--c-t3)', marginTop:2 }}>{user?.email}</div>
-          <div style={{ fontSize:11, color:'var(--c-t3)', marginTop:6 }}>Avatar upload coming soon</div>
         </div>
       </div>
 
@@ -104,24 +94,16 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {error && (
-          <div style={{ marginTop:14, padding:'10px 14px', background:'#fef2f2', border:'1px solid #fecaca', borderRadius:10, fontSize:13, color:'#dc2626' }}>
-            {error}
-          </div>
-        )}
-        {success && (
-          <div style={{ marginTop:14, padding:'10px 14px', background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:10, fontSize:13, color:'#16a34a' }}>
-            ✓ Profile saved successfully!
-          </div>
-        )}
+        {error && <div style={{ marginTop:14, padding:'10px 14px', background:'#fef2f2', border:'1px solid #fecaca', borderRadius:10, fontSize:13, color:'#dc2626' }}>{error}</div>}
+        {success && <div style={{ marginTop:14, padding:'10px 14px', background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:10, fontSize:13, color:'#16a34a' }}>✓ Saved! Returning to dashboard...</div>}
 
         <div style={{ marginTop:20, display:'flex', gap:10 }}>
-          <button type="submit" disabled={saving}
-            style={{ height:40, padding:'0 20px', background:'#1d4ed8', color:'white', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:saving?'not-allowed':'pointer', opacity:saving?0.7:1 }}>
-            {saving ? 'Saving...' : 'Save changes'}
+          <button type="submit" disabled={saving || success}
+            style={{ height:40, padding:'0 20px', background: success ? '#16a34a' : '#1d4ed8', color:'white', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', opacity: saving ? 0.7 : 1 }}>
+            {saving ? 'Saving...' : success ? 'Saved ✓' : 'Save changes'}
           </button>
           <a href="/" style={{ height:40, padding:'0 16px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, fontWeight:500, display:'inline-flex', alignItems:'center', textDecoration:'none' }}>
-            Cancel
+            ← Dashboard
           </a>
         </div>
       </form>
