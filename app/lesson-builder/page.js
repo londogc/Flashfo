@@ -3,9 +3,9 @@ import { useState } from 'react'
 
 export default function LessonBuilderPage() {
   const [form, setForm] = useState({ topic: '', grade: '', duration: '', objectives: '' })
-  const [output, setOutput] = useState('')
+  const [output, setOutput]   = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError]     = useState('')
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   async function generate() {
@@ -14,14 +14,13 @@ export default function LessonBuilderPage() {
     try {
       const topicText = [
         form.topic,
-        form.grade && `Grade/Level: ${form.grade}`,
-        form.duration && `Duration: ${form.duration}`,
-        form.objectives && `Objectives: ${form.objectives}`,
+        form.grade      && 'Grade/Level: ' + form.grade,
+        form.duration   && 'Duration: ' + form.duration,
+        form.objectives && 'Objectives: ' + form.objectives,
       ].filter(Boolean).join(' | ')
 
       const res = await fetch('/api/rpc', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fn: 'generateLessonPlanFromItems',
           args: [[{ type: 'topic', value: topicText }], form.grade || 'General', 'English']
@@ -35,9 +34,9 @@ export default function LessonBuilderPage() {
   }
 
   const fields = [
-    { k: 'topic', label: 'Topic', ph: 'e.g. The Holocaust, Photosynthesis', required: true },
-    { k: 'grade', label: 'Grade / Level', ph: 'e.g. Grade 8, High School, University' },
-    { k: 'duration', label: 'Duration', ph: 'e.g. 45 minutes, 1 hour' },
+    { k: 'topic',    label: 'Topic',        ph: 'e.g. The Holocaust, Photosynthesis', required: true },
+    { k: 'grade',    label: 'Grade / Level', ph: 'e.g. Grade 8, High School, University' },
+    { k: 'duration', label: 'Duration',      ph: 'e.g. 45 minutes, 1 hour' },
   ]
 
   return (
@@ -49,10 +48,11 @@ export default function LessonBuilderPage() {
         {fields.map(({ k, label, ph, required }) => (
           <div key={k}>
             <label className="block text-[11px] font-semibold text-t3 uppercase tracking-wider mb-1.5">
-              {label}{required && <span className="text-red-400 ml-0.5">*</span>}
+              {label}
+              {required ? <span className="text-red-400 ml-0.5">*</span> : <span className="text-t3 font-normal normal-case ml-1">(optional)</span>}
             </label>
             <input value={form[k]} onChange={e => set(k, e.target.value)} placeholder={ph}
-              className="w-full h-9 bg-surface2 border border-line rounded-lg px-3 text-sm text-t1 outline-none focus:border-blue-400 transition-colors placeholder:text-t3" />
+              className="w-full h-9 bg-surface2 border border-line rounded-lg px-3 text-sm text-t1 outline-none focus:border-blue-400 transition-colors placeholder:text-t3"/>
           </div>
         ))}
         <div>
@@ -61,13 +61,13 @@ export default function LessonBuilderPage() {
           </label>
           <textarea value={form.objectives} onChange={e => set('objectives', e.target.value)}
             placeholder="Students will be able to..." rows={3}
-            className="w-full bg-surface2 border border-line rounded-lg px-3 py-2 text-sm text-t1 outline-none focus:border-blue-400 transition-colors resize-none placeholder:text-t3" />
+            className="w-full bg-surface2 border border-line rounded-lg px-3 py-2 text-sm text-t1 outline-none focus:border-blue-400 transition-colors resize-none placeholder:text-t3"/>
         </div>
       </div>
 
       <button onClick={generate} disabled={loading || !form.topic.trim()}
         className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 transition-colors disabled:opacity-40 flex items-center gap-2">
-        {loading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Building plan...</> : 'Generate Lesson Plan'}
+        {loading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>Building plan...</> : 'Generate Lesson Plan'}
       </button>
 
       {error && <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-500">{error}</div>}
