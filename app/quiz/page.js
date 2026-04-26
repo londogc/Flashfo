@@ -1,22 +1,21 @@
 'use client'
 import { useState } from 'react'
 
-const TYPES  = [
-  { id: 'mcq',          label: 'Multiple Choice', config: n => ({ mcq: n }) },
-  { id: 'true_false',   label: 'True / False',    config: n => ({ true_false: n }) },
-  { id: 'mixed',        label: 'Mixed',            config: n => ({ mcq: Math.ceil(n/2), true_false: Math.floor(n/2) }) },
+const TYPES = [
+  { id: 'mcq',        label: 'Multiple Choice', config: n => ({ mcq: n }) },
+  { id: 'true_false', label: 'True / False',    config: n => ({ true_false: n }) },
+  { id: 'mixed',      label: 'Mixed',            config: n => ({ mcq: Math.ceil(n/2), true_false: Math.floor(n/2) }) },
 ]
-const COUNTS = [3, 5, 10]
 
 export default function QuizPage() {
-  const [topic, setTopic]     = useState('')
-  const [qType, setQType]     = useState(TYPES[0])
-  const [count, setCount]     = useState(5)
+  const [topic, setTopic]       = useState('')
+  const [qType, setQType]       = useState(TYPES[0])
+  const [count, setCount]       = useState(5)
   const [questions, setQuestions] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading]   = useState(false)
   const [selected, setSelected] = useState({})
   const [submitted, setSubmitted] = useState(false)
-  const [error, setError]     = useState('')
+  const [error, setError]       = useState('')
 
   async function generate() {
     if (!topic.trim()) return
@@ -29,14 +28,14 @@ export default function QuizPage() {
       const data = await res.json()
       if (data.error) { setError(data.error); return }
       const qs = data.result?.questions || []
-      if (!qs.length) { setError('Could not generate quiz. Try adding more detail to your topic.'); return }
+      if (!qs.length) { setError('Could not generate quiz. Try adding more detail.'); return }
       setQuestions(qs)
     } catch { setError('Something went wrong. Please try again.') }
     finally { setLoading(false) }
   }
 
   const score = submitted ? questions.filter((q, i) => selected[i] === q.answerIndex).length : 0
-  const pct   = submitted ? Math.round((score / questions.length) * 100) : 0
+  const pct   = submitted && questions.length ? Math.round((score / questions.length) * 100) : 0
 
   return (
     <div className="p-6 max-w-3xl mx-auto w-full">
@@ -47,9 +46,10 @@ export default function QuizPage() {
         <div className="bg-surface border border-line rounded-2xl p-5">
           <textarea value={topic} onChange={e => setTopic(e.target.value)}
             placeholder="Enter a topic or paste notes to generate a quiz from..."
-            className="w-full h-28 text-sm text-t1 bg-transparent resize-none outline-none placeholder:text-t3 mb-4"/>
+            className="w-full h-28 text-sm text-t1 bg-transparent resize-none outline-none placeholder:text-t3 mb-5"/>
 
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-2 gap-6 mb-5">
+            {/* Question type */}
             <div>
               <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-2">Question Type</div>
               <div className="flex flex-col gap-1.5">
@@ -61,15 +61,23 @@ export default function QuizPage() {
                 ))}
               </div>
             </div>
+
+            {/* Question count — clean slider */}
             <div>
-              <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-2">Number of questions</div>
-              <div className="flex gap-2">
-                {COUNTS.map(n => (
-                  <button key={n} onClick={() => setCount(n)}
-                    className={`h-8 px-4 rounded-lg text-[13px] font-semibold border transition-all ${count === n ? 'bg-blue-700 text-white border-blue-700' : 'bg-surface2 text-t2 border-line hover:border-blue-300'}`}>
-                    {n}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider">Number of Questions</div>
+                <div className="text-[18px] font-bold text-blue-600 leading-none">{count}</div>
+              </div>
+              <input
+                type="range"
+                min={3} max={35} step={1}
+                value={count}
+                onChange={e => setCount(Number(e.target.value))}
+                className="w-full accent-blue-600 cursor-pointer"
+                style={{ height: 4 }}
+              />
+              <div className="flex justify-between text-[10px] text-t3 mt-1.5">
+                <span>3</span><span>10</span><span>20</span><span>35</span>
               </div>
             </div>
           </div>
@@ -87,12 +95,11 @@ export default function QuizPage() {
               {score}/{questions.length} correct ({pct}%) — {pct === 100 ? '🎉 Perfect!' : pct >= 60 ? 'Good job! Keep studying.' : 'Keep practising — review the explanations below.'}
             </div>
           )}
-
           <div className="space-y-4 mb-6">
             {questions.map((q, i) => (
               <div key={i} className="bg-surface border border-line rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-[10px] font-bold bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full uppercase">{q.type || 'mcq'}</span>
+                <div className="flex items-start gap-2 mb-3">
+                  <span className="text-[10px] font-bold bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full uppercase flex-shrink-0 mt-0.5">{q.type || 'mcq'}</span>
                   <p className="text-sm font-semibold text-t1">{i + 1}. {q.question}</p>
                 </div>
                 <div className="space-y-2">
@@ -121,14 +128,13 @@ export default function QuizPage() {
               </div>
             ))}
           </div>
-
           <div className="flex gap-3">
-            {!submitted
-              ? <button onClick={() => setSubmitted(true)} disabled={Object.keys(selected).length === 0}
-                  className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 transition-colors disabled:opacity-40">
-                  Submit Answers
-                </button>
-              : null}
+            {!submitted && (
+              <button onClick={() => setSubmitted(true)} disabled={Object.keys(selected).length === 0}
+                className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 transition-colors disabled:opacity-40">
+                Submit Answers
+              </button>
+            )}
             <button onClick={() => { setQuestions([]); setError('') }}
               className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 transition-colors">
               New Quiz
