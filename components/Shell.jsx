@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
+import { supabase } from '@/lib/supabase'
 
 const I = ({ d, s = 16 }) => (
   <svg width={s} height={s} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -80,6 +81,14 @@ export default function Shell({ children }) {
     check(); window.addEventListener('resize', check)
     const saved = localStorage.getItem('ff-theme')
     if (saved === 'dark') { setDark(true); document.documentElement.classList.add('dark') }
+    // Sync from Supabase user_metadata if logged in and no local preference
+    if (!saved) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        const pref = session?.user?.user_metadata?.dark_mode
+        if (pref === true) { setDark(true); document.documentElement.classList.add('dark'); localStorage.setItem('ff-theme','dark') }
+        else if (pref === false) { setDark(false); document.documentElement.classList.remove('dark'); localStorage.setItem('ff-theme','light') }
+      })
+    }
     return () => window.removeEventListener('resize', check)
   }, [])
 
@@ -87,6 +96,9 @@ export default function Shell({ children }) {
     const next = !dark; setDark(next)
     document.documentElement.classList.toggle('dark', next)
     localStorage.setItem('ff-theme', next ? 'dark' : 'light')
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) supabase.auth.updateUser({ data: { dark_mode: next } })
+    })
   }
 
   const handleSignOut = async () => {
