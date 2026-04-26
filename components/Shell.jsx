@@ -22,7 +22,7 @@ const ICONS = {
   search:     'M7 1a6 6 0 100 12A6 6 0 007 1zm7 14l-3-3',
   tutor:      'M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z',
   suite:      'M8 1l1.5 4H14l-3.7 2.7 1.4 4.3L8 9.5 4.3 12 5.7 7.7 2 5h4.5z',
-  sources:    'M2 3h4v12H2zm5-2h4v16H7zm5 2h4v12h-4z',
+  sources:    'M1 5h3v9H1zm4-3h4v12H5zm5 2h4v10h-4z',
   sun:        'M8 1v2m0 10v2M1 8h2m10 0h2M3.5 3.5l1.5 1.5m6 6l1.5 1.5M3.5 12.5l1.5-1.5m6-6l1.5-1.5M8 5a3 3 0 100 6 3 3 0 000-6z',
   moon:       'M12 3A6 6 0 006 15a7 7 0 006-12z',
   cL:         'M10 3L5 8l5 5',
@@ -149,10 +149,10 @@ export default function Shell({ children }) {
               <span style={{ fontSize:14, fontWeight:700, color:'var(--c-t1)' }}>Flashfo</span>
             </div>
           )}
-          {/* Welcome message — desktop only, reserved space */}
+          {/* Welcome message â desktop only, reserved space */}
           {!isMobile && !authLoading && user && firstName && (
             <span style={{ fontSize:13, color:'var(--c-t2)', fontWeight:500 }}>
-              Welcome back, <span style={{ color:'var(--c-t1)', fontWeight:700 }}>{firstName}</span> 👋
+              Welcome back, <span style={{ color:'var(--c-t1)', fontWeight:700 }}>{firstName}</span> ð
             </span>
           )}
           <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
