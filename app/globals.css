@@ -31,3 +31,5 @@ button { cursor: pointer; font-family: inherit; }
 ::-webkit-scrollbar-thumb { background: var(--c-line); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--c-t3); }
 .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* deploy trigger */
