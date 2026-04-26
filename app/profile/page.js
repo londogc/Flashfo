@@ -48,14 +48,15 @@ export default function ProfilePage() {
   async function save(e) {
     e.preventDefault()
     setSaving(true); setError('')
-    const { error: updateErr } = await supabase.from('profiles')
-      .update({ full_name: form.full_name, username: form.username || null, bio: form.bio || null, updated_at: new Date().toISOString() })
-      .eq('id', user.id)
-    if (updateErr) {
-      const { error: insertErr } = await supabase.from('profiles')
-        .insert({ id: user.id, full_name: form.full_name, username: form.username || null, bio: form.bio || null })
-      if (insertErr) { setError(insertErr.message); setSaving(false); return }
-    }
+    // Use upsert — handles both new and existing rows cleanly
+    const { error: err } = await supabase.from('profiles').upsert({
+      id: user.id,
+      full_name: form.full_name,
+      username: form.username || null,
+      bio: form.bio || null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' })
+    if (err) { setError(err.message); setSaving(false); return }
     setSaving(false)
     window.location.href = '/'
   }
