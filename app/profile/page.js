@@ -11,7 +11,9 @@ function CropModal({ file, cropW, cropH, title, onApply, onCancel }) {
   const scaleRef  = useRef(1)
   const dragging  = useRef(false)
   const lastPt    = useRef({ x: 0, y: 0 })
-  const [ready, setReady] = useState(false)
+  const [ready, setReady]         = useState(false)
+  const [preview, setPreview]     = useState(null)  // data URL shown after crop
+  const [cropBlob, setCropBlob]   = useState(null)  // blob ready to upload
 
   function clamp(nx, ny, s) {
     const img = imgRef.current
@@ -33,7 +35,6 @@ function CropModal({ file, cropW, cropH, title, onApply, onCancel }) {
     ctx.drawImage(img, posRef.current.x, posRef.current.y, img.width * scaleRef.current, img.height * scaleRef.current)
   }
 
-  // Load image from file blob
   useEffect(() => {
     if (!file) return
     const url = URL.createObjectURL(file)
@@ -51,7 +52,6 @@ function CropModal({ file, cropW, cropH, title, onApply, onCancel }) {
 
   useEffect(() => { if (ready) draw() }, [ready])
 
-  // Wheel zoom — needs passive:false so we can preventDefault
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -63,10 +63,10 @@ function CropModal({ file, cropW, cropH, title, onApply, onCancel }) {
       const factor = e.deltaY < 0 ? 1.1 : 0.9
       const newS   = Math.min(5, Math.max(minS, scaleRef.current * factor))
       const rect   = canvas.getBoundingClientRect()
-      const sx     = cropW / rect.width
-      const sy     = cropH / rect.height
-      const mx     = (e.clientX - rect.left) * sx
-      const my     = (e.clientY - rect.top)  * sy
+      const rx     = cropW / rect.width
+      const ry     = cropH / rect.height
+      const mx     = (e.clientX - rect.left) * rx
+      const my     = (e.clientY - rect.top)  * ry
       const newX   = mx - (mx - posRef.current.x) * (newS / scaleRef.current)
       const newY   = my - (my - posRef.current.y) * (newS / scaleRef.current)
       scaleRef.current = newS
@@ -77,62 +77,73 @@ function CropModal({ file, cropW, cropH, title, onApply, onCancel }) {
     return () => canvas.removeEventListener('wheel', handler)
   }, [])
 
-  function toCanvas(clientX, clientY) {
+  function toCanvas(cx, cy) {
     const canvas = canvasRef.current
     const rect   = canvas.getBoundingClientRect()
     return {
-      x: (clientX - rect.left) * (cropW / rect.width),
-      y: (clientY - rect.top)  * (cropH / rect.height),
+      x: (cx - rect.left) * (cropW / rect.width),
+      y: (cy - rect.top)  * (cropH / rect.height),
     }
   }
 
-  function onStart(cx, cy) {
-    dragging.current = true
-    lastPt.current = toCanvas(cx, cy)
-  }
-
+  function onStart(cx, cy) { dragging.current = true; lastPt.current = toCanvas(cx, cy) }
   function onMove(cx, cy) {
     if (!dragging.current) return
     const pt = toCanvas(cx, cy)
-    posRef.current = clamp(
-      posRef.current.x + (pt.x - lastPt.current.x),
-      posRef.current.y + (pt.y - lastPt.current.y),
-      scaleRef.current
-    )
+    posRef.current = clamp(posRef.current.x + pt.x - lastPt.current.x, posRef.current.y + pt.y - lastPt.current.y, scaleRef.current)
     lastPt.current = pt
     draw()
   }
 
-  function apply() {
+  function applyCrop() {
     const img = imgRef.current
     if (!img) return
     const s  = scaleRef.current
-    const px = posRef.current.x  // always ≤ 0 (image shifted left)
-    const py = posRef.current.y  // always ≤ 0 (image shifted up)
-
-    // Compute the exact source region in original image pixels:
-    // The crop's top-left corresponds to source position (-px/s, -py/s)
-    // The crop covers (cropW/s) x (cropH/s) source pixels
+    const px = posRef.current.x
+    const py = posRef.current.y
+    // Source region in original image coords
     const sx = -px / s
     const sy = -py / s
     const sw = cropW / s
     const sh = cropH / s
-
-    // Use a fresh offscreen canvas — completely independent of the display canvas
     const out = document.createElement('canvas')
     out.width  = cropW
     out.height = cropH
-    const ctx  = out.getContext('2d')
-
-    // 9-arg drawImage: pull exactly (sx,sy,sw,sh) from source → fill entire output
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cropW, cropH)
-
-    out.toBlob(blob => {
-      if (!blob) return
-      onApply(new File([blob], 'cropped.jpg', { type: 'image/jpeg' }))
-    }, 'image/jpeg', 0.92)
+    out.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, cropW, cropH)
+    // Show preview BEFORE uploading
+    setPreview(out.toDataURL('image/jpeg', 0.92))
+    out.toBlob(blob => { setCropBlob(blob) }, 'image/jpeg', 0.92)
   }
 
+  function confirmUpload() {
+    if (!cropBlob) return
+    onApply(new File([cropBlob], 'cropped.jpg', { type: 'image/jpeg' }))
+  }
+
+  const btnBase = { height:38, padding:'0 18px', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer' }
+
+  // ── Preview / Confirm screen ──
+  if (preview) return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.82)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+      <div style={{ background:'var(--c-surface)', borderRadius:20, padding:24, width:'100%', maxWidth: Math.min(cropW, 800) + 48 }}>
+        <div style={{ fontSize:15, fontWeight:700, color:'var(--c-t1)', marginBottom:4 }}>Confirm crop</div>
+        <div style={{ fontSize:12, color:'var(--c-t3)', marginBottom:14 }}>This is exactly what will be uploaded. Happy with it?</div>
+        <img src={preview} alt="Crop preview" style={{ width:'100%', borderRadius:12, display:'block' }}/>
+        <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:16 }}>
+          <button onClick={() => { setPreview(null); setCropBlob(null) }}
+            style={{ ...btnBase, background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)' }}>
+            ← Back to crop
+          </button>
+          <button onClick={confirmUpload}
+            style={{ ...btnBase, background:'#1d4ed8', color:'white' }}>
+            Upload
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  // ── Crop screen ──
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.82)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
       <div style={{ background:'var(--c-surface)', borderRadius:20, padding:24, width:'100%', maxWidth: Math.min(cropW, 800) + 48 }}>
@@ -159,12 +170,12 @@ function CropModal({ file, cropW, cropH, title, onApply, onCancel }) {
         </div>
         <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:16 }}>
           <button onClick={onCancel}
-            style={{ height:38, padding:'0 16px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, fontWeight:500, cursor:'pointer' }}>
+            style={{ ...btnBase, background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)' }}>
             Cancel
           </button>
-          <button onClick={apply}
-            style={{ height:38, padding:'0 18px', background:'#1d4ed8', color:'white', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer' }}>
-            Apply crop
+          <button onClick={applyCrop}
+            style={{ ...btnBase, background:'#1d4ed8', color:'white' }}>
+            Apply crop →
           </button>
         </div>
       </div>
@@ -223,12 +234,10 @@ export default function ProfilePage() {
   }
 
   function onFileSelected(e, type) {
-    const file = e.target.files[0]
-    e.target.value = ''
+    const file = e.target.files[0]; e.target.value = ''
     if (!file) return
     if (!file.type.startsWith('image/')) { setError('Please select an image file'); return }
-    setCropType(type)
-    setCropFile(file)
+    setCropType(type); setCropFile(file)
   }
 
   async function onCropApply(croppedFile) {
@@ -239,15 +248,11 @@ export default function ProfilePage() {
   }
 
   async function save(e) {
-    e.preventDefault()
-    setSaving(true); setError('')
+    e.preventDefault(); setSaving(true); setError('')
     const { error: err } = await supabase.rpc('upsert_own_profile', {
-      p_full_name: form.full_name,
-      p_username: form.username || null,
-      p_bio: form.bio || null,
+      p_full_name: form.full_name, p_username: form.username || null, p_bio: form.bio || null,
     })
     if (err) { setError(err.message); setSaving(false); return }
-    setSaving(false)
     window.location.href = '/'
   }
 
@@ -258,7 +263,6 @@ export default function ProfilePage() {
 
   return (
     <div style={{ maxWidth:660, margin:'0 auto', paddingBottom:40 }}>
-
       {cropFile && (
         <CropModal
           file={cropFile}
@@ -270,7 +274,6 @@ export default function ProfilePage() {
         />
       )}
 
-      {/* Header */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'24px 20px 20px' }}>
         <div>
           <h1 style={{ fontSize:22, fontWeight:800, color:'var(--c-t1)', marginBottom:4, letterSpacing:'-0.3px' }}>Profile</h1>
@@ -284,14 +287,8 @@ export default function ProfilePage() {
       {/* Banner */}
       <div style={{ margin:'0 20px 12px' }}>
         <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Banner Photo</div>
-        {/* paddingBottom: 33.33% = 3:1 ratio — exactly matches the crop canvas (1200x400) */}
         <div style={{ position:'relative', paddingBottom:'33.33%', borderRadius:16, overflow:'hidden', border:'1px solid var(--c-line)' }}>
-          <div style={{
-            position:'absolute', inset:0,
-            background: bannerUrl ? 'none' : 'var(--c-surface2)',
-            backgroundImage: bannerUrl ? 'url(' + bannerUrl + ')' : undefined,
-            backgroundSize:'cover', backgroundPosition:'center center',
-          }}>
+          <div style={{ position:'absolute', inset:0, background: bannerUrl ? 'none' : 'var(--c-surface2)', backgroundImage: bannerUrl ? 'url(' + bannerUrl + ')' : undefined, backgroundSize:'cover', backgroundPosition:'center center' }}>
             {!bannerUrl && !bannerUploading && (
               <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8 }}>
                 <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="var(--c-t2)" strokeWidth="1.5" strokeLinecap="round"><path d="M8 11V1m-4 4l4-4 4 4M1 14h14"/></svg>
@@ -326,15 +323,7 @@ export default function ProfilePage() {
       <div style={{ margin:'0 20px 20px' }}>
         <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Profile Photo</div>
         <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-          <div style={{
-            width:80, height:80, borderRadius:'50%', flexShrink:0,
-            background: avatarUrl ? 'none' : '#1d4ed8',
-            backgroundImage: avatarUrl ? 'url(' + avatarUrl + ')' : undefined,
-            backgroundSize:'cover', backgroundPosition:'center',
-            border:'3px solid var(--c-line)',
-            display:'flex', alignItems:'center', justifyContent:'center',
-            color:'white', fontSize:24, fontWeight:800,
-          }}>
+          <div style={{ width:80, height:80, borderRadius:'50%', flexShrink:0, background: avatarUrl ? 'none' : '#1d4ed8', backgroundImage: avatarUrl ? 'url(' + avatarUrl + ')' : undefined, backgroundSize:'cover', backgroundPosition:'center', border:'3px solid var(--c-line)', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:24, fontWeight:800 }}>
             {!avatarUrl && initials}
           </div>
           <div>
@@ -342,8 +331,7 @@ export default function ProfilePage() {
             <div style={{ fontSize:12, color:'var(--c-t3)', marginTop:2 }}>{user?.email}</div>
             <div style={{ display:'flex', gap:8, marginTop:8 }}>
               <button onClick={() => avatarRef.current?.click()} disabled={avatarUploading}
-                style={{ height:30, padding:'0 12px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:8, fontSize:12, fontWeight:500, cursor:'pointer', display:'flex', alignItems:'center', gap:5 }}>
-                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M8 11V1m-4 4l4-4 4 4M1 14h14"/></svg>
+                style={{ height:30, padding:'0 12px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:8, fontSize:12, fontWeight:500, cursor:'pointer' }}>
                 {avatarUploading ? 'Uploading...' : avatarUrl ? 'Change photo' : 'Upload photo'}
               </button>
               {avatarUrl && (
@@ -361,37 +349,30 @@ export default function ProfilePage() {
       {/* Form */}
       <form onSubmit={save} style={{ margin:'0 20px 16px', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:20 }}>
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-          {[
-            { k:'full_name', label:'Full Name', ph:'Your full name' },
-            { k:'username',  label:'Username',  ph:'e.g. glen123' },
-          ].map(({ k, label, ph }) => (
+          {[{k:'full_name',label:'Full Name',ph:'Your full name'},{k:'username',label:'Username',ph:'e.g. glen123'}].map(({k,label,ph}) => (
             <div key={k}>
               <label style={{ display:'block', fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{label}</label>
               <input value={form[k]} onChange={e => set(k, e.target.value)} placeholder={ph} style={inp}
-                onFocus={e => e.target.style.borderColor='#3b82f6'}
-                onBlur={e => e.target.style.borderColor='var(--c-line)'}/>
+                onFocus={e => e.target.style.borderColor='#3b82f6'} onBlur={e => e.target.style.borderColor='var(--c-line)'}/>
             </div>
           ))}
           <div>
             <label style={{ display:'block', fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Bio</label>
-            <textarea value={form.bio} onChange={e => set('bio', e.target.value)}
-              placeholder="Tell us about yourself..." rows={3}
+            <textarea value={form.bio} onChange={e => set('bio', e.target.value)} placeholder="Tell us about yourself..." rows={3}
               style={{ ...inp, height:'auto', padding:'10px 14px', resize:'none', lineHeight:1.6 }}
-              onFocus={e => e.target.style.borderColor='#3b82f6'}
-              onBlur={e => e.target.style.borderColor='var(--c-line)'}/>
+              onFocus={e => e.target.style.borderColor='#3b82f6'} onBlur={e => e.target.style.borderColor='var(--c-line)'}/>
           </div>
         </div>
         {error && <div style={{ marginTop:14, padding:'10px 14px', background:'#fef2f2', border:'1px solid #fecaca', borderRadius:10, fontSize:13, color:'#dc2626' }}>{error}</div>}
         <div style={{ marginTop:20, display:'flex', gap:10, alignItems:'center' }}>
           <button type="submit" disabled={saving}
-            style={{ height:40, padding:'0 20px', background:'#1d4ed8', color:'white', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:saving?'not-allowed':'pointer', opacity:saving?0.7:1 }}>
+            style={{ height:40, padding:'0 20px', background:'#1d4ed8', color:'white', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', opacity:saving?0.7:1 }}>
             {saving ? 'Saving...' : 'Save changes'}
           </button>
-          <a href="/" style={{ fontSize:13, color:'var(--c-t3)', textDecoration:'none', fontWeight:500 }}>Cancel</a>
+          <a href="/" style={{ fontSize:13, color:'var(--c-t3)', textDecoration:'none' }}>Cancel</a>
         </div>
       </form>
 
-      {/* Sign out */}
       <div style={{ margin:'0 20px', background:'var(--c-surface)', border:'1px solid #fecaca', borderRadius:18, padding:20 }}>
         <div style={{ fontSize:13, fontWeight:700, color:'#dc2626', marginBottom:4 }}>Sign out</div>
         <p style={{ fontSize:12, color:'var(--c-t2)', marginBottom:12 }}>You will be signed out on this device.</p>
