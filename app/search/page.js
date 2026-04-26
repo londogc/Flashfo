@@ -1,10 +1,10 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-const SOURCES = ['All', 'Web', 'Wikipedia', 'Academic']
+const SOURCES = ['All', 'Web', 'Wikipedia']
 
-export default function SearchPage() {
+function SearchInner() {
   const searchParams = useSearchParams()
   const [q, setQ]             = useState('')
   const [results, setResults] = useState([])
@@ -16,7 +16,6 @@ export default function SearchPage() {
   const PER_PAGE = 5
   const didAutoSearch = useRef(false)
 
-  // Auto-search if ?q= param present
   useEffect(() => {
     const param = searchParams.get('q')
     if (param && !didAutoSearch.current) {
@@ -31,7 +30,6 @@ export default function SearchPage() {
     if (!term) return
     setLoading(true); setResults([]); setAllResults([]); setError(''); setPage(1)
     try {
-      // Run both searches in parallel
       const [rpcRes, wikiRes] = await Promise.all([
         fetch('/api/rpc', {
           method: 'POST',
@@ -40,30 +38,23 @@ export default function SearchPage() {
         }),
         fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term)}&srlimit=8&format=json&origin=*`)
       ])
-
       const rpcData  = await rpcRes.json()
       const wikiData = await wikiRes.json()
-
-      const rpcItems = Array.isArray(rpcData.result) ? rpcData.result :
-                       (rpcData.result?.results || [])
-
+      const rpcItems = Array.isArray(rpcData.result) ? rpcData.result : (rpcData.result?.results || [])
       const wikiItems = (wikiData?.query?.search || []).map(item => ({
         title: item.title,
         snippet: item.snippet?.replace(/<[^>]+>/g, '') || '',
         url: 'https://en.wikipedia.org/wiki/' + encodeURIComponent(item.title.replace(/ /g, '_')),
         source: 'Wikipedia',
       }))
-
       const combined = [
         ...rpcItems.map(i => ({ ...i, source: i.source || 'Web' })),
         ...wikiItems,
       ]
-
       setAllResults(combined)
       setResults(combined.slice(0, PER_PAGE))
-    } catch (e) {
-      setError('Search failed. Please try again.')
-    } finally { setLoading(false) }
+    } catch { setError('Search failed. Please try again.') }
+    finally { setLoading(false) }
   }
 
   function loadPage(p) {
@@ -97,17 +88,15 @@ export default function SearchPage() {
         </button>
       </form>
 
-      {/* Source filter tabs */}
       {allResults.length > 0 && (
-        <div className="flex gap-2 mb-5 flex-wrap">
+        <div className="flex gap-2 mb-5 flex-wrap items-center">
           {SOURCES.map(s => (
             <button key={s} onClick={() => filterSource(s)}
               className={`h-7 px-3 rounded-full text-[12px] font-medium border transition-all ${source === s ? 'bg-blue-700 text-white border-blue-700' : 'bg-surface text-t2 border-line hover:border-blue-300'}`}>
-              {s}
-              {s !== 'All' && <span className="ml-1 opacity-60">({allResults.filter(r => r.source === s).length})</span>}
+              {s}{s !== 'All' && <span className="ml-1 opacity-60">({allResults.filter(r => r.source === s).length})</span>}
             </button>
           ))}
-          <span className="ml-auto text-[12px] text-t3 self-center">{filteredAll.length} results</span>
+          <span className="ml-auto text-[12px] text-t3">{filteredAll.length} results</span>
         </div>
       )}
 
@@ -134,26 +123,23 @@ export default function SearchPage() {
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.source === 'Wikipedia' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-blue-500/10 text-blue-600'}`}>
                   {item.source || 'Web'}
                 </span>
-                {item.url && <span className="text-[10px] text-t3 truncate">{new URL(item.url).hostname}</span>}
+                {item.url && <span className="text-[10px] text-t3 truncate">{(() => { try { return new URL(item.url).hostname } catch { return '' } })()}</span>}
               </div>
               <div className="text-[13px] font-semibold text-blue-500 mb-1 group-hover:underline">
                 {item.title || item.name || 'Result ' + (i + 1)}
               </div>
-              <div className="text-[12px] text-t2 leading-relaxed line-clamp-3">
-                {item.snippet || item.description || item.content || ''}
+              <div className="text-[12px] text-t2 leading-relaxed">
+                {item.snippet || item.description || ''}
               </div>
             </a>
           ))}
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-6">
           <button onClick={() => loadPage(page - 1)} disabled={page === 1}
-            className="h-8 px-3 bg-surface border border-line text-t2 text-sm rounded-lg disabled:opacity-30 hover:bg-surface2 transition-colors">
-            ← Prev
-          </button>
+            className="h-8 px-3 bg-surface border border-line text-t2 text-sm rounded-lg disabled:opacity-30 hover:bg-surface2 transition-colors">← Prev</button>
           {[...Array(totalPages)].map((_, i) => (
             <button key={i} onClick={() => loadPage(i + 1)}
               className={`h-8 w-8 text-sm rounded-lg border transition-colors ${page === i + 1 ? 'bg-blue-700 text-white border-blue-700' : 'bg-surface border-line text-t2 hover:bg-surface2'}`}>
@@ -161,11 +147,17 @@ export default function SearchPage() {
             </button>
           ))}
           <button onClick={() => loadPage(page + 1)} disabled={page === totalPages}
-            className="h-8 px-3 bg-surface border border-line text-t2 text-sm rounded-lg disabled:opacity-30 hover:bg-surface2 transition-colors">
-            Next →
-          </button>
+            className="h-8 px-3 bg-surface border border-line text-t2 text-sm rounded-lg disabled:opacity-30 hover:bg-surface2 transition-colors">Next →</button>
         </div>
       )}
     </div>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-t3 text-sm">Loading search...</div>}>
+      <SearchInner />
+    </Suspense>
   )
 }
