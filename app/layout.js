@@ -19,7 +19,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <Shell>{children}</Shell>
+        {children}
       </body>
     </html>
   )
