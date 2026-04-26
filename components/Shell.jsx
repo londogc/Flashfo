@@ -143,10 +143,10 @@ export default function Shell({ children }) {
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <header className="h-[52px] bg-surface border-b border-line flex items-center px-5 gap-3 flex-shrink-0">
-          <div className="flex-1 max-w-md h-8 bg-surface2 border border-line rounded-lg flex items-center px-3 gap-2 hover:border-blue-300 transition-colors cursor-text">
+          <div className="flex-1 max-w-md h-8 bg-surface2 border border-line rounded-lg flex items-center px-3 gap-2 hover:border-blue-300 transition-colors">
             <I d={ICONS.search} s={13} />
             <span className="text-[12px] text-t3 flex-1 select-none">Search any topic, question, or keyword...</span>
-            <span className="text-[10px] text-t3 bg-surface border border-line px-1.5 py-0.5 rounded font-mono">⌘K</span>
+            <button className="h-6 px-3 bg-blue-700 text-white text-[11px] font-semibold rounded-md hover:bg-blue-800 transition-colors flex-shrink-0">Search</button>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <button className="h-8 px-3 text-[12px] font-medium bg-surface2 border border-line text-t2 rounded-lg hover:bg-bg transition-colors">
