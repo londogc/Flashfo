@@ -46,7 +46,7 @@ export default function ProfilePage() {
     setSaving(false)
     setSuccess(true)
     // Redirect to dashboard after 1 second
-    setTimeout(() => { router.push('/') }, 1000)
+    setTimeout(() => { window.location.href = '/' }, 1000)
   }
 
   if (loading) return (
