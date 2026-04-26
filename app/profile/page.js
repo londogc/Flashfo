@@ -55,6 +55,7 @@ export default function ProfilePage() {
 
     setSuccess(true)
     setSaving(false)
+    setTimeout(() => router.push('/'), 1200)
   }
 
   if (loading) return (
