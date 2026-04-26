@@ -1,71 +1,109 @@
 'use client'
 import { useState } from 'react'
 
+const TYPES  = [
+  { id: 'mcq',          label: 'Multiple Choice', config: n => ({ mcq: n }) },
+  { id: 'true_false',   label: 'True / False',    config: n => ({ true_false: n }) },
+  { id: 'mixed',        label: 'Mixed',            config: n => ({ mcq: Math.ceil(n/2), true_false: Math.floor(n/2) }) },
+]
+const COUNTS = [3, 5, 10]
+
 export default function QuizPage() {
-  const [topic, setTopic] = useState('')
+  const [topic, setTopic]     = useState('')
+  const [qType, setQType]     = useState(TYPES[0])
+  const [count, setCount]     = useState(5)
   const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState({})
   const [submitted, setSubmitted] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError]     = useState('')
 
   async function generate() {
     if (!topic.trim()) return
     setLoading(true); setQuestions([]); setSelected({}); setSubmitted(false); setError('')
     try {
       const res = await fetch('/api/rpc', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fn: 'generateQuizAdvancedFromText', args: [topic.trim(), { mcq: 5 }, 'English'] })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fn: 'generateQuizAdvancedFromText', args: [topic.trim(), qType.config(count), 'English'] })
       })
       const data = await res.json()
       if (data.error) { setError(data.error); return }
       const qs = data.result?.questions || []
-      if (!qs.length) { setError('Could not generate quiz. Try entering more detailed text.'); return }
+      if (!qs.length) { setError('Could not generate quiz. Try adding more detail to your topic.'); return }
       setQuestions(qs)
     } catch { setError('Something went wrong. Please try again.') }
     finally { setLoading(false) }
   }
 
   const score = submitted ? questions.filter((q, i) => selected[i] === q.answerIndex).length : 0
+  const pct   = submitted ? Math.round((score / questions.length) * 100) : 0
 
   return (
     <div className="p-6 max-w-3xl mx-auto w-full">
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Quiz</h1>
-      <p className="text-sm text-t2 mb-6">Generate a multiple-choice quiz on any topic and test your knowledge.</p>
+      <p className="text-sm text-t2 mb-6">Generate a quiz on any topic and test your knowledge.</p>
 
       {!questions.length ? (
         <div className="bg-surface border border-line rounded-2xl p-5">
           <textarea value={topic} onChange={e => setTopic(e.target.value)}
             placeholder="Enter a topic or paste notes to generate a quiz from..."
-            className="w-full h-28 text-sm text-t1 bg-transparent resize-none outline-none placeholder:text-t3 mb-4" />
+            className="w-full h-28 text-sm text-t1 bg-transparent resize-none outline-none placeholder:text-t3 mb-4"/>
+
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-2">Question Type</div>
+              <div className="flex flex-col gap-1.5">
+                {TYPES.map(t => (
+                  <button key={t.id} onClick={() => setQType(t)}
+                    className={`h-8 px-3 rounded-lg text-[12px] font-medium border text-left transition-all ${qType.id === t.id ? 'bg-blue-700 text-white border-blue-700' : 'bg-surface2 text-t2 border-line hover:border-blue-300'}`}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-2">Number of questions</div>
+              <div className="flex gap-2">
+                {COUNTS.map(n => (
+                  <button key={n} onClick={() => setCount(n)}
+                    className={`h-8 px-4 rounded-lg text-[13px] font-semibold border transition-all ${count === n ? 'bg-blue-700 text-white border-blue-700' : 'bg-surface2 text-t2 border-line hover:border-blue-300'}`}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
           <button onClick={generate} disabled={loading || !topic.trim()}
             className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 transition-colors disabled:opacity-40 flex items-center gap-2">
-            {loading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</> : 'Generate Quiz'}
+            {loading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>Generating...</> : `Generate ${count} Questions`}
           </button>
         </div>
       ) : (
         <div>
           {submitted && (
-            <div className={`mb-5 p-4 rounded-xl border text-sm font-semibold ${score === questions.length ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : score >= questions.length / 2 ? 'bg-blue-500/10 border-blue-500/20 text-blue-600' : 'bg-amber-500/10 border-amber-500/20 text-amber-600'}`}>
-              {score}/{questions.length} correct — {score === questions.length ? 'Perfect score! 🎉' : score >= questions.length / 2 ? 'Good job! Keep studying.' : 'Keep practising — you can do it!'}
+            <div className={`mb-5 p-4 rounded-xl border text-sm font-semibold ${pct === 100 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : pct >= 60 ? 'bg-blue-500/10 border-blue-500/20 text-blue-600' : 'bg-amber-500/10 border-amber-500/20 text-amber-600'}`}>
+              {score}/{questions.length} correct ({pct}%) — {pct === 100 ? '🎉 Perfect!' : pct >= 60 ? 'Good job! Keep studying.' : 'Keep practising — review the explanations below.'}
             </div>
           )}
 
           <div className="space-y-4 mb-6">
             {questions.map((q, i) => (
               <div key={i} className="bg-surface border border-line rounded-xl p-4">
-                <p className="text-sm font-semibold text-t1 mb-3">{i + 1}. {q.question}</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[10px] font-bold bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full uppercase">{q.type || 'mcq'}</span>
+                  <p className="text-sm font-semibold text-t1">{i + 1}. {q.question}</p>
+                </div>
                 <div className="space-y-2">
-                  {(q.options || []).map((opt, j) => {
+                  {(q.options || ['True', 'False']).map((opt, j) => {
                     const isSelected = selected[i] === j
-                    const isCorrect = q.answerIndex === j
+                    const isCorrect  = q.answerIndex === j
                     let cls = 'border-line text-t2 hover:border-blue-300 hover:bg-surface2'
                     if (submitted) {
                       if (isCorrect) cls = 'border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
                       else if (isSelected) cls = 'border-red-400 bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400'
-                      else cls = 'border-line text-t3'
+                      else cls = 'border-line text-t3 opacity-60'
                     } else if (isSelected) cls = 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
                     return (
                       <button key={j} onClick={() => !submitted && setSelected(s => ({ ...s, [i]: j }))}
