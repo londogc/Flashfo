@@ -262,25 +262,27 @@ export default function ProfilePage() {
       {/* Banner */}
       <div style={{ margin:'0 20px 12px' }}>
         <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Banner Photo</div>
-        <div style={{
-          height:160, borderRadius:16, overflow:'hidden', position:'relative',
-          background: bannerUrl ? 'none' : 'var(--c-surface2)',
-          backgroundImage: bannerUrl ? 'url(' + bannerUrl + ')' : undefined,
-          backgroundSize:'cover', backgroundPosition:'center',
-          border:'1px solid var(--c-line)',
-        }}>
-          {!bannerUrl && !bannerUploading && (
-            <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8 }}>
-              <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="var(--c-t2)" strokeWidth="1.5" strokeLinecap="round"><path d="M8 11V1m-4 4l4-4 4 4M1 14h14"/></svg>
-              <span style={{ fontSize:13, color:'var(--c-t1)', fontWeight:600 }}>Upload banner photo</span>
-              <span style={{ fontSize:11, color:'var(--c-t3)' }}>Recommended: 1200×400px · Max 5MB</span>
-            </div>
-          )}
-          {bannerUploading && (
-            <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.3)' }}>
-              <span style={{ fontSize:13, color:'white', fontWeight:600 }}>Uploading...</span>
-            </div>
-          )}
+        {/* paddingBottom: 33.33% = 3:1 ratio — exactly matches the crop canvas (1200x400) */}
+        <div style={{ position:'relative', paddingBottom:'33.33%', borderRadius:16, overflow:'hidden', border:'1px solid var(--c-line)' }}>
+          <div style={{
+            position:'absolute', inset:0,
+            background: bannerUrl ? 'none' : 'var(--c-surface2)',
+            backgroundImage: bannerUrl ? 'url(' + bannerUrl + ')' : undefined,
+            backgroundSize:'cover', backgroundPosition:'center center',
+          }}>
+            {!bannerUrl && !bannerUploading && (
+              <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8 }}>
+                <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="var(--c-t2)" strokeWidth="1.5" strokeLinecap="round"><path d="M8 11V1m-4 4l4-4 4 4M1 14h14"/></svg>
+                <span style={{ fontSize:13, color:'var(--c-t1)', fontWeight:600 }}>Upload banner photo</span>
+                <span style={{ fontSize:11, color:'var(--c-t3)' }}>Recommended: 1200×400px · Max 5MB</span>
+              </div>
+            )}
+            {bannerUploading && (
+              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.3)' }}>
+                <span style={{ fontSize:13, color:'white', fontWeight:600 }}>Uploading...</span>
+              </div>
+            )}
+          </div>
         </div>
         <div style={{ display:'flex', gap:8, marginTop:10 }}>
           <button onClick={() => bannerRef.current?.click()} disabled={bannerUploading}
