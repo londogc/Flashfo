@@ -306,7 +306,7 @@ export default function ProfilePage() {
         <div style={{ fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:8 }}>Banner Photo</div>
         {/* Display ratio = outW:outH = 1200:400 = 3:1 → paddingBottom 33.33% */}
         <div style={{ position:'relative',paddingBottom:'33.33%',borderRadius:16,overflow:'hidden',border:'1px solid var(--c-line)' }}>
-          <div style={{ position:'absolute',inset:0,background:bannerUrl?'none':'var(--c-surface2)',backgroundImage:bannerUrl?'url('+bannerUrl+')':undefined,backgroundSize:'100% 100%' }}>
+          <div style={{ position:'absolute',inset:0,background:bannerUrl?'none':'var(--c-surface2)',backgroundImage:bannerUrl?'url('+bannerUrl+')':undefined,backgroundSize:'cover', backgroundPosition:'center center' }}>
             {!bannerUrl&&!bannerUploading&&(
               <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8 }}>
                 <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="var(--c-t2)" strokeWidth="1.5" strokeLinecap="round"><path d="M8 11V1m-4 4l4-4 4 4M1 14h14"/></svg>
@@ -331,7 +331,7 @@ export default function ProfilePage() {
       <div style={{ margin:'0 20px 20px' }}>
         <div style={{ fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:8 }}>Profile Photo</div>
         <div style={{ display:'flex',alignItems:'center',gap:16 }}>
-          <div style={{ width:80,height:80,borderRadius:'50%',flexShrink:0,background:avatarUrl?'none':'#1d4ed8',backgroundImage:avatarUrl?'url('+avatarUrl+')':undefined,backgroundSize:'100% 100%',border:'3px solid var(--c-line)',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:24,fontWeight:800 }}>
+          <div style={{ width:80,height:80,borderRadius:'50%',flexShrink:0,background:avatarUrl?'none':'#1d4ed8',backgroundImage:avatarUrl?'url('+avatarUrl+')':undefined,backgroundSize:'cover', backgroundPosition:'center center',border:'3px solid var(--c-line)',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:24,fontWeight:800 }}>
             {!avatarUrl&&initials}
           </div>
           <div>
