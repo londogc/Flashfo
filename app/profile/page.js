@@ -48,14 +48,12 @@ export default function ProfilePage() {
   async function save(e) {
     e.preventDefault()
     setSaving(true); setError('')
-    // Use upsert — handles both new and existing rows cleanly
-    const { error: err } = await supabase.from('profiles').upsert({
-      id: user.id,
-      full_name: form.full_name,
-      username: form.username || null,
-      bio: form.bio || null,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'id' })
+    // Use security definer RPC — bypasses RLS completely
+    const { error: err } = await supabase.rpc('upsert_own_profile', {
+      p_full_name: form.full_name,
+      p_username: form.username || null,
+      p_bio: form.bio || null,
+    })
     if (err) { setError(err.message); setSaving(false); return }
     setSaving(false)
     window.location.href = '/'
