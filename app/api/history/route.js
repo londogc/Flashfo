@@ -10,24 +10,31 @@ export async function GET() {
     const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
     const url = `https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/selected/${month}/${day}`
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Flashfo/1.0 (https://flashfo.org)' }
-    })
+    const res = await fetch(url, { headers: { 'User-Agent': 'Flashfo/1.0 (https://flashfo.org)' } })
     if (!res.ok) throw new Error('wiki ' + res.status)
     const data = await res.json()
     const events = data.selected || data.events || []
 
-    const notable  = events.filter(e => e.year && e.text && e.text.length > 40)
-    const positive = notable.filter(e => !MORBID.test(e.text))
-    const pool     = positive.length > 0 ? positive : notable
+    const notable   = events.filter(e => e.year && e.text && e.text.length > 40)
+    const positive  = notable.filter(e => !MORBID.test(e.text))
+    const pool      = positive.length > 0 ? positive : notable
     const historical = pool.filter(e => e.year < (now.getFullYear() - 5))
-    const final    = historical.length > 0 ? historical : pool
+    const final     = historical.length > 0 ? historical : pool
+    const pick      = final[Math.floor(Math.random() * Math.min(final.length, 8))]
+    const dateStr   = months[now.getMonth()] + ' ' + now.getDate()
 
-    // Pick a random one from first 8 candidates
-    const pick = final[Math.floor(Math.random() * Math.min(final.length, 8))]
-    const dateStr = months[now.getMonth()] + ' ' + now.getDate()
+    // Extract Wikipedia URL from the event's pages array
+    const wikiUrl = pick.pages?.[0]?.content_urls?.desktop?.page || 
+                    pick.pages?.[0]?.content_urls?.desktop?.['page'] ||
+                    null
 
-    return Response.json({ year: pick.year, text: pick.text, dateStr, fullDate: dateStr + ', ' + now.getFullYear() })
+    return Response.json({
+      year: pick.year,
+      text: pick.text,
+      dateStr,
+      fullDate: dateStr + ', ' + now.getFullYear(),
+      wikiUrl,
+    })
   } catch (e) {
     return Response.json({ error: true }, { status: 200 })
   }
