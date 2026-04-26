@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/useAuth'
 
@@ -8,72 +8,144 @@ export default function ProfilePage() {
   const [form, setForm] = useState({ full_name: '', username: '', bio: '' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState(null)
+  const [bannerUrl, setBannerUrl] = useState(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [bannerUploading, setBannerUploading] = useState(false)
+  const avatarRef = useRef()
+  const bannerRef = useRef()
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   useEffect(() => {
     if (!loading && !user) window.location.href = '/auth'
-    if (profile) setForm({
-      full_name: profile.full_name || '',
-      username: profile.username || '',
-      bio: profile.bio || ''
-    })
+    if (profile) {
+      setForm({ full_name: profile.full_name || '', username: profile.username || '', bio: profile.bio || '' })
+      setAvatarUrl(profile.avatar_url || null)
+      setBannerUrl(profile.banner_url || null)
+    }
   }, [user, profile, loading])
+
+  async function uploadFile(file, bucket, onUrl, setUploading) {
+    if (!file) return
+    const maxMb = bucket === 'banners' ? 5 : 2
+    if (file.size > maxMb * 1024 * 1024) { setError('File too large (max ' + maxMb + 'MB)'); return }
+    if (!file.type.startsWith('image/')) { setError('Please upload an image file'); return }
+    setUploading(true); setError('')
+    try {
+      const ext = file.name.split('.').pop()
+      const path = user.id + '.' + ext
+      const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, { upsert: true })
+      if (upErr) throw upErr
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path)
+      const url = data.publicUrl + '?t=' + Date.now()
+      onUrl(url)
+      // Save URL to profile immediately
+      const field = bucket === 'avatars' ? 'avatar_url' : 'banner_url'
+      await supabase.from('profiles').update({ [field]: data.publicUrl }).eq('id', user.id)
+    } catch (e) { setError(e.message || 'Upload failed') }
+    finally { setUploading(false) }
+  }
 
   async function save(e) {
     e.preventDefault()
     setSaving(true); setError('')
-    
-    const { error: updateErr } = await supabase
-      .from('profiles')
-      .update({
-        full_name: form.full_name,
-        username: form.username || null,
-        bio: form.bio || null,
-        updated_at: new Date().toISOString(),
-      })
+    const { error: updateErr } = await supabase.from('profiles')
+      .update({ full_name: form.full_name, username: form.username || null, bio: form.bio || null, updated_at: new Date().toISOString() })
       .eq('id', user.id)
-
     if (updateErr) {
-      const { error: insertErr } = await supabase
-        .from('profiles')
+      const { error: insertErr } = await supabase.from('profiles')
         .insert({ id: user.id, full_name: form.full_name, username: form.username || null, bio: form.bio || null })
       if (insertErr) { setError(insertErr.message); setSaving(false); return }
     }
-
-    // Redirect immediately — no setTimeout
+    setSaving(false)
     window.location.href = '/'
   }
 
-  if (loading) return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'50vh', color:'var(--c-t3)', fontSize:14 }}>Loading...</div>
-  )
+  if (loading) return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'50vh', color:'var(--c-t3)', fontSize:14 }}>Loading...</div>
 
   const inp = { width:'100%', height:44, padding:'0 14px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:12, fontSize:14, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', transition:'border-color 0.2s', boxSizing:'border-box' }
   const initials = (form.full_name || user?.email || 'U').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()
 
   return (
-    <div style={{ padding:'24px 20px', maxWidth:600, margin:'0 auto' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
+    <div style={{ maxWidth:680, margin:'0 auto', paddingBottom:40 }}>
+
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'24px 20px 16px' }}>
         <div>
           <h1 style={{ fontSize:22, fontWeight:800, color:'var(--c-t1)', marginBottom:4, letterSpacing:'-0.3px' }}>Profile</h1>
-          <p style={{ fontSize:13, color:'var(--c-t2)' }}>Manage your Flashfo account details.</p>
+          <p style={{ fontSize:13, color:'var(--c-t2)' }}>Manage your Flashfo account.</p>
         </div>
-        <a href="/" style={{ height:36, padding:'0 14px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, fontWeight:500, display:'inline-flex', alignItems:'center', textDecoration:'none', gap:6 }}>
+        <a href="/" style={{ height:36, padding:'0 14px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, fontWeight:500, display:'inline-flex', alignItems:'center', textDecoration:'none' }}>
           ← Dashboard
         </a>
       </div>
 
-      <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:20, marginBottom:16, display:'flex', alignItems:'center', gap:16 }}>
-        <div style={{ width:64, height:64, borderRadius:'50%', background:'#1d4ed8', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:22, fontWeight:800, flexShrink:0 }}>
-          {initials}
+      {/* Banner */}
+      <div style={{ position:'relative', margin:'0 20px', borderRadius:18, overflow:'hidden', marginBottom:0 }}>
+        <div
+          onClick={() => !bannerUploading && bannerRef.current?.click()}
+          style={{
+            height:140, background: bannerUrl ? 'none' : 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #3b82f6 100%)',
+            backgroundImage: bannerUrl ? `url(${bannerUrl})` : undefined,
+            backgroundSize:'cover', backgroundPosition:'center',
+            cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+            border:'1px solid var(--c-line)',
+            transition:'opacity 0.2s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.opacity='0.85'}
+          onMouseLeave={e => e.currentTarget.style.opacity='1'}
+        >
+          <div style={{ background:'rgba(0,0,0,0.35)', borderRadius:10, padding:'8px 14px', display:'flex', alignItems:'center', gap:8 }}>
+            {bannerUploading
+              ? <span style={{ fontSize:12, color:'white', fontWeight:600 }}>Uploading...</span>
+              : <><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"><path d="M8 1v10m-4-4l4 4 4-4M1 14h14"/></svg>
+                <span style={{ fontSize:12, color:'white', fontWeight:600 }}>{bannerUrl ? 'Change banner' : 'Upload banner'}</span></>
+            }
+          </div>
         </div>
-        <div>
-          <div style={{ fontSize:15, fontWeight:700, color:'var(--c-t1)' }}>{form.full_name || 'Your Name'}</div>
-          <div style={{ fontSize:12, color:'var(--c-t3)', marginTop:2 }}>{user?.email}</div>
+        <input ref={bannerRef} type="file" accept="image/*" style={{ display:'none' }}
+          onChange={e => uploadFile(e.target.files[0], 'banners', setBannerUrl, setBannerUploading)} />
+
+        {/* Avatar overlapping banner */}
+        <div style={{ position:'absolute', bottom:-44, left:20, display:'flex', alignItems:'flex-end', gap:12 }}>
+          <div style={{ position:'relative' }}>
+            <div
+              onClick={() => !avatarUploading && avatarRef.current?.click()}
+              style={{
+                width:80, height:80, borderRadius:'50%',
+                background: avatarUrl ? 'none' : '#1d4ed8',
+                backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined,
+                backgroundSize:'cover', backgroundPosition:'center',
+                border:'3px solid var(--c-surface)',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                color:'white', fontSize:26, fontWeight:800,
+                cursor:'pointer', position:'relative', overflow:'hidden',
+              }}>
+              {!avatarUrl && initials}
+              <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.35)', display:'flex', alignItems:'center', justifyContent:'center', opacity:0, transition:'opacity 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.opacity='1'}
+                onMouseLeave={e => e.currentTarget.style.opacity='0'}>
+                {avatarUploading
+                  ? <span style={{ fontSize:10, color:'white' }}>...</span>
+                  : <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"><path d="M8 1v10m-4-4l4 4 4-4M1 14h14"/></svg>
+                }
+              </div>
+            </div>
+            <input ref={avatarRef} type="file" accept="image/*" style={{ display:'none' }}
+              onChange={e => uploadFile(e.target.files[0], 'avatars', setAvatarUrl, setAvatarUploading)} />
+          </div>
         </div>
       </div>
 
-      <form onSubmit={save} style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:20 }}>
+      {/* Info below avatar */}
+      <div style={{ padding:'56px 20px 0' }}>
+        <div style={{ fontSize:16, fontWeight:700, color:'var(--c-t1)' }}>{form.full_name || 'Your Name'}</div>
+        <div style={{ fontSize:12, color:'var(--c-t3)', marginTop:2 }}>{user?.email}</div>
+        <div style={{ fontSize:11, color:'var(--c-t3)', marginTop:4 }}>Click your avatar or banner to upload a photo</div>
+      </div>
+
+      {/* Form */}
+      <form onSubmit={save} style={{ margin:'20px 20px 0', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:20 }}>
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
           {[
             { k:'full_name', label:'Full Name', ph:'Your full name' },
@@ -107,7 +179,8 @@ export default function ProfilePage() {
         </div>
       </form>
 
-      <div style={{ background:'var(--c-surface)', border:'1px solid #fecaca', borderRadius:18, padding:20, marginTop:16 }}>
+      {/* Sign out */}
+      <div style={{ margin:'16px 20px 0', background:'var(--c-surface)', border:'1px solid #fecaca', borderRadius:18, padding:20 }}>
         <div style={{ fontSize:13, fontWeight:700, color:'#dc2626', marginBottom:4 }}>Sign out</div>
         <p style={{ fontSize:12, color:'var(--c-t2)', marginBottom:12 }}>You will be signed out on this device.</p>
         <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/auth' }}
