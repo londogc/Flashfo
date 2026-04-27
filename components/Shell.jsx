@@ -78,6 +78,7 @@ export default function Shell({ children }) {
   const [dark, setDark] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isMidScreen, setIsMidScreen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
   useEffect(() => {
@@ -85,7 +86,7 @@ export default function Shell({ children }) {
     const check = () => {
       const w = window.innerWidth
       setIsMobile(w < 768)
-      // Auto-collapse sidebar in medium viewport (768–1100px = Mac windowed / half-screen)
+      setIsMidScreen(w >= 768 && w < 1100)
       if (w >= 768 && w < 1100) setCollapsed(true)
       else if (w >= 1100) setCollapsed(c => c === true && w >= 1100 ? false : c)
     }
@@ -179,7 +180,7 @@ export default function Shell({ children }) {
             </span>
           )}
           <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:6, minWidth:0, flexShrink:0 }}>
-            {isMobile && mounted && (
+            {(isMobile || isMidScreen) && mounted && (
               <button onClick={toggleDark} style={{ height:32, padding:'0 10px', borderRadius:20, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', display:'flex', alignItems:'center', gap:6, color:'var(--c-t2)', flexShrink:0, fontSize:12, fontWeight:500 }}>
                 <svg width="14" height="14" viewBox="-1 -1 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ flexShrink:0, overflow:'visible' }}>
                   {dark
