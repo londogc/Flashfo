@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
-import { printContent } from '@/lib/exportPdf'
 
 export default function GradeBookPage({ params }) {
   const { code } = params
@@ -65,18 +64,7 @@ export default function GradeBookPage({ params }) {
     return 'text-red-500'
   }
 
-  function printGradeBook() {
-    const rows = students.map(name=>{
-      const sessData = sessions.map(s=>{
-        const sc = studentScores[name]?.[s.id]
-        return sc ? (sc.total>0?Math.round(sc.score/sc.total*100)+'%':'SA') : '—'
-      }).join('</td><td style="padding:6px 10px;border:1px solid #e5e7eb">')
-      const avg = studentAvg(name)
-      return `<tr><td style="padding:6px 10px;border:1px solid #e5e7eb;font-weight:600">${name}</td><td style="padding:6px 10px;border:1px solid #e5e7eb">${rows}</td><td style="padding:6px 10px;border:1px solid #e5e7eb;font-weight:700;color:${avg>=90?'#059669':avg>=70?'#2563eb':avg>=60?'#d97706':'#dc2626'}">${avg!==null?avg+'%':'—'}</td></tr>`
-    }).join('')
-    const headers = ['Student',...sessions.map(s=>s.title.substring(0,20)),'Avg'].map(h=>`<th style="padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;text-align:left;font-size:11px">${h}</th>`).join('')
-    printContent(classroom.name+' — Grade Book', `<h1>${classroom.name}</h1><div class="meta">Grade Book · ${students.length} students · ${sessions.length} sessions</div><div style="overflow-x:auto;margin-top:16px"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table></div>`)
-  }
+  function printGradeBook() { window.print() }
 
   if (loading) return <div className="p-6 flex items-center justify-center min-h-64"><span className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/></div>
 
