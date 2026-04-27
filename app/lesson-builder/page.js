@@ -2,6 +2,13 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem } from '@/lib/savedItems'
+
+function printPDF(title, text) {
+  const win = window.open('','_blank')
+  const safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  win.document.write('<html><head><title>'+title+'</title><style>body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;color:#111;font-size:14px;line-height:1.7;white-space:pre-wrap}h1{font-size:22px;margin-bottom:4px}.sub{color:#666;font-size:12px;margin-bottom:28px}@media print{body{margin:20px}}</style></head><body><h1>'+title+'</h1><div class="sub">'+new Date().toLocaleDateString()+'</div><div>'+safe+'</div></body></html>')
+  win.document.close(); win.focus(); setTimeout(()=>win.print(),400)
+}
 import UploadInput from '@/components/UploadInput'
 
 function printContent(title, content) {
