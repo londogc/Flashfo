@@ -230,9 +230,11 @@ function buildConfig(typeId, count, breakdown) {
   if (typeId==='matching')     return { matching: count }
   // mixed — use breakdown
   const cfg = {}
-  if (breakdown.mcq > 0) cfg.mcq = breakdown.mcq
-  if (breakdown.tf  > 0) cfg.true_false = breakdown.tf
-  if (breakdown.sa  > 0) cfg.short_answer = breakdown.sa
+  if (breakdown.mcq   > 0) cfg.mcq          = breakdown.mcq
+  if (breakdown.tf    > 0) cfg.true_false    = breakdown.tf
+  if (breakdown.sa    > 0) cfg.short_answer  = breakdown.sa
+  if (breakdown.fitb  > 0) cfg.fill_blank    = breakdown.fitb
+  if (breakdown.match > 0) cfg.matching      = breakdown.match
   return cfg
 }
 
@@ -240,7 +242,7 @@ export default function QuizPage({ initialQuiz }) {
   const { user } = useAuth()
   const [typeId, setTypeId]   = useState('mcq')
   const [count, setCount]     = useState(5)
-  const [breakdown, setBreakdown] = useState({ mcq:2, tf:2, sa:1 })
+  const [breakdown, setBreakdown] = useState({ mcq:2, tf:1, sa:1, fitb:1, match:0 })
   const [topic, setTopic]     = useState('')
   const [questions, setQuestions] = useState(initialQuiz?.questions || [])
   const [loading, setLoading] = useState(false)
@@ -262,13 +264,15 @@ export default function QuizPage({ initialQuiz }) {
 
   // Sync breakdown sum with count slider
   function syncBreakdown(newCount) {
-    const total = breakdown.mcq + breakdown.tf + breakdown.sa
+    const total = breakdown.mcq + breakdown.tf + breakdown.sa + breakdown.fitb + breakdown.match
     if (total === newCount) return
     const ratio = newCount / (total || 1)
-    const mcq = Math.max(0, Math.round(breakdown.mcq * ratio))
-    const tf  = Math.max(0, Math.round(breakdown.tf  * ratio))
-    const sa  = Math.max(0, newCount - mcq - tf)
-    setBreakdown({ mcq, tf, sa })
+    const mcq   = Math.max(0, Math.round(breakdown.mcq   * ratio))
+    const tf    = Math.max(0, Math.round(breakdown.tf    * ratio))
+    const fitb  = Math.max(0, Math.round(breakdown.fitb  * ratio))
+    const match = Math.max(0, Math.round(breakdown.match * ratio))
+    const sa    = Math.max(0, newCount - mcq - tf - fitb - match)
+    setBreakdown({ mcq, tf, sa, fitb, match })
   }
 
   function handleExtracted(text) { setTopic(text.substring(0, 500)+'...') }
@@ -330,7 +334,7 @@ export default function QuizPage({ initialQuiz }) {
     onSave={qs=>{setQuestions(qs);setEditMode(false);setSelected({});setSaInputs({});setSaGrades({});setSubmitted(false)}}
     onCancel={()=>setEditMode(false)}/>
 
-  const breakdownTotal = breakdown.mcq + breakdown.tf + breakdown.sa
+  const breakdownTotal = breakdown.mcq + breakdown.tf + breakdown.sa + breakdown.fitb + breakdown.match
 
   return (
     <div className="p-6 max-w-3xl mx-auto w-full">
@@ -378,13 +382,13 @@ export default function QuizPage({ initialQuiz }) {
               <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-3">Breakdown
                 <span className={`ml-2 ${breakdownTotal===count?'text-emerald-500':'text-amber-500'}`}>({breakdownTotal}/{count} questions)</span>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                {[{k:'mcq',label:'MCQ'},{k:'tf',label:'True/False'},{k:'sa',label:'Short Answer'}].map(({k,label})=>(
+              <div className="grid grid-cols-5 gap-2">
+                {[{k:'mcq',label:'MCQ'},{k:'tf',label:'T/F'},{k:'sa',label:'Short Ans'},{k:'fitb',label:'Fill Blank'},{k:'match',label:'Matching'}].map(({k,label})=>(
                   <div key={k} className="text-center">
-                    <div className="text-[11px] text-t3 mb-1">{label}</div>
+                    <div className="text-[10px] text-t3 mb-1 leading-tight">{label}</div>
                     <div className="flex items-center justify-center gap-1">
                       <button onClick={()=>setBreakdown(b=>({...b,[k]:Math.max(0,b[k]-1)}))} className="w-6 h-6 rounded border border-line text-t2 hover:bg-surface text-sm">−</button>
-                      <span className="text-[18px] font-bold text-blue-600 w-8 text-center">{breakdown[k]}</span>
+                      <span className="text-[16px] font-bold text-blue-600 w-6 text-center">{breakdown[k]}</span>
                       <button onClick={()=>setBreakdown(b=>({...b,[k]:b[k]+1}))} className="w-6 h-6 rounded border border-line text-t2 hover:bg-surface text-sm">+</button>
                     </div>
                   </div>
