@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 
@@ -24,17 +24,21 @@ function printDeck(cards, topic) {
   win.document.close()
 }
 
-function SpeakerBtn({ text }) {
+function SpeakerBtn({ text, audioRef }) {
   const [busy, setBusy] = useState(false)
   async function speak() {
-    if (busy || !text) return
+    if (!text) return
+    // Stop any currently playing audio
+    if (audioRef?.current) { audioRef.current.pause(); audioRef.current = null }
+    if (busy) { setBusy(false); return }
     setBusy(true)
     try {
       const res = await fetch('/api/rpc', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fn: 'generateOpenAITtsAudio', args: [text, 'nova', 1] }) })
       const d = await res.json()
       const audio = new Audio('data:' + d.result.mimeType + ';base64,' + d.result.base64)
-      audio.onended = () => setBusy(false)
+      if (audioRef) audioRef.current = audio
+      audio.onended = () => { setBusy(false); if(audioRef) audioRef.current = null }
       audio.play()
     } catch { setBusy(false) }
   }
@@ -66,6 +70,7 @@ export default function FlashcardsPage() {
   const [savedId, setSavedId]   = useState(null)
   const [saving, setSaving]     = useState(false)
   const [saveFeedback, setSaveFeedback] = useState('')
+  const audioRef = useRef(null)
   const [showSave, setShowSave] = useState(false)
   const [saveTitle, setSaveTitle] = useState('')
 
@@ -105,6 +110,7 @@ export default function FlashcardsPage() {
     finally { setSaving(false) }
   }
 
+  function stopAudio() { if(audioRef?.current){ audioRef.current.pause(); audioRef.current = null } }
   function startEdit(i) { setEditIdx(i); setEditVals({ front: cards[i].front || cards[i].question || '', back: cards[i].back || cards[i].answer || '' }) }
   function saveEdit() { if (editIdx === null) return; setCards(cs => cs.map((c, i) => i === editIdx ? { front: editVals.front, back: editVals.back } : c)); setEditIdx(null) }
   function addCard() { const n = cards.length; setCards(cs => [...cs, { front: 'New question', back: 'New answer' }]); setTimeout(() => startEdit(n), 0) }
@@ -125,7 +131,7 @@ export default function FlashcardsPage() {
           </div>
           <input type="range" min={5} max={30} step={1} value={count}
             onChange={e => setCount(Number(e.target.value))}
-            className="w-full accent-blue-600 cursor-pointer" style={{ height: 4 }}/>
+            className="w-full accent-blue-600 cursor-pointer h-2 rounded-full" style={{ display:'block' }}/>
           <div className="flex justify-between text-[10px] text-t3 mt-1.5"><span>5</span><span>10</span><span>20</span><span>30</span></div>
         </div>
         {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
@@ -202,6 +208,12 @@ export default function FlashcardsPage() {
           </div>
         </div>
       )}
+      {!savedId && cards.length > 0 && (
+        <div className="mb-4 px-4 py-2.5 bg-amber-500/10 border border-amber-400/30 rounded-xl flex items-center justify-between">
+          <span className="text-[12px] text-amber-600 font-medium">💾 Don't forget to save your deck to My Stuff!</span>
+          <button onClick={() => { setSaveTitle(topic); setShowSave(true) }} className="h-7 px-3 bg-amber-500 text-white text-[11px] font-bold rounded-lg hover:bg-amber-600">Save Now</button>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-t1 tracking-tight">Flashcards</h1>
@@ -225,7 +237,7 @@ export default function FlashcardsPage() {
       <div className="w-full bg-line rounded-full h-1.5 mb-6">
         <div className="bg-blue-600 h-1.5 rounded-full transition-all" style={{ width: progress + '%' }}/>
       </div>
-      <div onClick={() => setFlipped(f => !f)}
+      <div onClick={() => { stopAudio(); setFlipped(f => !f) }}
         className="bg-surface border border-line rounded-2xl p-10 text-center cursor-pointer hover:border-blue-300 transition-all min-h-[220px] flex flex-col items-center justify-center gap-4 relative">
         <div className="text-[10px] font-bold text-t3 uppercase tracking-widest">
           {flipped ? 'Answer' : 'Question'} · {current + 1} of {cards.length}
@@ -235,17 +247,17 @@ export default function FlashcardsPage() {
         </div>
         <div className="text-[11px] text-t3">Tap to {flipped ? 'see question' : 'reveal answer'}</div>
         <div className="absolute bottom-3 right-3" onClick={e => e.stopPropagation()}>
-          <SpeakerBtn text={flipped ? (card.back || card.answer || '') : (card.front || card.question || '')}/>
+          <SpeakerBtn text={flipped ? (card.back || card.answer || '') : (card.front || card.question || '')} audioRef={audioRef}/>
         </div>
       </div>
       <div className="flex gap-3 mt-4 justify-center">
-        <button onClick={() => { setCurrent(c => Math.max(0, c - 1)); setFlipped(false) }} disabled={current === 0}
+        <button onClick={() => { stopAudio(); setCurrent(c => Math.max(0, c - 1)); setFlipped(false) }} disabled={current === 0}
           className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">← Prev</button>
         {flipped && (
-          <button onClick={() => { setDone(d => [...new Set([...d, current])]); setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false) }}
+          <button onClick={() => { stopAudio(); setDone(d => [...new Set([...d, current])]); setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false) }}
             className="h-9 px-4 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700">✓ Got it</button>
         )}
-        <button onClick={() => { setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false) }} disabled={current === cards.length - 1}
+        <button onClick={() => { stopAudio(); setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false) }} disabled={current === cards.length - 1}
           className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">Next →</button>
       </div>
       {done.length === cards.length && cards.length > 1 && (
