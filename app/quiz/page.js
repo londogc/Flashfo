@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem, deleteItem } from '@/lib/savedItems'
 import { printContent, quizToPrintHtml } from '@/lib/exportPdf'
-import UploadGenerate from '@/components/UploadGenerate'
 import UploadInput from '@/components/UploadInput'
 
 // ── TTS Button ─────────────────────────────────────────────────────────────
