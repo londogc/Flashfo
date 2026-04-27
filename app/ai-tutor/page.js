@@ -11,6 +11,7 @@ export default function NovaPage() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [grade, setGrade] = useState('')
+  const [classContext, setClassContext] = useState(null)
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
 
@@ -18,15 +19,53 @@ export default function NovaPage() {
 
   useEffect(() => {
     if (!user) return
+    // Load profile for grade level
     supabase.from('profiles').select('grade_level').eq('id', user.id).single()
       .then(({ data }) => { if (data?.grade_level) setGrade(data.grade_level) })
+    // Load most recent enrolled classroom for context
+    supabase.from('student_enrollments')
+      .select('*, classroom:classrooms(*)')
+      .eq('student_id', user.id)
+      .order('joined_at', { ascending: false })
+      .limit(1)
+      .single()
+      .then(({ data }) => {
+        if (data?.classroom) {
+          // Get recent homework to give Nova context on what they're studying
+          supabase.from('homework_assignments')
+            .select('title, quiz_data')
+            .eq('classroom_id', data.classroom.id)
+            .eq('status', 'open')
+            .order('due_date', { ascending: true })
+            .limit(3)
+            .then(({ data: hw }) => {
+              setClassContext({
+                className: data.classroom.name,
+                subject: data.classroom.subject,
+                homework: (hw || []).map(h => h.title)
+              })
+            })
+        }
+      })
   }, [user])
 
   function buildSystemPrompt() {
-    const gradeCtx = grade
-      ? 'The student is in ' + grade + '. Calibrate your language, depth, and examples to that level — not too simple, not too complex.'
-      : 'Calibrate to the complexity of what the student is asking. Match their level.'
-    return 'You are Nova, an AI study tutor inside Flashfo. ' + gradeCtx + ' Be direct, knowledgeable, and intellectually honest. Do not oversimplify or be condescending. Explain things clearly with real depth. Use examples when helpful. If asked about history, science, math, literature, or any subject, give a real substantive answer — not a watered-down version. You are a tutor, not a children\'s content filter.'
+    let prompt = 'You are Nova, an AI study tutor inside Flashfo. '
+    if (grade) {
+      prompt += 'The student is in ' + grade + '. Calibrate your language, depth, and examples to that level — not too simple, not too complex. '
+    } else {
+      prompt += 'Calibrate to the complexity of what the student is asking. Match their level. '
+    }
+    if (classContext) {
+      prompt += 'The student is enrolled in "' + classContext.className + '"'
+      if (classContext.subject) prompt += ' (' + classContext.subject + ')'
+      if (classContext.homework?.length > 0) {
+        prompt += '. Their current assignments include: ' + classContext.homework.join(', ') + '. Reference this context if relevant to help them prepare or understand the material.'
+      }
+      prompt += ' '
+    }
+    prompt += 'Be direct, knowledgeable, and intellectually honest. Do not oversimplify or be condescending. Explain things clearly with real depth. Use examples when helpful. You are a tutor, not a content filter.'
+    return prompt
   }
 
   async function send() {
@@ -38,32 +77,24 @@ export default function NovaPage() {
     setMessages(newMessages)
     setLoading(true)
     try {
-      // Build conversation history for context
       const history = newMessages.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }))
-      const systemPrompt = buildSystemPrompt()
       const res = await fetch('/api/rpc', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fn: 'generateChatResponse',
-          args: [history, systemPrompt]
-        })
+        body: JSON.stringify({ fn: 'generateChatResponse', args: [history, buildSystemPrompt()] })
       })
       const data = await res.json()
       const result = data.result?.content || data.result || ''
       if (!result || data.error) {
-        // Fallback: use explainSimplyFromText with the last user message
         const res2 = await fetch('/api/rpc', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fn: 'explainSimplyFromText', args: [text, 'English'] })
         })
         const data2 = await res2.json()
-        const r2 = typeof data2.result === 'string' ? data2.result : JSON.stringify(data2.result)
-        setMessages(m => [...m, { role: 'nova', text: r2 || 'Could not get a response. Try again.' }])
+        setMessages(m => [...m, { role: 'nova', text: typeof data2.result === 'string' ? data2.result : 'Could not get a response. Try again.' }])
       } else {
         setMessages(m => [...m, { role: 'nova', text: typeof result === 'string' ? result : JSON.stringify(result) }])
       }
     } catch {
-      // Final fallback
       try {
         const res2 = await fetch('/api/rpc', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -85,8 +116,6 @@ export default function NovaPage() {
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%', minHeight:0 }}>
-
-      {/* Header */}
       <div style={{ flexShrink:0, padding:'12px 16px 10px', borderBottom:'1px solid var(--c-line)', background:'var(--c-surface)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <div style={{ width:36, height:36, borderRadius:'50%', background:'linear-gradient(135deg,#3b82f6,#6366f1)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -96,17 +125,16 @@ export default function NovaPage() {
             <div style={{ fontWeight:700, fontSize:14, color:'var(--c-t1)', display:'flex', alignItems:'center', gap:6 }}>
               Nova
               {grade && <span style={{ fontSize:10, fontWeight:600, padding:'1px 7px', borderRadius:20, background:'rgba(99,102,241,0.1)', color:'#6366f1' }}>{grade}</span>}
+              {classContext && <span style={{ fontSize:10, fontWeight:600, padding:'1px 7px', borderRadius:20, background:'rgba(16,185,129,0.1)', color:'#059669' }}>{classContext.className}</span>}
             </div>
             <div style={{ fontSize:11, color:'var(--c-t3)' }}>AI study companion · Powered by Flashfo</div>
           </div>
         </div>
-        <button onClick={clearChat} style={{ fontSize:11, color:'var(--c-t3)', background:'none', border:'1px solid var(--c-line)', borderRadius:8, padding:'4px 10px', cursor:'pointer', transition:'color 0.15s' }}
-          onMouseEnter={e=>e.target.style.color='var(--c-t1)'} onMouseLeave={e=>e.target.style.color='var(--c-t3)'}>
+        <button onClick={clearChat} style={{ fontSize:11, color:'var(--c-t3)', background:'none', border:'1px solid var(--c-line)', borderRadius:8, padding:'4px 10px', cursor:'pointer' }}>
           Clear
         </button>
       </div>
 
-      {/* Messages */}
       <div style={{ flex:1, overflowY:'auto', padding:'14px', display:'flex', flexDirection:'column', gap:12, minHeight:0 }}>
         {messages.map((msg, i) => (
           <div key={i} style={{ display:'flex', gap:8, alignItems:'flex-start', flexDirection: msg.role==='user' ? 'row-reverse' : 'row' }}>
@@ -140,7 +168,6 @@ export default function NovaPage() {
         <div ref={bottomRef}/>
       </div>
 
-      {/* Input */}
       <div style={{ flexShrink:0, padding:'10px 12px 12px', borderTop:'1px solid var(--c-line)', background:'var(--c-surface)' }}>
         <div style={{ display:'flex', gap:8, alignItems:'flex-end' }}>
           <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={handleKey}
@@ -165,7 +192,6 @@ export default function NovaPage() {
         </div>
         <div style={{ textAlign:'center', fontSize:10, color:'var(--c-t3)', marginTop:5 }}>Enter to send · Shift+Enter for new line</div>
       </div>
-
       <style>{`@keyframes nova-bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}@keyframes nova-spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
