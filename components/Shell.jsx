@@ -80,7 +80,13 @@ export default function Shell({ children }) {
 
   useEffect(() => {
     setMounted(true)
-    const check = () => setIsMobile(window.innerWidth < 768)
+    const check = () => {
+      const w = window.innerWidth
+      setIsMobile(w < 768)
+      // Auto-collapse sidebar in medium viewport (Mac half-screen / windowed)
+      if (w >= 768 && w < 1080) setCollapsed(true)
+      else if (w >= 1080) setCollapsed(false)
+    }
     check(); window.addEventListener('resize', check)
     const saved = localStorage.getItem('ff-theme')
     if (saved === 'dark') { setDark(true); document.documentElement.classList.add('dark') }
