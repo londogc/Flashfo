@@ -93,10 +93,7 @@ export default function MyStuffPage() {
       ) : filtered.length===0 ? (
         <div className="bg-surface border border-line rounded-xl p-10 text-center">
           <p className="text-t2 text-sm mb-4">{filter==='all'?'Nothing saved yet. Generate something and hit 💾 Save!':('No '+TYPE_META[filter]?.label+' saved yet.')}</p>
-          <div className="flex gap-3 justify-center">
-            <a href="/quiz" className="h-8 px-4 bg-blue-700 text-white text-[12px] font-semibold rounded-lg hover:bg-blue-800 flex items-center">Create Quiz</a>
-            <a href="/flashcards" className="h-8 px-4 bg-surface border border-line text-t2 text-[12px] rounded-lg hover:bg-surface2 flex items-center">Make Flashcards</a>
-          </div>
+          
         </div>
       ) : (
         <div className="space-y-3">
