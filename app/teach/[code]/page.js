@@ -62,16 +62,16 @@ export default function TeachSessionPage({ params }) {
     channelRef.current = ch
   }
 
-  async function launchSession(quizData) {
+  async function launchSession(quizData, isHomework=false, dueDate=null) {
     setLaunching(true)
     try {
-      // Close any existing open session first
       if (session) await supabase.from('classroom_sessions').update({status:'closed'}).eq('id',session.id)
+      const enriched = isHomework ? { ...quizData, homework: true, due_date: dueDate } : quizData
       const { data, error } = await supabase.from('classroom_sessions').insert({
         classroom_id: classroom.id,
-        title: quizData.topic || 'Quiz',
-        quiz_data: quizData,
-        status: 'waiting',
+        title: quizData.topic || (isHomework?'Homework':'Quiz'),
+        quiz_data: enriched,
+        status: isHomework ? 'active' : 'waiting',
         current_q: -1
       }).select().single()
       if (error) throw error
@@ -132,6 +132,7 @@ export default function TeachSessionPage({ params }) {
           <h1 className="text-2xl font-bold text-t1 tracking-tight">{classroom.name}</h1>
           <p className="text-sm text-t2 mt-0.5">
             Share code <span className="font-black tracking-widest text-blue-600">{code}</span> · students join at <span className="text-t3">flashfo.org/join</span>
+            {' · '}<a href={'/teach/'+code+'/gradebook'} className="text-blue-500 hover:underline text-[12px] font-semibold">📊 Grade Book</a>
           </p>
         </div>
         {session && session.status !== 'closed' && (
@@ -152,7 +153,7 @@ export default function TeachSessionPage({ params }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:'rgba(0,0,0,0.5)'}}>
           <div className="bg-surface border border-line rounded-2xl w-full max-w-lg shadow-2xl max-h-[80vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-line">
-              <h2 className="text-base font-bold text-t1">Select a Quiz</h2>
+              <h2 className="text-base font-bold text-t1">{showPicker==='homework'?'Post Homework':'Select a Quiz'}</h2>
               <button onClick={()=>setShowPicker(false)} className="text-t3 hover:text-t1 text-xl w-7 h-7 flex items-center justify-center">✕</button>
             </div>
             <div className="flex border-b border-line">
@@ -164,12 +165,17 @@ export default function TeachSessionPage({ params }) {
               ))}
             </div>
             <div className="p-5 flex-1 overflow-y-auto">
+              {showPicker==='homework'&&<div className="mb-4 p-3 bg-amber-500/10 border border-amber-400/20 rounded-xl">
+                <label className="block text-[11px] font-bold text-amber-600 uppercase tracking-wider mb-1.5">Due Date (optional)</label>
+                <input type="datetime-local" id="hw-due" className="h-9 bg-surface border border-line rounded-lg px-3 text-sm text-t1 outline-none focus:border-amber-400"/>
+                <p className="text-[11px] text-t3 mt-1">Students can submit anytime before this date. Leave blank for no deadline.</p>
+              </div>}
               {pickerTab==='saved' && (
                 savedQuizzes.length === 0
                   ? <div className="text-center py-10"><p className="text-t3 text-sm">No saved quizzes. Generate one from the Quiz page and save it first.</p><a href="/quiz" className="inline-block mt-4 text-blue-500 text-sm hover:underline">Go to Quiz Builder →</a></div>
                   : <div className="space-y-2">
                       {savedQuizzes.map(q=>(
-                        <button key={q.id} onClick={()=>launchSession(q.data)} disabled={launching}
+                        <button key={q.id} onClick={()=>{const dd=document.getElementById('hw-due');launchSession(q.data,showPicker==='homework',dd?.value||null)}} disabled={launching}
                           className="w-full text-left p-4 bg-surface2 border border-line rounded-xl hover:border-blue-400 transition-colors disabled:opacity-40">
                           <div className="text-sm font-semibold text-t1">{q.title}</div>
                           <div className="text-[11px] text-t3 mt-0.5">{q.data?.questions?.length||0} questions · {q.data?.type||'MCQ'}</div>
@@ -200,7 +206,10 @@ export default function TeachSessionPage({ params }) {
           <div className="text-4xl mb-3">📋</div>
           <h2 className="text-base font-bold text-t1 mb-1">No active session</h2>
           <p className="text-sm text-t2 mb-6">Load a quiz and distribute it to your students.</p>
-          <button onClick={()=>setShowPicker(true)} className="h-10 px-6 bg-blue-700 text-white text-sm font-bold rounded-xl hover:bg-blue-800">Load a Quiz</button>
+          <div className="flex gap-3 justify-center">
+            <button onClick={()=>setShowPicker(true)} className="h-10 px-6 bg-blue-700 text-white text-sm font-bold rounded-xl hover:bg-blue-800">🚀 Live Quiz</button>
+            <button onClick={()=>setShowPicker('homework')} className="h-10 px-6 bg-amber-500 text-white text-sm font-bold rounded-xl hover:bg-amber-600">📋 Post Homework</button>
+          </div>
         </div>
       )}
 
