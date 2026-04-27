@@ -76,8 +76,7 @@ function JoinInner() {
     <div className="min-h-screen flex items-center justify-center p-4" style={{background:'var(--c-bg)'}}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <a href="/" className="inline-flex items-center gap-1 text-[12px] mb-4 hover:underline" style={{color:'var(--c-t3)'}}>← Back to Flashfo</a>
-          <div className="text-3xl font-black mb-1" style={{color:'var(--c-t1)'}}>Flashfo</div>
+<div className="text-3xl font-black mb-1" style={{color:'var(--c-t1)'}}>Flashfo</div>
           <p style={{color:'var(--c-t2)'}} className="text-sm">Join a class quiz</p>
         </div>
         <div className="rounded-2xl border p-6" style={{background:'var(--c-surface)',borderColor:'var(--c-line)'}}>
@@ -104,6 +103,12 @@ function JoinInner() {
             className="w-full h-10 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 disabled:opacity-40 transition-colors">
             {step==='loading'?'Looking up class...':'Join Quiz'}
           </button>
+        </div>
+        <div className="text-center mt-5">
+          <a href="/" className="inline-flex items-center justify-center gap-2 h-9 px-5 rounded-xl border text-sm font-medium transition-colors"
+            style={{borderColor:'var(--c-line)',color:'var(--c-t2)',background:'var(--c-surface)'}}>
+            ← Back to Flashfo
+          </a>
         </div>
       </div>
     </div>
