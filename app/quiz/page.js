@@ -405,7 +405,7 @@ export default function QuizPage() {
           {typeId === 'mixed' && (
             <div className="mb-5 p-4 bg-surface2 rounded-xl border border-line">
               <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-3">
-                Breakdown <span className={breakdownTotal === count ? 'text-emerald-500' : 'text-amber-500'}>({breakdownTotal}/{count})</span>
+                Breakdown <span className="text-emerald-500">({breakdownTotal} QUESTIONS)</span>
               </div>
               <div className="grid grid-cols-5 gap-2">
                 {[{k:'mcq',label:'MCQ'},{k:'tf',label:'T/F'},{k:'sa',label:'Short Ans'},{k:'fitb',label:'Fill Blank'},{k:'match',label:'Matching'}].map(({k, label}) => (
