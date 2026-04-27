@@ -2,6 +2,8 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
+import { printContent, flashcardsToPrintHtml } from '@/lib/exportPdf'
+import UploadGenerate from '@/components/UploadGenerate'
 
 function printFlashcards(topic, cards) {
   const win = window.open('','_blank')
@@ -213,6 +215,9 @@ export default function FlashcardsPage({ initialDeck }) {
             <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print
           </button>
           <button onClick={()=>{setShowEdit(true);setEditIdx(null)}} className="h-8 px-3 text-[12px] text-t2 border border-line rounded-lg hover:bg-surface2">Edit Deck</button>
+          <button onClick={()=>printContent(topic+' — Flashcards', flashcardsToPrintHtml(cards,topic))} className="h-8 px-3 text-[12px] text-t2 border border-line rounded-lg hover:bg-surface2 flex items-center gap-1">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print
+          </button>
           <button onClick={()=>setCards([])} className="text-sm text-blue-500 font-medium hover:underline">New deck</button>
         </div>
       </div>
