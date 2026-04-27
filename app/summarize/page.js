@@ -2,8 +2,6 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem } from '@/lib/savedItems'
-import { printContent } from '@/lib/exportPdf'
-import UploadGenerate from '@/components/UploadGenerate'
 
 function printPDF(title, text) {
   const win = window.open('','_blank')
@@ -57,7 +55,6 @@ export default function SummarizePage() {
     <div className="p-6 max-w-3xl mx-auto w-full">
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Summarize</h1>
       <p className="text-sm text-t2 mb-6">Paste text, upload a file, or enter a URL to get a clean summary.</p>
-      <div className="mb-3"><UploadGenerate onTextExtracted={t=>{setInput(t)}}/></div>
       <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
         <UploadInput onText={t=>setInputText(t)} placeholder="Paste text, article content, or notes here..."/>
       </div>
@@ -73,10 +70,6 @@ export default function SummarizePage() {
             <div className="flex gap-2 items-center flex-wrap">
               {saveFeedback&&<span className="text-[11px] text-emerald-500">{saveFeedback}</span>}
               {user&&<button onClick={doSave} disabled={saving} className="h-7 px-3 bg-emerald-600 text-white text-[11px] font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-40">{saving?'Saving...':'💾 Save'}</button>}
-              <button onClick={()=>printContent('Summary',output)}
-                className="h-7 px-3 bg-surface border border-line text-t2 text-[11px] rounded-lg hover:bg-surface2 flex items-center gap-1">
-                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print / PDF
-              </button>
               <button onClick={()=>navigator.clipboard.writeText(output)} className="h-7 px-3 text-[11px] text-blue-500 hover:underline">Copy</button>
             </div>
           </div>
