@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem, deleteItem } from '@/lib/savedItems'
+import { printContent, quizToPrintHtml } from '@/lib/exportPdf'
+import UploadGenerate from '@/components/UploadGenerate'
 import UploadInput from '@/components/UploadInput'
 
 // ── TTS Button ─────────────────────────────────────────────────────────────
@@ -254,6 +256,9 @@ export default function QuizPage({ initialQuiz }) {
   const [saveTitle, setSaveTitle] = useState('')
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [saveFeedback, setSaveFeedback] = useState('')
+  const [fitbInputs, setFitbInputs] = useState({})   // { [qIdx]: string }
+  const [matchAnswers, setMatchAnswers] = useState({}) // { [qIdx]: { [leftIdx]: string } }
+  const [shuffledRights, setShuffledRights] = useState({}) // shuffled right-side options
 
   // Sync breakdown sum with count slider
   function syncBreakdown(newCount) {
@@ -266,6 +271,17 @@ export default function QuizPage({ initialQuiz }) {
     setBreakdown({ mcq, tf, sa })
   }
 
+  function handleExtracted(text) { setTopic(text.substring(0, 500)+'...') }
+  function initMatching(qs) {
+    const shuffled = {}
+    qs.forEach((q,i) => {
+      if (q.type==='matching' && q.pairs) {
+        shuffled[i] = [...q.pairs.map(p=>p.right)].sort(()=>Math.random()-0.5)
+      }
+    })
+    setShuffledRights(shuffled)
+  }
+
   async function generate() {
     if (!topic.trim()) return
     setLoading(true); setQuestions([]); setSelected({}); setSaInputs({}); setSaGrades({}); setSubmitted(false); setError(''); setSavedId(null)
@@ -276,7 +292,7 @@ export default function QuizPage({ initialQuiz }) {
       if (data.error) { setError(data.error); return }
       const qs = data.result?.questions || []
       if (!qs.length) { setError('Could not generate quiz. Try adding more detail.'); return }
-      setQuestions(qs)
+      setQuestions(qs); initMatching(qs)
     } catch { setError('Something went wrong. Please try again.') }
     finally { setLoading(false) }
   }
@@ -420,7 +436,39 @@ export default function QuizPage({ initialQuiz }) {
                     <SpeakerBtn text={q.question}/>
                   </div>
 
-                  {isSA ? (
+                  {isFITB ? (
+                    <div>
+                      <div className="flex items-center flex-wrap gap-2 text-sm text-t1 mb-2">
+                        <span>Answer:</span>
+                        <input value={fitbInputs[i]||''} onChange={e=>setFitbInputs(s=>({...s,[i]:e.target.value}))}
+                          disabled={submitted} placeholder="Fill in the blank..."
+                          className="flex-1 min-w-32 h-9 bg-surface2 border border-line rounded-lg px-3 text-sm text-t1 outline-none focus:border-blue-400 disabled:opacity-70"/>
+                      </div>
+                      {submitted && (
+                        <div className="space-y-1">
+                          <div className={`text-[12px] px-3 py-2 rounded-lg ${(fitbInputs[i]||'').toLowerCase().trim()===q.correctAnswer?.toLowerCase().trim()?'bg-emerald-500/10 text-emerald-600 font-semibold':'bg-red-500/10 text-red-500'}`}>
+                            {(fitbInputs[i]||'').toLowerCase().trim()===q.correctAnswer?.toLowerCase().trim()?'✓ Correct!':'✗ Correct answer: '+q.correctAnswer}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : isMatch ? (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2 text-[11px] font-bold text-t3 uppercase px-1 mb-1"><span>Term</span><span>Match</span></div>
+                      {(q.pairs||[]).map((pair,j)=>(
+                        <div key={j} className="grid grid-cols-2 gap-2 items-center">
+                          <div className="px-3 py-2 bg-surface2 border border-line rounded-lg text-[13px] text-t1">{pair.left}</div>
+                          <select value={matchAnswers[i]?.[j]||''} onChange={e=>setMatchAnswers(s=>({...s,[i]:{...(s[i]||{}),[j]:e.target.value}}))} disabled={submitted}
+                            className="h-9 bg-surface2 border border-line rounded-lg px-2 text-[13px] text-t1 outline-none focus:border-blue-400 disabled:opacity-70"
+                            style={{borderColor:submitted?(matchAnswers[i]?.[j]===pair.right?'#10b981':'#ef4444'):'var(--c-line)'}}>
+                            <option value="">Select...</option>
+                            {(shuffledRights[i]||[]).map((r,ri)=><option key={ri} value={r}>{r}</option>)}
+                          </select>
+                        </div>
+                      ))}
+                      {submitted && <div className="text-[11px] text-t3 mt-1">{(q.pairs||[]).map(p=>`${p.left} → ${p.right}`).join(' · ')}</div>}
+                    </div>
+                  ) : isSA ? (
                     <div>
                       <textarea value={saInputs[i]||''} onChange={e=>setSaInputs(s=>({...s,[i]:e.target.value}))}
                         placeholder="Type your answer here..." disabled={submitted} rows={3}
@@ -504,6 +552,10 @@ export default function QuizPage({ initialQuiz }) {
             </button>
             <button onClick={()=>setShowKey(true)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 flex items-center gap-1.5">
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="7"/><path d="M8 5v4m0 2.5v.5"/></svg>Answer Key</button>
+            <button onClick={()=>printContent(topic+' — Quiz', quizToPrintHtml(questions,topic,false))} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 flex items-center gap-1.5">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print Quiz</button>
+            <button onClick={()=>printContent(topic+' — Answer Key', quizToPrintHtml(questions,topic,true))} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 flex items-center gap-1.5">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print Key</button>
             <button onClick={()=>setEditMode(true)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2">Edit / Add Questions</button>
             {user&&<button onClick={()=>{setSaveTitle(topic);setShowSaveDialog(true)}} className="h-9 px-4 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 flex items-center gap-1.5">
               💾 {savedId?'Update Save':'Save Quiz'}</button>}
