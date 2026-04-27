@@ -178,7 +178,7 @@ export default function Shell({ children }) {
               Welcome back, <span style={{ color:'var(--c-t1)', fontWeight:700 }}>{firstName}</span> 👋
             </span>
           )}
-          <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:6, minWidth:0, flexShrink:0 }}>
             {isMobile && mounted && (
               <button onClick={toggleDark} style={{ height:32, padding:'0 10px', borderRadius:20, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', display:'flex', alignItems:'center', gap:6, color:'var(--c-t2)', flexShrink:0, fontSize:12, fontWeight:500 }}>
                 <svg width="14" height="14" viewBox="-1 -1 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ flexShrink:0, overflow:'visible' }}>
