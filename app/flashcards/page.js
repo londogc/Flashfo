@@ -3,12 +3,7 @@ import { useState } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 
-function printFlashcards(topic, cards) {
-  const win = window.open('','_blank')
-  const rows = cards.map((c,i)=>`<tr style="page-break-inside:avoid"><td style="padding:10px;border:1px solid #ddd;font-weight:600;width:50%">${i+1}. ${c.front||c.question}</td><td style="padding:10px;border:1px solid #ddd">${c.back||c.answer}</td></tr>`).join('')
-  win.document.write('<html><head><title>Flashcards — '+topic+'</title><style>body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;color:#111}h1{font-size:22px;margin-bottom:4px}.sub{color:#666;font-size:12px;margin-bottom:20px}table{width:100%;border-collapse:collapse}th{background:#f3f4f6;padding:8px 10px;border:1px solid #ddd;text-align:left}@media print{body{margin:20px}}</style></head><body><h1>'+topic+'</h1><div class="sub">'+cards.length+' cards · '+new Date().toLocaleDateString()+'</div><table><tr><th>Question</th><th>Answer</th></tr>'+rows+'</table></body></html>')
-  win.document.close(); win.focus(); setTimeout(()=>win.print(),400)
-}
+
 import UploadInput from '@/components/UploadInput'
 
 function SpeakerBtn({ text }) {
