@@ -32,11 +32,13 @@ function JoinInner() {
     const qs = sess.quiz_data?.questions || []
     if (!qs.length) { setError('Session has no questions yet.'); setStep('entry'); return }
     setClassroom(cls); setSession(sess); setQuestions(qs)
-    if (sess.status === 'waiting') {
-      // Poll until teacher distributes
+    // If homework or already active — go straight to quiz
+    if (sess.status === 'active' || sess.quiz_data?.homework) {
+      setStep('quiz')
+    } else if (sess.status === 'waiting') {
       setStep('waiting')
       const poll = setInterval(async () => {
-        const { data } = await supabase.from('classroom_sessions').select('status').eq('id', sess.id).single()
+        const { data } = await supabase.from('classroom_sessions').select('status,quiz_data').eq('id', sess.id).single()
         if (data?.status === 'active') { clearInterval(poll); setStep('quiz') }
         if (data?.status === 'closed') { clearInterval(poll); setError('Session closed.'); setStep('entry') }
       }, 2000)
