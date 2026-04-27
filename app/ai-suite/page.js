@@ -18,6 +18,8 @@ const TOOLS = [
   { label: 'Lesson Builder',  desc: 'Build full structured lesson plans',                                href: '/lesson-builder', bg: 'bg-rose-500/10',   ic: 'text-rose-500',    icon: 'M13 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V2a1 1 0 00-1-1zM5 5h6m-6 3h6m-6 3h4' },
   // Content Creator — star
   { label: 'Content Creator', desc: 'Generate any study material from a topic',                          href: '/create',         bg: 'bg-cyan-500/10',   ic: 'text-cyan-500',    icon: 'M8 1l1.8 5H15l-4.4 3.2 1.7 5.2L8 11.2 3.7 14.4l1.7-5.2L1 6h5.2z' },
+  // Study Guide Creator
+  { label: 'Study Guide',     desc: 'Build a full structured study guide from any topic or notes',       href: '/study-guide',    bg: 'bg-indigo-500/10', ic: 'text-indigo-500',  icon: 'M2 2h4v12H2zm5-1h2v14H7zm4 2h3v10h-3z' },
 ]
 
 export default function AISuitePage() {
