@@ -1,4 +1,8 @@
 'use client'
+// QUIZ_ISOLATION: Nova, messaging, student portal, and teacher portal
+// are intentionally NOT imported on this page.
+// Students taking a live quiz or homework assignment have no access
+// to AI assistance or communication tools.
 import { useState, useRef, Suspense } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useSearchParams } from 'next/navigation'
