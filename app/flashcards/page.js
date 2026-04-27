@@ -234,11 +234,9 @@ export default function FlashcardsPage() {
           {flipped ? (card.back || card.answer) : (card.front || card.question)}
         </div>
         <div className="text-[11px] text-t3">Tap to {flipped ? 'see question' : 'reveal answer'}</div>
-        {flipped && (
-          <div className="absolute bottom-3 right-3" onClick={e => e.stopPropagation()}>
-            <SpeakerBtn text={card.back || card.answer || ''}/>
-          </div>
-        )}
+        <div className="absolute bottom-3 right-3" onClick={e => e.stopPropagation()}>
+          <SpeakerBtn text={flipped ? (card.back || card.answer || '') : (card.front || card.question || '')}/>
+        </div>
       </div>
       <div className="flex gap-3 mt-4 justify-center">
         <button onClick={() => { setCurrent(c => Math.max(0, c - 1)); setFlipped(false) }} disabled={current === 0}
