@@ -114,6 +114,10 @@ export default function FlashcardsPage({ initialDeck }) {
       <div className="bg-surface border border-line rounded-2xl p-5">
         <div className="mb-4">
           <UploadInput onText={t=>setTopic(t)} placeholder="Enter a topic or paste notes to generate flashcards from..."/>
+        <label className="flex items-center gap-1.5 mt-2 cursor-pointer w-fit">
+          <input type="file" accept=".txt,.md" className="hidden" onChange={async e=>{const f=e.target.files[0];if(f){const t=await f.text();setTopic(t.substring(0,8000));e.target.value=''}}}/>
+          <span className="text-[11px] text-t3 hover:text-blue-500 transition-colors">📎 Upload .txt file</span>
+        </label>
         </div>
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
