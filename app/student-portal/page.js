@@ -152,9 +152,38 @@ export default function StudentPortalPage() {
         </a>
       </div>
 
+      {/* My Classes - always visible at top */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider">My Classes</h2>
+          <button onClick={() => setTab('classes')} className="text-[12px] text-blue-500 hover:underline font-medium">+ Join a Class</button>
+        </div>
+        {classrooms.length === 0 ? (
+          <div className="bg-surface border border-dashed border-line rounded-xl p-5 text-center">
+            <p className="text-sm text-t2 mb-3">No classes yet. Get a code from your teacher.</p>
+            <button onClick={() => setTab('classes')} className="h-8 px-4 bg-blue-700 text-white text-[12px] font-semibold rounded-lg hover:bg-blue-800">Join a Class</button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {classrooms.map(cls => (
+              <div key={cls.id} className="bg-surface border border-line rounded-xl p-4 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-semibold text-t1 text-sm truncate">{cls.name}</div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {cls.subject && <span className="text-[11px] text-t3">{cls.subject}</span>}
+                    <span className="text-[10px] font-mono font-bold bg-surface2 px-1.5 py-0.5 rounded text-t3">{cls.code}</span>
+                  </div>
+                </div>
+                <a href={'/join?code='+cls.code} className="h-7 px-3 bg-blue-700 text-white text-[11px] font-semibold rounded-lg hover:bg-blue-800 flex-shrink-0">Join →</a>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 p-1 bg-surface2 rounded-xl w-fit">
-        {[['classes','Classes'],['homework','Homework'],['messages','Announcements']].map(([id, label]) => (
+      <div className="flex gap-1 mb-5 p-1 bg-surface2 rounded-xl w-fit">
+        {[['classes','Join / Manage'],['homework','Homework'],['messages','Announcements']].map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)}
             className={'px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-all ' + (tab === id ? 'bg-surface text-t1 shadow-sm' : 'text-t3 hover:text-t2')}>
             {label}
