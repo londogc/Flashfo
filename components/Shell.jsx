@@ -35,6 +35,7 @@ const NAV = [
   { href:'/study',          label:'Study',         icon:'study'      },
   { href:'/teach',          label:'Teacher Portal', icon:'teach'      },
   { href:'/my-stuff',       label:'My Stuff',      icon:'mystuff'    },
+  { href:'/student-portal', label:'Student Portal', icon:'study'      },
 ]
 const TOOLS = [
   { href:'/summarize',      label:'Summarize',     icon:'summarize'  },
