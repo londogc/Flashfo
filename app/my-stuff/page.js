@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
-import { getUserItems, deleteItem } from '@/lib/savedItems'
+import { getUserItems, deleteItem, updateSavedItem } from '@/lib/savedItems'
 
 const TYPE_META = {
   quiz:       { label:'Quizzes',      color:'bg-blue-500/10 text-blue-500',    emoji:'❓' },
@@ -43,6 +43,14 @@ export default function MyStuffPage() {
     } catch(e) {
       setError('Error: ' + (e.message || e.code || JSON.stringify(e)))
     } finally { setLoading(false) }
+  }
+
+  async function togglePublish(item) {
+    const isPublished = item.data?.published
+    try {
+      await updateSavedItem(item.id, { ...item, data: { ...item.data, published: !isPublished } })
+      setItems(prev => prev.map(x => x.id===item.id ? { ...x, data: { ...x.data, published: !isPublished } } : x))
+    } catch(e) {}
   }
 
   async function doDelete(id) {
