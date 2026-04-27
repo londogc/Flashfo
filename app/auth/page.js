@@ -1,12 +1,55 @@
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 export default function AuthPage() {
   const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'reset'
   const [form, setForm] = useState({ email: '', password: '', name: '' })
   const [loading, setLoading] = useState(false)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Handle email confirmation redirect — Supabase sends back tokens in the URL hash
+    const handleAuthRedirect = async () => {
+      // Check for error in URL params first
+      const errorCode = searchParams.get('error_code')
+      const errorDesc = searchParams.get('error_description')
+      if (errorCode) { setError(decodeURIComponent(errorDesc || 'Authentication error')); return }
+
+      // Handle hash-based tokens (email confirmation, magic link)
+      const hash = window.location.hash
+      if (hash && hash.includes('access_token')) {
+        setLoading(true)
+        try {
+          // Supabase automatically processes the hash and sets the session
+          const { data, error: sessionError } = await supabase.auth.getSession()
+          if (sessionError) throw sessionError
+          if (data.session) { router.push('/'); return }
+          // If no session yet, give it a moment (supabase processes the hash async)
+          await new Promise(r => setTimeout(r, 800))
+          const { data: data2 } = await supabase.auth.getSession()
+          if (data2.session) router.push('/')
+          else setError('Email confirmed! Please sign in.')
+        } catch(e) { setError('Confirmation failed. Please try signing in.') }
+        finally { setLoading(false) }
+        return
+      }
+
+      // Check for PKCE code flow (newer Supabase versions)
+      const code = searchParams.get('code')
+      if (code) {
+        setLoading(true)
+        try {
+          const { error: exchError } = await supabase.auth.exchangeCodeForSession(code)
+          if (exchError) throw exchError
+          router.push('/')
+        } catch(e) { setError('Sign in failed. Please try again.') }
+        finally { setLoading(false) }
+      }
+    }
+    handleAuthRedirect()
+  }, [])
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const router = useRouter()
