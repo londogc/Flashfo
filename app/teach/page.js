@@ -13,6 +13,7 @@ export default function TeachPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [classrooms, setClassrooms] = useState([])
+  const [enrollments, setEnrollments] = useState({})
   const [fetching, setFetching]     = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm]             = useState({ name:'', subject:'' })
@@ -28,6 +29,12 @@ export default function TeachPage() {
     setFetching(true)
     const { data } = await supabase.from('classrooms').select('*').eq('teacher_id',user.id).order('created_at',{ascending:false})
     setClassrooms(data||[])
+    if (data?.length) {
+      const { data: enroll } = await supabase.from('student_enrollments').select('classroom_id').in('classroom_id', data.map(c=>c.id))
+      const counts = {}
+      ;(enroll||[]).forEach(e=>{ counts[e.classroom_id] = (counts[e.classroom_id]||0)+1 })
+      setEnrollments(counts)
+    }
     setFetching(false)
   }
 
@@ -114,7 +121,10 @@ export default function TeachPage() {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h3 className="text-base font-bold text-t1">{cls.name}</h3>
-                  {cls.subject&&<p className="text-[12px] text-t3 mt-0.5">{cls.subject}</p>}
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {cls.subject&&<span className="text-[12px] text-t3">{cls.subject}</span>}
+                    <span className="text-[11px] text-t3">{enrollments[cls.id]||0} student{(enrollments[cls.id]||0)!==1?'s':''}</span>
+                  </div>
                 </div>
                 <button onClick={()=>del(cls.id)} className="text-t3 hover:text-red-500 text-lg w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">✕</button>
               </div>
