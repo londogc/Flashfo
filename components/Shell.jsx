@@ -152,12 +152,12 @@ export default function Shell({ children }) {
           </nav>
 
           <div style={{ padding:12, borderTop:'1px solid var(--c-line)', flexShrink:0 }}>
-            <button onClick={toggleDark} style={{ width:'100%', display:'flex', alignItems:'center', gap:8, padding:'6px 8px', borderRadius:10, background:'none', border:'none', cursor:'pointer' }}>
+            {!isMidScreen && <button onClick={toggleDark} style={{ width:'100%', display:'flex', alignItems:'center', gap:8, padding:'6px 8px', borderRadius:10, background:'none', border:'none', cursor:'pointer' }}>
               {!collapsed && <span style={{ fontSize:12, fontWeight:500, color:'var(--c-t2)' }}>{dark ? 'Dark' : 'Light'}</span>}
               <div style={{ marginLeft:'auto', width:36, height:20, background:dark?'#1d4ed8':'#e2e8f0', borderRadius:10, position:'relative', transition:'background 0.2s', flexShrink:0 }}>
                 <div style={{ position:'absolute', top:3, left:dark?19:3, width:14, height:14, background:'#fff', borderRadius:'50%', transition:'left 0.2s', boxShadow:'0 1px 3px rgba(0,0,0,0.2)' }}/>
               </div>
-            </button>
+            </button>}
           </div>
         </aside>
       )}
