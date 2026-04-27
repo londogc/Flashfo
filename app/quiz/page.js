@@ -283,7 +283,7 @@ export default function QuizPage() {
   const { user } = useAuth()
   const [typeId, setTypeId] = useState('mcq')
   const [count, setCount] = useState(5)
-  const [breakdown, setBreakdown] = useState({ mcq: 2, tf: 1, sa: 1, fitb: 1, match: 0 })
+  const [breakdown, setBreakdown] = useState({ mcq: 0, tf: 0, sa: 0, fitb: 0, match: 0 })
   const [topic, setTopic] = useState('')
   const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(false)
@@ -317,14 +317,33 @@ export default function QuizPage() {
     if (!topic.trim()) return
     setLoading(true); setQuestions([]); setSelected({}); setSaInputs({}); setFitbInputs({}); setMatchAnswers({}); setSaGrades({}); setSubmitted(false); setError(''); setSavedId(null)
     try {
+      const cfg = buildConfig(typeId, count, breakdown)
+      const typeInstructions = Object.entries(cfg).map(([t, n]) => {
+        if (t === 'mcq') return n + ' multiple choice questions (4 options A-D, one correct)'
+        if (t === 'true_false') return n + ' true/false questions'
+        if (t === 'short_answer') return n + ' short answer questions'
+        if (t === 'fill_blank') return n + ' fill-in-the-blank questions (single word or short phrase answer)'
+        if (t === 'matching') return n + ' matching questions (4-5 pairs, term to definition)'
+        return ''
+      }).filter(Boolean).join(', ')
+      const prompt = 'Generate a quiz about: ' + topic.trim() + '\n\nCreate exactly: ' + typeInstructions + '\n\nReturn ONLY valid JSON in this exact format, no other text:\n{\n  "questions": [\n    {\n      "type": "mcq",\n      "question": "Question text",\n      "options": ["A","B","C","D"],\n      "answerIndex": 0,\n      "explanation": "Why this is correct"\n    },\n    {\n      "type": "true_false",\n      "question": "Statement",\n      "options": ["True","False"],\n      "answerIndex": 0,\n      "explanation": "Explanation"\n    },\n    {\n      "type": "short_answer",\n      "question": "Question",\n      "correctAnswer": "Expected answer",\n      "explanation": "Explanation"\n    },\n    {\n      "type": "fill_blank",\n      "question": "The ___ is ...",\n      "correctAnswer": "word",\n      "explanation": "Explanation"\n    },\n    {\n      "type": "matching",\n      "question": "Match each term to its definition",\n      "pairs": [{"left":"Term","right":"Definition"}]\n    }\n  ]\n}'
       const res = await fetch('/api/rpc', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fn: 'generateQuizAdvancedFromText', args: [topic.trim(), buildConfig(typeId, count, breakdown), 'English'] }) })
+        body: JSON.stringify({ fn: 'generateChatResponse', args: [[{role:'user',content:prompt}], 'You are a quiz generator. Return ONLY valid JSON. No markdown, no backticks, no explanation. Just the raw JSON object.'] }) })
       const data = await res.json()
-      if (data.error) { setError(data.error); return }
-      const qs = data.result?.questions || []
-      if (!qs.length) { setError('Could not generate quiz. Try adding more detail.'); return }
+      const raw = data.result?.content || data.result || ''
+      const text = typeof raw === 'string' ? raw : JSON.stringify(raw)
+      const clean = text.replace(/```json|```/g,'').trim()
+      let parsed
+      try { parsed = JSON.parse(clean) } catch(e) {
+        // Try to extract JSON from response
+        const match = clean.match(/\{[\s\S]*\}/)
+        if (match) parsed = JSON.parse(match[0])
+        else { setError('Could not parse quiz response. Try again.'); return }
+      }
+      const qs = parsed?.questions || []
+      if (!qs.length) { setError('Could not generate quiz. Try a more specific topic.'); return }
       setQuestions(qs); initMatching(qs)
-    } catch { setError('Something went wrong. Please try again.') }
+    } catch(e) { setError('Something went wrong. Please try again.') }
     finally { setLoading(false) }
   }
 
@@ -394,7 +413,7 @@ export default function QuizPage() {
             <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-2">Question Type</div>
             <div className="flex gap-2 flex-wrap">
               {BASE_TYPES.map(t => (
-                <button key={t.id} onClick={() => setTypeId(t.id)}
+                <button key={t.id} onClick={() => { setTypeId(t.id); if(t.id==='mixed') setBreakdown({mcq:0,tf:0,sa:0,fitb:0,match:0}) }}
                   className={'h-8 px-3 rounded-lg text-[12px] font-medium border transition-all ' + (typeId === t.id ? 'bg-blue-700 text-white border-blue-700' : 'bg-surface2 text-t2 border-line hover:border-blue-300')}>
                   {t.label}
                 </button>
