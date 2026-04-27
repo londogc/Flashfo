@@ -127,7 +127,11 @@ export default function TeachSessionPage({ params }) {
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-3">
             <a href="/teach" className="text-[12px] text-blue-500 hover:underline">← All Classrooms</a>
+            <a href={'/teach/'+code+'/gradebook'} className="text-[12px] text-t2 hover:text-blue-500 hover:underline">📊 Grade Book</a>
+            <a href={'/teach/'+code+'/homework'} className="text-[12px] text-t2 hover:text-blue-500 hover:underline">📚 Homework</a>
+          </div>
           </div>
           <h1 className="text-2xl font-bold text-t1 tracking-tight">{classroom.name}</h1>
           <p className="text-sm text-t2 mt-0.5">
