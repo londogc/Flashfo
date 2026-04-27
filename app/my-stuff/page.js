@@ -41,7 +41,7 @@ export default function MyStuffPage() {
       const data = await getUserItems(user.id)
       setItems(data)
     } catch(e) {
-      setError('Could not load saved items. Make sure the database is set up (see README).')
+      setError('Error: ' + (e.message || e.code || JSON.stringify(e)))
     } finally { setLoading(false) }
   }
 
