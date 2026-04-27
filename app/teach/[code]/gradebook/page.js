@@ -2,21 +2,16 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
+import { printContent } from '@/lib/exportPdf'
 
-function timeAgo(ts) {
-  const diff = Date.now() - new Date(ts).getTime()
-  const d = Math.floor(diff/86400000), h = Math.floor(diff/3600000), m = Math.floor(diff/60000)
-  return d>0?d+'d ago':h>0?h+'h ago':m>0?m+'m ago':'just now'
-}
-
-export default function GradebookPage({ params }) {
+export default function GradeBookPage({ params }) {
   const { code } = params
   const { user, loading: authLoading } = useAuth()
   const [classroom, setClassroom] = useState(null)
-  const [sessions, setSessions]   = useState([])
-  const [expanded, setExpanded]   = useState(null)
-  const [sessionData, setSessionData] = useState({})   // { [sessionId]: [{name, score, total}] }
-  const [loading, setLoading]     = useState(true)
+  const [sessions, setSessions] = useState([])
+  const [allResponses, setAllResponses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [view, setView] = useState('overview') // 'overview' | 'students' | 'sessions'
 
   useEffect(()=>{ if(!authLoading&&user) init() },[authLoading,user])
 
@@ -24,118 +19,129 @@ export default function GradebookPage({ params }) {
     const { data: cls } = await supabase.from('classrooms').select('*').eq('code',code).single()
     if (!cls) { setLoading(false); return }
     setClassroom(cls)
-    const { data: sess } = await supabase.from('classroom_sessions').select('*')
-      .eq('classroom_id',cls.id).order('created_at',{ascending:false})
+    const { data: sess } = await supabase.from('classroom_sessions').select('*').eq('classroom_id',cls.id).eq('status','closed').order('created_at',{ascending:false})
     setSessions(sess||[])
+    if (sess?.length) {
+      const ids = sess.map(s=>s.id)
+      const { data: resp } = await supabase.from('session_responses').select('*').in('session_id',ids)
+      setAllResponses(resp||[])
+    }
     setLoading(false)
   }
 
-  async function loadSession(sessionId) {
-    if (sessionData[sessionId]) { setExpanded(expanded===sessionId?null:sessionId); return }
-    const { data: rows } = await supabase.from('session_responses').select('*').eq('session_id',sessionId)
-    const scores = {}
-    ;(rows||[]).forEach(r=>{
-      if(!scores[r.student_name]) scores[r.student_name]={score:0,total:0}
-      if(r.is_correct===true) scores[r.student_name].score++
-      if(r.is_correct!==null) scores[r.student_name].total++
-    })
-    const list = Object.entries(scores).map(([name,{score,total}])=>({name,score,total,pct:total>0?Math.round(score/total*100):null}))
-      .sort((a,b)=>(b.pct||0)-(a.pct||0))
-    setSessionData(d=>({...d,[sessionId]:list}))
-    setExpanded(sessionId)
+  // Build student × session score matrix
+  const studentScores = {}
+  allResponses.forEach(r=>{
+    if (!studentScores[r.student_name]) studentScores[r.student_name] = {}
+    const sess = sessions.find(s=>s.id===r.session_id)
+    if (!sess) return
+    if (!studentScores[r.student_name][r.session_id]) studentScores[r.student_name][r.session_id] = {score:0,total:0}
+    if (r.is_correct===true) studentScores[r.student_name][r.session_id].score++
+    if (r.is_correct!==null) studentScores[r.student_name][r.session_id].total++
+  })
+  const students = Object.keys(studentScores).sort()
+
+  function studentAvg(name) {
+    const scores = Object.values(studentScores[name]||{})
+    if (!scores.length) return null
+    const total = scores.reduce((a,s)=>a+(s.total>0?s.score/s.total*100:0),0)
+    return Math.round(total/scores.length)
   }
 
-  async function deleteSession(id) {
-    if (!confirm('Delete this session and all its responses?')) return
-    await supabase.from('classroom_sessions').delete().eq('id',id)
-    setSessions(s=>s.filter(x=>x.id!==id))
-    if (expanded===id) setExpanded(null)
+  function sessionAvg(sessionId) {
+    const relevant = allResponses.filter(r=>r.session_id===sessionId&&r.is_correct!==null)
+    if (!relevant.length) return null
+    const byStudent = {}
+    relevant.forEach(r=>{ if(!byStudent[r.student_name])byStudent[r.student_name]={score:0,total:0}; if(r.is_correct)byStudent[r.student_name].score++; byStudent[r.student_name].total++ })
+    const vals = Object.values(byStudent)
+    return Math.round(vals.reduce((a,v)=>a+(v.total>0?v.score/v.total*100:0),0)/vals.length)
   }
 
-  if (loading) return <div className="p-6 flex items-center justify-center"><span className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/></div>
-  if (!classroom) return <div className="p-6"><p className="text-t2">Classroom not found.</p></div>
+  function gradeColor(pct) {
+    if (pct===null) return 'text-t3'
+    if (pct>=90) return 'text-emerald-600'
+    if (pct>=70) return 'text-blue-600'
+    if (pct>=60) return 'text-amber-600'
+    return 'text-red-500'
+  }
+
+  function printGradeBook() {
+    const rows = students.map(name=>{
+      const sessData = sessions.map(s=>{
+        const sc = studentScores[name]?.[s.id]
+        return sc ? (sc.total>0?Math.round(sc.score/sc.total*100)+'%':'SA') : '—'
+      }).join('</td><td style="padding:6px 10px;border:1px solid #e5e7eb">')
+      const avg = studentAvg(name)
+      return `<tr><td style="padding:6px 10px;border:1px solid #e5e7eb;font-weight:600">${name}</td><td style="padding:6px 10px;border:1px solid #e5e7eb">${rows}</td><td style="padding:6px 10px;border:1px solid #e5e7eb;font-weight:700;color:${avg>=90?'#059669':avg>=70?'#2563eb':avg>=60?'#d97706':'#dc2626'}">${avg!==null?avg+'%':'—'}</td></tr>`
+    }).join('')
+    const headers = ['Student',...sessions.map(s=>s.title.substring(0,20)),'Avg'].map(h=>`<th style="padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;text-align:left;font-size:11px">${h}</th>`).join('')
+    printContent(classroom.name+' — Grade Book', `<h1>${classroom.name}</h1><div class="meta">Grade Book · ${students.length} students · ${sessions.length} sessions</div><div style="overflow-x:auto;margin-top:16px"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table></div>`)
+  }
+
+  if (loading) return <div className="p-6 flex items-center justify-center min-h-64"><span className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/></div>
 
   return (
-    <div className="p-6 max-w-4xl mx-auto w-full">
-      <div className="mb-6">
-        <a href={'/teach/'+code} className="text-[12px] text-blue-500 hover:underline">← Back to Classroom</a>
-        <h1 className="text-2xl font-bold text-t1 mt-1">{classroom.name} — Grade Book</h1>
-        <p className="text-sm text-t2">{sessions.length} session{sessions.length!==1?'s':''} total</p>
+    <div className="p-6 max-w-5xl mx-auto w-full">
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <a href={'/teach/'+code} className="text-[12px] text-blue-500 hover:underline block mb-1">← Back to Live</a>
+          <h1 className="text-2xl font-bold text-t1">Grade Book</h1>
+          <p className="text-sm text-t2 mt-0.5">{classroom?.name} · {students.length} students · {sessions.length} sessions</p>
+        </div>
+        <button onClick={printGradeBook} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 flex items-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print Grade Book
+        </button>
       </div>
 
-      {sessions.length===0 && (
-        <div className="text-center py-12 bg-surface border border-line rounded-xl">
-          <p className="text-t2 text-sm">No sessions yet. Go live to start collecting grades.</p>
+      {sessions.length===0 ? (
+        <div className="border-2 border-dashed border-line rounded-2xl p-14 text-center">
+          <div className="text-4xl mb-3">📊</div>
+          <p className="text-t1 font-semibold mb-1">No closed sessions yet</p>
+          <p className="text-sm text-t2">Grades appear here after you close a live session.</p>
+        </div>
+      ) : (
+        <div className="bg-surface border border-line rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b border-line">
+                  <th className="text-left px-5 py-3 font-bold text-t1 bg-surface2 sticky left-0 min-w-36">Student</th>
+                  {sessions.map(s=>(
+                    <th key={s.id} className="text-center px-4 py-3 font-semibold text-t3 text-[11px] uppercase bg-surface2 min-w-28 whitespace-nowrap">{s.title.substring(0,18)}</th>
+                  ))}
+                  <th className="text-center px-4 py-3 font-bold text-t1 bg-surface2 min-w-20">Avg</th>
+                </tr>
+                <tr className="border-b-2 border-line">
+                  <td className="px-5 py-2 text-[11px] text-t3 bg-surface sticky left-0">Class avg</td>
+                  {sessions.map(s=>{ const avg=sessionAvg(s.id); return <td key={s.id} className={`text-center px-4 py-2 text-[12px] font-bold ${gradeColor(avg)}`}>{avg!==null?avg+'%':'—'}</td> })}
+                  <td className="text-center px-4 py-2"></td>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((name,idx)=>{
+                  const avg = studentAvg(name)
+                  return (
+                    <tr key={name} className={'border-b border-line '+(idx%2===0?'bg-surface':'bg-surface2/50')}>
+                      <td className="px-5 py-3 font-semibold text-t1 sticky left-0 bg-inherit">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-blue-500/10 text-blue-600 text-[10px] font-bold flex items-center justify-center">{name.charAt(0).toUpperCase()}</span>
+                          {name}
+                        </div>
+                      </td>
+                      {sessions.map(s=>{
+                        const sc = studentScores[name]?.[s.id]
+                        const pct = sc?.total>0 ? Math.round(sc.score/sc.total*100) : null
+                        return <td key={s.id} className={`text-center px-4 py-3 text-[13px] font-semibold ${gradeColor(pct)}`}>{sc?pct!==null?pct+'%':'SA':'—'}</td>
+                      })}
+                      <td className={`text-center px-4 py-3 font-black text-base ${gradeColor(avg)}`}>{avg!==null?avg+'%':'—'}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
-
-      <div className="space-y-3">
-        {sessions.map(sess=>{
-          const qs = sess.quiz_data?.questions||[]
-          const isHomework = !!sess.quiz_data?.homework
-          const isOpen = expanded===sess.id
-          const data = sessionData[sess.id]||[]
-          const avgPct = data.length>0 ? Math.round(data.filter(s=>s.pct!==null).reduce((a,s)=>a+s.pct,0)/data.filter(s=>s.pct!==null).length) : null
-          return (
-            <div key={sess.id} className="bg-surface border border-line rounded-xl overflow-hidden">
-              <div className="flex items-center gap-3 p-4 cursor-pointer hover:bg-surface2 transition-colors" onClick={()=>loadSession(sess.id)}>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm font-bold text-t1 truncate">{sess.title}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isHomework?'bg-amber-500/10 text-amber-500':sess.status==='closed'?'bg-surface2 text-t3':'bg-emerald-500/10 text-emerald-500'}`}>
-                      {isHomework?'📋 Homework':sess.status==='closed'?'Closed':'Active'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-[11px] text-t3">
-                    <span>{timeAgo(sess.created_at)}</span>
-                    <span>·</span>
-                    <span>{qs.length} questions</span>
-                    {isHomework&&sess.quiz_data?.due_date&&<><span>·</span><span>Due {new Date(sess.quiz_data.due_date).toLocaleDateString()}</span></>}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  {data.length>0&&<div className="text-center">
-                    <div className="text-lg font-black text-blue-600">{data.length}</div>
-                    <div className="text-[10px] text-t3">submitted</div>
-                  </div>}
-                  {avgPct!==null&&<div className="text-center">
-                    <div className={`text-lg font-black ${avgPct>=70?'text-emerald-600':avgPct>=50?'text-amber-500':'text-red-500'}`}>{avgPct}%</div>
-                    <div className="text-[10px] text-t3">avg</div>
-                  </div>}
-                  <button onClick={e=>{e.stopPropagation();deleteSession(sess.id)}} className="text-red-400 hover:text-red-600 text-sm px-2 h-7 border border-red-200 dark:border-red-500/30 rounded-lg">✕</button>
-                  <span className="text-t3 text-sm">{isOpen?'▲':'▼'}</span>
-                </div>
-              </div>
-              {isOpen&&(
-                <div className="border-t border-line p-4">
-                  {data.length===0 ? <p className="text-sm text-t3 text-center py-4">No submissions for this session.</p> : (
-                    <table className="w-full">
-                      <thead><tr className="text-left">
-                        <th className="text-[11px] font-bold text-t3 uppercase pb-2">Student</th>
-                        <th className="text-[11px] font-bold text-t3 uppercase pb-2">Score</th>
-                        <th className="text-[11px] font-bold text-t3 uppercase pb-2">Grade</th>
-                      </tr></thead>
-                      <tbody className="divide-y divide-line">
-                        {data.map(s=>(
-                          <tr key={s.name}>
-                            <td className="py-2 text-sm font-medium text-t1">{s.name}</td>
-                            <td className="py-2 text-sm text-t2">{s.pct!==null?`${s.score}/${s.total}`:'Short answer'}</td>
-                            <td className="py-2">
-                              <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${s.pct===null?'bg-surface2 text-t3':s.pct>=90?'bg-emerald-500/10 text-emerald-600':s.pct>=70?'bg-blue-500/10 text-blue-600':s.pct>=60?'bg-amber-500/10 text-amber-600':'bg-red-500/10 text-red-600'}`}>
-                                {s.pct===null?'Pending':s.pct+'%'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
     </div>
   )
 }
