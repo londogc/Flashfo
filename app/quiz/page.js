@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem, deleteItem } from '@/lib/savedItems'
-import { printContent, quizToPrintHtml } from '@/lib/exportPdf'
 import UploadInput from '@/components/UploadInput'
 
 // ── TTS Button ─────────────────────────────────────────────────────────────
@@ -555,11 +554,7 @@ export default function QuizPage({ initialQuiz }) {
             </button>
             <button onClick={()=>setShowKey(true)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 flex items-center gap-1.5">
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="7"/><path d="M8 5v4m0 2.5v.5"/></svg>Answer Key</button>
-            <button onClick={()=>printContent(topic+' — Quiz', quizToPrintHtml(questions,topic,false))} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 flex items-center gap-1.5">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print Quiz</button>
-            <button onClick={()=>printContent(topic+' — Answer Key', quizToPrintHtml(questions,topic,true))} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 flex items-center gap-1.5">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print Key</button>
-            <button onClick={()=>setEditMode(true)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2">Edit / Add Questions</button>
+Edit / Add Questions</button>
             {user&&<button onClick={()=>{setSaveTitle(topic);setShowSaveDialog(true)}} className="h-9 px-4 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 flex items-center gap-1.5">
               💾 {savedId?'Update Save':'Save Quiz'}</button>}
             {saveFeedback&&<span className="text-[12px] text-emerald-500 font-medium">{saveFeedback}</span>}
