@@ -212,11 +212,19 @@ export default function Shell({ children }) {
       {isMobile && (
         <nav style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:100, background:'var(--c-surface)', borderTop:'1px solid var(--c-line)', display:'flex', alignItems:'center', justifyContent:'space-around', padding:'6px 4px', paddingBottom:'calc(6px + env(safe-area-inset-bottom, 0px))' }}>
           {NAV.map(item => (
-            <Link key={item.href} href={item.href} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 12px', borderRadius:12, textDecoration:'none', background: pathname===item.href?'rgba(29,78,216,0.1)':'transparent', color: pathname===item.href?'#3b82f6':'var(--c-t3)', transition:'all 0.1s' }}>
+            <Link key={item.href} href={item.href} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 8px', borderRadius:12, textDecoration:'none', background: pathname===item.href?'rgba(29,78,216,0.1)':'transparent', color: pathname===item.href?'#3b82f6':'var(--c-t3)', transition:'all 0.1s' }}>
               <I d={ICONS[item.icon]} s={18}/>
               <span style={{ fontSize:9, fontWeight:600 }}>{item.label}</span>
             </Link>
           ))}
+          <button onClick={toggleDark} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 8px', borderRadius:12, border:'none', background:'transparent', color:'var(--c-t3)', cursor:'pointer' }}>
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              {dark
+                ? <path d="M8 1v1M8 14v1M1 8h1M14 8h1M3 3l.7.7M12.3 12.3l.7.7M3 13l.7-.7M12.3 3.7l.7-.7M11 8a3 3 0 11-6 0 3 3 0 016 0z"/>
+                : <path d="M13 8.5A5.5 5.5 0 016 2a6 6 0 100 12 5.5 5.5 0 007-5.5z"/>}
+            </svg>
+            <span style={{ fontSize:9, fontWeight:600 }}>{dark ? 'Light' : 'Dark'}</span>
+          </button>
         </nav>
       )}
     </div>
