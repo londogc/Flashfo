@@ -14,7 +14,12 @@ export default function HistoryBar() {
   }, [])
 
   useEffect(() => {
-    fetch('/api/history')
+    // Use the user's LOCAL date so west coast users see the right day
+    const now = new Date()
+    const month = String(now.getMonth() + 1)
+    const day   = String(now.getDate())
+    const year  = String(now.getFullYear())
+    fetch('/api/history?month=' + month + '&day=' + day + '&year=' + year)
       .then(r => r.json())
       .then(d => { if (!d.error) setEvent(d) })
       .catch(() => {})
@@ -35,9 +40,7 @@ export default function HistoryBar() {
       alignItems:'center', gap:20,
     }}>
       <div style={{ flexShrink:0, marginBottom: mobile ? 10 : 0 }}>
-        <div style={{ fontSize:9, fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:3 }}>
-          This Day in History
-        </div>
+        <div style={{ fontSize:9, fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:3 }}>This Day in History</div>
         <div style={{ fontSize:14, fontWeight:700, color:'white' }}>{event.fullDate}</div>
       </div>
       {!mobile && <div style={{ width:1, height:36, background:'rgba(255,255,255,0.1)', flexShrink:0 }}/>}
@@ -45,17 +48,10 @@ export default function HistoryBar() {
         <span style={{ fontWeight:700, color:'white' }}>{event.year} — </span>{event.text}
       </p>
       <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
-        <span style={{ fontSize:10, background:'rgba(255,255,255,0.06)', color:'#64748b', padding:'4px 10px', borderRadius:99, fontWeight:500 }}>
-          History
-        </span>
-        {event.wikiUrl ? (
-          <a href={event.wikiUrl} target="_blank" rel="noopener noreferrer"
-            style={{ fontSize:11, color:'#60a5fa', fontWeight:600, textDecoration:'none' }}>
-            Learn more →
-          </a>
-        ) : (
-          <span style={{ fontSize:11, color:'#374151', fontWeight:500 }}>Learn more →</span>
-        )}
+        <span style={{ fontSize:10, background:'rgba(255,255,255,0.06)', color:'#64748b', padding:'4px 10px', borderRadius:99, fontWeight:500 }}>History</span>
+        {event.wikiUrl
+          ? <a href={event.wikiUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize:11, color:'#60a5fa', fontWeight:600, textDecoration:'none' }}>Learn more →</a>
+          : <span style={{ fontSize:11, color:'#374151', fontWeight:500 }}>Learn more →</span>}
       </div>
     </div>
   )
