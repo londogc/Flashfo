@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 
@@ -300,6 +300,16 @@ export default function QuizPage() {
   const [savedId, setSavedId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saveFeedback, setSaveFeedback] = useState('')
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false)
+  const [pendingNav, setPendingNav] = useState(null)
+
+  // Warn before leaving with unsaved generated quiz
+  useEffect(() => {
+    if (!questions.length || savedId) return
+    const handler = (e) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [questions.length, savedId])
   const [showSave, setShowSave] = useState(false)
   const [saveTitle, setSaveTitle] = useState('')
 
@@ -384,6 +394,21 @@ export default function QuizPage() {
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Quiz</h1>
       <p className="text-sm text-t2 mb-6">Generate a quiz on any topic and test your knowledge.</p>
 
+      {showUnsavedModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{background:'rgba(0,0,0,0.6)'}}>
+          <div className="bg-surface border border-line rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center">
+            <div className="text-3xl mb-3">⚠️</div>
+            <h3 className="text-base font-bold text-t1 mb-2">Unsaved Progress</h3>
+            <p className="text-sm text-t2 mb-5">You have a generated quiz that hasn't been saved. Save it to My Stuff before leaving?</p>
+            <div className="flex gap-2">
+              <button onClick={() => { setShowUnsavedModal(false); setShowSave(true) }}
+                className="flex-1 h-9 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800">Save Quiz</button>
+              <button onClick={() => { setShowUnsavedModal(false); setQuestions([]); setSavedId(null) }}
+                className="h-9 px-4 bg-surface border border-line text-t2 text-sm rounded-xl hover:bg-surface2">Discard</button>
+            </div>
+          </div>
+        </div>
+      )}
       {showKey && <AnswerKeyModal questions={questions} topic={topic} onClose={() => setShowKey(false)}/>}
 
       {showSave && (
@@ -602,7 +627,7 @@ export default function QuizPage() {
               </button>
             )}
             {saveFeedback && <span className="text-[12px] text-emerald-500 font-medium">{saveFeedback}</span>}
-            <button onClick={() => { setQuestions([]); setError(''); setSavedId(null) }}
+            <button onClick={() => { if (questions.length && !savedId) { setShowUnsavedModal(true) } else { setQuestions([]); setError(''); setSavedId(null) } }}
               className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 ml-auto">
               New Quiz
             </button>
