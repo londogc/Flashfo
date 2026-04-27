@@ -332,7 +332,7 @@ export default function QuizPage({ initialQuiz }) {
     onSave={qs=>{setQuestions(qs);setEditMode(false);setSelected({});setSaInputs({});setSaGrades({});setSubmitted(false)}}
     onCancel={()=>setEditMode(false)}/>
 
-  const breakdownTotal = breakdown.mcq + breakdown.tf + breakdown.sa + breakdown.fitb + breakdown.match
+  const breakdownTotal = breakdown.mcq + breakdown.tf + breakdown.sa + (breakdown.fitb||0) + (breakdown.match||0) + breakdown.fitb + breakdown.match
 
   return (
     <div className="p-6 max-w-3xl mx-auto w-full">
