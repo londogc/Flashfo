@@ -196,6 +196,19 @@ function JoinInner() {
       {/* Sticky submit bar */}
       <div className="fixed bottom-0 left-0 right-0 border-t px-4 py-4 flex items-center justify-between" style={{background:'var(--c-surface)',borderColor:'var(--c-line)'}}>
         <p className="text-sm" style={{color:'var(--c-t2)'}}>{answered < questions.length ? questions.length-answered+' question'+(questions.length-answered!==1?'s':'')+' remaining' : 'All answered — ready to submit!'}</p>
+        {mode === 'homework' && (
+          <div className="mb-4 p-3 bg-blue-500/10 border border-blue-400/20 rounded-xl flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-blue-600">Need help understanding something?</p>
+              <p className="text-[11px] text-t3 mt-0.5">Nova can explain concepts — opens in a new tab so you don't lose progress</p>
+            </div>
+            <a href="/ai-tutor" target="_blank" rel="noopener noreferrer"
+              className="h-8 px-3 bg-blue-700 text-white text-[12px] font-semibold rounded-lg hover:bg-blue-800 flex-shrink-0 flex items-center gap-1.5">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="8" cy="8" r="7"/><circle cx="8" cy="8" r="3"/></svg>
+              Ask Nova
+            </a>
+          </div>
+        )}
         <button onClick={submit} disabled={submitting||answered<questions.length}
           className="h-10 px-6 bg-blue-700 text-white text-sm font-bold rounded-xl hover:bg-blue-800 disabled:opacity-40 transition-colors">
           {submitting ? 'Submitting...' : 'Submit Quiz'}
