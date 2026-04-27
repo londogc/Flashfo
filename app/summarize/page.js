@@ -2,6 +2,8 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem } from '@/lib/savedItems'
+import { printContent } from '@/lib/exportPdf'
+import UploadGenerate from '@/components/UploadGenerate'
 
 function printPDF(title, text) {
   const win = window.open('','_blank')
@@ -55,6 +57,7 @@ export default function SummarizePage() {
     <div className="p-6 max-w-3xl mx-auto w-full">
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Summarize</h1>
       <p className="text-sm text-t2 mb-6">Paste text, upload a file, or enter a URL to get a clean summary.</p>
+      <div className="mb-3"><UploadGenerate onTextExtracted={t=>{setInput(t)}}/></div>
       <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
         <UploadInput onText={t=>setInputText(t)} placeholder="Paste text, article content, or notes here..."/>
       </div>
