@@ -178,10 +178,9 @@ export default function Shell({ children }) {
           )}
           <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
             {isMobile && mounted && (
-              <button onClick={toggleDark} style={{ width:36, height:36, borderRadius:10, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--c-t2)', flexShrink:0, overflow:'visible' }}>
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                  {dark ? <path d="M8 1v1M8 14v1M1 8h1M14 8h1M3 3l.7.7M12.3 12.3l.7.7M3 13l.7-.7M12.3 3.7l.7-.7M11 8a3 3 0 11-6 0 3 3 0 016 0z"/> : <path d="M13 8.5A5.5 5.5 0 016 2a6 6 0 100 12 5.5 5.5 0 007-5.5z"/>}
-                </svg>
+              <button onClick={toggleDark} style={{ height:32, padding:'0 10px', borderRadius:20, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', display:'flex', alignItems:'center', gap:5, color:'var(--c-t2)', flexShrink:0, fontSize:12, fontWeight:500 }}>
+                <span style={{ fontSize:14, lineHeight:1 }}>{dark ? '☀️' : '🌙'}</span>
+                <span>{dark ? 'Light' : 'Dark'}</span>
               </button>
             )}
             {!authLoading && !user && (
