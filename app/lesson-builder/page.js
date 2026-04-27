@@ -2,6 +2,8 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem } from '@/lib/savedItems'
+import { printContent } from '@/lib/exportPdf'
+import UploadGenerate from '@/components/UploadGenerate'
 
 function printPDF(title, text) {
   const win = window.open('','_blank')
@@ -60,6 +62,7 @@ export default function LessonBuilderPage() {
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Lesson Builder</h1>
       <p className="text-sm text-t2 mb-6">Build a complete lesson plan from a topic, notes, or uploaded material.</p>
 
+      <div className="mb-3"><UploadGenerate onTextExtracted={t=>{setForm(f=>({...f,topic:t.substring(0,200)}))}} label="Fill from file or URL"/></div>
       <div className="bg-surface border border-line rounded-2xl p-5 space-y-4 mb-4">
         <UploadInput onText={t=>{setInputText(t);set('topic',t.substring(0,120))}} placeholder="Enter a topic (e.g. The Water Cycle, World War II)"/>
         {[{k:'grade',label:'Grade / Level',ph:'e.g. Grade 8, High School'},{k:'duration',label:'Duration',ph:'e.g. 45 minutes'},{k:'objectives',label:'Learning Objectives',ph:'Students will be able to...'}].map(({k,label,ph})=>(
