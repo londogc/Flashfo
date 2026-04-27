@@ -74,10 +74,12 @@ export default function Shell({ children }) {
   const { user, profile, loading: authLoading, signOut } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
   const [dark, setDark] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const check = () => setIsMobile(window.innerWidth < 768)
     check(); window.addEventListener('resize', check)
     const saved = localStorage.getItem('ff-theme')
@@ -169,6 +171,13 @@ export default function Shell({ children }) {
             </span>
           )}
           <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
+            {isMobile && mounted && (
+              <button onClick={toggleDark} style={{ width:32, height:32, borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--c-t2)', flexShrink:0 }}>
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                  {dark ? <path d="M8 1v1M8 14v1M1 8h1M14 8h1M3 3l.7.7M12.3 12.3l.7.7M3 13l.7-.7M12.3 3.7l.7-.7M11 8a3 3 0 11-6 0 3 3 0 016 0z"/> : <path d="M13 8.5A5.5 5.5 0 016 2a6 6 0 100 12 5.5 5.5 0 007-5.5z"/>}
+                </svg>
+              </button>
+            )}
             {!authLoading && !user && (
               <a href="/auth" style={{ height:32, padding:'0 14px', fontSize:12, fontWeight:600, background:'#1d4ed8', color:'white', borderRadius:8, display:'inline-flex', alignItems:'center', textDecoration:'none' }}>
                 Sign in
@@ -218,14 +227,10 @@ export default function Shell({ children }) {
               <span style={{ fontSize:9, fontWeight:600 }}>{item.label}</span>
             </Link>
           ))}
-          <button onClick={toggleDark} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 8px', borderRadius:12, border:'none', background:'transparent', color:'var(--c-t3)', cursor:'pointer' }}>
-            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              {dark
-                ? <path d="M8 1v1M8 14v1M1 8h1M14 8h1M3 3l.7.7M12.3 12.3l.7.7M3 13l.7-.7M12.3 3.7l.7-.7M11 8a3 3 0 11-6 0 3 3 0 016 0z"/>
-                : <path d="M13 8.5A5.5 5.5 0 016 2a6 6 0 100 12 5.5 5.5 0 007-5.5z"/>}
-            </svg>
-            <span style={{ fontSize:9, fontWeight:600 }}>{dark ? 'Light' : 'Dark'}</span>
-          </button>
+          <Link href="/ai-tutor" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 8px', borderRadius:12, textDecoration:'none', background: pathname==='/ai-tutor'?'rgba(99,102,241,0.1)':'transparent', color: pathname==='/ai-tutor'?'#6366f1':'var(--c-t3)', transition:'all 0.1s' }}>
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="8" cy="8" r="7"/><circle cx="8" cy="8" r="3"/></svg>
+            <span style={{ fontSize:9, fontWeight:600 }}>Nova</span>
+          </Link>
         </nav>
       )}
     </div>
