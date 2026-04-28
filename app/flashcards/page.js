@@ -129,10 +129,10 @@ export default function FlashcardsPage() {
             <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider">Number of Cards</div>
             <div className="text-[18px] font-bold text-blue-600">{count}</div>
           </div>
-          <input type="range" min={5} max={30} step={1} value={count}
-            onChange={e => setCount(Number(e.target.value))}
+          <input type="range" min={10} max={30} step={1} value={count}
+            onChange={e => setCount(Number(e.target.value))} onInput={e => setCount(Number(e.target.value))}
             className="w-full accent-blue-600 cursor-pointer h-2 rounded-full" style={{ display:'block' }}/>
-          <div className="flex justify-between text-[10px] text-t3 mt-1.5"><span>5</span><span>10</span><span>20</span><span>30</span></div>
+          <div className="flex justify-between text-[10px] text-t3 mt-1.5"><span>10</span><span>10</span><span>20</span><span>30</span></div>
         </div>
         {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
         <button onClick={generate} disabled={loading || !topic.trim()}
