@@ -14,6 +14,14 @@ function renderStudyGuide(text) {
     const line = lines[i]
     const trimmed = line.trim()
 
+    // Skip mnemonic / memory trick sections entirely
+    const lowerTrimmed = trimmed.toLowerCase()
+    if (lowerTrimmed.includes('memory trick') || lowerTrimmed.includes('mnemonic') || lowerTrimmed.includes('memory aids')) {
+      // Skip this heading AND everything until the next --- or ###
+      while (i + 1 < lines.length && !lines[i+1].trim().startsWith('---') && !lines[i+1].trim().startsWith('###')) i++
+      continue
+    }
+
     // Skip dividers
     if (trimmed === '---' || trimmed === '') {
       if (trimmed === '' && elements.length > 0) {
@@ -117,7 +125,7 @@ export default function StudyGuidePage() {
     try {
       const depthNote = depth === 'quick' ? ' Keep it concise, key points only.' : depth === 'deep' ? ' Be comprehensive and thorough with examples.' : ''
       const res = await fetch('/api/rpc', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fn: 'generateStudyGuideFromText', args: [topic.trim() + depthNote + ' Write in an engaging, student-friendly tone. Use clear section headings without ### symbols. Write bullet points as plain text without ** markers. Make it feel like a knowledgeable teacher wrote this, not a textbook. Be direct, real, and interesting.', 'English'] }) })
+        body: JSON.stringify({ fn: 'generateStudyGuideFromText', args: [topic.trim() + depthNote + ' Write in an engaging, student-friendly tone. Use clear section headings without ### symbols. Write bullet points as plain text without ** markers. Make it feel like a knowledgeable teacher wrote this, not a textbook. Be direct, real, and interesting. Do NOT include a Memory Tricks or Mnemonics section.', 'English'] }) })
       const data = await res.json()
       if (data.error) { setError(data.error); return }
       const result = typeof data.result === 'string' ? data.result : JSON.stringify(data.result)
