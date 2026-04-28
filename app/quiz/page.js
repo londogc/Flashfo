@@ -475,10 +475,10 @@ export default function QuizPage() {
             </div>
             {typeId !== 'mixed' && (
               <>
-                <input type="range" min={3} max={35} step={1} value={count}
-                  onChange={e => setCount(Number(e.target.value))}
+                <input type="range" min={5} max={35} step={1} value={count}
+                  onChange={e => setCount(Number(e.target.value))} onInput={e => setCount(Number(e.target.value))}
                   className="w-full accent-blue-600 cursor-pointer" style={{ height: 4 }}/>
-                <div className="flex justify-between text-[10px] text-t3 mt-1.5"><span>3</span><span>10</span><span>20</span><span>35</span></div>
+                <div className="flex justify-between text-[10px] text-t3 mt-1.5"><span>5</span><span>10</span><span>20</span><span>35</span></div>
               </>
             )}
           </div>
