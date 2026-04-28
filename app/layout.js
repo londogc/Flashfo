@@ -19,8 +19,9 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <style dangerouslySetInnerHTML={{ __html: `
-          html{background-color:#f1f5f9}
-          html.dark{background-color:#0d1117;color-scheme:dark}
+          *,*::before,*::after{box-sizing:border-box}
+          html,body{margin:0;padding:0;min-height:100%;background-color:#f1f5f9}
+          html.dark,html.dark body{background-color:#0d1117;color-scheme:dark}
           .ff-desktop-only{display:flex!important}
           @media(max-width:767px){.ff-desktop-only{display:none!important}aside{display:none!important}}
           .ff-mobile-only{display:none!important}
@@ -30,7 +31,7 @@ export default function RootLayout({ children }) {
           @media(min-width:768px)and(max-width:1099px){aside.ff-desktop-only{width:56px!important;min-width:56px!important;max-width:56px!important;overflow:hidden!important}}
           @media(max-width:767px){.ff-content{padding-bottom:80px!important}}
         `}}/>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('ff-theme');var d=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches);if(d){document.documentElement.classList.add('dark');document.documentElement.style.backgroundColor='#0d1117';}}catch(e){}})()`}}/>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('ff-theme');var d=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches);if(d){document.documentElement.classList.add('dark');document.documentElement.style.backgroundColor='#0d1117';document.body&&(document.body.style.backgroundColor='#0d1117');}}catch(e){}})()`}}/>
       </head>
       <body suppressHydrationWarning>
         {children}
