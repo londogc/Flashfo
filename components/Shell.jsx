@@ -52,7 +52,7 @@ const TOOLS = [
 const ADV = [
   { href:'/ai-tutor',       label:'Nova',          icon:'tutor',  nova:true },
   { href:'/resource-hub',   label:'Resource Hub',  icon:'mystuff' },
-  { href:'/ai-suite',       label:'AI Suite',      icon:'suite'   },
+  { href:'/ai-suite',       label:'Create',        icon:'suite'   },
   { href:'/source-library', label:'Source Library',icon:'sources' },
 ]
 
