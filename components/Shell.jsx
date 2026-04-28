@@ -243,12 +243,15 @@ export default function Shell({ children }) {
 
       {/* Mobile bottom nav */}
       {isMobile && (
-        <nav style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:100, background:'var(--c-surface)', borderTop:'1px solid var(--c-line)', display:'flex', alignItems:'flex-end', justifyContent:'space-around', height:64, paddingBottom:'env(safe-area-inset-bottom, 0px)', overflow:'visible' }}>
-
-          {/* Tool wheel overlay — covers everything ABOVE the nav bar only */}
+        <>
+          {/* Wheel overlay — covers content above nav only */}
           {plusOpen && (
-            <div onClick={()=>setPlusOpen(false)} style={{ position:'fixed', top:0, left:0, right:0, bottom:64, zIndex:99, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(10px)', WebkitBackdropFilter:'blur(10px)', display:'flex', flexDirection:'column', justifyContent:'flex-end', padding:'0 16px 16px' }}>
-              <div onClick={e=>e.stopPropagation()} style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+            <div onClick={()=>setPlusOpen(false)}
+              style={{ position:'fixed', top:0, left:0, right:0, bottom:64, zIndex:98,
+                background:'rgba(0,0,0,0.55)', backdropFilter:'blur(12px)', WebkitBackdropFilter:'blur(12px)',
+                display:'flex', flexDirection:'column', justifyContent:'flex-end', padding:'0 16px 16px' }}>
+              <div onClick={e=>e.stopPropagation()}
+                style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
                 {[
                   { href:'/quiz',           label:'Quiz',           icon:'M6 5.5a2.5 2.5 0 014.5 1.5c0 1.5-1.5 2-2 3V11m0 2.5v.5' },
                   { href:'/flashcards',     label:'Flashcards',     icon:'M4 3h9a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zM2 5H1v7a1 1 0 001 1h9' },
@@ -256,10 +259,15 @@ export default function Shell({ children }) {
                   { href:'/study-guide',    label:'Study Guide',    icon:'M1 3h6.5L9 4.5h6V13H9l-1.5-1.5H1zm0 0v10' },
                   { href:'/teach',          label:'Teacher Portal', icon:'M8 1a4 4 0 100 8 4 4 0 000-8zm-6 14c0-3.3 2.7-6 6-6s6 2.7 6 6' },
                   { href:'/student-portal', label:'Student Portal', icon:'M8 1l7 3.5-7 3.5-7-3.5zm-5 5.5v4c0 2 2.2 3 5 3s5-1 5-3V10' },
-                ].map((item) => (
+                ].map(item => (
                   <Link key={item.label} href={item.href} onClick={()=>setPlusOpen(false)}
-                    style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'14px 8px', borderRadius:16, background:'var(--c-surface)', border:'1px solid var(--c-line)', textDecoration:'none', transition:'all 0.15s' }}>
-                    <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"><path d={item.icon}/></svg>
+                    style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6,
+                      padding:'14px 8px', borderRadius:16,
+                      background:'var(--c-surface)', border:'1px solid var(--c-line)',
+                      textDecoration:'none' }}>
+                    <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round">
+                      <path d={item.icon}/>
+                    </svg>
                     <span style={{ fontSize:10, fontWeight:600, color:'var(--c-t1)', textAlign:'center', lineHeight:1.2 }}>{item.label}</span>
                   </Link>
                 ))}
@@ -267,36 +275,60 @@ export default function Shell({ children }) {
             </div>
           )}
 
-          {/* Dashboard */}
-          <Link href="/" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', gap:3, padding:'0 10px 10px', textDecoration:'none', color: pathname==='/'?'#3b82f6':'var(--c-t3)' }}>
-            <I d={ICONS['dashboard']} s={20}/>
-            <span style={{ fontSize:9, fontWeight:600 }}>Dashboard</span>
-          </Link>
-
-          {/* My Stuff */}
-          <Link href="/my-stuff" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', gap:3, padding:'0 10px 10px', textDecoration:'none', color: pathname==='/my-stuff'?'#3b82f6':'var(--c-t3)' }}>
-            <I d={ICONS['mystuff']} s={20}/>
-            <span style={{ fontSize:9, fontWeight:600 }}>My Stuff</span>
-          </Link>
-
-          {/* + button — sits flush at top of nav, centered horizontally */}
-          <button onClick={()=>setPlusOpen(o=>!o)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:52, height:52, background:'#2563eb', border:'none', borderRadius:16, cursor:'pointer', alignSelf:'flex-start', marginTop:0, flexShrink:0, transform: plusOpen ? 'rotate(45deg)' : 'rotate(0deg)', transition:'transform 0.2s', zIndex:101 }}>
-            <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M8 2v12M2 8h12"/></svg>
+          {/* + button — separate fixed element, top edge flush with nav top */}
+          <button onClick={()=>setPlusOpen(o=>!o)}
+            style={{ position:'fixed',
+              bottom:'calc(12px + env(safe-area-inset-bottom, 0px))',
+              left:'50%',
+              transform: 'translateX(-50%) rotate(' + (plusOpen ? '45deg' : '0deg') + ')',
+              width:52, height:52,
+              background:'#2563eb', border:'none', borderRadius:16,
+              cursor:'pointer', zIndex:101, transition:'transform 0.2s',
+              display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+              <path d="M8 2v12M2 8h12"/>
+            </svg>
           </button>
 
-          {/* Nova */}
-          <Link href="/ai-tutor" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', gap:3, padding:'0 10px 10px', textDecoration:'none', color: pathname==='/ai-tutor'?'#6366f1':'var(--c-t3)' }}>
-            <I d={ICONS['tutor']} s={20}/>
-            <span style={{ fontSize:9, fontWeight:600 }}>Nova</span>
-          </Link>
+          {/* Bottom nav bar — 4 items + invisible center spacer for + button */}
+          <nav style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:100,
+            background:'var(--c-surface)', borderTop:'1px solid var(--c-line)',
+            height:64, paddingBottom:'env(safe-area-inset-bottom, 0px)',
+            display:'flex', alignItems:'center', justifyContent:'space-around' }}>
 
-          {/* Settings */}
-          <Link href="/settings" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', gap:3, padding:'0 10px 10px', textDecoration:'none', color: pathname==='/settings'?'#3b82f6':'var(--c-t3)' }}>
-            <I d={ICONS['settings']} s={20}/>
-            <span style={{ fontSize:9, fontWeight:600 }}>Settings</span>
-          </Link>
+            <Link href="/" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3,
+              padding:'6px 12px', borderRadius:12, textDecoration:'none',
+              color: pathname==='/'?'#3b82f6':'var(--c-t3)' }}>
+              <I d={ICONS['dashboard']} s={20}/>
+              <span style={{ fontSize:9, fontWeight:600 }}>Dashboard</span>
+            </Link>
 
-        </nav>
+            <Link href="/my-stuff" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3,
+              padding:'6px 12px', borderRadius:12, textDecoration:'none',
+              color: pathname==='/my-stuff'?'#3b82f6':'var(--c-t3)' }}>
+              <I d={ICONS['mystuff']} s={20}/>
+              <span style={{ fontSize:9, fontWeight:600 }}>My Stuff</span>
+            </Link>
+
+            {/* Spacer so the + button doesn't overlap text */}
+            <div style={{ width:60, flexShrink:0 }}/>
+
+            <Link href="/ai-tutor" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3,
+              padding:'6px 12px', borderRadius:12, textDecoration:'none',
+              color: pathname==='/ai-tutor'?'#6366f1':'var(--c-t3)' }}>
+              <I d={ICONS['tutor']} s={20}/>
+              <span style={{ fontSize:9, fontWeight:600 }}>Nova</span>
+            </Link>
+
+            <Link href="/settings" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3,
+              padding:'6px 12px', borderRadius:12, textDecoration:'none',
+              color: pathname==='/settings'?'#3b82f6':'var(--c-t3)' }}>
+              <I d={ICONS['settings']} s={20}/>
+              <span style={{ fontSize:9, fontWeight:600 }}>Settings</span>
+            </Link>
+
+          </nav>
+        </>
       )}
     </div>
   )
