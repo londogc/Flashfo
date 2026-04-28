@@ -34,11 +34,12 @@ const NAV = [
   { href:'/create',         label:'Create',        icon:'create'     },
   { href:'/study',          label:'Study',         icon:'study'      },
   { href:'/teach',          label:'Teacher Portal', icon:'teach'      },
-  { href:'/my-stuff',       label:'My Stuff',      icon:'mystuff'    },
   { href:'/student-portal', label:'Student Portal', icon:'study'      },
+  { href:'/my-stuff',       label:'My Stuff',      icon:'mystuff'    },
 ]
 const TOOLS = [
   { href:'/summarize',      label:'Summarize',     icon:'summarize'  },
+  { href:'/study-guide',    label:'Study Guide',   icon:'study'      },
   { href:'/flashcards',     label:'Flashcards',    icon:'flashcards' },
   { href:'/quiz',           label:'Quiz',          icon:'quiz'       },
   { href:'/lesson-builder', label:'Lesson Builder',icon:'lesson'     },
@@ -46,7 +47,6 @@ const TOOLS = [
 ]
 const ADV = [
   { href:'/ai-tutor',       label:'Nova',          icon:'tutor'      },
-  { href:'/study-guide',    label:'Study Guide',   icon:'study'     },
   { href:'/resource-hub',   label:'Resource Hub',  icon:'mystuff'   },
   { href:'/ai-suite',       label:'AI Suite',      icon:'suite'      },
   { href:'/source-library', label:'Source Library',icon:'sources'    },
