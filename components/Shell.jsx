@@ -243,23 +243,23 @@ export default function Shell({ children }) {
 
       {/* Mobile bottom nav */}
       {isMobile && (
-        <nav style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:100, background:'var(--c-surface)', borderTop:'1px solid var(--c-line)', display:'flex', alignItems:'center', justifyContent:'space-around', padding:'6px 8px', paddingBottom:'calc(6px + env(safe-area-inset-bottom, 0px))', overflow:'visible' }}>
+        <nav style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:100, background:'var(--c-surface)', borderTop:'1px solid var(--c-line)', display:'flex', alignItems:'flex-end', justifyContent:'space-around', height:64, paddingBottom:'env(safe-area-inset-bottom, 0px)', overflow:'visible' }}>
 
-          {/* Tool wheel overlay */}
+          {/* Tool wheel overlay — covers everything ABOVE the nav bar only */}
           {plusOpen && (
-            <div onClick={()=>setPlusOpen(false)} style={{ position:'fixed', top:0, left:0, right:0, bottom:'calc(72px + env(safe-area-inset-bottom, 0px))', zIndex:99, background:'rgba(0,0,0,0.45)', backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)' }}>
-              <div onClick={e=>e.stopPropagation()} style={{ position:'absolute', bottom:'calc(72px + env(safe-area-inset-bottom,0px))', left:0, right:0, display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, padding:'16px 20px' }}>
+            <div onClick={()=>setPlusOpen(false)} style={{ position:'fixed', top:0, left:0, right:0, bottom:64, zIndex:99, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(10px)', WebkitBackdropFilter:'blur(10px)', display:'flex', flexDirection:'column', justifyContent:'flex-end', padding:'0 16px 16px' }}>
+              <div onClick={e=>e.stopPropagation()} style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
                 {[
-                  { href:'/create',       label:'Create',      icon:'M8 1l1.8 5H15l-4.4 3.2 1.7 5.2L8 11.2 3.7 14.4l1.7-5.2L1 6h5.2z' },
-                  { href:'/study',        label:'Study',       icon:'M2 4h12M2 8h8M2 12h10' },
-                  { href:'/quiz',         label:'Quiz',        icon:'M6 5.5a2.5 2.5 0 014.5 1.5c0 1.5-1.5 2-2 3V11m0 2.5v.5' },
-                  { href:'/flashcards',   label:'Flashcards',  icon:'M4 3h9a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zM2 5H1v7a1 1 0 001 1h9' },
-                  { href:'/summarize',    label:'Summarize',   icon:'M2 3h12v2.5H2zm0 4h8v2.5H2zm0 4h10v2H2' },
-                  { href:'/study-guide',  label:'Study Guide', icon:'M1 3h6.5L9 4.5h6V13H9l-1.5-1.5H1zm0 0v10' },
+                  { href:'/quiz',           label:'Quiz',           icon:'M6 5.5a2.5 2.5 0 014.5 1.5c0 1.5-1.5 2-2 3V11m0 2.5v.5' },
+                  { href:'/flashcards',     label:'Flashcards',     icon:'M4 3h9a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zM2 5H1v7a1 1 0 001 1h9' },
+                  { href:'/summarize',      label:'Summarize',      icon:'M2 3h12v2.5H2zm0 4h8v2.5H2zm0 4h10v2H2' },
+                  { href:'/study-guide',    label:'Study Guide',    icon:'M1 3h6.5L9 4.5h6V13H9l-1.5-1.5H1zm0 0v10' },
+                  { href:'/teach',          label:'Teacher Portal', icon:'M8 1a4 4 0 100 8 4 4 0 000-8zm-6 14c0-3.3 2.7-6 6-6s6 2.7 6 6' },
+                  { href:'/student-portal', label:'Student Portal', icon:'M8 1l7 3.5-7 3.5-7-3.5zm-5 5.5v4c0 2 2.2 3 5 3s5-1 5-3V10' },
                 ].map((item) => (
                   <Link key={item.label} href={item.href} onClick={()=>setPlusOpen(false)}
-                    style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'12px 8px', borderRadius:16, background:'var(--c-surface)', border:'1px solid var(--c-line)', textDecoration:'none', color:'var(--c-t2)', transition:'all 0.15s' }}>
-                    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"><path d={item.icon}/></svg>
+                    style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'14px 8px', borderRadius:16, background:'var(--c-surface)', border:'1px solid var(--c-line)', textDecoration:'none', transition:'all 0.15s' }}>
+                    <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"><path d={item.icon}/></svg>
                     <span style={{ fontSize:10, fontWeight:600, color:'var(--c-t1)', textAlign:'center', lineHeight:1.2 }}>{item.label}</span>
                   </Link>
                 ))}
@@ -268,30 +268,30 @@ export default function Shell({ children }) {
           )}
 
           {/* Dashboard */}
-          <Link href="/" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'4px 10px', borderRadius:12, textDecoration:'none', color: pathname==='/'?'#3b82f6':'var(--c-t3)', transition:'all 0.1s' }}>
+          <Link href="/" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', gap:3, padding:'0 10px 10px', textDecoration:'none', color: pathname==='/'?'#3b82f6':'var(--c-t3)' }}>
             <I d={ICONS['dashboard']} s={20}/>
             <span style={{ fontSize:9, fontWeight:600 }}>Dashboard</span>
           </Link>
 
           {/* My Stuff */}
-          <Link href="/my-stuff" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'4px 10px', borderRadius:12, textDecoration:'none', color: pathname==='/my-stuff'?'#3b82f6':'var(--c-t3)', transition:'all 0.1s' }}>
+          <Link href="/my-stuff" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', gap:3, padding:'0 10px 10px', textDecoration:'none', color: pathname==='/my-stuff'?'#3b82f6':'var(--c-t3)' }}>
             <I d={ICONS['mystuff']} s={20}/>
             <span style={{ fontSize:9, fontWeight:600 }}>My Stuff</span>
           </Link>
 
-          {/* + button */}
-          <button onClick={()=>setPlusOpen(o=>!o)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:52, height:52, background:'#2563eb', border:'none', borderRadius:16, cursor:'pointer', marginTop:-20, flexShrink:0, transform: plusOpen ? 'rotate(45deg)' : 'rotate(0deg)', transition:'all 0.2s', zIndex:101 }}>
+          {/* + button — sits flush at top of nav, centered horizontally */}
+          <button onClick={()=>setPlusOpen(o=>!o)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:52, height:52, background:'#2563eb', border:'none', borderRadius:16, cursor:'pointer', alignSelf:'flex-start', marginTop:0, flexShrink:0, transform: plusOpen ? 'rotate(45deg)' : 'rotate(0deg)', transition:'transform 0.2s', zIndex:101 }}>
             <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M8 2v12M2 8h12"/></svg>
           </button>
 
           {/* Nova */}
-          <Link href="/ai-tutor" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'4px 10px', borderRadius:12, textDecoration:'none', color: pathname==='/ai-tutor'?'#6366f1':'var(--c-t3)', transition:'all 0.1s' }}>
+          <Link href="/ai-tutor" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', gap:3, padding:'0 10px 10px', textDecoration:'none', color: pathname==='/ai-tutor'?'#6366f1':'var(--c-t3)' }}>
             <I d={ICONS['tutor']} s={20}/>
             <span style={{ fontSize:9, fontWeight:600 }}>Nova</span>
           </Link>
 
           {/* Settings */}
-          <Link href="/settings" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'4px 10px', borderRadius:12, textDecoration:'none', color: pathname==='/settings'?'#3b82f6':'var(--c-t3)', transition:'all 0.1s' }}>
+          <Link href="/settings" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', gap:3, padding:'0 10px 10px', textDecoration:'none', color: pathname==='/settings'?'#3b82f6':'var(--c-t3)' }}>
             <I d={ICONS['settings']} s={20}/>
             <span style={{ fontSize:9, fontWeight:600 }}>Settings</span>
           </Link>
