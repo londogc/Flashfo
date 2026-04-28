@@ -22,6 +22,8 @@ const ICONS = {
   lesson:     'M13 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V2a1 1 0 00-1-1zM5 5h6m-6 3h6m-6 3h4',
   search:     'M7 1a6 6 0 100 12A6 6 0 007 1zm7 14l-3-3',
   tutor:      'M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z',
+  guide:      'M1 3h6.5L9 4.5h6V13H9l-1.5-1.5H1zm0 0v10m6.5-10v10',
+  studentp:   'M8 1l7 3.5-7 3.5-7-3.5zm-5 5.5v4c0 2 2.2 3 5 3s5-1 5-3V10',
   suite:      'M8 1l1.5 4H14l-3.7 2.7 1.4 4.3L8 9.5 4.3 12 5.7 7.7 2 5h4.5z',
   sources:    'M1 5h3v9H1zm4-3h4v12H5zm5 2h4v10h-4z',
   sun:        'M8 1v2m0 10v2M1 8h2m10 0h2M3.5 3.5l1.5 1.5m6 6l1.5 1.5M3.5 12.5l1.5-1.5m6-6l1.5-1.5M8 5a3 3 0 100 6 3 3 0 000-6z',
@@ -34,12 +36,12 @@ const NAV = [
   { href:'/create',         label:'Create',        icon:'create'     },
   { href:'/study',          label:'Study',         icon:'study'      },
   { href:'/teach',          label:'Teacher Portal', icon:'teach'      },
-  { href:'/student-portal', label:'Student Portal', icon:'study'      },
+  { href:'/student-portal', label:'Student Portal', icon:'studentp'   },
   { href:'/my-stuff',       label:'My Stuff',      icon:'mystuff'    },
 ]
 const TOOLS = [
   { href:'/summarize',      label:'Summarize',     icon:'summarize'  },
-  { href:'/study-guide',    label:'Study Guide',   icon:'study'      },
+  { href:'/study-guide',    label:'Study Guide',   icon:'guide'      },
   { href:'/flashcards',     label:'Flashcards',    icon:'flashcards' },
   { href:'/quiz',           label:'Quiz',          icon:'quiz'       },
   { href:'/lesson-builder', label:'Lesson Builder',icon:'lesson'     },
