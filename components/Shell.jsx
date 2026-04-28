@@ -240,7 +240,7 @@ export default function Shell({ children }) {
 
           {/* Tool wheel overlay */}
           {plusOpen && (
-            <div onClick={()=>setPlusOpen(false)} style={{ position:'fixed', inset:0, zIndex:99, background:'rgba(0,0,0,0.45)', backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)' }}>
+            <div onClick={()=>setPlusOpen(false)} style={{ position:'fixed', top:0, left:0, right:0, bottom:'calc(72px + env(safe-area-inset-bottom, 0px))', zIndex:99, background:'rgba(0,0,0,0.45)', backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)' }}>
               <div onClick={e=>e.stopPropagation()} style={{ position:'absolute', bottom:'calc(72px + env(safe-area-inset-bottom,0px))', left:0, right:0, display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, padding:'16px 20px' }}>
                 {[
                   { href:'/create',       label:'Create',      icon:'M8 1l1.8 5H15l-4.4 3.2 1.7 5.2L8 11.2 3.7 14.4l1.7-5.2L1 6h5.2z' },
@@ -273,7 +273,7 @@ export default function Shell({ children }) {
           </Link>
 
           {/* + button */}
-          <button onClick={()=>setPlusOpen(o=>!o)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:52, height:52, background:'#2563eb', border:'none', borderRadius:16, cursor:'pointer', marginTop:-10, flexShrink:0, transform: plusOpen ? 'rotate(45deg)' : 'rotate(0deg)', transition:'all 0.2s', zIndex:101 }}>
+          <button onClick={()=>setPlusOpen(o=>!o)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:52, height:52, background:'#2563eb', border:'none', borderRadius:16, cursor:'pointer', marginTop:-20, flexShrink:0, transform: plusOpen ? 'rotate(45deg)' : 'rotate(0deg)', transition:'all 0.2s', zIndex:101 }}>
             <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M8 2v12M2 8h12"/></svg>
           </button>
 
