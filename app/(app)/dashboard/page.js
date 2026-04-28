@@ -128,7 +128,18 @@ export default function DashboardPage() {
   const subjectColors = classes.map((cls, i) => ({ ...cls, color: SUBJECT_COLORS[i % SUBJECT_COLORS.length] }))
 
   return (
-    <div style={{ padding: '24px 24px 0', maxWidth: 1100, margin: '0 auto' }}>
+    <div style={{ padding: 'clamp(14px,3vw,24px) clamp(12px,3vw,24px) 0', maxWidth: 1100, margin: '0 auto' }}>
+      <style>{`
+        @media(max-width:700px){
+          .dash-metrics{ grid-template-columns:1fr!important; gap:8px!important; }
+          .dash-tools{ grid-template-columns:repeat(3,1fr)!important; gap:8px!important; }
+          .dash-bottom{ grid-template-columns:1fr!important; }
+        }
+        @media(min-width:701px) and (max-width:900px){
+          .dash-tools{ grid-template-columns:repeat(3,1fr)!important; }
+          .dash-bottom{ grid-template-columns:1fr 1fr!important; }
+        }
+      `}</style>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
@@ -199,7 +210,7 @@ export default function DashboardPage() {
       {/* Tool grid */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 10, color: 'var(--c-t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Quick tools</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10 }}>
+        <div className="dash-tools" style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10 }}>
           {TOOLS.map(t => (
             <Link key={t.href} href={t.href} style={{ background: t.bg, border: '1px solid ' + t.border, borderRadius: 14, padding: 14, textDecoration: 'none', transition: 'transform 0.15s, box-shadow 0.15s', display: 'block' }}
               onMouseEnter={e => { e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.boxShadow='0 8px 24px ' + t.color + '22'; }}
@@ -215,7 +226,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom row — 3 columns: Active class | Recent activity | This Day in History */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 1fr', gap: 12, paddingBottom: 24 }}>
+      <div className="dash-bottom" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 1fr', gap: 12, paddingBottom: 24 }}>
 
         {/* Active class */}
         <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: 16 }}>
