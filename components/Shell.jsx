@@ -34,7 +34,7 @@ const ICONS = {
 }
 
 const NAV = [
-  { href:'/',               label:'Dashboard',     icon:'dashboard' },
+  { href:'/dashboard',               label:'Dashboard',     icon:'dashboard' },
   { href:'/create',         label:'Create',        icon:'create'    },
   { href:'/study',          label:'Study',         icon:'study'     },
   { href:'/teach',          label:'Teacher Portal',icon:'teach'     },
@@ -248,7 +248,7 @@ export default function Shell({ children }) {
       {plusOpen && (
         <div onClick={() => setPlusOpen(false)}
           style={{ position:'fixed', top:0, left:0, right:0, bottom:64, zIndex:98,
-            background:'rgba(0,0,0,0.55)', backdropFilter:'blur(12px)', WebkitBackdropFilter:'blur(12px)',
+            background:'rgba(0,0,0,0.4)', backdropFilter:'blur(6px)', WebkitBackdropFilter:'blur(6px)', transition:'backdrop-filter 0.4s ease, opacity 0.4s ease',
             display:'flex', flexDirection:'column', justifyContent:'flex-end', padding:'0 16px 16px' }}>
           <div onClick={e => e.stopPropagation()} style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
             {[
@@ -287,7 +287,7 @@ export default function Shell({ children }) {
           background:'var(--c-surface)', borderTop:'1px solid var(--c-line)',
           height:64, paddingBottom:'env(safe-area-inset-bottom, 0px)',
           display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr', alignItems:'center' }}>
-          <Link href="/" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 4px', borderRadius:12, textDecoration:'none', justifyContent:'center', color: pathname==='/'?'#3b82f6':'var(--c-t3)' }}>
+          <Link href="/dashboard" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 4px', borderRadius:12, textDecoration:'none', justifyContent:'center', color: pathname==='/dashboard'?'#3b82f6':'var(--c-t3)' }}>
             <I d={ICONS.dashboard} s={20}/><span style={{ fontSize:9, fontWeight:600 }}>Dashboard</span>
           </Link>
           <Link href="/my-stuff" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 4px', borderRadius:12, textDecoration:'none', justifyContent:'center', color: pathname==='/my-stuff'?'#3b82f6':'var(--c-t3)' }}>
