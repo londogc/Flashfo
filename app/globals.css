@@ -85,3 +85,14 @@ html:not(.dark) {
 @media (max-width: 767px) {
   aside { display: none !important; }
 }
+
+
+/* Mid-screen sidebar — force collapsed width via CSS as instant guarantee */
+@media (min-width: 768px) and (max-width: 1099px) {
+  aside.ff-desktop-only {
+    width: 56px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
+    overflow: hidden !important;
+  }
+}
