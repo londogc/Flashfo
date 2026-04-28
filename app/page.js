@@ -27,7 +27,7 @@ function FeatureDemo() {
           // auto-advance to next topic after 3 s of showing results
           t2 = setTimeout(() => {
             setTopicIdx(idx => (idx + 1) % TOPICS.length)
-          }, 3000)
+          }, 6000)
         }, 400)
       }
     }, 85) // 85ms per character — readable but lively
@@ -78,13 +78,7 @@ function FeatureDemo() {
         </>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <button onClick={() => setTopicIdx(i => (i + 1) % TOPICS.length)}
-          style={{ background: 'none', border: '1px solid #30363d', borderRadius: 8, padding: '6px 14px', fontSize: 12, color: '#8b949e', cursor: 'pointer' }}>
-          Try again ↺
-        </button>
-        <span style={{ fontSize: 11, color: '#484f58' }}>Auto-advances · {TOPICS.length} topics</span>
-      </div>
+      <span style={{ fontSize: 11, color: '#484f58' }}>Auto-advances · {TOPICS.length} topics</span>
 
       <style>{`
         @keyframes cardIn {
