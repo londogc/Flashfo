@@ -192,7 +192,7 @@ export default function Shell({ children }) {
           )}
           <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:6, minWidth:0, flexShrink:0 }}>
             {true && (
-              <button onClick={toggleDark} style={{ height:32, padding:'0 10px', borderRadius:20, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', display:'flex', alignItems:'center', gap:6, color:'var(--c-t2)', flexShrink:0, fontSize:12, fontWeight:500 }}>
+              <button onClick={toggleDark} className="ff-mid-mobile-only" style={{ height:30, padding:'0 10px', borderRadius:20, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', alignItems:'center', gap:5, color:'var(--c-t2)', flexShrink:0, fontSize:11, fontWeight:600, whiteSpace:'nowrap' }}>
                 <svg width="14" height="14" viewBox="-1 -1 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ flexShrink:0, overflow:'visible' }}>
                   {dark
                     ? <path d="M8 1v1M8 14v1M1 8h1M14 8h1M3 3l.7.7M12.3 12.3l.7.7M3 13l.7-.7M12.3 3.7l.7-.7M11 8a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -236,13 +236,13 @@ export default function Shell({ children }) {
           </div>
         </header>
 
-        <main style={{ flex:1, overflowY:'auto', paddingBottom: isMobile ? 72 : 0 }}>
+        <main className="ff-content" style={{ flex:1, overflowY:'auto' }}>
           {children}
         </main>
       </div>
 
       {/* Mobile bottom nav */}
-      {isMobile && (
+      {true && (
         <>
           {/* Wheel overlay — covers content above nav only */}
           {plusOpen && (
