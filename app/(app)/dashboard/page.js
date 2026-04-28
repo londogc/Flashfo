@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
 const TOOLS = [
-  { href:'/ai-tutor',    label:'Nova',        sub:'AI tutor',     icon:'M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z', color:'#a78bfa', bg:'rgba(124,58,237,0.12)', border:'rgba(124,58,237,0.25)', float:true },
+  { href:'/ai-tutor',    label:'Nova',        sub:'AI tutor',     icon:'M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z', color:'#a78bfa', bg:'rgba(124,58,237,0.12)', border:'rgba(124,58,237,0.25)' },
   { href:'/flashcards',  label:'Flashcards',  sub:'Quick review', icon:'M4 3h9a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zM2 5H1v7a1 1 0 001 1h9', color:'#34d399', bg:'rgba(52,211,153,0.12)', border:'rgba(52,211,153,0.2)' },
   { href:'/quiz',        label:'Quiz',        sub:'Test yourself', icon:'M6 5.5a2.5 2.5 0 014.5 1.5c0 1.5-1.5 2-2 3V11m0 2.5v.5',   color:'#a78bfa', bg:'rgba(167,139,250,0.12)', border:'rgba(167,139,250,0.2)' },
   { href:'/study-guide', label:'Study Guide', sub:'Deep dive',     icon:'M1 3h6.5L9 4.5h6V13H9l-1.5-1.5H1zm0 0v10',                  color:'#fb923c', bg:'rgba(251,146,60,0.12)',  border:'rgba(251,146,60,0.2)'  },
@@ -15,29 +15,104 @@ const TOOLS = [
 
 const SUBJECT_COLORS = ['#60a5fa','#34d399','#a78bfa','#fb923c','#f472b6']
 
+function TodayInHistory() {
+  const [events, setEvents] = useState([])
+  const [idx, setIdx] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [dateLabel, setDateLabel] = useState('')
+
+  useEffect(() => {
+    const now = new Date()
+    const month = now.getMonth() + 1
+    const day = now.getDate()
+    setDateLabel(now.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }))
+
+    fetch(`https://en.wikipedia.org/api/rest_v1/feed/onthisday/selected/${month}/${day}`)
+      .then(r => r.json())
+      .then(data => {
+        const items = (data.selected || [])
+          .filter(e => e.text && e.year)
+          .slice(0, 6)
+          .map(e => ({ year: e.year, text: e.text }))
+        setEvents(items)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [])
+
+  // Auto-cycle through events every 5 seconds
+  useEffect(() => {
+    if (events.length < 2) return
+    const t = setInterval(() => setIdx(i => (i + 1) % events.length), 5000)
+    return () => clearInterval(t)
+  }, [events])
+
+  const event = events[idx]
+
+  return (
+    <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: 16, overflow: 'hidden' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <div style={{ width: 24, height: 24, borderRadius: 8, background: 'rgba(251,146,60,0.15)', border: '1px solid rgba(251,146,60,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#fb923c" strokeWidth="1.5" strokeLinecap="round"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 4v4l3 1.5"/></svg>
+          </div>
+          <span style={{ fontSize: 10, color: 'var(--c-t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>This day in history</span>
+        </div>
+        <span style={{ fontSize: 10, color: '#fb923c', fontWeight: 600 }}>{dateLabel}</span>
+      </div>
+
+      {/* Content */}
+      {loading ? (
+        <div style={{ height: 60, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid #fb923c', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }}/>
+          <span style={{ fontSize: 12, color: 'var(--c-t3)' }}>Loading today's events…</span>
+        </div>
+      ) : event ? (
+        <div style={{ animation: 'fadeSlide 0.4s ease' }} key={idx}>
+          <div style={{ display: 'inline-block', background: 'rgba(251,146,60,0.12)', border: '1px solid rgba(251,146,60,0.2)', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 700, color: '#fb923c', marginBottom: 8 }}>
+            {event.year}
+          </div>
+          <p style={{ fontSize: 13, color: 'var(--c-t1)', lineHeight: 1.55, margin: '0 0 12px' }}>
+            {event.text.length > 140 ? event.text.slice(0, 140) + '…' : event.text}
+          </p>
+          {/* Dot nav */}
+          <div style={{ display: 'flex', gap: 4 }}>
+            {events.map((_, i) => (
+              <button key={i} onClick={() => setIdx(i)}
+                style={{ width: i === idx ? 16 : 5, height: 5, borderRadius: 3, background: i === idx ? '#fb923c' : 'var(--c-line)', border: 'none', cursor: 'pointer', transition: 'all 0.25s', padding: 0 }}/>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p style={{ fontSize: 12, color: 'var(--c-t3)', margin: 0 }}>Could not load events for today.</p>
+      )}
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg) } }
+        @keyframes fadeSlide { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
+      `}</style>
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   const { user, profile, loading } = useAuth()
-  const [dark, setDark] = useState(false)
   const [classes, setClasses] = useState([])
   const [assignments, setAssignments] = useState([])
   const [quizScore, setQuizScore] = useState(null)
-  const [activity, setActivity] = useState([])
 
   useEffect(() => {
-    const d = document.documentElement.classList.contains('dark')
-    setDark(d)
     if (user) loadData()
   }, [user])
 
   async function loadData() {
-    // Load enrolled classes
     const { data: enroll } = await supabase
       .from('student_enrollments')
       .select('classroom_id, classrooms(name, subject)')
       .eq('student_id', user.id)
     if (enroll) setClasses(enroll.map(e => e.classrooms).filter(Boolean))
 
-    // Load pending assignments
     const { data: hw } = await supabase
       .from('homework_assignments')
       .select('id, title, due_date, classroom_id')
@@ -50,7 +125,6 @@ export default function DashboardPage() {
   const firstName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-
   const subjectColors = classes.map((cls, i) => ({ ...cls, color: SUBJECT_COLORS[i % SUBJECT_COLORS.length] }))
 
   return (
@@ -78,15 +152,13 @@ export default function DashboardPage() {
 
       {/* Metric cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
-
-        {/* Subjects active */}
         <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: 16 }}>
           <div style={{ fontSize: 9, color: 'var(--c-t3)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700, marginBottom: 8 }}>Subjects active</div>
           {subjectColors.length > 0 ? (
             <>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
                 {subjectColors.slice(0, 4).map(cls => (
-                  <span key={cls.name} style={{ background: cls.color + '22', border: `1px solid ${cls.color}44`, color: cls.color, fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6 }}>
+                  <span key={cls.name} style={{ background: cls.color + '22', border: '1px solid ' + cls.color + '44', color: cls.color, fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6 }}>
                     {cls.name || cls.subject || 'Class'}
                   </span>
                 ))}
@@ -103,25 +175,23 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Assignments */}
         <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: 16 }}>
           <div style={{ fontSize: 9, color: 'var(--c-t3)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700, marginBottom: 8 }}>Assignments due</div>
           <div style={{ fontSize: 26, fontWeight: 800, color: assignments.length > 0 ? '#f59e0b' : 'var(--c-t2)', lineHeight: 1 }}>
             {assignments.length}<span style={{ fontSize: 12, color: 'var(--c-t3)', fontWeight: 400 }}> pending</span>
           </div>
           <div style={{ height: 3, background: 'var(--c-surface2)', borderRadius: 2, marginTop: 10, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${Math.min(assignments.length * 20, 100)}%`, background: 'linear-gradient(90deg,#f59e0b,#d97706)', borderRadius: 2 }}/>
+            <div style={{ height: '100%', width: Math.min(assignments.length * 20, 100) + '%', background: 'linear-gradient(90deg,#f59e0b,#d97706)', borderRadius: 2 }}/>
           </div>
         </div>
 
-        {/* Last quiz score */}
         <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: 16 }}>
           <div style={{ fontSize: 9, color: 'var(--c-t3)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700, marginBottom: 8 }}>Last quiz score</div>
           <div style={{ fontSize: 26, fontWeight: 800, color: '#60a5fa', lineHeight: 1 }}>
             {quizScore !== null ? <>{quizScore}<span style={{ fontSize: 12, color: 'var(--c-t3)', fontWeight: 400 }}>%</span></> : <span style={{ fontSize: 13, color: 'var(--c-t3)', fontWeight: 500 }}>No quiz yet</span>}
           </div>
           <div style={{ height: 3, background: 'var(--c-surface2)', borderRadius: 2, marginTop: 10, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${quizScore || 0}%`, background: 'linear-gradient(90deg,#3b82f6,#6366f1)', borderRadius: 2 }}/>
+            <div style={{ height: '100%', width: (quizScore || 0) + '%', background: 'linear-gradient(90deg,#3b82f6,#6366f1)', borderRadius: 2 }}/>
           </div>
         </div>
       </div>
@@ -131,8 +201,8 @@ export default function DashboardPage() {
         <div style={{ fontSize: 10, color: 'var(--c-t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Quick tools</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10 }}>
           {TOOLS.map(t => (
-            <Link key={t.href} href={t.href} style={{ background: t.bg, border: `1px solid ${t.border}`, borderRadius: 14, padding: 14, textDecoration: 'none', transition: 'transform 0.15s, box-shadow 0.15s', display: 'block' }}
-              onMouseEnter={e => { e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.boxShadow=`0 8px 24px ${t.color}22`; }}
+            <Link key={t.href} href={t.href} style={{ background: t.bg, border: '1px solid ' + t.border, borderRadius: 14, padding: 14, textDecoration: 'none', transition: 'transform 0.15s, box-shadow 0.15s', display: 'block' }}
+              onMouseEnter={e => { e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.boxShadow='0 8px 24px ' + t.color + '22'; }}
               onMouseLeave={e => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; }}>
               <div style={{ width: 30, height: 30, borderRadius: 10, background: t.bg.replace('0.12','0.2'), display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke={t.color} strokeWidth="1.5" strokeLinecap="round"><path d={t.icon}/></svg>
@@ -144,8 +214,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Bottom row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 12, paddingBottom: 24 }}>
+      {/* Bottom row — 3 columns: Active class | Recent activity | This Day in History */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 1fr', gap: 12, paddingBottom: 24 }}>
+
         {/* Active class */}
         <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: 16 }}>
           <div style={{ fontSize: 10, color: 'var(--c-t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 12 }}>Active class</div>
@@ -184,9 +255,9 @@ export default function DashboardPage() {
           <div style={{ fontSize: 10, color: 'var(--c-t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 12 }}>Recent activity</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[
-              { color: '#34d399', label: 'Start generating flashcards', href: '/flashcards', empty: true },
-              { color: '#a78bfa', label: 'Ask Nova your first question', href: '/ai-tutor', empty: true },
-              { color: '#60a5fa', label: 'Take a practice quiz', href: '/quiz', empty: true },
+              { color: '#34d399', label: 'Start generating flashcards', href: '/flashcards' },
+              { color: '#a78bfa', label: 'Ask Nova your first question', href: '/ai-tutor' },
+              { color: '#60a5fa', label: 'Take a practice quiz', href: '/quiz' },
             ].map((a, i) => (
               <Link key={i} href={a.href} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: a.color, flexShrink: 0 }}></div>
@@ -196,6 +267,9 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
+
+        {/* This Day in History */}
+        <TodayInHistory />
       </div>
 
       <style>{`
