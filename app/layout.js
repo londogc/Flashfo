@@ -18,9 +18,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Script runs FIRST — dark class applied before any CSS is parsed */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('ff-theme');var dark=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches);var bg=dark?'#0d1117':'#f1f5f9';document.documentElement.style.background=bg;document.documentElement.style.backgroundColor=bg;if(dark)document.documentElement.classList.add('dark');}catch(e){document.documentElement.style.background='#f1f5f9';}})()`}}/>
-        {/* Style runs AFTER script — dark class already set, correct background applied instantly */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('ff-theme');var d=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches);var bg=d?'#0d1117':'#f1f5f9';document.documentElement.style.background=bg;document.documentElement.style.backgroundColor=bg;if(d)document.documentElement.classList.add('dark');}catch(e){}})()`}}/>
         <style dangerouslySetInnerHTML={{ __html: `
           *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
           html,body{margin:0;padding:0;min-height:100%}
@@ -30,9 +28,11 @@ export default function RootLayout({ children }) {
           @media(max-width:767px){.ff-desktop-only{display:none!important}aside{display:none!important}}
           .ff-mobile-only{display:none!important}
           @media(max-width:767px){.ff-mobile-only{display:block!important}}
+          .ff-mobile-block{display:none!important}
+          @media(max-width:767px){.ff-mobile-block{display:flex!important}}
           .ff-mid-mobile-only{display:none!important}
           @media(max-width:1099px){.ff-mid-mobile-only{display:flex!important}}
-          @media(min-width:768px)and(max-width:1099px){aside.ff-desktop-only{width:56px!important;min-width:56px!important;max-width:56px!important;overflow:hidden!important}}
+          @media(min-width:768px)and(max-width:1099px){aside.ff-desktop-only{width:56px!important;min-width:56px!important;max-width:56px!important;overflow:hidden!important}.ff-desktop-dark-toggle{display:none!important}}
           @media(max-width:767px){.ff-content{padding-bottom:80px!important}}
         `}}/>
       </head>
