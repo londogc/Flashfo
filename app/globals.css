@@ -60,7 +60,7 @@ html:not(.dark) {
 /* Mobile only: show on <768px, hide on ≥768px */
 .ff-mobile-only { display: none !important; }
 @media (max-width: 767px) {
-  .ff-mobile-only { display: flex !important; }
+  .ff-mobile-only { display: block !important; }
   .ff-mobile-block { display: block !important; }
 }
 
