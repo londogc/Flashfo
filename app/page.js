@@ -112,6 +112,7 @@ export default function LandingPage() {
 
   return (
     <div style={{ background: '#0d1117', minHeight: '100dvh', color: '#e6edf3', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+      <style>{`@media(max-width:767px){.lp-nav-links{display:none!important}}`}</style>
 
       {/* Navbar */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: '1px solid #21262d', background: 'rgba(13,17,23,0.9)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
@@ -124,7 +125,7 @@ export default function LandingPage() {
             <span style={{ fontSize: 15, fontWeight: 700, color: '#e6edf3' }}>Flashfo</span>
           </div>
           {/* Nav links — desktop only via inline media trick */}
-          <div className="ff-desktop-only" style={{ display: 'flex', gap: 2, flex: 1, marginLeft: 12 }}>
+          <div className="lp-nav-links" style={{ display: 'flex', gap: 2, flex: 1, marginLeft: 12 }}>
             {NAV_LINKS.map(l => (
               <a key={l} href={'#' + l.toLowerCase().replace(/ /g,'-')} style={{ padding: '6px 12px', fontSize: 13, fontWeight: 500, color: '#8b949e', textDecoration: 'none', borderRadius: 8 }}
                 onMouseEnter={e => e.currentTarget.style.color='#e6edf3'} onMouseLeave={e => e.currentTarget.style.color='#8b949e'}>{l}</a>
