@@ -38,3 +38,18 @@ button { cursor: pointer; font-family: inherit; }
 
 /* v7 */
 /* v8-force */
+
+/* Hard block — sidebar never shows on mobile screens regardless of JS state */
+@media (max-width: 767px) {
+  aside { display: none !important; }
+}
+
+/* Prevent dark mode flash — these rules ensure dark bg is applied instantly */
+html.dark {
+  background-color: #0d1117;
+  color-scheme: dark;
+}
+html:not(.dark) {
+  background-color: #f1f5f9;
+  color-scheme: light;
+}
