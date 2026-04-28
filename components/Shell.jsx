@@ -21,7 +21,7 @@ const ICONS = {
   quiz:       'M6 5.5a2.5 2.5 0 014.5 1.5c0 1.5-1.5 2-2 3V11m0 2.5v.5',
   lesson:     'M13 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V2a1 1 0 00-1-1zM5 5h6m-6 3h6m-6 3h4',
   search:     'M7 1a6 6 0 100 12A6 6 0 007 1zm7 14l-3-3',
-  settings:   'M8 5.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3',
+  settings:   'M6.5 1h3l.5 2a5 5 0 011.2.7l2-.7 1.5 2.6-1.5 1.5a5 5 0 010 1.8l1.5 1.5L13.2 13l-2-.7A5 5 0 0110 13l-.5 2h-3L6 13a5 5 0 01-1.2-.7l-2 .7L1.3 10.4l1.5-1.5a5 5 0 010-1.8L1.3 5.6 2.8 3l2 .7A5 5 0 016 3l.5-2zM8 6a2 2 0 100 4 2 2 0 000-4z',
   tutor:      'M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z',
   guide:      'M1 3h6.5L9 4.5h6V13H9l-1.5-1.5H1zm0 0v10m6.5-10v10',
   studentp:   'M8 1l7 3.5-7 3.5-7-3.5zm-5 5.5v4c0 2 2.2 3 5 3s5-1 5-3V10',
@@ -240,7 +240,7 @@ export default function Shell({ children }) {
 
           {/* Tool wheel overlay */}
           {plusOpen && (
-            <div onClick={()=>setPlusOpen(false)} style={{ position:'fixed', inset:0, zIndex:99, background:'rgba(0,0,0,0.35)' }}>
+            <div onClick={()=>setPlusOpen(false)} style={{ position:'fixed', inset:0, zIndex:99, background:'rgba(0,0,0,0.45)', backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)' }}>
               <div onClick={e=>e.stopPropagation()} style={{ position:'absolute', bottom:'calc(72px + env(safe-area-inset-bottom,0px))', left:0, right:0, display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, padding:'16px 20px' }}>
                 {[
                   { href:'/create',       label:'Create',      icon:'M8 1l1.8 5H15l-4.4 3.2 1.7 5.2L8 11.2 3.7 14.4l1.7-5.2L1 6h5.2z' },
@@ -249,8 +249,8 @@ export default function Shell({ children }) {
                   { href:'/flashcards',   label:'Flashcards',  icon:'M4 3h9a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zM2 5H1v7a1 1 0 001 1h9' },
                   { href:'/summarize',    label:'Summarize',   icon:'M2 3h12v2.5H2zm0 4h8v2.5H2zm0 4h10v2H2' },
                   { href:'/study-guide',  label:'Study Guide', icon:'M1 3h6.5L9 4.5h6V13H9l-1.5-1.5H1zm0 0v10' },
-                ].map((item, i) => (
-                  <Link key={item.href} href={item.href} onClick={()=>setPlusOpen(false)}
+                ].map((item) => (
+                  <Link key={item.label} href={item.href} onClick={()=>setPlusOpen(false)}
                     style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'12px 8px', borderRadius:16, background:'var(--c-surface)', border:'1px solid var(--c-line)', textDecoration:'none', color:'var(--c-t2)', transition:'all 0.15s' }}>
                     <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"><path d={item.icon}/></svg>
                     <span style={{ fontSize:10, fontWeight:600, color:'var(--c-t1)', textAlign:'center', lineHeight:1.2 }}>{item.label}</span>
@@ -273,7 +273,7 @@ export default function Shell({ children }) {
           </Link>
 
           {/* + button */}
-          <button onClick={()=>setPlusOpen(o=>!o)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:52, height:52, background:'#2563eb', border:'none', borderRadius:18, cursor:'pointer', marginTop:-18, flexShrink:0, transform: plusOpen ? 'rotate(45deg)' : 'rotate(0deg)', transition:'all 0.2s', zIndex:101 }}>
+          <button onClick={()=>setPlusOpen(o=>!o)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:52, height:52, background:'#2563eb', border:'none', borderRadius:16, cursor:'pointer', marginTop:-10, flexShrink:0, transform: plusOpen ? 'rotate(45deg)' : 'rotate(0deg)', transition:'all 0.2s', zIndex:101 }}>
             <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M8 2v12M2 8h12"/></svg>
           </button>
 
