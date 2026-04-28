@@ -78,7 +78,14 @@ export default function Shell({ children }) {
   const router = useRouter()
   const { user, profile, loading: authLoading, signOut } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
-  const [dark, setDark] = useState(false)
+  const [dark, setDark] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const saved = localStorage.getItem('ff-theme')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const isDark = saved === 'dark' || (!saved && prefersDark)
+    if (isDark) document.documentElement.classList.add('dark')
+    return isDark
+  })
   const [mounted, setMounted] = useState(false)
   const [plusOpen, setPlusOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : true)
