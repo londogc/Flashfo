@@ -18,10 +18,14 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Script runs FIRST — dark class applied before any CSS is parsed */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('ff-theme');var dark=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches);var bg=dark?'#0d1117':'#f1f5f9';document.documentElement.style.background=bg;document.documentElement.style.backgroundColor=bg;if(dark)document.documentElement.classList.add('dark');}catch(e){document.documentElement.style.background='#f1f5f9';}})()`}}/>
+        {/* Style runs AFTER script — dark class already set, correct background applied instantly */}
         <style dangerouslySetInnerHTML={{ __html: `
-          *,*::before,*::after{box-sizing:border-box}
-          html,body{margin:0;padding:0;min-height:100%;background-color:#f1f5f9}
-          html.dark,html.dark body{background-color:#0d1117;color-scheme:dark}
+          *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+          html,body{margin:0;padding:0;min-height:100%}
+          html.dark,html.dark body{background-color:#0d1117!important;color-scheme:dark}
+          html:not(.dark),html:not(.dark) body{background-color:#f1f5f9!important;color-scheme:light}
           .ff-desktop-only{display:flex!important}
           @media(max-width:767px){.ff-desktop-only{display:none!important}aside{display:none!important}}
           .ff-mobile-only{display:none!important}
@@ -31,7 +35,6 @@ export default function RootLayout({ children }) {
           @media(min-width:768px)and(max-width:1099px){aside.ff-desktop-only{width:56px!important;min-width:56px!important;max-width:56px!important;overflow:hidden!important}}
           @media(max-width:767px){.ff-content{padding-bottom:80px!important}}
         `}}/>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('ff-theme');var d=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches);if(d){document.documentElement.classList.add('dark');document.documentElement.style.backgroundColor='#0d1117';document.body&&(document.body.style.backgroundColor='#0d1117');}}catch(e){}})()`}}/>
       </head>
       <body suppressHydrationWarning>
         {children}
