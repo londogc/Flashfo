@@ -53,3 +53,35 @@ html:not(.dark) {
   background-color: #f1f5f9;
   color-scheme: light;
 }
+
+
+/* ─── Responsive utility classes — apply instantly, no JS flash ─── */
+
+/* Mobile only: show on <768px, hide on ≥768px */
+.ff-mobile-only { display: none !important; }
+@media (max-width: 767px) {
+  .ff-mobile-only { display: flex !important; }
+  .ff-mobile-block { display: block !important; }
+}
+
+/* Desktop only: show on ≥768px, hide on <768px */
+.ff-desktop-only { display: flex !important; }
+@media (max-width: 767px) {
+  .ff-desktop-only { display: none !important; }
+}
+
+/* Mid+mobile (≤1099px): for topbar dark pill */
+.ff-mid-mobile-only { display: none !important; }
+@media (max-width: 1099px) {
+  .ff-mid-mobile-only { display: flex !important; }
+}
+
+/* Content bottom padding on mobile for nav bar */
+@media (max-width: 767px) {
+  .ff-content { padding-bottom: 80px !important; }
+}
+
+/* Hard block sidebar on mobile — belt AND suspenders */
+@media (max-width: 767px) {
+  aside { display: none !important; }
+}
