@@ -132,7 +132,7 @@ export default function FlashcardsPage() {
           <input type="range" min={10} max={30} step={1} value={count}
             onChange={e => setCount(Number(e.target.value))} onInput={e => setCount(Number(e.target.value))}
             className="w-full accent-blue-600 cursor-pointer h-2 rounded-full" style={{ display:'block' }}/>
-          <div className="flex justify-between text-[10px] text-t3 mt-1.5"><span>10</span><span>10</span><span>20</span><span>30</span></div>
+          <div className="flex justify-between text-[10px] text-t3 mt-1.5"><span>10</span><span>15</span><span>20</span><span>30</span></div>
         </div>
         {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
         <button onClick={generate} disabled={loading || !topic.trim()}
