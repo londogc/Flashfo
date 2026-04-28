@@ -13,17 +13,26 @@ function FeatureDemo() {
 
   useEffect(() => {
     let i = 0
+    let t1, t2
     setTyped('')
     setShowCards(false)
+
     const interval = setInterval(() => {
       i++
       setTyped(topic.slice(0, i))
       if (i >= topic.length) {
         clearInterval(interval)
-        setTimeout(() => setShowCards(true), 400)
+        t1 = setTimeout(() => {
+          setShowCards(true)
+          // auto-advance to next topic after 3 s of showing results
+          t2 = setTimeout(() => {
+            setTopicIdx(idx => (idx + 1) % TOPICS.length)
+          }, 3000)
+        }, 400)
       }
-    }, 60)
-    return () => clearInterval(interval)
+    }, 85) // 85ms per character — readable but lively
+
+    return () => { clearInterval(interval); clearTimeout(t1); clearTimeout(t2) }
   }, [topicIdx, topic])
 
   const cards = [
@@ -35,11 +44,20 @@ function FeatureDemo() {
 
   return (
     <div style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: 20, padding: 28, maxWidth: 520, margin: '0 auto' }}>
+      {/* Topic indicator dots */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 18, justifyContent: 'center' }}>
+        {TOPICS.map((_, i) => (
+          <button key={i} onClick={() => setTopicIdx(i)} style={{ width: i === topicIdx ? 20 : 6, height: 6, borderRadius: 3, background: i === topicIdx ? '#2563eb' : '#30363d', border: 'none', cursor: 'pointer', transition: 'all 0.3s', padding: 0 }}/>
+        ))}
+      </div>
+
+      {/* Fake search input */}
       <div style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: 12, padding: '12px 16px', fontSize: 15, color: '#e6edf3', marginBottom: 20, minHeight: 48, display: 'flex', alignItems: 'center', gap: 8 }}>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8b949e" strokeWidth="1.5"><path d="M7 1a6 6 0 100 12A6 6 0 007 1zm7 14l-3-3"/></svg>
         <span style={{ flex: 1 }}>{typed}<span style={{ opacity: 0.4, animation: 'blink 1s step-end infinite' }}>|</span></span>
       </div>
 
+      {/* Result cards */}
       {showCards && (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
@@ -60,10 +78,13 @@ function FeatureDemo() {
         </>
       )}
 
-      <button onClick={() => setTopicIdx(i => (i + 1) % TOPICS.length)}
-        style={{ background: 'none', border: '1px solid #30363d', borderRadius: 8, padding: '6px 14px', fontSize: 12, color: '#8b949e', cursor: 'pointer' }}>
-        Try again ↺
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <button onClick={() => setTopicIdx(i => (i + 1) % TOPICS.length)}
+          style={{ background: 'none', border: '1px solid #30363d', borderRadius: 8, padding: '6px 14px', fontSize: 12, color: '#8b949e', cursor: 'pointer' }}>
+          Try again ↺
+        </button>
+        <span style={{ fontSize: 11, color: '#484f58' }}>Auto-advances · {TOPICS.length} topics</span>
+      </div>
 
       <style>{`
         @keyframes cardIn {
@@ -189,9 +210,7 @@ export default function LandingPage() {
         <a href="/auth?mode=signup" style={{ padding: '16px 40px', fontSize: 16, fontWeight: 700, background: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: 14, boxShadow: '0 0 48px rgba(37,99,235,0.32)' }}>
           Get started free →
         </a>
-        <div style={{ marginTop: 60, fontSize: 12, color: '#484f58' }}>
-          © 2025 Flashfo · Study workspace
-        </div>
+        <div style={{ marginTop: 60, fontSize: 12, color: '#484f58' }}>© 2025 Flashfo · Study workspace</div>
       </section>
 
     </div>
