@@ -279,8 +279,9 @@ export default function Shell({ children }) {
             </div>
           )}
 
-          {/* + button — CSS ff-mobile-only hides on desktop */}
-          <button className="ff-mobile-only" onClick={()=>setPlusOpen(o=>!o)}
+          {/* Wrapper — display:none on desktop hides all fixed children too */}
+          <div className="ff-mobile-only">
+          <button onClick={()=>setPlusOpen(o=>!o)}
             style={{ position:'fixed',
               bottom:'calc(12px + env(safe-area-inset-bottom, 0px))',
               left:'calc(50% - 26px)',
@@ -295,7 +296,7 @@ export default function Shell({ children }) {
           </button>
 
           {/* Bottom nav bar — CSS ff-mobile-only hides on desktop */}
-          <nav className="ff-mobile-only" style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:100,
+          <nav style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:100,
             background:'var(--c-surface)', borderTop:'1px solid var(--c-line)',
             height:64, paddingBottom:'env(safe-area-inset-bottom, 0px)',
             display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr', alignItems:'center' }}>
@@ -332,6 +333,7 @@ export default function Shell({ children }) {
             </Link>
 
           </nav>
+          </div>
         </>
       )}
     </div>
