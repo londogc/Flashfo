@@ -50,20 +50,25 @@ const TOOLS = [
   { href:'/search',         label:'Search',        icon:'search'     },
 ]
 const ADV = [
-  { href:'/ai-tutor',       label:'Nova',          icon:'tutor'   },
+  { href:'/ai-tutor',       label:'Nova',          icon:'tutor',  nova:true },
   { href:'/resource-hub',   label:'Resource Hub',  icon:'mystuff' },
   { href:'/ai-suite',       label:'AI Suite',      icon:'suite'   },
   { href:'/source-library', label:'Source Library',icon:'sources' },
 ]
 
 function NavItem({ item, collapsed, active }) {
+  const nova = item.nova
   return (
     <Link href={item.href} title={collapsed ? item.label : undefined}
       style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 8px', borderRadius:10,
         fontSize:13, fontWeight:500, textDecoration:'none', transition:'all 0.1s',
-        background: active ? 'rgba(29,78,216,0.1)' : 'transparent',
-        color: active ? '#3b82f6' : 'var(--c-t2)' }}>
-      <span style={{ flexShrink:0 }}><I d={ICONS[item.icon]}/></span>
+        background: active ? 'rgba(29,78,216,0.1)' : nova ? 'rgba(124,58,237,0.12)' : 'transparent',
+        border: nova ? '1px solid rgba(124,58,237,0.2)' : '1px solid transparent',
+        color: active ? '#3b82f6' : nova ? '#a78bfa' : 'var(--c-t2)' }}>
+      <span style={{ flexShrink:0, position:'relative' }}>
+        <I d={ICONS[item.icon]}/>
+        {nova && <span style={{ position:'absolute', top:-2, right:-2, width:5, height:5, background:'#4ade80', borderRadius:'50%', border:'1.5px solid var(--c-surface)', animation:'nova-pulse 1.5s ease-in-out infinite' }}/>}
+      </span>
       {!collapsed && <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.label}</span>}
     </Link>
   )
@@ -199,6 +204,15 @@ export default function Shell({ children }) {
 
           {/* Right side */}
           <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+            {/* Notification bell */}
+            <button style={{ position:'relative', background:'none', border:'none', cursor:'pointer', padding:5, color:'var(--c-t2)', display:'flex', alignItems:'center', borderRadius:8, flexShrink:0 }}
+              title="Notifications">
+              <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 1a5 5 0 00-5 5v2.5L1.5 11h13L13 8.5V6a5 5 0 00-5-5zM6.5 13.5a1.5 1.5 0 003 0"/>
+              </svg>
+              <span style={{ position:'absolute', top:3, right:3, width:6, height:6, background:'#ef4444', borderRadius:'50%', border:'1.5px solid var(--c-surface)' }}/>
+            </button>
+
             {/* Dark pill — shows on mobile + mid-screen only */}
             <button onClick={toggleDark} className="ff-mid-mobile-only" style={{ height:30, padding:'0 10px', borderRadius:20, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', alignItems:'center', gap:5, color:'var(--c-t2)', flexShrink:0, fontSize:11, fontWeight:600, whiteSpace:'nowrap' }}>
               <svg width="14" height="14" viewBox="-1 -1 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ flexShrink:0 }}>
@@ -303,6 +317,7 @@ export default function Shell({ children }) {
         </nav>
       </div>
 
+    <style>{`@keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.75)}}`}</style>
     </div>
   )
 }
