@@ -136,9 +136,9 @@ export default function Shell({ children }) {
   return (
     <div style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'var(--c-bg)' }}>
 
-      {/* Desktop Sidebar — hidden on mobile via both JSX condition AND CSS */}
-      {!isMobile && (
-        <aside style={{ width:sidebarW, transition:'width 0.2s', flexShrink:0, background:'var(--c-surface)', borderRight:'1px solid var(--c-line)', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      {/* Desktop Sidebar — hidden on mobile via CSS ff-desktop-only class */}
+      {true && (
+        <aside className="ff-desktop-only" style={{ width:sidebarW, transition:'width 0.2s', flexShrink:0, background:'var(--c-surface)', borderRight:'1px solid var(--c-line)', display:'flex', flexDirection:'column', overflow:'hidden' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, padding:'0 14px', height:52, borderBottom:'1px solid var(--c-line)', flexShrink:0 }}>
             <div style={{ width:28, height:28, background:'#1d4ed8', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
@@ -191,7 +191,7 @@ export default function Shell({ children }) {
             </span>
           )}
           <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:6, minWidth:0, flexShrink:0 }}>
-            {(isMobile || isMidScreen) && mounted && (
+            {true && (
               <button onClick={toggleDark} style={{ height:32, padding:'0 10px', borderRadius:20, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', display:'flex', alignItems:'center', gap:6, color:'var(--c-t2)', flexShrink:0, fontSize:12, fontWeight:500 }}>
                 <svg width="14" height="14" viewBox="-1 -1 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ flexShrink:0, overflow:'visible' }}>
                   {dark
@@ -275,8 +275,8 @@ export default function Shell({ children }) {
             </div>
           )}
 
-          {/* + button — separate fixed element, top edge flush with nav top */}
-          <button onClick={()=>setPlusOpen(o=>!o)}
+          {/* + button — CSS ff-mobile-only hides on desktop */}
+          <button className="ff-mobile-only" onClick={()=>setPlusOpen(o=>!o)}
             style={{ position:'fixed',
               bottom:'calc(12px + env(safe-area-inset-bottom, 0px))',
               left:'50%',
@@ -290,8 +290,8 @@ export default function Shell({ children }) {
             </svg>
           </button>
 
-          {/* Bottom nav bar — 4 items + invisible center spacer for + button */}
-          <nav style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:100,
+          {/* Bottom nav bar — CSS ff-mobile-only hides on desktop */}
+          <nav className="ff-mobile-only" style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:100,
             background:'var(--c-surface)', borderTop:'1px solid var(--c-line)',
             height:64, paddingBottom:'env(safe-area-inset-bottom, 0px)',
             display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr', alignItems:'center' }}>
