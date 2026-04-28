@@ -125,7 +125,7 @@ export default function StudentPortalPage() {
       <div className="text-4xl mb-4">🎒</div>
       <h2 className="text-xl font-bold text-t1 mb-2">Student Portal</h2>
       <p className="text-sm text-t2 mb-5">Sign in to access your classes, homework, and Nova tutor.</p>
-      <a href="/auth" className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800">Sign In</a>
+      <a href="/auth" className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 flex items-center justify-center">Sign In</a>
     </div>
   )
 
