@@ -21,73 +21,20 @@
   --c-t3:      #484f58;
 }
 
-*, *::before, *::after { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; -webkit-font-smoothing: antialiased; }
-body { background: var(--c-bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color: var(--c-t1); }
-a { text-decoration: none; color: inherit; }
-button { cursor: pointer; font-family: inherit; }
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--c-line); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: var(--c-t3); }
-.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+*,:after,:before { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body, html { height: 100%; margin: 0; -webkit-font-smoothing: antialiased; }
+body { background: var(--c-bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--c-t1); }
 
+/* ── Responsive layout — CSS controls show/hide, no JS flash ── */
 
-
-
-
-/* v7 */
-/* v8-force */
-
-/* Hard block — sidebar never shows on mobile screens regardless of JS state */
-@media (max-width: 767px) {
-  aside { display: none !important; }
-}
-
-/* Prevent dark mode flash — these rules ensure dark bg is applied instantly */
-html.dark, html.dark body {
-  background-color: #0d1117;
-  color-scheme: dark;
-}
-html:not(.dark) {
-  background-color: #f1f5f9;
-  color-scheme: light;
-}
-
-
-/* ─── Responsive utility classes — apply instantly, no JS flash ─── */
-
-/* Mobile only: show on <768px, hide on ≥768px */
-.ff-mobile-only { display: none !important; }
-@media (max-width: 767px) {
-  .ff-mobile-only { display: block !important; }
-  .ff-mobile-block { display: block !important; }
-}
-
-/* Desktop only: show on ≥768px, hide on <768px */
+/* Desktop sidebar */
 .ff-desktop-only { display: flex !important; }
 @media (max-width: 767px) {
   .ff-desktop-only { display: none !important; }
-}
-
-/* Mid+mobile (≤1099px): for topbar dark pill */
-.ff-mid-mobile-only { display: none !important; }
-@media (max-width: 1099px) {
-  .ff-mid-mobile-only { display: flex !important; }
-}
-
-/* Content bottom padding on mobile for nav bar */
-@media (max-width: 767px) {
-  .ff-content { padding-bottom: 80px !important; }
-}
-
-/* Hard block sidebar on mobile — belt AND suspenders */
-@media (max-width: 767px) {
   aside { display: none !important; }
 }
 
-
-/* Mid-screen sidebar — force collapsed width via CSS as instant guarantee */
+/* Mid-screen sidebar auto-collapse (768–1099px) */
 @media (min-width: 768px) and (max-width: 1099px) {
   aside.ff-desktop-only {
     width: 56px !important;
@@ -95,4 +42,20 @@ html:not(.dark) {
     max-width: 56px !important;
     overflow: hidden !important;
   }
+  /* Hide sidebar dark toggle on mid-screen — topbar pill handles it */
+  .ff-desktop-dark-toggle { display: none !important; }
 }
+
+/* Mobile only elements */
+.ff-mobile-only { display: none !important; }
+@media (max-width: 767px) {
+  .ff-mobile-only { display: block !important; }
+  .ff-mobile-block { display: flex !important; }
+}
+
+/* Mid-screen + mobile elements (e.g. topbar dark pill) */
+.ff-mid-mobile-only { display: none !important; }
+@media (max-width: 1099px) { .ff-mid-mobile-only { display: flex !important; } }
+
+/* Mobile content bottom padding for nav bar */
+@media (max-width: 767px) { .ff-content { padding-bottom: 80px !important; } }
