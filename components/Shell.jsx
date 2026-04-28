@@ -81,8 +81,8 @@ export default function Shell({ children }) {
   const [dark, setDark] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [plusOpen, setPlusOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-  const [isMidScreen, setIsMidScreen] = useState(false)
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : true)
+  const [isMidScreen, setIsMidScreen] = useState(typeof window !== 'undefined' ? (window.innerWidth >= 768 && window.innerWidth < 1100) : false)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
   useEffect(() => {
@@ -129,7 +129,7 @@ export default function Shell({ children }) {
   return (
     <div style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'var(--c-bg)' }}>
 
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar — hidden on mobile via both JSX condition AND CSS */}
       {!isMobile && (
         <aside style={{ width:sidebarW, transition:'width 0.2s', flexShrink:0, background:'var(--c-surface)', borderRight:'1px solid var(--c-line)', display:'flex', flexDirection:'column', overflow:'hidden' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, padding:'0 14px', height:52, borderBottom:'1px solid var(--c-line)', flexShrink:0 }}>
@@ -142,7 +142,7 @@ export default function Shell({ children }) {
                 <div style={{ fontSize:10, color:'var(--c-t3)' }}>Study workspace</div>
               </div>
             )}
-            <button onClick={() => setCollapsed(c => !c)} style={{ background:'none', border:'none', padding:2, color:'var(--c-t3)', cursor:'pointer', flexShrink:0 }}>
+            <button onClick={() => !isMobile && setCollapsed(c => !c)} style={{ background:'none', border:'none', padding:2, color:'var(--c-t3)', cursor:'pointer', flexShrink:0 }}>
               <I d={collapsed ? ICONS.cR : ICONS.cL} s={13}/>
             </button>
           </div>
