@@ -18,6 +18,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('ff-theme');if(t==='dark')document.documentElement.classList.add('dark');else if(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.classList.add('dark');}catch(e){}})()` }}/>
       <body>
         {children}
       </body>
