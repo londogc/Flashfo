@@ -294,17 +294,17 @@ export default function Shell({ children }) {
           <nav style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:100,
             background:'var(--c-surface)', borderTop:'1px solid var(--c-line)',
             height:64, paddingBottom:'env(safe-area-inset-bottom, 0px)',
-            display:'flex', alignItems:'center', justifyContent:'space-around' }}>
+            display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr', alignItems:'center' }}>
 
             <Link href="/" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-              padding:'6px 12px', borderRadius:12, textDecoration:'none',
+              padding:'6px 4px', borderRadius:12, textDecoration:'none', justifyContent:'center',
               color: pathname==='/'?'#3b82f6':'var(--c-t3)' }}>
               <I d={ICONS['dashboard']} s={20}/>
               <span style={{ fontSize:9, fontWeight:600 }}>Dashboard</span>
             </Link>
 
             <Link href="/my-stuff" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-              padding:'6px 12px', borderRadius:12, textDecoration:'none',
+              padding:'6px 4px', borderRadius:12, textDecoration:'none', justifyContent:'center',
               color: pathname==='/my-stuff'?'#3b82f6':'var(--c-t3)' }}>
               <I d={ICONS['mystuff']} s={20}/>
               <span style={{ fontSize:9, fontWeight:600 }}>My Stuff</span>
@@ -314,14 +314,14 @@ export default function Shell({ children }) {
             <div style={{ width:60, flexShrink:0 }}/>
 
             <Link href="/ai-tutor" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-              padding:'6px 12px', borderRadius:12, textDecoration:'none',
+              padding:'6px 4px', borderRadius:12, textDecoration:'none', justifyContent:'center',
               color: pathname==='/ai-tutor'?'#6366f1':'var(--c-t3)' }}>
               <I d={ICONS['tutor']} s={20}/>
               <span style={{ fontSize:9, fontWeight:600 }}>Nova</span>
             </Link>
 
             <Link href="/settings" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-              padding:'6px 12px', borderRadius:12, textDecoration:'none',
+              padding:'6px 4px', borderRadius:12, textDecoration:'none', justifyContent:'center',
               color: pathname==='/settings'?'#3b82f6':'var(--c-t3)' }}>
               <I d={ICONS['settings']} s={20}/>
               <span style={{ fontSize:9, fontWeight:600 }}>Settings</span>
