@@ -43,7 +43,7 @@ function TodayInHistory() {
   // Auto-cycle through events every 5 seconds
   useEffect(() => {
     if (events.length < 2) return
-    const t = setInterval(() => setIdx(i => (i + 1) % events.length), 5000)
+    const t = setInterval(() => setIdx(i => (i + 1) % events.length), 9000)
     return () => clearInterval(t)
   }, [events])
 
