@@ -45,7 +45,7 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 /* Prevent dark mode flash — these rules ensure dark bg is applied instantly */
-html.dark {
+html.dark, html.dark body {
   background-color: #0d1117;
   color-scheme: dark;
 }
