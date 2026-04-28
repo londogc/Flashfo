@@ -115,29 +115,34 @@ export default function LandingPage() {
 
       {/* Navbar */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: '1px solid #21262d', background: 'rgba(13,17,23,0.9)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginRight: 16 }}>
-            <div style={{ width: 30, height: 30, background: '#1d4ed8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="15" height="15" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <div style={{ width: 28, height: 28, background: '#1d4ed8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
             </div>
             <span style={{ fontSize: 15, fontWeight: 700, color: '#e6edf3' }}>Flashfo</span>
           </div>
-          <div style={{ display: 'flex', gap: 2, flex: 1 }}>
+          {/* Nav links — desktop only via inline media trick */}
+          <div className="ff-desktop-only" style={{ display: 'flex', gap: 2, flex: 1, marginLeft: 12 }}>
             {NAV_LINKS.map(l => (
               <a key={l} href={'#' + l.toLowerCase().replace(/ /g,'-')} style={{ padding: '6px 12px', fontSize: 13, fontWeight: 500, color: '#8b949e', textDecoration: 'none', borderRadius: 8 }}
                 onMouseEnter={e => e.currentTarget.style.color='#e6edf3'} onMouseLeave={e => e.currentTarget.style.color='#8b949e'}>{l}</a>
             ))}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-            <a href="/auth" style={{ padding: '7px 14px', fontSize: 13, fontWeight: 600, color: '#8b949e', textDecoration: 'none', borderRadius: 8 }}
+          {/* Spacer on mobile */}
+          <div style={{ flex: 1 }}/>
+          {/* CTAs — always visible, compact on mobile */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <a href="/auth" style={{ padding: '7px 12px', fontSize: 13, fontWeight: 600, color: '#8b949e', textDecoration: 'none', borderRadius: 8, whiteSpace: 'nowrap' }}
               onMouseEnter={e => e.currentTarget.style.color='#e6edf3'} onMouseLeave={e => e.currentTarget.style.color='#8b949e'}>Sign in</a>
-            <a href="/auth?mode=signup" style={{ padding: '8px 18px', fontSize: 13, fontWeight: 700, background: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: 10 }}>Get started free</a>
+            <a href="/auth?mode=signup" style={{ padding: '8px 14px', fontSize: 13, fontWeight: 700, background: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: 10, whiteSpace: 'nowrap' }}>Get started free</a>
           </div>
         </div>
       </nav>
 
       {/* Hero */}
-      <section style={{ maxWidth: 900, margin: '0 auto', padding: '96px 24px 80px', textAlign: 'center' }}>
+      <section style={{ maxWidth: 900, margin: '0 auto', padding: 'clamp(48px,8vw,96px) 20px clamp(48px,6vw,80px)', textAlign: 'center' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: 20, background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.3)', fontSize: 12, fontWeight: 600, color: '#60a5fa', marginBottom: 32, letterSpacing: '0.02em' }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#60a5fa', display: 'inline-block' }}/>
           Now with Nova — your AI class companion
@@ -163,7 +168,7 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 24px 60px' }}>
+      <section id="how-it-works" style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(40px,6vw,80px) 20px clamp(32px,4vw,60px)' }}>
         <h2 style={{ textAlign: 'center', fontSize: 34, fontWeight: 800, marginBottom: 60, color: '#e6edf3', letterSpacing: '-0.02em' }}>How it works</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 48 }}>
           {STEPS.map(s => (
@@ -191,14 +196,14 @@ export default function LandingPage() {
       </section>
 
       {/* Animated Demo */}
-      <section style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px 100px' }}>
+      <section style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 20px clamp(60px,8vw,100px)' }}>
         <h2 style={{ textAlign: 'center', fontSize: 34, fontWeight: 800, marginBottom: 14, color: '#e6edf3', letterSpacing: '-0.02em' }}>See Nova in action</h2>
         <p style={{ textAlign: 'center', fontSize: 15, color: '#8b949e', marginBottom: 48 }}>Drop a topic and watch your study kit appear.</p>
         <FeatureDemo />
       </section>
 
       {/* Footer CTA */}
-      <section style={{ borderTop: '1px solid #21262d', padding: '80px 24px', textAlign: 'center' }}>
+      <section style={{ borderTop: '1px solid #21262d', padding: 'clamp(48px,6vw,80px) 20px', textAlign: 'center' }}>
         <h2 style={{ fontSize: 36, fontWeight: 800, color: '#e6edf3', margin: '0 0 14px', letterSpacing: '-0.02em' }}>Ready to study smarter?</h2>
         <p style={{ fontSize: 16, color: '#8b949e', margin: '0 0 36px' }}>Join students and teachers already using Flashfo.</p>
         <a href="/auth?mode=signup" style={{ padding: '16px 40px', fontSize: 16, fontWeight: 700, background: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: 14, boxShadow: '0 0 48px rgba(37,99,235,0.32)' }}>
