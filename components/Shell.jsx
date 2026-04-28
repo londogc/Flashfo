@@ -283,8 +283,8 @@ export default function Shell({ children }) {
           <button className="ff-mobile-only" onClick={()=>setPlusOpen(o=>!o)}
             style={{ position:'fixed',
               bottom:'calc(12px + env(safe-area-inset-bottom, 0px))',
-              left:'50%',
-              transform: 'translateX(-50%) rotate(' + (plusOpen ? '45deg' : '0deg') + ')',
+              left:'calc(50% - 26px)',
+              transform: plusOpen ? 'rotate(45deg)' : 'none',
               width:52, height:52,
               background:'#2563eb', border:'none', borderRadius:16,
               cursor:'pointer', zIndex:101, transition:'transform 0.2s',
