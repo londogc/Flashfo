@@ -77,7 +77,11 @@ export default function Shell({ children }) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, profile, loading: authLoading, signOut } = useAuth()
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const w = window.innerWidth
+    return w >= 768 && w < 1100
+  })
   const [dark, setDark] = useState(() => {
     if (typeof window === 'undefined') return false
     const saved = localStorage.getItem('ff-theme')
