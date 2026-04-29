@@ -237,11 +237,11 @@ export default function FlashcardsPage() {
   return (
     <div className="p-6 max-w-2xl mx-auto w-full">
       {/* ── Review Queue Banner ── */}
-      {dueQueue.length > 0 && (
+      {reviewQueue.length > 0 && (
         <div style={{ background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:10, padding:'12px 16px', marginBottom:20, display:'flex', alignItems:'center', gap:12 }}>
           <span style={{ fontSize:20 }}>⏰</span>
           <div style={{ flex:1 }}>
-            <p style={{ margin:0, fontWeight:600, fontSize:14, color:'#f59e0b' }}>{dueQueue.length} card{dueQueue.length>1?'s':''} due for review</p>
+            <p style={{ margin:0, fontWeight:600, fontSize:14, color:'#f59e0b' }}>{reviewQueue.length} card{reviewQueue.length>1?'s':''} due for review</p>
             <p style={{ margin:0, fontSize:12, color:'#8b949e' }}>Spaced repetition queue — review these first</p>
           </div>
           <button onClick={() => {}} style={{ background:'#f59e0b', color:'#000', fontSize:12, fontWeight:600, padding:'6px 14px', borderRadius:8, border:'none', cursor:'pointer' }}>Review now</button>
