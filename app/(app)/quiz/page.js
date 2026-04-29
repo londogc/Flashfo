@@ -451,16 +451,20 @@ export default function QuizPage() {
               <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-3">
                 Breakdown <span className="text-emerald-500">({breakdownTotal} QUESTIONS)</span>
               </div>
-              <div className="grid grid-cols-5 gap-2">
-                {[{k:'mcq',label:'MCQ'},{k:'tf',label:'T/F'},{k:'sa',label:'Short Ans'},{k:'fitb',label:'Fill Blank'},{k:'match',label:'Matching'}].map(({k, label}) => (
-                  <div key={k} className="text-center">
-                    <div className="text-[10px] text-t3 mb-1 leading-tight">{label}</div>
-                    <div className="flex items-center justify-center gap-1">
+              <style>{`
+                .bd-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+                @media(max-width:640px){.bd-grid{grid-template-columns:1fr 1fr;gap:10px}}
+              `}</style>
+              <div className="bd-grid">
+                {[{k:'mcq',label:'Multiple Choice'},{k:'tf',label:'True / False'},{k:'sa',label:'Short Answer'},{k:'fitb',label:'Fill in Blank'},{k:'match',label:'Matching'}].map(({k,label}) => (
+                  <div key={k} style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:10,padding:'8px 12px'}}>
+                    <span style={{fontSize:12,fontWeight:600,color:'var(--c-t2)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',paddingRight:6}}>{label}</span>
+                    <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
                       <button onClick={() => setBreakdown(b => ({ ...b, [k]: Math.max(0, (b[k]||0) - 1) }))}
-                        className="w-6 h-6 rounded border border-line text-t2 hover:bg-surface text-sm">−</button>
-                      <span className="text-[16px] font-bold text-blue-600 w-6 text-center">{breakdown[k]||0}</span>
+                        style={{width:30,height:30,borderRadius:8,border:'1px solid var(--c-line)',background:'none',color:'var(--c-t2)',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>−</button>
+                      <span style={{fontSize:15,fontWeight:700,color:'#3b82f6',width:22,textAlign:'center'}}>{breakdown[k]||0}</span>
                       <button onClick={() => setBreakdown(b => ({ ...b, [k]: (b[k]||0) + 1 }))}
-                        className="w-6 h-6 rounded border border-line text-t2 hover:bg-surface text-sm">+</button>
+                        style={{width:30,height:30,borderRadius:8,border:'1px solid var(--c-line)',background:'none',color:'var(--c-t2)',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>+</button>
                     </div>
                   </div>
                 ))}
