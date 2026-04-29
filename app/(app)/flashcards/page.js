@@ -152,7 +152,7 @@ export default function FlashcardsPage() {
   function addCard() { const n = cards.length; setCards(cs => [...cs, { front: 'New question', back: 'New answer' }]); setTimeout(() => startEdit(n), 0) }
   function deleteCard(i) { setCards(cs => cs.filter((_, ci) => ci !== i)); if (current >= i && current > 0) setCurrent(c => c - 1); setDone(d => d.filter(di => di !== i).map(di => di > i ? di - 1 : di)); if (editIdx === i) setEditIdx(null) }
 
-  if (!cards.length) 
+  if (!cards.length) return null
 
   // ── Spaced Repetition (SM-2) ──────────────────────────────────────
   const [reviewQueue, setReviewQueue] = useState([])
