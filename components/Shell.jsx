@@ -1,6 +1,6 @@
 'use client'
 // v5.9.2 — scrubbed for v6.0
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
@@ -58,6 +58,64 @@ const ADV = [
 
 function NavItem({ item, collapsed, active }) {
   const nova = item.nova
+  // ── Notifications ──
+  useEffect(() => {
+    if (!user) return
+    const fetchNotifs = async () => {
+      const { data } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50)
+      if (data) {
+        setNotifications(data)
+        setUnreadCount(data.filter(n => !n.read).length)
+      }
+    }
+    fetchNotifs()
+    // Real-time subscription
+    const sub = supabase.channel('notifs_'+user.id)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.'+user.id },
+        payload => {
+          setNotifications(prev => [payload.new, ...prev])
+          setUnreadCount(c => c + 1)
+        })
+      .subscribe()
+    return () => supabase.removeChannel(sub)
+  }, [user])
+
+  useEffect(() => {
+    if (!showNotifs) return
+    const handleClick = (e) => {
+      if (panelRef.current && !panelRef.current.contains(e.target) &&
+          bellRef.current && !bellRef.current.contains(e.target)) {
+        setShowNotifs(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showNotifs])
+
+  const markAllRead = async () => {
+    if (!user) return
+    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false)
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setUnreadCount(0)
+  }
+
+  const markRead = async (id) => {
+    await supabase.from('notifications').update({ read: true }).eq('id', id)
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+    setUnreadCount(c => Math.max(0, c - 1))
+  }
+
+  const filteredNotifs = notifFilter === 'all'
+    ? notifications
+    : notifications.filter(n => n.category === notifFilter)
+
+  const notifCategories = ['all', ...new Set(notifications.map(n => n.category).filter(Boolean))]
+
   return (
     <Link href={item.href} title={collapsed ? item.label : undefined}
       style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 8px', borderRadius:10,
@@ -101,6 +159,13 @@ export default function Shell({ children }) {
     if (isDark) document.documentElement.classList.add('dark')
     return isDark
   })
+
+  const [showNotifs, setShowNotifs] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [notifFilter, setNotifFilter] = useState('all')
+  const [unreadCount, setUnreadCount] = useState(0)
+  const bellRef = useRef(null)
+  const panelRef = useRef(null)
 
   const [plusOpen, setPlusOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -205,13 +270,81 @@ export default function Shell({ children }) {
           {/* Right side */}
           <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
             {/* Notification bell */}
-            <button style={{ position:'relative', background:'none', border:'none', cursor:'pointer', padding:5, color:'var(--c-t2)', display:'flex', alignItems:'center', borderRadius:8, flexShrink:0 }}
-              title="Notifications">
-              <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M8 1a5 5 0 00-5 5v2.5L1.5 11h13L13 8.5V6a5 5 0 00-5-5zM6.5 13.5a1.5 1.5 0 003 0"/>
-              </svg>
-              <span style={{ position:'absolute', top:3, right:3, width:6, height:6, background:'#ef4444', borderRadius:'50%', border:'1.5px solid var(--c-surface)' }}/>
-            </button>
+             <div style={{ position:'relative' }}>
+               <button ref={bellRef} onClick={() => { setShowNotifs(v=>!v); if(!showNotifs){ /* panel opening */ } }}
+                 style={{ position:'relative', background:showNotifs?'var(--c-surface2)':'none', border:'none', cursor:'pointer', padding:5, color: unreadCount>0?'#a78bfa':'var(--c-t2)', display:'flex', alignItems:'center', borderRadius:8, flexShrink:0, transition:'color 0.2s,background 0.2s' }}
+                 title="Notifications">
+                 <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                   <path d="M8 1a5 5 0 00-5 5v2.5L1.5 11h13L13 8.5V6a5 5 0 00-5-5zM6.5 13.5a1.5 1.5 0 003 0"/>
+                 </svg>
+                 {unreadCount > 0 && (
+                   <span style={{ position:'absolute', top:3, right:3, minWidth:14, height:14, background:'#ef4444', borderRadius:7, border:'1.5px solid var(--c-surface)', fontSize:8, fontWeight:700, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', padding:'0 2px' }}>
+                     {unreadCount > 9 ? '9+' : unreadCount}
+                   </span>
+                 )}
+               </button>
+
+               {/* Notifications panel */}
+               {showNotifs && (
+                 <div ref={panelRef} style={{ position:'absolute', top:'calc(100% + 8px)', right:0, width:340, maxWidth:'calc(100vw - 24px)', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:12, boxShadow:'0 8px 32px rgba(0,0,0,0.4)', zIndex:200, overflow:'hidden' }}>
+                   {/* Header */}
+                   <div style={{ padding:'14px 16px 10px', borderBottom:'1px solid var(--c-line)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                     <span style={{ fontSize:13, fontWeight:600, color:'var(--c-t1)' }}>Notifications</span>
+                     <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                       {unreadCount > 0 && (
+                         <button onClick={markAllRead} style={{ fontSize:11, color:'#a78bfa', background:'none', border:'none', cursor:'pointer', padding:0 }}>Mark all read</button>
+                       )}
+                       <button onClick={() => setShowNotifs(false)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--c-t3)', display:'flex', padding:2 }}>
+                         <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 1l10 10M11 1L1 11"/></svg>
+                       </button>
+                     </div>
+                   </div>
+
+                   {/* Filter pills */}
+                   {notifCategories.length > 1 && (
+                     <div style={{ padding:'8px 12px', display:'flex', gap:6, overflowX:'auto', borderBottom:'1px solid var(--c-line)' }}>
+                       {notifCategories.map(cat => (
+                         <button key={cat} onClick={() => setNotifFilter(cat)}
+                           style={{ padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:500, border:'1px solid', whiteSpace:'nowrap', cursor:'pointer', transition:'all 0.15s',
+                             background: notifFilter===cat ? '#a78bfa' : 'var(--c-surface2)',
+                             borderColor: notifFilter===cat ? '#a78bfa' : 'var(--c-line)',
+                             color: notifFilter===cat ? '#fff' : 'var(--c-t2)' }}>
+                           {cat.charAt(0).toUpperCase()+cat.slice(1)}
+                         </button>
+                       ))}
+                     </div>
+                   )}
+
+                   {/* List */}
+                   <div style={{ maxHeight:360, overflowY:'auto' }}>
+                     {filteredNotifs.length === 0 ? (
+                       <div style={{ padding:'32px 16px', textAlign:'center', color:'var(--c-t3)', fontSize:13 }}>
+                         <div style={{ fontSize:28, marginBottom:8 }}>🔔</div>
+                         <p style={{ margin:0 }}>No notifications yet</p>
+                       </div>
+                     ) : filteredNotifs.map(n => (
+                       <div key={n.id} onClick={() => markRead(n.id)}
+                         style={{ padding:'12px 16px', borderBottom:'1px solid var(--c-line)', cursor:'pointer', background: n.read ? 'transparent' : 'rgba(167,139,250,0.05)', display:'flex', gap:12, alignItems:'flex-start', transition:'background 0.15s' }}
+                         onMouseEnter={e=>e.currentTarget.style.background='var(--c-surface2)'}
+                         onMouseLeave={e=>e.currentTarget.style.background=n.read?'transparent':'rgba(167,139,250,0.05)'}>
+                         <div style={{ width:32, height:32, borderRadius:8, background: n.read?'var(--c-surface2)':'rgba(167,139,250,0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15 }}>
+                           {n.type==='assignment' ? '📋' : n.type==='quiz' ? '⚡' : n.type==='grade' ? '✅' : n.type==='class' ? '🏫' : '📣'}
+                         </div>
+                         <div style={{ flex:1, minWidth:0 }}>
+                           <p style={{ margin:'0 0 2px', fontSize:13, fontWeight: n.read?400:600, color:'var(--c-t1)', lineHeight:1.4 }}>{n.title}</p>
+                           {n.body && <p style={{ margin:'0 0 4px', fontSize:12, color:'var(--c-t2)', lineHeight:1.4, overflow:'hidden', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' }}>{n.body}</p>}
+                           <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                             {n.category && <span style={{ fontSize:10, color:'#a78bfa', background:'rgba(167,139,250,0.1)', padding:'1px 6px', borderRadius:4 }}>{n.category}</span>}
+                             <span style={{ fontSize:10, color:'var(--c-t3)' }}>{n.created_at ? new Date(n.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : ''}</span>
+                           </div>
+                         </div>
+                         {!n.read && <div style={{ width:6, height:6, borderRadius:'50%', background:'#a78bfa', flexShrink:0, marginTop:4 }}/>}
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+               )}
+             </div>
 
             {/* Dark pill — shows on mobile + mid-screen only */}
             <button onClick={toggleDark} className="ff-mid-mobile-only" style={{ height:30, padding:'0 10px', borderRadius:20, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', alignItems:'center', gap:5, color:'var(--c-t2)', flexShrink:0, fontSize:11, fontWeight:600, whiteSpace:'nowrap' }}>
