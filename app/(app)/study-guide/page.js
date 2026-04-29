@@ -161,6 +161,26 @@ export default function StudyGuidePage() {
     { id: 'deep',     label: 'Deep Dive', desc: 'Comprehensive' },
   ]
 
+
+  const generateShareLink = async () => {
+    if (!output) return
+    const uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2)+Date.now().toString(36)
+    if (typeof window !== 'undefined') {
+      const existing = JSON.parse(localStorage.getItem('ff-shared-guides') || '{}')
+      existing[uuid] = { topic, content: output, created: Date.now() }
+      localStorage.setItem('ff-shared-guides', JSON.stringify(existing))
+    }
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://flashfo.org'
+    const url = origin + '/shared/' + uuid
+    try {
+      await navigator.clipboard.writeText(url)
+      setShareMsg('Link copied!')
+    } catch {
+      setShareMsg('Copy failed')
+    }
+    setTimeout(() => setShareMsg(''), 2500)
+  }
+
   return (
     <div className="p-6 max-w-3xl mx-auto w-full">
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Study Guide Creator</h1>
