@@ -2,7 +2,7 @@
 // v5.9.2 — scrubbed for v6.0
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
@@ -159,7 +159,7 @@ export default function Shell({ children }) {
 
         {/* Nav links */}
         <nav style={{ flex:1, overflowY:'auto', overflowX:'hidden', padding:8, display:'flex', flexDirection:'column', gap:2 }}>
-          {NAV.map(item => <NavItem key={item.href} item={item} collapsed={collapsed} active={typeof window !== 'undefined' && window.location.pathname === item.href}/>)}
+          {NAV.map(item => <NavItem key={item.href} item={item} collapsed={collapsed} active={pathname === item.href}/>)}
           {!collapsed
             ? <div style={{ fontSize:10, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.06em', padding:'16px 8px 4px' }}>Tools</div>
             : <div style={{ borderTop:'1px solid var(--c-line)', margin:'8px 0' }}/>}
