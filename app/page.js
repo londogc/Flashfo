@@ -60,7 +60,7 @@ function AnimatedDemo() {
   const cards = CARDS[topic] || []
 
   return (
-    <div style={{ background:'#0d1117', border:'1px solid #30363d', borderRadius:12, padding:'12px 16px', maxWidth:580, margin:'0 auto', fontFamily:'ui-monospace,monospace', fontSize:13 }}>
+    <div style={{ background:'#0d1117', border:'1px solid #30363d', borderRadius:12, padding:'12px 16px', maxWidth:580, margin:'0 auto', minHeight:440, fontFamily:'ui-monospace,monospace', fontSize:13 }}>
       <div style={{ display:'flex', gap:6, marginBottom:12 }}>
         {['#ff5f57','#febc2e','#28c840'].map(c=>(
           <div key={c} style={{ width:10,height:10,borderRadius:'50%',background:c }}/>
@@ -70,8 +70,8 @@ function AnimatedDemo() {
         <span style={{ color:'#8b949e' }}>›</span>
         <span style={{ color:'#e6edf3', flex:1 }}>{typed}<span style={{ color:'#2563eb', animation:'blink 1s step-end infinite' }}>|</span></span>
       </div>
-      <div style={{ minHeight:220, transition:'opacity 0.4s' }}>
-        {showCards ? (
+      <div style={{ minHeight:320, transition:'opacity 0.4s', opacity: showCards ? 1 : 0 }}>
+        {(
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             <div style={{ color:'#8b949e', fontSize:11, marginBottom:2 }}>✦ Nova generated {cards.length} flashcards</div>
             {cards.map((c,i) => (
@@ -153,34 +153,36 @@ export default function LandingPage() {
       </section>
 
       {/* ── How it works — flowchart ── */}
-      <section style={{ maxWidth:900, margin:'0 auto', padding:'0 16px 80px' }}>
-        <p style={{ textAlign:'center',fontSize:12,color:'#484f58',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:48 }}>How it works</p>
-        <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'center', gap:0, flexWrap:'wrap' }}>
+      <section id="how-it-works" style={{ maxWidth:960, margin:'0 auto', padding:'0 16px 80px' }}>
+        <p style={{ textAlign:'center',fontSize:12,color:'#484f58',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:56 }}>How it works</p>
+        <div style={{ display:'flex', alignItems:'stretch', justifyContent:'center', gap:0 }}>
           {[
-            { step:'01', icon:'📋', label:'Drop any topic', desc:'Type a subject, paste notes, or pick a curriculum standard.', color:'#2563eb', bgColor:'rgba(37,99,235,0.08)', borderColor:'rgba(37,99,235,0.25)' },
-            { step:'02', icon:'✦', label:'Nova builds your kit', desc:'Flashcards, a study guide, and a quiz — ready in seconds.', color:'#a78bfa', bgColor:'rgba(167,139,250,0.08)', borderColor:'rgba(167,139,250,0.25)' },
-            { step:'03', icon:'🎯', label:'Study, quiz, repeat', desc:'Spaced repetition brings back hard cards until they stick.', color:'#34d399', bgColor:'rgba(52,211,153,0.08)', borderColor:'rgba(52,211,153,0.25)' },
-          ].map((item,i,arr) => (
-            <div key={i} style={{ display:'flex', alignItems:'center', gap:0 }}>
-              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', width:220, textAlign:'center', padding:'0 8px' }}>
-                <div style={{ fontSize:10, color:item.color, fontWeight:700, letterSpacing:'0.12em', marginBottom:14 }}>STEP {item.step}</div>
-                <div style={{ width:60,height:60,borderRadius:'50%',background:item.bgColor,border:`1.5px solid ${item.borderColor}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,marginBottom:18 }}>
-                  {item.icon}
+            { step:'01', icon:'📋', label:'Drop any topic', desc:'Type a subject, paste notes, or pick a curriculum standard.', color:'#2563eb', bg:'rgba(37,99,235,0.08)', border:'rgba(37,99,235,0.25)' },
+            { step:'02', icon:'✦', label:'Nova builds your kit', desc:'Flashcards, a study guide, and a quiz — ready in seconds.', color:'#a78bfa', bg:'rgba(167,139,250,0.08)', border:'rgba(167,139,250,0.25)' },
+            { step:'03', icon:'🎯', label:'Study, quiz, repeat', desc:'Spaced repetition brings back what needs work. Share with one link.', color:'#34d399', bg:'rgba(52,211,153,0.08)', border:'rgba(52,211,153,0.25)' },
+          ].map((s, i) => (
+            <div key={s.step} style={{ display:'flex', alignItems:'stretch', flex:1, minWidth:0 }}>
+              {/* Node */}
+              <div style={{ flex:1, background:s.bg, border:'1px solid '+s.border, borderRadius:14, padding:'28px 24px', display:'flex', flexDirection:'column', gap:12 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                  <div style={{ width:32, height:32, borderRadius:'50%', background:s.color, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, color:'#fff', fontWeight:700, flexShrink:0 }}>{s.step}</div>
+                  <span style={{ fontSize:18 }}>{s.icon}</span>
                 </div>
-                <div style={{ fontSize:15, fontWeight:600, color:'#e6edf3', marginBottom:8 }}>{item.label}</div>
-                <div style={{ fontSize:13, color:'#8b949e', lineHeight:1.55 }}>{item.desc}</div>
+                <p style={{ fontWeight:600, fontSize:15, color:'#e6edf3', margin:0 }}>{s.label}</p>
+                <p style={{ fontSize:13, color:'#8b949e', lineHeight:1.6, margin:0 }}>{s.desc}</p>
               </div>
-              {i < arr.length-1 && (
-                <div style={{ display:'flex', alignItems:'center', paddingBottom:16, minWidth:48 }}>
-                  <svg width="48" height="16" viewBox="0 0 48 16" fill="none">
-                    <line x1="0" y1="8" x2="38" y2="8" stroke="#30363d" strokeWidth="1.5" strokeDasharray="4 3"/>
-                    <polygon points="38,4 48,8 38,12" fill="#30363d"/>
-                  </svg>
+              {/* Arrow connector (between nodes) */}
+              {i < 2 && (
+                <div style={{ width:40, flexShrink:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:4 }}>
+                  <div style={{ width:24, height:1, background:'#30363d' }}/>
+                  <div style={{ width:0, height:0, borderTop:'5px solid transparent', borderBottom:'5px solid transparent', borderLeft:'7px solid #30363d' }}/>
                 </div>
               )}
             </div>
           ))}
         </div>
+        {/* Mobile: vertical flow */}
+        <style>{'.fc-mobile{display:none}@media(max-width:640px){.fc-mobile{display:flex}.fc-desktop{display:none!important}}'}</style>
       </section>
 
       {/* ── Nova in action demo ── */}
