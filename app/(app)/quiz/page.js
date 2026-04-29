@@ -454,6 +454,7 @@ export default function QuizPage() {
               <style>{`
                 .bd-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
                 @media(max-width:640px){.bd-grid{grid-template-columns:1fr 1fr;gap:10px}}
+                @media(max-width:480px){.bd-grid{grid-template-columns:1fr;gap:8px}}
               `}</style>
               <div className="bd-grid">
                 {[{k:'mcq',label:'Multiple Choice'},{k:'tf',label:'True / False'},{k:'sa',label:'Short Answer'},{k:'fitb',label:'Fill in Blank'},{k:'match',label:'Matching'}].map(({k,label}) => (
