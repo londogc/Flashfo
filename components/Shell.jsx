@@ -104,6 +104,13 @@ export default function Shell({ children }) {
 
   const [plusOpen, setPlusOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [entered, setEntered] = useState(false)
+
+  useEffect(() => {
+    setEntered(false)
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)))
+    return () => cancelAnimationFrame(id)
+  }, [pathname])
 
   useEffect(() => {
     // Handle sidebar auto-collapse on window resize
