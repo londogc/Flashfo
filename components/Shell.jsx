@@ -103,7 +103,6 @@ export default function Shell({ children }) {
 
   const [plusOpen, setPlusOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [entered, setEntered] = useState(false)
 
   useEffect(() => {
     // Handle sidebar auto-collapse on window resize
