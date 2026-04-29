@@ -60,7 +60,7 @@ function AnimatedDemo() {
   const cards = CARDS[topic] || []
 
   return (
-    <div style={{ background:'#0d1117', border:'1px solid #30363d', borderRadius:12, padding:'12px 16px', maxWidth:580, margin:'0 auto', minHeight:440, fontFamily:'ui-monospace,monospace', fontSize:13 }}>
+    <div style={{ background:'#0d1117', border:'1px solid #30363d', borderRadius:12, padding:'12px 16px', maxWidth:580, margin:'0 auto', height:460, overflow:'hidden', fontFamily:'ui-monospace,monospace', fontSize:13 }}>
       <div style={{ display:'flex', gap:6, marginBottom:12 }}>
         {['#ff5f57','#febc2e','#28c840'].map(c=>(
           <div key={c} style={{ width:10,height:10,borderRadius:'50%',background:c }}/>
@@ -70,7 +70,7 @@ function AnimatedDemo() {
         <span style={{ color:'#8b949e' }}>›</span>
         <span style={{ color:'#e6edf3', flex:1 }}>{typed}<span style={{ color:'#2563eb', animation:'blink 1s step-end infinite' }}>|</span></span>
       </div>
-      <div style={{ minHeight:320, transition:'opacity 0.4s', opacity: showCards ? 1 : 0 }}>
+      <div style={{ height:320, overflow:'hidden', transition:'opacity 0.4s', opacity: showCards ? 1 : 0 }}>
         {(
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             <div style={{ color:'#8b949e', fontSize:11, marginBottom:2 }}>✦ Nova generated {cards.length} flashcards</div>
@@ -153,36 +153,35 @@ export default function LandingPage() {
       </section>
 
       {/* ── How it works — flowchart ── */}
-      <section id="how-it-works" style={{ maxWidth:960, margin:'0 auto', padding:'0 16px 80px' }}>
+      <section id="how-it-works" style={{ maxWidth:700, margin:'0 auto', padding:'0 16px 80px' }}>
         <p style={{ textAlign:'center',fontSize:12,color:'#484f58',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:56 }}>How it works</p>
-        <div style={{ display:'flex', alignItems:'stretch', justifyContent:'center', gap:0 }}>
+        <div style={{ position:'relative', paddingLeft:52 }}>
+          {/* Vertical connector line */}
+          <div style={{ position:'absolute',left:19,top:32,bottom:32,width:2,background:'linear-gradient(180deg,#2563eb 0%,#a78bfa 50%,#34d399 100%)',borderRadius:2 }}/>
           {[
-            { step:'01', icon:'📋', label:'Drop any topic', desc:'Type a subject, paste notes, or pick a curriculum standard.', color:'#2563eb', bg:'rgba(37,99,235,0.08)', border:'rgba(37,99,235,0.25)' },
-            { step:'02', icon:'✦', label:'Nova builds your kit', desc:'Flashcards, a study guide, and a quiz — ready in seconds.', color:'#a78bfa', bg:'rgba(167,139,250,0.08)', border:'rgba(167,139,250,0.25)' },
-            { step:'03', icon:'🎯', label:'Study, quiz, repeat', desc:'Spaced repetition brings back what needs work. Share with one link.', color:'#34d399', bg:'rgba(52,211,153,0.08)', border:'rgba(52,211,153,0.25)' },
+            { step:'01', label:'Drop any topic', desc:'Type a subject, paste your notes, or pick a curriculum standard — any format works.', color:'#2563eb', bg:'rgba(37,99,235,0.08)', border:'rgba(37,99,235,0.2)' },
+            { step:'02', label:'Nova builds your kit', desc:'Flashcards, a full study guide, and a quiz appear instantly — tailored to exactly what you pasted.', color:'#a78bfa', bg:'rgba(167,139,250,0.08)', border:'rgba(167,139,250,0.2)' },
+            { step:'03', label:'Study, quiz, repeat', desc:'Spaced repetition surfaces cards you found hard. Share everything with one link.', color:'#34d399', bg:'rgba(52,211,153,0.08)', border:'rgba(52,211,153,0.2)' },
           ].map((s, i) => (
-            <div key={s.step} style={{ display:'flex', alignItems:'stretch', flex:1, minWidth:0 }}>
-              {/* Node */}
-              <div style={{ flex:1, background:s.bg, border:'1px solid '+s.border, borderRadius:14, padding:'28px 24px', display:'flex', flexDirection:'column', gap:12 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <div style={{ width:32, height:32, borderRadius:'50%', background:s.color, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, color:'#fff', fontWeight:700, flexShrink:0 }}>{s.step}</div>
-                  <span style={{ fontSize:18 }}>{s.icon}</span>
-                </div>
-                <p style={{ fontWeight:600, fontSize:15, color:'#e6edf3', margin:0 }}>{s.label}</p>
-                <p style={{ fontSize:13, color:'#8b949e', lineHeight:1.6, margin:0 }}>{s.desc}</p>
+            <div key={s.step} style={{ position:'relative', marginBottom: i < 2 ? 12 : 0 }}>
+              {/* Step circle */}
+              <div style={{ position:'absolute', left:-52, top:24, width:40, height:40, borderRadius:'50%', background:s.bg, border:'2px solid '+s.border, display:'flex', alignItems:'center', justifyContent:'center', zIndex:1 }}>
+                <span style={{ fontSize:12, fontWeight:700, color:s.color }}>{s.step}</span>
               </div>
-              {/* Arrow connector (between nodes) */}
+              {/* Card */}
+              <div style={{ background:s.bg, border:'1px solid '+s.border, borderRadius:14, padding:'24px 28px' }}>
+                <p style={{ fontWeight:600, fontSize:16, color:'#e6edf3', margin:'0 0 8px' }}>{s.label}</p>
+                <p style={{ fontSize:14, color:'#8b949e', lineHeight:1.6, margin:0 }}>{s.desc}</p>
+              </div>
+              {/* Arrow connector between steps */}
               {i < 2 && (
-                <div style={{ width:40, flexShrink:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:4 }}>
-                  <div style={{ width:24, height:1, background:'#30363d' }}/>
-                  <div style={{ width:0, height:0, borderTop:'5px solid transparent', borderBottom:'5px solid transparent', borderLeft:'7px solid #30363d' }}/>
+                <div style={{ position:'absolute', left:-33, bottom:-22, display:'flex', flexDirection:'column', alignItems:'center', gap:0 }}>
+                  <div style={{ width:0, height:0, borderLeft:'6px solid transparent', borderRight:'6px solid transparent', borderTop:'8px solid #30363d' }}/>
                 </div>
               )}
             </div>
           ))}
         </div>
-        {/* Mobile: vertical flow */}
-        <style>{'.fc-mobile{display:none}@media(max-width:640px){.fc-mobile{display:flex}.fc-desktop{display:none!important}}'}</style>
       </section>
 
       {/* ── Nova in action demo ── */}
