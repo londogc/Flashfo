@@ -5,11 +5,26 @@ import { supabase } from '@/lib/supabase'
 
 export default function NovaPage() {
   const { user } = useAuth()
+  const isFirstVisit = typeof window !== 'undefined' && !localStorage.getItem('ff-nova-visited')
   const [messages, setMessages] = useState([
-    { role: 'nova', text: "Hi, I'm Nova — your AI study companion. Ask me anything: explain a concept, work through a topic, summarize your notes, or build a study guide. What are we tackling today?" }
+    { role: 'nova', text: isFirstVisit
+      ? "Hey, I'm Nova — I'm not just a chatbot. Tell me what classes you're in or what you want to study and I'll make everything specific to you. What are we working on?"
+      : "Hey! I'm Nova. Ask me anything — explain a concept, quiz you on a topic, summarize your notes, or build a study guide. What are we tackling today?" }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [speaking, setSpeaking] = useState(false)
+
+  function speak(text) {
+    if (!window.speechSynthesis) return
+    window.speechSynthesis.cancel()
+    if (speaking) { setSpeaking(false); return }
+    const utt = new SpeechSynthesisUtterance(text)
+    utt.rate = 1.05; utt.pitch = 1
+    utt.onend = () => setSpeaking(false)
+    setSpeaking(true)
+    window.speechSynthesis.speak(utt)
+  }
   const [grade, setGrade] = useState('')
   const [classContext, setClassContext] = useState(null)
   const bottomRef = useRef(null)
@@ -69,6 +84,7 @@ export default function NovaPage() {
   }
 
   async function send() {
+    try { localStorage.setItem('ff-nova-visited', '1') } catch(e) {}
     const text = input.trim()
     if (!text || loading) return
     setInput('')
@@ -150,7 +166,14 @@ export default function NovaPage() {
               border: msg.role==='user' ? 'none' : '1px solid var(--c-line)',
               color: msg.role==='user' ? 'white' : 'var(--c-t1)',
               fontSize:14, lineHeight:1.6, whiteSpace:'pre-wrap', wordBreak:'break-word'
-            }}>{msg.text}</div>
+            }}>{msg.text}
+              {msg.role === 'nova' && window.speechSynthesis && (
+                <button onClick={() => speak(msg.text)} style={{ marginTop:6, display:'flex', alignItems:'center', gap:4, background:'none', border:'none', cursor:'pointer', padding:'2px 4px', borderRadius:6, opacity:0.5 }}
+                  onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0.5'}>
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round"><path d="M3 5H1v6h2l4 3V2L3 5zm8-2a6 6 0 010 10m-2-8a4 4 0 010 6"/></svg>
+                  <span style={{fontSize:10, color:'#a78bfa'}}>Listen</span>
+                </button>
+              )}</div>
           </div>
         ))}
         {loading && (
