@@ -1,4 +1,5 @@
 import './globals.css'
+import PageTransition from '@/components/PageTransition'
 
 export const metadata = {
   title: 'Flashfo — AI Study & Teaching Workspace',
@@ -34,10 +35,14 @@ export default function RootLayout({ children }) {
           @media(max-width:1099px){.ff-mid-mobile-only{display:flex!important}}
           @media(min-width:768px)and(max-width:1099px){aside.ff-desktop-only{width:56px!important;min-width:56px!important;max-width:56px!important;overflow:hidden!important}.ff-desktop-dark-toggle{display:none!important}}
           @media(max-width:767px){.ff-content{padding-bottom:80px!important}}
+          @keyframes ff-shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+          .ff-skeleton{background:linear-gradient(90deg,var(--c-surface2,#21262d) 25%,var(--c-surface,#161b22) 50%,var(--c-surface2,#21262d) 75%);background-size:800px 100%;animation:ff-shimmer 1.4s infinite linear;border-radius:8px}
         `}}/>
       </head>
       <body suppressHydrationWarning>
-        {children}
+        <PageTransition>
+          {children}
+        </PageTransition>
       </body>
     </html>
   )
