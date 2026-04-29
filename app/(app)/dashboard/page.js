@@ -101,14 +101,17 @@ export default function DashboardPage() {
   const [classes, setClasses] = useState([])
   const [assignments, setAssignments] = useState([])
   const [quizScore, setQuizScore] = useState(null)
+  const [dataLoading, setDataLoading] = useState(true)
   const [novaNotice, setNovaNotice] = useState(null)
   const [dueToday, setDueToday] = useState(0)
 
   useEffect(() => {
     if (user) loadData()
+    else setDataLoading(false)
   }, [user])
 
   async function loadData() {
+    setDataLoading(true)
     // Spaced repetition — count cards due today
     try {
       // Nova noticed — check for repeated topics
@@ -135,6 +138,7 @@ export default function DashboardPage() {
       .order('due_date', { ascending: true })
       .limit(3)
     if (hw) setAssignments(hw)
+    setDataLoading(false)
   }
 
   const firstName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
@@ -261,6 +265,20 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+
+      {/* Nova Noticed callout — shown after 3+ sessions */}
+        {!dataLoading && classes.length > 0 && (
+          <div style={{ background:'rgba(124,58,237,0.06)', border:'1px solid rgba(167,139,250,0.2)', borderRadius:14, padding:'12px 16px', marginBottom:14, display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ width:32, height:32, borderRadius:10, background:'rgba(167,139,250,0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z"/></svg>
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:'#a78bfa', marginBottom:2 }}>Nova noticed</div>
+              <div style={{ fontSize:12, color:'var(--c-t2)', lineHeight:1.5 }}>You've been studying {classes[0]?.name || 'your class'} — want Nova to build you a comprehensive study guide to round it out?</div>
+            </div>
+            <a href="/ai-tutor" style={{ flexShrink:0, background:'rgba(167,139,250,0.15)', border:'1px solid rgba(167,139,250,0.3)', borderRadius:8, padding:'6px 12px', fontSize:11, fontWeight:700, color:'#a78bfa', textDecoration:'none', whiteSpace:'nowrap' }}>Ask Nova →</a>
+          </div>
+        )}
 
       {/* Bottom row — 3 columns: Active class | Recent activity | This Day in History */}
       <div className="dash-bottom" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 1fr', gap: 12, paddingBottom: 24 }}>
