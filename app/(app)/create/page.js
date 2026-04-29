@@ -1,43 +1,129 @@
-
-const I = ({ d, cls }) => (
-  <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
-    <path d={d} />
-  </svg>
-)
+'use client'
+import { useState, useRef } from 'react'
+import { useAuth } from '@/lib/useAuth'
+import { useRouter } from 'next/navigation'
 
 const TOOLS = [
-  // Nova — target/bullseye icon (same as sidebar)
-  { label: 'Nova',            desc: 'Your AI study companion — explains, summarizes, and adapts to you', href: '/ai-tutor',       bg: 'bg-blue-500/10',   ic: 'text-blue-500',   icon: 'M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z' },
-  // Summarizer
-  { label: 'Summarizer',      desc: 'Condense long texts into key points',                               href: '/summarize',      bg: 'bg-emerald-500/10', ic: 'text-emerald-500', icon: 'M2 3h12v2.5H2zm0 4h8v2.5H2zm0 4h10v2H2' },
-  // Quiz Generator — question mark
-  { label: 'Quiz Generator',  desc: 'Create tests and assessments from any topic',                       href: '/quiz',           bg: 'bg-amber-500/10',  ic: 'text-amber-500',   icon: 'M6 5.5a2.5 2.5 0 014.5 1.5c0 1.5-1.5 2-2 3V11m0 2.5v.5' },
-  // Flashcard Maker — two offset cards (updated icon matching sidebar)
-  { label: 'Flashcard Maker', desc: 'Turn notes into interactive study cards',                           href: '/flashcards',     bg: 'bg-violet-500/10', ic: 'text-violet-500',  icon: 'M4 3h9a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zM2 5H1v7a1 1 0 001 1h9' },
-  // Lesson Builder
-  { label: 'Lesson Builder',  desc: 'Build full structured lesson plans',                                href: '/lesson-builder', bg: 'bg-rose-500/10',   ic: 'text-rose-500',    icon: 'M13 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V2a1 1 0 00-1-1zM5 5h6m-6 3h6m-6 3h4' },
-  // Content Creator — star
-  { label: 'Content Creator', desc: 'Generate any study material from a topic',                          href: '/create',         bg: 'bg-cyan-500/10',   ic: 'text-cyan-500',    icon: 'M8 1l1.8 5H15l-4.4 3.2 1.7 5.2L8 11.2 3.7 14.4l1.7-5.2L1 6h5.2z' },
-  // Study Guide Creator
-  { label: 'Study Guide',     desc: 'Build a full structured study guide from any topic or notes',       href: '/study-guide',    bg: 'bg-indigo-500/10', ic: 'text-indigo-500',  icon: 'M2 2h4v12H2zm5-1h2v14H7zm4 2h3v10h-3z' },
+  { id:'flashcards', label:'Flashcards', icon:'🗂️', desc:'Generate a full flashcard deck' },
+  { id:'quiz',       label:'Quiz',       icon:'⚡', desc:'Build a custom quiz' },
+  { id:'study_guide',label:'Study Guide',icon:'📖', desc:'Detailed study guide' },
+  { id:'summary',    label:'Summary',    icon:'✦',  desc:'Concise topic summary' },
 ]
 
-export default function AISuitePage() {
+export default function CreatePage() {
+  const { user } = useAuth()
+  const router = useRouter()
+  const [tool, setTool] = useState('flashcards')
+  const [inputMode, setInputMode] = useState('topic') // 'topic' | 'paste' | 'pdf'
+  const [topic, setTopic] = useState('')
+  const [pastedText, setPastedText] = useState('')
+  const [pdfText, setPdfText] = useState('')
+  const [pdfName, setPdfName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const fileRef = useRef(null)
+
+  const readPDF = async (file) => {
+    // Use FileReader to get base64, send to rpc for text extraction
+    setPdfName(file.name)
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      const base64 = e.target.result.split(',')[1]
+      setLoading(true)
+      try {
+        const res = await fetch('/api/rpc', { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ fn:'summarizeImportedFile', args:[{ base64, mimeType: file.type, filename: file.name }, 'Extract all text content verbatim, preserving structure.'] }) })
+        const data = await res.json()
+        setPdfText(data.result || data.text || '')
+        setInputMode('pdf')
+      } catch { setError('Could not read PDF') }
+      setLoading(false)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const generate = async () => {
+    const content = inputMode === 'topic' ? topic : inputMode === 'paste' ? pastedText : pdfText
+    if (!content.trim()) { setError('Add some content first'); return }
+    setError('')
+    // Route to the right page with content pre-filled via sessionStorage
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('ff-create-content', JSON.stringify({ inputMode, content, topic: inputMode==='topic'?content:pdfName||'Imported content' }))
+    }
+    const routes = { flashcards:'/flashcards', quiz:'/quiz', study_guide:'/study-guide', summary:'/study-guide' }
+    router.push(routes[tool] || '/flashcards')
+  }
+
   return (
-    <div className="p-6 max-w-4xl mx-auto w-full">
-      <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">AI Suite</h1>
-      <p className="text-sm text-t2 mb-6">Your complete collection of AI-powered study and teaching tools.</p>
-      <div className="grid grid-cols-3 gap-3">
-        {TOOLS.map(t => (
-          <a key={t.label} href={t.href} className="bg-surface border border-line rounded-xl p-5 hover:border-blue-300/50 transition-all group block">
-            <div className={`w-10 h-10 ${t.bg} rounded-xl mb-3 flex items-center justify-center`}>
-              <I d={t.icon} cls={t.ic} />
-            </div>
-            <div className="text-[13px] font-bold text-t1 mb-1">{t.label}</div>
-            <p className="text-[11px] text-t2 mb-3">{t.desc}</p>
-            <span className="text-[11px] text-blue-500 font-semibold group-hover:underline">Open →</span>
-          </a>
+    <div style={{ maxWidth:680, margin:'0 auto', padding:'0 16px 40px' }}>
+      <h1 style={{ fontSize:22, fontWeight:700, color:'var(--c-t1)', marginBottom:4 }}>Create</h1>
+      <p style={{ color:'var(--c-t2)', fontSize:14, marginBottom:24 }}>Drop a topic, paste notes, or upload a PDF — Nova builds your study kit.</p>
+
+      {/* Tool selector */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:24 }}>
+        {TOOLS.map(t=>(
+          <button key={t.id} onClick={()=>setTool(t.id)}
+            style={{ padding:'12px 8px', borderRadius:10, border:'1px solid', textAlign:'center', cursor:'pointer', transition:'all 0.15s',
+              borderColor: tool===t.id ? '#2563eb' : 'var(--c-line)',
+              background: tool===t.id ? 'rgba(37,99,235,0.08)' : 'var(--c-surface)',
+              color: tool===t.id ? '#2563eb' : 'var(--c-t2)' }}>
+            <div style={{ fontSize:20, marginBottom:4 }}>{t.icon}</div>
+            <div style={{ fontSize:12, fontWeight:600 }}>{t.label}</div>
+          </button>
         ))}
+      </div>
+
+      {/* Input mode tabs */}
+      <div style={{ display:'flex', gap:4, marginBottom:12, background:'var(--c-surface2)', borderRadius:8, padding:3 }}>
+        {[['topic','💬 Topic'],['paste','📋 Paste notes'],['pdf','📄 Upload PDF']].map(([mode,label])=>(
+          <button key={mode} onClick={()=>setInputMode(mode)}
+            style={{ flex:1, padding:'7px 4px', borderRadius:6, border:'none', fontSize:12, fontWeight:500, cursor:'pointer', transition:'all 0.15s',
+              background: inputMode===mode ? 'var(--c-surface)' : 'transparent',
+              color: inputMode===mode ? 'var(--c-t1)' : 'var(--c-t3)',
+              boxShadow: inputMode===mode ? '0 1px 4px rgba(0,0,0,0.15)' : 'none' }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Input area */}
+      <div style={{ marginBottom:16 }}>
+        {inputMode === 'topic' && (
+          <textarea value={topic} onChange={e=>setTopic(e.target.value)} rows={3}
+            placeholder="e.g. The causes of World War I, Photosynthesis, Quadratic equations..."
+            style={{ width:'100%', padding:'12px 14px', borderRadius:10, border:'1px solid var(--c-line)', background:'var(--c-surface)', color:'var(--c-t1)', fontSize:14, resize:'vertical', boxSizing:'border-box', lineHeight:1.5 }}/>
+        )}
+        {inputMode === 'paste' && (
+          <textarea value={pastedText} onChange={e=>setPastedText(e.target.value)} rows={8}
+            placeholder="Paste your notes, textbook excerpt, or any text here..."
+            style={{ width:'100%', padding:'12px 14px', borderRadius:10, border:'1px solid var(--c-line)', background:'var(--c-surface)', color:'var(--c-t1)', fontSize:13, resize:'vertical', boxSizing:'border-box', lineHeight:1.6, fontFamily:'inherit' }}/>
+        )}
+        {inputMode === 'pdf' && (
+          <div>
+            <div onClick={()=>fileRef.current?.click()} style={{ border:'2px dashed var(--c-line)', borderRadius:10, padding:'32px 16px', textAlign:'center', cursor:'pointer', background:'var(--c-surface)', transition:'border-color 0.2s' }}
+              onDragOver={e=>{e.preventDefault();e.currentTarget.style.borderColor='#2563eb'}}
+              onDragLeave={e=>e.currentTarget.style.borderColor='var(--c-line)'}
+              onDrop={e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)readPDF(f);}}>
+              <div style={{ fontSize:32, marginBottom:8 }}>📄</div>
+              <p style={{ color:'var(--c-t2)', fontSize:13, margin:'0 0 4px' }}>{pdfName ? pdfName : 'Drop your PDF here or click to browse'}</p>
+              {pdfText && <p style={{ color:'#34d399', fontSize:12, margin:0 }}>✓ Text extracted — ready to generate</p>}
+              {loading && <p style={{ color:'var(--c-t3)', fontSize:12, margin:0 }}>Reading file...</p>}
+            </div>
+            <input ref={fileRef} type="file" accept=".pdf,.txt,.doc,.docx" style={{ display:'none' }} onChange={e=>{const f=e.target.files?.[0];if(f)readPDF(f);}}/>
+          </div>
+        )}
+      </div>
+
+      {error && <p style={{ color:'#ef4444', fontSize:13, marginBottom:12 }}>{error}</p>}
+
+      <button onClick={generate} disabled={loading}
+        style={{ padding:'11px 28px', borderRadius:10, background:'#2563eb', color:'#fff', border:'none', fontWeight:600, fontSize:14, cursor:'pointer', opacity:loading?0.6:1 }}>
+        {loading ? 'Working...' : '✦ Generate with Nova'}
+      </button>
+
+      <div style={{ marginTop:32, padding:'16px 20px', background:'rgba(167,139,250,0.06)', border:'1px solid rgba(167,139,250,0.2)', borderRadius:10 }}>
+        <p style={{ margin:'0 0 4px', fontSize:13, fontWeight:600, color:'#a78bfa' }}>✦ Nova tip</p>
+        <p style={{ margin:0, fontSize:13, color:'var(--c-t2)' }}>Pasting your actual class notes gives Nova the most accurate context — she'll match your teacher's vocabulary and focus on exactly what your class covers.</p>
       </div>
     </div>
   )
