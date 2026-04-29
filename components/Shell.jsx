@@ -67,7 +67,7 @@ function NavItem({ item, collapsed, active }) {
         color: active ? '#3b82f6' : nova ? '#a78bfa' : 'var(--c-t2)' }}>
       <span style={{ flexShrink:0, position:'relative' }}>
         <I d={ICONS[item.icon]}/>
-        {nova && <span style={{ position:'absolute', top:-2, right:-2, width:5, height:5, background:'#4ade80', borderRadius:'50%', border:'1.5px solid var(--c-surface)', animation:'nova-pulse 1.5s ease-in-out infinite' }}/>}
+        {nova && <span style={{ position:'absolute', top:-3, right:-3, width:7, height:7, background:'#a78bfa', borderRadius:'50%', border:'1.5px solid var(--c-surface)', animation:'nova-breathe 2.4s ease-in-out infinite' }}/>}
       </span>
       {!collapsed && <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.label}</span>}
     </Link>
@@ -317,7 +317,11 @@ export default function Shell({ children }) {
         </nav>
       </div>
 
-    <style>{`@keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.75)}}`}</style>
+    <style>{`
+      @keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.75)}}
+      @keyframes nova-breathe{0%,100%{box-shadow:0 0 0 0 rgba(167,139,250,0.5)}50%{box-shadow:0 0 0 6px rgba(167,139,250,0)}}
+      @keyframes nova-thinking{0%,100%{box-shadow:0 0 0 2px rgba(167,139,250,0.7)}50%{box-shadow:0 0 0 5px rgba(167,139,250,0.1)}}
+    `}</style>
     </div>
   )
 }
