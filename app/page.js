@@ -1,216 +1,226 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/useAuth'
+import { useAuth } from '@/lib/auth'
 
-const TOPICS = ['Civil War causes', 'Photosynthesis', 'Quadratic equations', 'The Great Gatsby']
+const TOPICS = ['Civil War causes','Photosynthesis','Quadratic equations','The Great Gatsby']
+const CARDS = {
+  'Civil War causes':[
+    {q:'What year did the Civil War begin?',a:'1861'},
+    {q:'Primary economic difference between North and South?',a:'Industrial vs agricultural'},
+    {q:'What was the Missouri Compromise?',a:'Limited slavery expansion to new territories'},
+  ],
+  'Photosynthesis':[
+    {q:'What is the main product of photosynthesis?',a:'Glucose (C₆H₁₂O₆)'},
+    {q:'Where does the light reaction occur?',a:'Thylakoid membrane'},
+    {q:'What gas is released as a byproduct?',a:'Oxygen'},
+  ],
+  'Quadratic equations':[
+    {q:'What is the quadratic formula?',a:'x = (−b ± √(b²−4ac)) / 2a'},
+    {q:'What is the discriminant?',a:'b² − 4ac'},
+    {q:'When does a quadratic have no real roots?',a:'When discriminant < 0'},
+  ],
+  'The Great Gatsby':[
+    {q:'Who narrates the story?',a:'Nick Carraway'},
+    {q:'What does the green light symbolize?',a:"Gatsby's hopes and the American Dream"},
+    {q:'In what era is the novel set?',a:'The Roaring Twenties (1922)'},
+  ],
+}
 
-function FeatureDemo() {
+function AnimatedDemo() {
   const [topicIdx, setTopicIdx] = useState(0)
   const [typed, setTyped] = useState('')
   const [showCards, setShowCards] = useState(false)
   const topic = TOPICS[topicIdx]
+  const timerRef = useRef(null)
 
   useEffect(() => {
-    let i = 0
-    let t1, t2
     setTyped('')
     setShowCards(false)
-
-    const interval = setInterval(() => {
-      i++
-      setTyped(topic.slice(0, i))
-      if (i >= topic.length) {
-        clearInterval(interval)
-        t1 = setTimeout(() => {
-          setShowCards(true)
-          // auto-advance to next topic after 3 s of showing results
-          t2 = setTimeout(() => {
-            setTopicIdx(idx => (idx + 1) % TOPICS.length)
-          }, 6000)
-        }, 400)
+    let charIdx = 0
+    const typeNext = () => {
+      charIdx++
+      setTyped(topic.slice(0, charIdx))
+      if (charIdx < topic.length) {
+        timerRef.current = setTimeout(typeNext, 85)
+      } else {
+        timerRef.current = setTimeout(() => setShowCards(true), 400)
       }
-    }, 85) // 85ms per character — readable but lively
-
-    return () => { clearInterval(interval); clearTimeout(t1); clearTimeout(t2) }
+    }
+    timerRef.current = setTimeout(typeNext, 300)
+    return () => clearTimeout(timerRef.current)
   }, [topicIdx, topic])
 
-  const cards = [
-    { label: 'Flashcards', color: '#34d399' },
-    { label: 'Quiz', color: '#a78bfa' },
-    { label: 'Study Guide', color: '#fb923c' },
-    { label: 'Nova ready', color: '#60a5fa' },
-  ]
+  useEffect(() => {
+    if (!showCards) return
+    timerRef.current = setTimeout(() => setTopicIdx(i => (i+1) % TOPICS.length), 6000)
+    return () => clearTimeout(timerRef.current)
+  }, [showCards])
+
+  const cards = CARDS[topic] || []
 
   return (
-    <div style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: 20, padding: 28, maxWidth: 520, margin: '0 auto' }}>
-      {/* Topic indicator dots */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 18, justifyContent: 'center' }}>
-        {TOPICS.map((_, i) => (
-          <button key={i} onClick={() => setTopicIdx(i)} style={{ width: i === topicIdx ? 20 : 6, height: 6, borderRadius: 3, background: i === topicIdx ? '#2563eb' : '#30363d', border: 'none', cursor: 'pointer', transition: 'all 0.3s', padding: 0 }}/>
+    <div style={{ background:'#0d1117', border:'1px solid #30363d', borderRadius:12, padding:'12px 16px', maxWidth:580, margin:'0 auto', fontFamily:'ui-monospace,monospace', fontSize:13 }}>
+      <div style={{ display:'flex', gap:6, marginBottom:12 }}>
+        {['#ff5f57','#febc2e','#28c840'].map(c=>(
+          <div key={c} style={{ width:10,height:10,borderRadius:'50%',background:c }}/>
         ))}
       </div>
-
-      {/* Fake search input */}
-      <div style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: 12, padding: '12px 16px', fontSize: 15, color: '#e6edf3', marginBottom: 20, minHeight: 48, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8b949e" strokeWidth="1.5"><path d="M7 1a6 6 0 100 12A6 6 0 007 1zm7 14l-3-3"/></svg>
-        <span style={{ flex: 1 }}>{typed}<span style={{ opacity: 0.4, animation: 'blink 1s step-end infinite' }}>|</span></span>
+      <div style={{ display:'flex', alignItems:'center', gap:8, background:'#161b22', borderRadius:8, padding:'8px 12px', marginBottom:12, border:'1px solid #30363d' }}>
+        <span style={{ color:'#8b949e' }}>›</span>
+        <span style={{ color:'#e6edf3', flex:1 }}>{typed}<span style={{ color:'#2563eb', animation:'blink 1s step-end infinite' }}>|</span></span>
       </div>
-
-      {/* Result cards */}
-      {showCards && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-            {cards.map((c, i) => (
-              <div key={c.label} style={{
-                background: '#21262d', border: '1px solid ' + c.color + '40', borderRadius: 12, padding: '14px 12px',
-                display: 'flex', alignItems: 'center', gap: 8,
-                animation: 'cardIn 0.35s ease ' + (i * 0.07) + 's both',
-              }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: c.color, flexShrink: 0 }}/>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#e6edf3' }}>{c.label}</span>
+      <div style={{ minHeight:220, transition:'opacity 0.4s' }}>
+        {showCards ? (
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <div style={{ color:'#8b949e', fontSize:11, marginBottom:2 }}>✦ Nova generated {cards.length} flashcards</div>
+            {cards.map((c,i) => (
+              <div key={i} style={{ background:'#161b22', borderRadius:8, padding:'10px 14px', border:'1px solid #30363d', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12 }}>
+                <span style={{ color:'#e6edf3', flex:1 }}>{c.q}</span>
+                <span style={{ color:'#34d399', fontSize:11, whiteSpace:'nowrap' }}>{c.a}</span>
               </div>
             ))}
           </div>
-          <div style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#a78bfa', marginBottom: 16 }}>
-            Nova noticed this matches AP US History — materials tailored for your class
+        ) : (
+          <div style={{ display:'flex', alignItems:'center', gap:10, color:'#8b949e', fontSize:13, padding:'24px 8px' }}>
+            <span style={{ width:8,height:8,borderRadius:'50%',background:'#a78bfa',display:'inline-block',flexShrink:0 }} className="nova-thinking"/>
+            Nova is building your flashcard kit…
           </div>
-        </>
-      )}
-
-      <span style={{ fontSize: 11, color: '#484f58' }}>Auto-advances · {TOPICS.length} topics</span>
-
-      <style>{`
-        @keyframes cardIn {
-          from { opacity: 0; transform: scale(0.88) translateY(6px); }
-          60% { transform: scale(1.03) translateY(-2px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes blink { 0%,100%{opacity:0.4} 50%{opacity:0} }
-      `}</style>
+        )}
+      </div>
+      <div style={{ display:'flex', gap:6, marginTop:12, justifyContent:'center' }}>
+        {TOPICS.map((_,i) => (
+          <button key={i} onClick={() => setTopicIdx(i)} style={{ width:i===topicIdx?20:6,height:6,borderRadius:3,background:i===topicIdx?'#2563eb':'#30363d',border:'none',cursor:'pointer',padding:0,transition:'width 0.3s,background 0.2s' }}/>
+        ))}
+      </div>
     </div>
   )
 }
 
 export default function LandingPage() {
-  const router = useRouter()
   const { user, loading } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
     if (!loading && user) router.replace('/dashboard')
   }, [user, loading, router])
 
-  if (loading) return <div style={{ background: '#0d1117', minHeight: '100dvh' }}/>
-  if (user) return null
-
-  const NAV_LINKS = ['Features', 'For Teachers', 'Resource Hub', 'Pricing']
-  const STEPS = [
-    { n: '01', title: 'Drop any topic', body: 'Paste your notes, a URL, or just type a subject. Nova reads everything you give it.', icon: 'M2 3h12v2.5H2zm0 4h8v2.5H2zm0 4h10v2H2' },
-    { n: '02', title: 'Nova builds your kit', body: 'Nova generates flashcards, quizzes, and study guides — tailored to your actual class, not just generic AI output.', icon: 'M8 1l1.8 5H15l-4.4 3.2 1.7 5.2L8 11.2 3.7 14.4l1.7-5.2L1 6h5.2z' },
-    { n: '03', title: 'Study, quiz, repeat', body: 'Nova stays with you through every session. Ask questions, get explanations, never study alone.', icon: 'M2 4h12M2 8h8M2 12h10' },
-  ]
+  if (loading) return <div style={{ background:'#0d1117', minHeight:'100dvh' }}/>
 
   return (
-    <div style={{ background: '#0d1117', minHeight: '100dvh', color: '#e6edf3', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
-      <style>{`@media(max-width:767px){.lp-nav-links{display:none!important}}`}</style>
+    <div style={{ background:'#0d1117', minHeight:'100dvh', color:'#e6edf3', fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
 
-      {/* Navbar */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: '1px solid #21262d', background: 'rgba(13,17,23,0.9)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-            <div style={{ width: 28, height: 28, background: '#1d4ed8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
-            </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#e6edf3' }}>Flashfo</span>
+      {/* ── Nav ── */}
+      <nav style={{ position:'sticky',top:0,zIndex:50,background:'rgba(13,17,23,0.92)',backdropFilter:'blur(12px)',borderBottom:'1px solid #21262d' }}>
+        <div style={{ maxWidth:1200,margin:'0 auto',padding:'0 16px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ width:28,height:28,background:'#1d4ed8',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:'#fff' }}>F</div>
+            <span style={{ fontWeight:600, fontSize:16 }}>Flashfo</span>
           </div>
-          {/* Nav links — desktop only via inline media trick */}
-          <div className="lp-nav-links" style={{ display: 'flex', gap: 2, flex: 1, marginLeft: 12 }}>
-            {NAV_LINKS.map(l => (
-              <a key={l} href={'#' + l.toLowerCase().replace(/ /g,'-')} style={{ padding: '6px 12px', fontSize: 13, fontWeight: 500, color: '#8b949e', textDecoration: 'none', borderRadius: 8 }}
-                onMouseEnter={e => e.currentTarget.style.color='#e6edf3'} onMouseLeave={e => e.currentTarget.style.color='#8b949e'}>{l}</a>
+          <div className="lp-nav-links" style={{ display:'flex', gap:28, fontSize:13 }}>
+            {['Features','For Teachers','Resource Hub','Pricing'].map(l=>(
+              <a key={l} href="#" style={{ color:'#8b949e', textDecoration:'none' }}>{l}</a>
             ))}
           </div>
-          {/* Spacer on mobile */}
-          <div style={{ flex: 1 }}/>
-          {/* CTAs — always visible, compact on mobile */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            <a href="/auth" style={{ padding: '7px 12px', fontSize: 13, fontWeight: 600, color: '#8b949e', textDecoration: 'none', borderRadius: 8, whiteSpace: 'nowrap' }}
-              onMouseEnter={e => e.currentTarget.style.color='#e6edf3'} onMouseLeave={e => e.currentTarget.style.color='#8b949e'}>Sign in</a>
-            <a href="/auth?mode=signup" style={{ padding: '8px 14px', fontSize: 13, fontWeight: 700, background: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: 10, whiteSpace: 'nowrap' }}>Get started free</a>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            <a href="/sign-in" style={{ color:'#8b949e', fontSize:13, textDecoration:'none' }}>Sign in</a>
+            <a href="/sign-up" style={{ background:'#2563eb', color:'#fff', fontSize:13, fontWeight:500, padding:'7px 14px', borderRadius:8, textDecoration:'none' }}>Get started free</a>
           </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section style={{ maxWidth: 900, margin: '0 auto', padding: 'clamp(48px,8vw,96px) 20px clamp(48px,6vw,80px)', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: 20, background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.3)', fontSize: 12, fontWeight: 600, color: '#60a5fa', marginBottom: 32, letterSpacing: '0.02em' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#60a5fa', display: 'inline-block' }}/>
-          Now with Nova — your AI class companion
+      {/* ── Hero ── */}
+      <section style={{ maxWidth:1200, margin:'0 auto', padding:'80px 16px 64px', textAlign:'center' }}>
+        <div style={{ display:'inline-flex',alignItems:'center',gap:6,background:'rgba(167,139,250,0.08)',border:'1px solid rgba(167,139,250,0.2)',borderRadius:20,padding:'4px 12px',fontSize:12,color:'#a78bfa',marginBottom:24 }}>
+          <span style={{ width:6,height:6,borderRadius:'50%',background:'#a78bfa',display:'inline-block' }}/>
+          Powered by Nova AI
         </div>
-        <h1 style={{ fontSize: 'clamp(40px, 7vw, 76px)', fontWeight: 800, lineHeight: 1.08, margin: '0 0 28px', letterSpacing: '-0.025em' }}>
-          <span style={{ background: 'linear-gradient(135deg, #e6edf3 20%, #a78bfa 80%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Study smarter.</span>
-          <br/>
-          <span style={{ background: 'linear-gradient(135deg, #60a5fa, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Teach better.</span>
-          <br/>
-          <span style={{ color: '#e6edf3' }}>Together.</span>
+        <h1 style={{ fontSize:'clamp(32px,6vw,64px)',fontWeight:700,lineHeight:1.1,marginBottom:20,background:'linear-gradient(135deg,#e6edf3 0%,#a78bfa 50%,#2563eb 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text' }}>
+          Study smarter.<br/>Teach better. Together.
         </h1>
-        <p style={{ fontSize: 19, color: '#8b949e', lineHeight: 1.7, maxWidth: 540, margin: '0 auto 44px' }}>
-          Drop any topic and Nova builds your flashcards, quizzes, and study guides — tailored to your actual class.
+        <p style={{ fontSize:18, color:'#8b949e', maxWidth:520, margin:'0 auto 36px', lineHeight:1.6 }}>
+          Nova builds personalised flashcards, quizzes, and study guides in seconds — tailored to your exact curriculum.
         </p>
-        <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="/auth?mode=signup" style={{ padding: '15px 32px', fontSize: 16, fontWeight: 700, background: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: 14, boxShadow: '0 0 40px rgba(37,99,235,0.35)', letterSpacing: '-0.01em' }}>
-            Start for free →
+        <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
+          <a href="/sign-up" style={{ background:'#2563eb',color:'#fff',fontSize:15,fontWeight:600,padding:'12px 24px',borderRadius:10,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8 }}>
+            Get started free <span>→</span>
           </a>
-          <a href="#how-it-works" style={{ padding: '15px 28px', fontSize: 16, fontWeight: 600, background: '#161b22', color: '#e6edf3', textDecoration: 'none', borderRadius: 14, border: '1px solid #30363d' }}>
-            See how it works
-          </a>
+          <button onClick={() => document.getElementById('nova-demo')?.scrollIntoView({behavior:'smooth'})} style={{ background:'transparent',color:'#e6edf3',fontSize:15,fontWeight:500,padding:'12px 24px',borderRadius:10,border:'1px solid #30363d',cursor:'pointer',display:'inline-flex',alignItems:'center',gap:8 }}>
+            <span style={{ width:6,height:6,borderRadius:'50%',background:'#a78bfa',display:'inline-block' }}/>
+            See Nova in action
+          </button>
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="how-it-works" style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(40px,6vw,80px) 20px clamp(32px,4vw,60px)' }}>
-        <h2 style={{ textAlign: 'center', fontSize: 34, fontWeight: 800, marginBottom: 60, color: '#e6edf3', letterSpacing: '-0.02em' }}>How it works</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 48 }}>
-          {STEPS.map(s => (
-            <div key={s.n} style={{ background: '#161b22', border: '1px solid #21262d', borderRadius: 20, padding: 32 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#484f58', letterSpacing: '0.1em', marginBottom: 20 }}>{s.n}</div>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-                <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#60a5fa" strokeWidth="1.5" strokeLinecap="round"><path d={s.icon}/></svg>
+      {/* ── How it works — flowchart ── */}
+      <section style={{ maxWidth:900, margin:'0 auto', padding:'0 16px 80px' }}>
+        <p style={{ textAlign:'center',fontSize:12,color:'#484f58',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:48 }}>How it works</p>
+        <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'center', gap:0, flexWrap:'wrap' }}>
+          {[
+            { step:'01', icon:'📋', label:'Drop any topic', desc:'Type a subject, paste notes, or pick a curriculum standard.', color:'#2563eb', bgColor:'rgba(37,99,235,0.08)', borderColor:'rgba(37,99,235,0.25)' },
+            { step:'02', icon:'✦', label:'Nova builds your kit', desc:'Flashcards, a study guide, and a quiz — ready in seconds.', color:'#a78bfa', bgColor:'rgba(167,139,250,0.08)', borderColor:'rgba(167,139,250,0.25)' },
+            { step:'03', icon:'🎯', label:'Study, quiz, repeat', desc:'Spaced repetition brings back hard cards until they stick.', color:'#34d399', bgColor:'rgba(52,211,153,0.08)', borderColor:'rgba(52,211,153,0.25)' },
+          ].map((item,i,arr) => (
+            <div key={i} style={{ display:'flex', alignItems:'center', gap:0 }}>
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', width:220, textAlign:'center', padding:'0 8px' }}>
+                <div style={{ fontSize:10, color:item.color, fontWeight:700, letterSpacing:'0.12em', marginBottom:14 }}>STEP {item.step}</div>
+                <div style={{ width:60,height:60,borderRadius:'50%',background:item.bgColor,border:`1.5px solid ${item.borderColor}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,marginBottom:18 }}>
+                  {item.icon}
+                </div>
+                <div style={{ fontSize:15, fontWeight:600, color:'#e6edf3', marginBottom:8 }}>{item.label}</div>
+                <div style={{ fontSize:13, color:'#8b949e', lineHeight:1.55 }}>{item.desc}</div>
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#e6edf3', margin: '0 0 10px' }}>{s.title}</h3>
-              <p style={{ fontSize: 14, color: '#8b949e', lineHeight: 1.65, margin: 0 }}>{s.body}</p>
+              {i < arr.length-1 && (
+                <div style={{ display:'flex', alignItems:'center', paddingBottom:16, minWidth:48 }}>
+                  <svg width="48" height="16" viewBox="0 0 48 16" fill="none">
+                    <line x1="0" y1="8" x2="38" y2="8" stroke="#30363d" strokeWidth="1.5" strokeDasharray="4 3"/>
+                    <polygon points="38,4 48,8 38,12" fill="#30363d"/>
+                  </svg>
+                </div>
+              )}
             </div>
           ))}
         </div>
+      </section>
 
-        {/* Nova callout */}
-        <div style={{ background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(167,139,250,0.22)', borderRadius: 24, padding: '36px 40px', textAlign: 'center', maxWidth: 680, margin: '0 auto' }}>
-          <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-            <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z"/></svg>
-          </div>
-          <h3 style={{ fontSize: 20, fontWeight: 700, color: '#a78bfa', margin: '0 0 14px' }}>Nova is part of your class — not just a chatbot.</h3>
-          <p style={{ fontSize: 15, color: '#8b949e', lineHeight: 1.7, margin: 0 }}>
-            Connect your classroom and Nova learns your syllabus, tracks your homework, and preps you for every assignment.
-          </p>
+      {/* ── Nova in action demo ── */}
+      <section id="nova-demo" style={{ borderTop:'1px solid #21262d', borderBottom:'1px solid #21262d', padding:'80px 16px', background:'#0a0e14' }}>
+        <div style={{ maxWidth:1200, margin:'0 auto', textAlign:'center' }}>
+          <p style={{ fontSize:12,color:'#484f58',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:16 }}>Nova in action</p>
+          <h2 style={{ fontSize:'clamp(24px,4vw,40px)', fontWeight:700, marginBottom:12 }}>Watch Nova work</h2>
+          <p style={{ color:'#8b949e', marginBottom:48, fontSize:15 }}>Type any topic and Nova builds your complete study kit instantly.</p>
+          <AnimatedDemo/>
         </div>
       </section>
 
-      {/* Animated Demo */}
-      <section style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 20px clamp(60px,8vw,100px)' }}>
-        <h2 style={{ textAlign: 'center', fontSize: 34, fontWeight: 800, marginBottom: 14, color: '#e6edf3', letterSpacing: '-0.02em' }}>See Nova in action</h2>
-        <p style={{ textAlign: 'center', fontSize: 15, color: '#8b949e', marginBottom: 48 }}>Drop a topic and watch your study kit appear.</p>
-        <FeatureDemo />
+      {/* ── Nova callout ── */}
+      <section style={{ maxWidth:1200, margin:'0 auto', padding:'80px 16px' }}>
+        <div style={{ background:'rgba(167,139,250,0.05)',border:'1px solid rgba(167,139,250,0.18)',borderRadius:16,padding:'40px 48px',display:'flex',gap:40,alignItems:'center',flexWrap:'wrap' }}>
+          <div style={{ flex:1, minWidth:260 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
+              <span style={{ width:8,height:8,borderRadius:'50%',background:'#34d399',display:'inline-block' }} className="nova-thinking"/>
+              <span style={{ fontSize:12, color:'#a78bfa', fontWeight:600, letterSpacing:'0.08em' }}>NOVA</span>
+            </div>
+            <h2 style={{ fontSize:'clamp(20px,3vw,32px)', fontWeight:700, marginBottom:12, lineHeight:1.2 }}>
+              Nova is part of your class<br/>— not just a chatbot
+            </h2>
+            <p style={{ color:'#8b949e', fontSize:15, lineHeight:1.6 }}>Nova learns which classes you're in, what you're studying, and where you're stuck. Every resource she creates is built around your exact curriculum.</p>
+          </div>
+          <div style={{ flex:'0 0 auto', display:'flex', flexDirection:'column', gap:12 }}>
+            {['Personalised to your syllabus','Aware of your teacher\'s assignments','Remembers what you find hard','Works across all your subjects'].map(f => (
+              <div key={f} style={{ display:'flex', alignItems:'center', gap:10, fontSize:14, color:'#e6edf3' }}>
+                <span style={{ color:'#34d399', fontWeight:600, fontSize:16 }}>✓</span>{f}
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
-      {/* Footer CTA */}
-      <section style={{ borderTop: '1px solid #21262d', padding: 'clamp(48px,6vw,80px) 20px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: 36, fontWeight: 800, color: '#e6edf3', margin: '0 0 14px', letterSpacing: '-0.02em' }}>Ready to study smarter?</h2>
-        <p style={{ fontSize: 16, color: '#8b949e', margin: '0 0 36px' }}>Join students and teachers already using Flashfo.</p>
-        <a href="/auth?mode=signup" style={{ padding: '16px 40px', fontSize: 16, fontWeight: 700, background: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: 14, boxShadow: '0 0 48px rgba(37,99,235,0.32)' }}>
-          Get started free →
-        </a>
-        <div style={{ marginTop: 60, fontSize: 12, color: '#484f58' }}>© 2025 Flashfo · Study workspace</div>
+      {/* ── Footer CTA ── */}
+      <section style={{ background:'#161b22', borderTop:'1px solid #21262d', padding:'80px 16px', textAlign:'center' }}>
+        <h2 style={{ fontSize:'clamp(24px,4vw,40px)', fontWeight:700, marginBottom:16 }}>Ready to study smarter?</h2>
+        <p style={{ color:'#8b949e', fontSize:16, marginBottom:32 }}>Join thousands of students and teachers already using Flashfo.</p>
+        <a href="/sign-up" style={{ background:'#2563eb', color:'#fff', fontSize:15, fontWeight:600, padding:'14px 28px', borderRadius:10, textDecoration:'none' }}>Get started free →</a>
       </section>
 
     </div>
