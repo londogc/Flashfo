@@ -252,7 +252,7 @@ export default function Shell({ children }) {
           </div>
         </header>
 
-        <main className="ff-content ff-page-in" style={{ flex:1, overflowY:'auto' }}>
+        <main key={pathname ?? ''} className="ff-content" style={{ flex:1, overflowY:'auto', animation:'page-drop 0.22s ease both' }}>
           {children}
         </main>
       </div>
