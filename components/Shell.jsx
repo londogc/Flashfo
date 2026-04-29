@@ -40,6 +40,10 @@ const NAV = [
   { href:'/teach',          label:'Teacher Portal',icon:'teach'     },
   { href:'/student-portal', label:'Student Portal',icon:'studentp'  },
   { href:'/my-stuff',       label:'My Stuff',      icon:'mystuff'   },
+  { href:'/stem',          label:'Flashfo STEM',  icon:'stem'      },
+  { href:'/standards',     label:'Standards',     icon:'standards' },
+  { href:'/collab-decks',  label:'Collab Decks',  icon:'collab'    },
+  { href:'/parent-report', label:'Parent Reports', icon:'report'   },
 ]
 const TOOLS = [
   { href:'/summarize',      label:'Summarize',     icon:'summarize'  },
