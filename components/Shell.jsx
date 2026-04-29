@@ -253,7 +253,7 @@ export default function Shell({ children }) {
           </div>
         </header>
 
-        <main className="ff-content" style={{ flex:1, overflowY:'auto' }}>
+        <main className={`ff-content page-enter${entered ? ' page-enter-active' : ''}`} style={{ flex:1, overflowY:'auto' }}>
           {children}
         </main>
       </div>
