@@ -18,6 +18,7 @@ export default function TeachSessionPage({ params }) {
   const [generating, setGenerating] = useState(false)
   const [launching, setLaunching]   = useState(false)
   const [distributing, setDistributing] = useState(false)
+  const [sessionError, setSessionError] = useState(null)
   const channelRef = useRef(null)
 
   useEffect(()=>{
@@ -28,9 +29,12 @@ export default function TeachSessionPage({ params }) {
     const { data: cls } = await supabase.from('classrooms').select('*').eq('code', code).single()
     if (!cls) { setLoading(false); return }
     setClassroom(cls)
-    const { data: sess } = await supabase.from('classroom_sessions').select('*')
+    const { data: sess, error: sessErr } = await supabase.from('classroom_sessions').select('*')
       .eq('classroom_id', cls.id).neq('status','closed')
       .order('created_at',{ascending:false}).limit(1).maybeSingle()
+    if (sessErr && (sessErr.code === '42501' || (sessErr.message||'').includes('permission'))) {
+      setSessionError('Live sessions need a Supabase RLS policy — see error banner for details.')
+    }
     if (sess) { setSession(sess); loadSubmissions(sess.id); subscribeToResponses(sess.id) }
     const items = await getUserItems(user.id, 'quiz').catch(()=>[])
     setSavedQuizzes(items)
@@ -64,6 +68,7 @@ export default function TeachSessionPage({ params }) {
 
   async function launchSession(quizData, isHomework=false, dueDate=null) {
     setLaunching(true)
+    setSessionError(null)
     try {
       if (session) await supabase.from('classroom_sessions').update({status:'closed'}).eq('id',session.id)
       const enriched = isHomework ? { ...quizData, homework: true, due_date: dueDate } : quizData
@@ -78,6 +83,11 @@ export default function TeachSessionPage({ params }) {
       setSession(data); setSubmissions({})
       subscribeToResponses(data.id)
       setShowPicker(false)
+    } catch (e) {
+      const isRLS = e.code === '42501' || (e.message||'').toLowerCase().includes('permission')
+      setSessionError(isRLS
+        ? 'Permission denied — the classroom_sessions table needs a Supabase RLS policy for teachers. Run: CREATE POLICY \"Teachers manage sessions\" ON classroom_sessions FOR ALL USING (auth.uid() = teacher_id);'
+        : (e.message || 'Failed to launch session'))
     } finally { setLaunching(false) }
   }
 
