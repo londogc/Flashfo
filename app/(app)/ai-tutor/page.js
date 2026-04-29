@@ -30,6 +30,19 @@ export default function NovaPage() {
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
 
+  
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const welcomed = localStorage.getItem('ff-nova-welcomed')
+    if (!welcomed) {
+      setMessages(prev => prev.length === 0 ? [{
+        role: 'assistant',
+        content: "Hey, I'm Nova — I'm not just a chatbot. Tell me what classes you're in or what you want to study and I'll make everything specific to you."
+      }] : prev)
+      localStorage.setItem('ff-nova-welcomed', '1')
+    }
+  }, [])
+
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
   useEffect(() => {
