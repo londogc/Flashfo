@@ -84,7 +84,7 @@ export default function NovaPage() {
   }
 
   async function send() {
-    try { (typeof window!=='undefined'?localStorage:setItem('ff-nova-visited', '1') } catch(e) {}
+    try { localStorage.setItem('ff-nova-visited', '1') } catch(e) {}
     const text = input.trim()
     if (!text || loading) return
     setInput('')
