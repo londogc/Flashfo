@@ -58,64 +58,6 @@ const ADV = [
 
 function NavItem({ item, collapsed, active }) {
   const nova = item.nova
-  // ── Notifications ──
-  useEffect(() => {
-    if (!user) return
-    const fetchNotifs = async () => {
-      const { data } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50)
-      if (data) {
-        setNotifications(data)
-        setUnreadCount(data.filter(n => !n.read).length)
-      }
-    }
-    fetchNotifs()
-    // Real-time subscription
-    const sub = supabase.channel('notifs_'+user.id)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.'+user.id },
-        payload => {
-          setNotifications(prev => [payload.new, ...prev])
-          setUnreadCount(c => c + 1)
-        })
-      .subscribe()
-    return () => supabase.removeChannel(sub)
-  }, [user])
-
-  useEffect(() => {
-    if (!showNotifs) return
-    const handleClick = (e) => {
-      if (panelRef.current && !panelRef.current.contains(e.target) &&
-          bellRef.current && !bellRef.current.contains(e.target)) {
-        setShowNotifs(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [showNotifs])
-
-  const markAllRead = async () => {
-    if (!user) return
-    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false)
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-    setUnreadCount(0)
-  }
-
-  const markRead = async (id) => {
-    await supabase.from('notifications').update({ read: true }).eq('id', id)
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
-    setUnreadCount(c => Math.max(0, c - 1))
-  }
-
-  const filteredNotifs = notifFilter === 'all'
-    ? notifications
-    : notifications.filter(n => n.category === notifFilter)
-
-  const notifCategories = ['all', ...new Set(notifications.map(n => n.category).filter(Boolean))]
-
   return (
     <Link href={item.href} title={collapsed ? item.label : undefined}
       style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 8px', borderRadius:10,
@@ -199,6 +141,60 @@ export default function Shell({ children }) {
 
   const firstName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || null
   const sidebarW = collapsed ? 56 : 210
+
+  // ── Notifications ──
+  useEffect(() => {
+    if (!user) return
+    const fetchNotifs = async () => {
+      const { data } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50)
+      if (data) {
+        setNotifications(data)
+        setUnreadCount(data.filter(n => !n.read).length)
+      }
+    }
+    fetchNotifs()
+    const sub = supabase.channel('notifs_'+user.id)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.'+user.id },
+        payload => { setNotifications(prev => [payload.new, ...prev]); setUnreadCount(c => c + 1) })
+      .subscribe()
+    return () => supabase.removeChannel(sub)
+  }, [user])
+
+  useEffect(() => {
+    if (!showNotifs) return
+    const handleClick = (e) => {
+      if (panelRef.current && !panelRef.current.contains(e.target) &&
+          bellRef.current && !bellRef.current.contains(e.target)) {
+        setShowNotifs(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showNotifs])
+
+  const markAllRead = async () => {
+    if (!user) return
+    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false)
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setUnreadCount(0)
+  }
+
+  const markRead = async (id) => {
+    await supabase.from('notifications').update({ read: true }).eq('id', id)
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+    setUnreadCount(c => Math.max(0, c - 1))
+  }
+
+  const filteredNotifs = notifFilter === 'all'
+    ? notifications
+    : notifications.filter(n => n.category === notifFilter)
+
+  const notifCategories = ['all', ...new Set(notifications.map(n => n.category).filter(Boolean))]
 
   return (
     <div style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'var(--c-bg)' }}>
