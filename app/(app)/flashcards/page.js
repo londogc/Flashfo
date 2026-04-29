@@ -54,8 +54,16 @@ function SpeakerBtn({ text, audioRef }) {
   )
 }
 
+function shareLink(data, topic) {
+  const payload = btoa(JSON.stringify({ topic, cards: data }))
+  const url = window.location.origin + '/flashcards?share=' + payload
+  navigator.clipboard.writeText(url).catch(() => {})
+  return url
+}
+
 export default function FlashcardsPage() {
   const { user } = useAuth()
+  const [copied, setCopied2] = useState(false)
   const [topic, setTopic]       = useState('')
   const [count, setCount]       = useState(10)
   const [cards, setCards]       = useState([])
@@ -228,6 +236,12 @@ export default function FlashcardsPage() {
           <button onClick={() => printDeck(cards, topic)}
             className="h-8 px-3 text-[12px] text-t2 border border-line rounded-lg hover:bg-surface2 flex items-center gap-1">
             <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print
+          </button>
+          <button onClick={() => { shareLink(cards, topic); setCopied2(true); setTimeout(() => setCopied2(false), 2000) }}
+            className="h-8 px-3 text-[12px] border border-line rounded-lg hover:bg-surface2 flex items-center gap-1"
+            style={{ color: copied2 ? '#34d399' : undefined, borderColor: copied2 ? '#34d399' : undefined }}>
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 2h4v4m0-4L6 10M7 4H2v10h10V9"/></svg>
+            {copied2 ? 'Link copied!' : 'Share'}
           </button>
           <button onClick={() => { setShowEdit(true); setEditIdx(null) }}
             className="h-8 px-3 text-[12px] text-t2 border border-line rounded-lg hover:bg-surface2">Edit Deck</button>
