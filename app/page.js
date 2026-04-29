@@ -182,8 +182,8 @@ export default function LandingPage() {
             ))}
           </div>
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-            <a href="/sign-in" style={{ color:'#8b949e', fontSize:13, textDecoration:'none' }}>Sign in</a>
-            <a href="/sign-up" style={{ background:'#2563eb', color:'#fff', fontSize:13, fontWeight:500, padding:'7px 14px', borderRadius:8, textDecoration:'none' }}>Get started free</a>
+            <a href="/auth" style={{ color:'#8b949e', fontSize:13, textDecoration:'none' }}>Sign in</a>
+            <a href="/auth?mode=signup" style={{ background:'#2563eb', color:'#fff', fontSize:13, fontWeight:500, padding:'7px 14px', borderRadius:8, textDecoration:'none' }}>Get started free</a>
           </div>
         </div>
       </nav>
@@ -201,7 +201,7 @@ export default function LandingPage() {
           Nova builds personalised flashcards, quizzes, and study guides in seconds — tailored to your exact curriculum.
         </p>
         <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
-          <a href="/sign-up" style={{ background:'#2563eb',color:'#fff',fontSize:15,fontWeight:600,padding:'12px 24px',borderRadius:10,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8 }}>
+          <a href="/auth?mode=signup" style={{ background:'#2563eb',color:'#fff',fontSize:15,fontWeight:600,padding:'12px 24px',borderRadius:10,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8 }}>
             Get started free <span>→</span>
           </a>
           <button onClick={() => document.getElementById('nova-demo')?.scrollIntoView({behavior:'smooth'})} style={{ background:'transparent',color:'#e6edf3',fontSize:15,fontWeight:500,padding:'12px 24px',borderRadius:10,border:'1px solid #30363d',cursor:'pointer',display:'inline-flex',alignItems:'center',gap:8 }}>
@@ -280,7 +280,7 @@ export default function LandingPage() {
       <section style={{ background:'#161b22', borderTop:'1px solid #21262d', padding:'80px 16px', textAlign:'center' }}>
         <h2 style={{ fontSize:'clamp(24px,4vw,40px)', fontWeight:700, marginBottom:16 }}>Ready to study smarter?</h2>
         <p style={{ color:'#8b949e', fontSize:16, marginBottom:32 }}>Join thousands of students and teachers already using Flashfo.</p>
-        <a href="/sign-up" style={{ background:'#2563eb', color:'#fff', fontSize:15, fontWeight:600, padding:'14px 28px', borderRadius:10, textDecoration:'none' }}>Get started free →</a>
+        <a href="/auth?mode=signup" style={{ background:'#2563eb', color:'#fff', fontSize:15, fontWeight:600, padding:'14px 28px', borderRadius:10, textDecoration:'none' }}>Get started free →</a>
       </section>
 
     </div>
