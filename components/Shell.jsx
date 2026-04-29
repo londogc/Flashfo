@@ -263,7 +263,7 @@ export default function Shell({ children }) {
           {/* Welcome message — desktop only */}
           {!authLoading && user && firstName && (
             <span className="ff-desktop-only" style={{ fontSize:13, color:'var(--c-t2)', fontWeight:500 }}>
-              Welcome back, <span style={{ color:'var(--c-t1)', fontWeight:700 }}>{firstName}</span> 👋
+              Welcome back, <span style={{ color:'var(--c-t1)', fontWeight:700 }}>{firstName}</span> 
             </span>
           )}
 
@@ -286,7 +286,7 @@ export default function Shell({ children }) {
 
                {/* Notifications panel */}
                {showNotifs && (
-                 <div ref={panelRef} style={{ position:'absolute', top:'calc(100% + 8px)', right:0, width:340, maxWidth:'calc(100vw - 24px)', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:12, boxShadow:'0 8px 32px rgba(0,0,0,0.4)', zIndex:200, overflow:'hidden' }}>
+                 <div ref={panelRef} style={{ position:'fixed', top:56, right:12, left:12, width:'auto', maxWidth:380, margin:'0 auto', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:12, boxShadow:'0 8px 32px rgba(0,0,0,0.4)', zIndex:300, overflow:'hidden' }}>
                    {/* Header */}
                    <div style={{ padding:'14px 16px 10px', borderBottom:'1px solid var(--c-line)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                      <span style={{ fontSize:13, fontWeight:600, color:'var(--c-t1)' }}>Notifications</span>
@@ -319,7 +319,7 @@ export default function Shell({ children }) {
                    <div style={{ maxHeight:360, overflowY:'auto' }}>
                      {filteredNotifs.length === 0 ? (
                        <div style={{ padding:'32px 16px', textAlign:'center', color:'var(--c-t3)', fontSize:13 }}>
-                         <div style={{ fontSize:28, marginBottom:8 }}>🔔</div>
+                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--c-t3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:8}}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                          <p style={{ margin:0 }}>No notifications yet</p>
                        </div>
                      ) : filteredNotifs.map(n => (
@@ -328,7 +328,16 @@ export default function Shell({ children }) {
                          onMouseEnter={e=>e.currentTarget.style.background='var(--c-surface2)'}
                          onMouseLeave={e=>e.currentTarget.style.background=n.read?'transparent':'rgba(167,139,250,0.05)'}>
                          <div style={{ width:32, height:32, borderRadius:8, background: n.read?'var(--c-surface2)':'rgba(167,139,250,0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15 }}>
-                           {n.type==='assignment' ? '📋' : n.type==='quiz' ? '⚡' : n.type==='grade' ? '✅' : n.type==='class' ? '🏫' : '📣'}
+                           {n.type==='assignment'
+    ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+    : n.type==='quiz'
+    ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+    : n.type==='grade'
+    ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="20 6 9 17 4 12"/></svg>
+    : n.type==='class'
+    ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+  }
                          </div>
                          <div style={{ flex:1, minWidth:0 }}>
                            <p style={{ margin:'0 0 2px', fontSize:13, fontWeight: n.read?400:600, color:'var(--c-t1)', lineHeight:1.4 }}>{n.title}</p>
