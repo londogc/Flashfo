@@ -53,25 +53,25 @@ function ProductDemo() {
     if (phase === 0) {
       setTyped(''); setVisibleCards(0); setSelectedOpt(null); setScore(0)
       let i = 0
-      const type = () => { setTyped(topic.slice(0,i)); i++; i <= topic.length ? delay(type, 60) : delay(() => setPhase(1), 500) }
+      const type = () => { setTyped(topic.slice(0,i)); i++; i <= topic.length ? delay(type, 60) : delay(() => setPhase(1), 700) }
       delay(type, 400)
       return clear
     }
     if (phase === 1) {
       setVisibleCards(0)
       let c = 0
-      const show = () => { setVisibleCards(++c); c < cards.length ? delay(show, 420) : delay(() => setPhase(2), 700) }
-      delay(show, 900)
+      const show = () => { setVisibleCards(++c); c < cards.length ? delay(show, 500) : delay(() => setPhase(2), 1000) }
+      delay(show, 1000)
       return clear
     }
     if (phase === 2) {
       setSelectedOpt(null)
-      delay(() => { setSelectedOpt(quiz.correct); delay(() => setPhase(3), 900) }, 1400)
+      delay(() => { setSelectedOpt(quiz.correct); delay(() => setPhase(3), 1100) }, 1800)
       return clear
     }
     if (phase === 3) {
       let s = 0
-      const count = () => { s = Math.min(s+5,80); setScore(s); s < 80 ? delay(count,25) : delay(()=>{ setFading(true); delay(()=>{ setTopicIdx(i=>(i+1)%TOPICS.length); setPhase(0); setFading(false) },400) },1500) }
+      const count = () => { s = Math.min(s+5,80); setScore(s); s < 80 ? delay(count,25) : delay(()=>{ setFading(true); delay(()=>{ setTopicIdx(i=>(i+1)%TOPICS.length); setPhase(0); setFading(false) },400) },2000) }
       delay(count, 300)
       return clear
     }
