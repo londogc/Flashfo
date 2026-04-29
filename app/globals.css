@@ -123,4 +123,5 @@ body { background: var(--c-bg); font-family: -apple-system, BlinkMacSystemFont, 
 }
 
 /* ff-v6-animations */
-.page-enter{opacity:0;transform:translateY(12px)}.page-enter-active{opacity:1;transform:translateY(0);transition:opacity 0.22s ease,transform 0.22s ease}
+@keyframes ff-page-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.ff-page-in{animation:ff-page-in 0.22s ease both}
