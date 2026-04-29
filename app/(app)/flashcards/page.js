@@ -27,8 +27,6 @@ function printDeck(cards, topic) {
 function SpeakerBtn({ text, audioRef }) {
   const [busy, setBusy] = useState(false)
   const [speaking, setSpeaking] = useState(false)
-  const [voiceInput, setVoiceInput] = useState(false)
-  const [dueQueue, setDueQueue] = useState([])
   async function speak() {
     if (!text) return
     // Stop any currently playing audio
