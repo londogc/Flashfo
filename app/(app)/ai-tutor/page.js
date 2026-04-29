@@ -27,6 +27,10 @@ export default function NovaPage() {
   }
   const [grade, setGrade] = useState('')
   const [classContext, setClassContext] = useState(null)
+  const [allClasses, setAllClasses] = useState([])
+  const [showClassManager, setShowClassManager] = useState(false)
+  const [newClassName, setNewClassName] = useState('')
+  const [newClassSubject, setNewClassSubject] = useState('')
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
 
@@ -51,6 +55,10 @@ export default function NovaPage() {
     supabase.from('profiles').select('grade_level').eq('id', user.id).single()
       .then(({ data }) => { if (data?.grade_level) setGrade(data.grade_level) })
     // Load most recent enrolled classroom for context
+    // Load all saved Nova classes
+    supabase.from('nova_user_classes').select('*').eq('user_id', user.id).order('created_at').then(({ data }) => {
+      if (data && data.length > 0) setAllClasses(data)
+    })
     supabase.from('student_enrollments')
       .select('*, classroom:classrooms(*)')
       .eq('student_id', user.id)
@@ -77,22 +85,25 @@ export default function NovaPage() {
       })
   }, [user])
 
-  function buildSystemPrompt() {
-    let prompt = 'You are Nova, an AI study tutor inside Flashfo. '
+  function buildSystemPrompt(allClasses) {
+    let prompt = 'You are Nova, a proactive AI study tutor inside Flashfo. You are warm, encouraging, and specific — not generic. '
     if (grade) {
-      prompt += 'The student is in ' + grade + '. Calibrate your language, depth, and examples to that level — not too simple, not too complex. '
-    } else {
-      prompt += 'Calibrate to the complexity of what the student is asking. Match their level. '
+      prompt += 'The student is in ' + grade + '. Calibrate language and depth accordingly. '
+    }
+    if (allClasses && allClasses.length > 0) {
+      prompt += 'The student is enrolled in the following classes: ' + allClasses.map(c => '"' + c.name + '"' + (c.subject ? ' (' + c.subject + ')' : '') + (c.teacher ? ' with ' + c.teacher : '')).join(', ') + '. '
+      prompt += 'When relevant, tailor examples, flashcards, and quiz questions to these specific classes. '
     }
     if (classContext) {
-      prompt += 'The student is enrolled in "' + classContext.className + '"'
+      prompt += 'Currently active class: "' + classContext.className + '"'
       if (classContext.subject) prompt += ' (' + classContext.subject + ')'
       if (classContext.homework?.length > 0) {
-        prompt += '. Their current assignments include: ' + classContext.homework.join(', ') + '. Reference this context if relevant to help them prepare or understand the material.'
+        prompt += '. Current assignments: ' + classContext.homework.join(', ') + '.'
       }
       prompt += ' '
     }
-    prompt += 'Be direct, knowledgeable, and intellectually honest. Do not oversimplify or be condescending. Explain things clearly with real depth. Use examples when helpful. You are a tutor, not a content filter.'
+    prompt += 'Be proactive: if the student mentions struggling with something, suggest relevant flashcards or a quiz. If you detect a new class or subject they mention, acknowledge it and offer to build a study kit for it. '
+    prompt += 'Keep responses focused and actionable. Format with short paragraphs. '
     return prompt
   }
 
@@ -109,7 +120,7 @@ export default function NovaPage() {
       const history = newMessages.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }))
       const res = await fetch('/api/rpc', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fn: 'generateChatResponse', args: [history, buildSystemPrompt()] })
+        body: JSON.stringify({ fn: 'generateChatResponse', args: [history, buildSystemPrompt(allClasses)] })
       })
       const data = await res.json()
       const result = data.result?.content || data.result || ''
