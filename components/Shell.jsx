@@ -33,7 +33,7 @@ const ICONS = {
   cR:         'M6 3l5 5-5 5',
   stem:       'M9 1L3 8h5l-1 7 6-8H8z',
   curriculum: 'M1 3h6v10H1zm8 0h6v10H9zM4 6h0M4 8h0M4 10h0M11 6h2M11 8h2M11 10h2',
-  collab:     'M2 3h7a1 1 0 011 1v7a1 1 0 01-1 1H2a1 1 0 01-1-1V4a1 1 0 011-1zm4 8h7a1 1 0 001-1V3M8 7h0M5 7h0M5 10h0',
+  collab:     'M3 8h13v11H3zM6 5h13v11H6zM9 11h6M9 13h4M17 1v6M14 3l3-2 3 2',
 }
 
 const NAV = [
