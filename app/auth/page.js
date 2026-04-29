@@ -4,7 +4,12 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 function AuthPageInner() {
-  const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'reset'
+  const [mode, setMode] = useState('signin')
+  // Read ?mode=signup from URL on first load
+  useEffect(() => {
+    const m = searchParams.get('mode')
+    if (m === 'signup' || m === 'signin' || m === 'reset') setMode(m)
+  }, []) // 'signin' | 'signup' | 'reset'
   const [form, setForm] = useState({ email: '', password: '', name: '' })
   const [loading, setLoading] = useState(false)
   const searchParams = useSearchParams()
