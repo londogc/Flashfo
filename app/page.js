@@ -71,7 +71,7 @@ function AnimatedDemo() {
         <span style={{ color:'#e6edf3', flex:1 }}>{typed}<span style={{ color:'#2563eb', animation:'blink 1s step-end infinite' }}>|</span></span>
       </div>
       <div style={{ height:320, overflow:'hidden', transition:'opacity 0.4s', opacity: showCards ? 1 : 0 }}>
-        {(
+        {showCards ? (
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             <div style={{ color:'#8b949e', fontSize:11, marginBottom:2 }}>✦ Nova generated {cards.length} flashcards</div>
             {cards.map((c,i) => (
