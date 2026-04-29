@@ -118,6 +118,7 @@ export default function StudyGuidePage() {
   const [error, setError]     = useState('')
   const [saving, setSaving]   = useState(false)
   const [saved, setSaved]     = useState(false)
+  const [shareMsg, setShareMsg] = useState('')
 
   async function generate() {
     if (!topic.trim()) return
@@ -196,8 +197,13 @@ export default function StudyGuidePage() {
                 className="h-7 px-3 bg-emerald-600 text-white text-[11px] font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-40">
                 {saving ? 'Saving...' : 'Save'}
               </button>}
-              <button onClick={printGuide} className="h-7 px-3 bg-surface border border-line text-t2 text-[11px] rounded-lg hover:bg-surface2 flex items-center gap-1">
+              <button onClick={printGuide} title="Print study guide" className="h-7 px-3 bg-surface border border-line text-t2 text-[11px] rounded-lg hover:bg-surface2 flex items-center gap-1">
                 <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print
+              </button>
+              <button onClick={generateShareLink} title="Copy share link"
+                style={{ height:34, padding:'0 14px', background:'rgba(167,139,250,0.1)', border:'1px solid rgba(167,139,250,0.25)', borderRadius:8, color:'#a78bfa', fontSize:13, fontWeight:500, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="13" cy="3" r="2"/><circle cx="3" cy="8" r="2"/><circle cx="13" cy="13" r="2"/><path d="M5 7l6-3M5 9l6 3"/></svg>
+                {shareMsg || 'Share'}
               </button>
               <button onClick={() => navigator.clipboard.writeText(output)} className="h-7 px-3 bg-surface border border-line text-t2 text-[11px] rounded-lg hover:bg-surface2">Copy</button>
             </div>
@@ -208,3 +214,15 @@ export default function StudyGuidePage() {
     </div>
   )
 }
+
+  function generateShareLink() {
+    if (!output) return
+    const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ topic, content: output }))))
+    const url = (typeof window !== 'undefined' ? window.location.origin : '') + '/study-guide?share=' + payload
+    if (typeof navigator !== 'undefined') {
+      navigator.clipboard?.writeText(url).then(() => {
+        setShareMsg('Link copied!')
+        setTimeout(() => setShareMsg(''), 2500)
+      }).catch(() => { setShareMsg(url) })
+    }
+  }
