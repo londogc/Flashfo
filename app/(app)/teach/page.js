@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
@@ -18,6 +19,24 @@ export default function TeachPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm]             = useState({ name:'', subject:'' })
   const [creating, setCreating]     = useState(false)
+
+  const [checklistDone, setChecklistDone] = React.useState(false)
+  const [checklistSkipped, setChecklistSkipped] = React.useState(() => {
+    try { return localStorage.getItem('ff-checklist-skipped') === '1' } catch(e) { return false }
+  })
+  const [checks, setChecks] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('ff-checklist') || '[false,false,false,false,false]') } catch(e) { return [false,false,false,false,false] }
+  })
+  function setCheck(i) {
+    const next = checks.map((v,j) => j===i ? true : v)
+    setChecks(next)
+    try { localStorage.setItem('ff-checklist', JSON.stringify(next)) } catch(e) {}
+    if (next.every(Boolean)) setChecklistDone(true)
+  }
+  function skipChecklist() {
+    setChecklistSkipped(true)
+    try { localStorage.setItem('ff-checklist-skipped','1') } catch(e) {}
+  }
   const [copied, setCopied]         = useState(null)
   const [err, setErr]               = useState('')
 
@@ -103,6 +122,45 @@ export default function TeachPage() {
         </button>}
       </div>
 
+
+      {/* Teacher launch checklist */}
+      {!checklistSkipped && !checklistDone && (
+        <div style={{ background:'rgba(37,99,235,0.05)', border:'1px solid rgba(37,99,235,0.2)', borderRadius:16, padding:'18px 20px', marginBottom:20 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+            <div>
+              <div style={{ fontSize:13, fontWeight:700, color:'var(--c-t1)', marginBottom:2 }}>🚀 Launch checklist</div>
+              <div style={{ fontSize:11, color:'var(--c-t3)' }}>{checks.filter(Boolean).length} of 5 complete</div>
+            </div>
+            <button onClick={skipChecklist} style={{ fontSize:11, color:'var(--c-t3)', background:'none', border:'none', cursor:'pointer', padding:'4px 8px' }}>Skip for now</button>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {[
+              { label:'Create your first classroom', href: null },
+              { label:'Invite students with your class code', href: null },
+              { label:'Connect curriculum — add subject & grade', href: '/settings' },
+              { label:'Launch your first live quiz', href: null },
+              { label:'Share results with students', href: null },
+            ].map((step, i) => (
+              <div key={i} style={{ display:'flex', alignItems:'center', gap:10 }} onClick={() => setCheck(i)}>
+                <div style={{ width:18, height:18, borderRadius:5, border:'1.5px solid', borderColor: checks[i] ? '#34d399' : 'var(--c-line)', background: checks[i] ? '#34d399' : 'transparent', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, transition:'all 0.15s' }}>
+                  {checks[i] && <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M2 8l4 4 8-8"/></svg>}
+                </div>
+                <span style={{ fontSize:12, color: checks[i] ? 'var(--c-t3)' : 'var(--c-t2)', textDecoration: checks[i] ? 'line-through' : 'none' }}>{step.label}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop:12, height:3, background:'var(--c-surface2)', borderRadius:2, overflow:'hidden' }}>
+            <div style={{ height:'100%', width:(checks.filter(Boolean).length/5*100)+'%', background:'linear-gradient(90deg,#2563eb,#7c3aed)', borderRadius:2, transition:'width 0.4s ease' }}/>
+          </div>
+        </div>
+      )}
+      {checklistDone && !checklistSkipped && (
+        <div style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(52,211,153,0.08)', border:'1px solid rgba(52,211,153,0.25)', borderRadius:12, padding:'10px 16px', marginBottom:16 }}>
+          <span style={{ fontSize:16 }}>🎉</span>
+          <span style={{ fontSize:13, fontWeight:600, color:'#34d399' }}>Setup complete! You're ready to teach.</span>
+          <button onClick={() => setChecklistSkipped(true)} style={{ marginLeft:'auto', fontSize:11, color:'var(--c-t3)', background:'none', border:'none', cursor:'pointer' }}>Dismiss</button>
+        </div>
+      )}
       {fetching && <div className="space-y-4">{[...Array(2)].map((_,i)=><div key={i} className="h-40 bg-surface border border-line rounded-xl animate-pulse"/>)}</div>}
 
       {!fetching && classrooms.length===0 && (
