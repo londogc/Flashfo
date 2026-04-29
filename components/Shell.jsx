@@ -31,6 +31,9 @@ const ICONS = {
   sources:    'M1 5h3v9H1zm4-3h4v12H5zm5 2h4v10h-4z',
   cL:         'M10 3L5 8l5 5',
   cR:         'M6 3l5 5-5 5',
+  stem:       'M9 1L3 8h5l-1 7 6-8H8z',
+  curriculum: 'M1 3h6v10H1zm8 0h6v10H9zM4 6h0M4 8h0M4 10h0M11 6h2M11 8h2M11 10h2',
+  collab:     'M2 3h7a1 1 0 011 1v7a1 1 0 01-1 1H2a1 1 0 01-1-1V4a1 1 0 011-1zm4 8h7a1 1 0 001-1V3M8 7h0M5 7h0M5 10h0',
 }
 
 const NAV = [
@@ -41,9 +44,8 @@ const NAV = [
   { href:'/student-portal', label:'Student Portal',icon:'studentp'  },
   { href:'/my-stuff',       label:'My Stuff',      icon:'mystuff'   },
   { href:'/stem',          label:'Flashfo STEM',  icon:'stem'      },
-  { href:'/standards',     label:'Standards',     icon:'standards' },
+  { href:'/curriculum',    label:'Curriculum',    icon:'curriculum'},
   { href:'/collab-decks',  label:'Collab Decks',  icon:'collab'    },
-  { href:'/parent-report', label:'Parent Reports', icon:'report'   },
 ]
 const TOOLS = [
   { href:'/summarize',      label:'Summarize',     icon:'summarize'  },
