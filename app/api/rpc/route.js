@@ -524,6 +524,22 @@ async function runLearningFeature(payload, targetLanguage) {
   })).trim();
 }
 
+
+async function generateChatResponse(messages, systemPrompt) {
+  // messages: [{role:'user'|'assistant', text:'...'}]
+  // systemPrompt: string
+  const apiMessages = messages.map(m => ({
+    role: m.role === 'assistant' ? 'assistant' : 'user',
+    content: [{ type: 'input_text', text: m.text || m.content || '' }]
+  }))
+  const text = await callOpenAI({
+    model: DEFAULT_MODEL,
+    system: systemPrompt,
+    input: apiMessages
+  })
+  return { reply: text }
+}
+
 const handlers = {
   summarizeText,
   summarizeFromUrl,
@@ -545,7 +561,8 @@ const handlers = {
   exportTextToGoogleDoc,
   saveFlashfoJsonToDrive,
   readDriveTextFile,
-  runLearningFeature
+  runLearningFeature,
+  generateChatResponse,
 };
 
 export async function POST(request) {
