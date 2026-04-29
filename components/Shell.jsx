@@ -2,7 +2,7 @@
 // v5.9.2 — scrubbed for v6.0
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
@@ -82,7 +82,6 @@ function Avatar({ user, profile, size = 28 }) {
 }
 
 export default function Shell({ children }) {
-  const pathname = usePathname()
   const router = useRouter()
   const { user, profile, loading: authLoading, signOut } = useAuth()
 
@@ -104,13 +103,7 @@ export default function Shell({ children }) {
 
   const [plusOpen, setPlusOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [entered, setEntered] = useState(false)
-
-  useEffect(() => {
-    setEntered(false)
-    const id = requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)))
-    return () => cancelAnimationFrame(id)
-  }, [pathname])
+)
 
   useEffect(() => {
     // Handle sidebar auto-collapse on window resize
