@@ -70,7 +70,7 @@ export default function ParentReportPage() {
             {students.map(s=>(
               <div key={s.id} style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:10, padding:'14px 18px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <div><p style={{ margin:'0 0 2px', fontWeight:600, color:'var(--c-t1)', fontSize:14 }}>{s.student?.email?.split('@')[0]}</p><span style={{ fontSize:12, color:'var(--c-t3)' }}>{s.student?.email}</span></div>
-                <button onClick={()=>generateReport(s)} style={{ padding:'7px 14px', borderRadius:8, background:'#2563eb', color:'#fff', border:'none', fontSize:12, fontWeight:600, cursor:'pointer' }}>⬇ Report</button>
+                <button onClick={()=>generateReport(s)} style={{ padding:'7px 14px', borderRadius:8, background:'#2563eb', color:'#fff', border:'none', fontSize:12, fontWeight:600, cursor:'pointer' }}>↓ Report</button>
               </div>
             ))}
           </div>
