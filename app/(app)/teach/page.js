@@ -54,7 +54,7 @@ function AssignmentBuilder({ classrooms, user }) {
   return (
     <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:12, padding:'20px 24px', marginBottom:24 }}>
       <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
-        <span style={{ fontSize:16 }}>📋</span>
+        <span style={{ fontSize:16 }}></span>
         <h3 style={{ margin:0, fontSize:15, fontWeight:600, color:'var(--c-t1)' }}>Assignment Builder</h3>
       </div>
       <div style={{ display:'grid', gap:12 }}>
@@ -165,7 +165,7 @@ export default function TeachPage() {
 
   if (!authLoading && !user) return (
     <div className="p-6 max-w-4xl mx-auto text-center py-20">
-      <div className="text-5xl mb-4">🏫</div>
+      <div className="text-5xl mb-4"></div>
       <h1 className="text-2xl font-bold text-t1 mb-2">Live Classrooms</h1>
 
       {classrooms.length > 0 && <AssignmentBuilder classrooms={classrooms} user={user} />}
@@ -181,7 +181,7 @@ export default function TeachPage() {
         <div style={{ background:'rgba(37,99,235,0.06)', border:'1px solid rgba(37,99,235,0.2)', borderRadius:14, padding:'20px 24px', marginBottom:28 }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
             <div>
-              <p style={{ margin:0, fontWeight:700, fontSize:16, color:'#e6edf3' }}>🚀 Get your class ready</p>
+              <p style={{ margin:0, fontWeight:700, fontSize:16, color:'#e6edf3' }}> Get your class ready</p>
               <p style={{ margin:0, fontSize:13, color:'#8b949e', marginTop:4 }}>{LAUNCH_STEPS.filter(s=>checklistDone[s.id]).length} of {LAUNCH_STEPS.length} steps complete</p>
             </div>
             <button onClick={() => setChecklistCollapsed(true)} style={{ background:'transparent', border:'none', color:'#484f58', fontSize:12, cursor:'pointer', padding:'4px 8px' }}>Skip for now</button>
@@ -211,7 +211,7 @@ export default function TeachPage() {
       )}
       {checklistCollapsed && !allDone && (
         <button onClick={() => setChecklistCollapsed(false)} style={{ background:'rgba(37,99,235,0.08)', border:'1px solid rgba(37,99,235,0.2)', borderRadius:8, padding:'8px 14px', fontSize:13, color:'#2563eb', cursor:'pointer', marginBottom:20, display:'block' }}>
-          📋 {LAUNCH_STEPS.filter(s=>checklistDone[s.id]).length}/{LAUNCH_STEPS.length} setup steps — continue →
+           {LAUNCH_STEPS.filter(s=>checklistDone[s.id]).length}/{LAUNCH_STEPS.length} setup steps — continue →
         </button>
       )}
       {/* Create modal */}
@@ -251,7 +251,7 @@ export default function TeachPage() {
 
       {!fetching && classrooms.length===0 && (
         <div className="border-2 border-dashed border-line rounded-2xl p-12 text-center mb-8">
-          <div className="text-4xl mb-3">🏫</div>
+          <div className="text-4xl mb-3"></div>
           <p className="text-t1 font-semibold mb-1">No classrooms yet</p>
           <p className="text-t2 text-sm mb-5">Create your first classroom and share the code with students to go live.</p>
           <button onClick={()=>setShowCreate(true)} className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800">Create Classroom</button>
@@ -270,7 +270,7 @@ export default function TeachPage() {
                     <span className="text-[11px] text-t3">{enrollments[cls.id]||0} student{(enrollments[cls.id]||0)!==1?'s':''}</span>
                   </div>
                 </div>
-                <button onClick={()=>del(cls.id)} className="text-t3 hover:text-red-500 text-lg w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">✕</button>
+                <button onClick={()=>del(cls.id)} className="text-t3 hover:text-red-500 text-lg w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">×</button>
               </div>
               <div className="flex items-center gap-4 p-3 bg-surface2 rounded-xl border border-line mb-4">
                 <div>
@@ -288,7 +288,7 @@ export default function TeachPage() {
               </div>
               <button onClick={()=>router.push('/teach/'+cls.code)}
                 className="w-full h-10 bg-blue-700 text-white text-sm font-bold rounded-xl hover:bg-blue-800 transition-colors flex items-center justify-center gap-2">
-                <span>🚀</span> Go Live
+                <span></span> Go Live
               </button>
             </div>
           </div>
@@ -297,7 +297,7 @@ export default function TeachPage() {
 
       <h2 className="text-sm font-bold text-t3 uppercase tracking-wider mb-3">Teacher Tools</h2>
       <div className="grid grid-cols-2 gap-3">
-        {[{label:'Lesson Builder',href:'/lesson-builder',e:'📋'},{label:'Quiz Builder',href:'/quiz',e:'❓'},{label:'My Saved Items',href:'/my-stuff',e:'💾'},{label:'Source Library',href:'/source-library',e:'📚'}].map(t=>(
+        {[{label:'Lesson Builder',href:'/lesson-builder',e:''},{label:'Quiz Builder',href:'/quiz',e:'?'},{label:'My Saved Items',href:'/my-stuff',e:''},{label:'Source Library',href:'/source-library',e:''}].map(t=>(
           <a key={t.label} href={t.href} className="bg-surface border border-line rounded-xl p-4 hover:border-blue-300/50 transition-all flex items-center gap-3 group">
             <span className="text-xl">{t.e}</span>
             <span className="text-sm font-semibold text-t1">{t.label}</span>
