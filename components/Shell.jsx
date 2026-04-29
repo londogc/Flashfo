@@ -2,7 +2,7 @@
 // v5.9.2 — scrubbed for v6.0
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
@@ -83,6 +83,7 @@ function Avatar({ user, profile, size = 28 }) {
 
 export default function Shell({ children }) {
   const router = useRouter()
+  const pathname = usePathname() ?? ''
   const { user, profile, loading: authLoading, signOut } = useAuth()
 
   // collapsed: sidebar collapsed state — initializes from window width immediately
@@ -252,7 +253,7 @@ export default function Shell({ children }) {
           </div>
         </header>
 
-        <main key={pathname ?? ''} className="ff-content" style={{ flex:1, overflowY:'auto', animation:'page-drop 0.22s ease both' }}>
+        <main key={pathname} className="ff-content" style={{ flex:1, overflowY:'auto', animation:'page-drop 0.22s ease both' }}>
           {children}
         </main>
       </div>
