@@ -101,12 +101,27 @@ export default function DashboardPage() {
   const [classes, setClasses] = useState([])
   const [assignments, setAssignments] = useState([])
   const [quizScore, setQuizScore] = useState(null)
+  const [novaNotice, setNovaNotice] = useState(null)
+  const [dueToday, setDueToday] = useState(0)
 
   useEffect(() => {
     if (user) loadData()
   }, [user])
 
   async function loadData() {
+    // Spaced repetition — count cards due today
+    try {
+      // Nova noticed — check for repeated topics
+      const topicLog = JSON.parse(localStorage.getItem('ff-topic-log') || '{}')
+      const topEntry = Object.entries(topicLog).find(([,v]) => v >= 3)
+      if (topEntry) setNovaNotice(topEntry[0])
+    } catch(e) {}
+    try {
+      const sm2 = JSON.parse(localStorage.getItem('ff-sm2') || '{}')
+      const now = Date.now()
+      const due = Object.values(sm2).filter(c => c.nextReview && c.nextReview <= now).length
+      setDueToday(due)
+    } catch(e) {}
     const { data: enroll } = await supabase
       .from('student_enrollments')
       .select('classroom_id, classrooms(name, subject)')
@@ -139,6 +154,22 @@ export default function DashboardPage() {
           .dash-tools{ grid-template-columns:repeat(3,1fr)!important; }
           .dash-bottom{ grid-template-columns:1fr 1fr!important; }
         }
+        @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}
+        @keyframes card-in{from{opacity:0;transform:translateY(16px) scale(0.96)}60%{transform:translateY(-3px) scale(1.01)}to{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+        .skel{background:linear-gradient(90deg,#21262d 25%,#2d333b 50%,#21262d 75%);background-size:1200px 100%;animation:shimmer 1.6s infinite linear;border-radius:8px}
+        html:not(.dark) .skel{background:linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%);background-size:1200px 100%;animation:shimmer 1.6s infinite linear}
+      `}</style>
+      <style>{`
+        @media(max-width:700px){
+          .dash-metrics{ grid-template-columns:1fr!important; gap:8px!important; }
+          .dash-tools{ grid-template-columns:repeat(3,1fr)!important; gap:8px!important; }
+          .dash-bottom{ grid-template-columns:1fr!important; }
+        }
+        @media(min-width:701px) and (max-width:900px){
+          .dash-tools{ grid-template-columns:repeat(3,1fr)!important; }
+          .dash-bottom{ grid-template-columns:1fr 1fr!important; }
+        }
       `}</style>
 
       {/* Header */}
@@ -153,6 +184,12 @@ export default function DashboardPage() {
               <span style={{ width: 5, height: 5, background: '#4ade80', borderRadius: '50%', display: 'inline-block', animation: 'pulse-dot 1.2s infinite' }}></span>
               <span style={{ fontSize: 11, color: '#4ade80', fontWeight: 600 }}>{classes.length} class{classes.length !== 1 ? 'es' : ''} active</span>
             </div>
+          )}
+          {dueToday > 0 && (
+            <a href="/flashcards" style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, padding: '4px 12px', textDecoration: 'none' }}>
+              <span style={{ fontSize: 11 }}>🔁</span>
+              <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700 }}>{dueToday} card{dueToday !== 1 ? 's' : ''} due today</span>
+            </a>
           )}
           <Link href="/create" style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: 9, padding: '8px 16px', fontSize: 12, fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
             <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M8 1v14M1 8h14"/></svg>
@@ -211,8 +248,8 @@ export default function DashboardPage() {
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 10, color: 'var(--c-t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Quick tools</div>
         <div className="dash-tools" style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10 }}>
-          {TOOLS.map(t => (
-            <Link key={t.href} href={t.href} style={{ background: t.bg, border: '1px solid ' + t.border, borderRadius: 14, padding: 14, textDecoration: 'none', transition: 'transform 0.15s, box-shadow 0.15s', display: 'block' }}
+          {TOOLS.map((t,i) => (
+            <Link key={t.href} href={t.href} style={{ background: t.bg, border: '1px solid ' + t.border, borderRadius: 14, padding: 14, textDecoration: 'none', transition: 'transform 0.15s, box-shadow 0.15s', display: 'block', animation: `card-in 0.4s ease ${i*60}ms both` }}
               onMouseEnter={e => { e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.boxShadow='0 8px 24px ' + t.color + '22'; }}
               onMouseLeave={e => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; }}>
               <div style={{ width: 30, height: 30, borderRadius: 10, background: t.bg.replace('0.12','0.2'), display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
