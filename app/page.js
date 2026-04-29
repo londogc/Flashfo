@@ -27,71 +27,130 @@ const CARDS = {
   ],
 }
 
-function AnimatedDemo() {
+const QUIZ = {
+  'Civil War causes': { q:'What was the primary cause of Southern secession?', opts:['Economic competition','Slavery & states\' rights','Border disputes','Religious freedom'], correct:1 },
+  'Photosynthesis':   { q:'Where does the light-dependent reaction occur?', opts:['Cell wall','Nucleus','Chloroplast stroma','Thylakoid membrane'], correct:3 },
+  'Quadratic equations': { q:'When does a quadratic have no real roots?', opts:['Discriminant > 0','Discriminant = 0','Discriminant < 0','Coefficient = 0'], correct:2 },
+  'The Great Gatsby':    { q:'What social class does Gatsby represent?', opts:['Old money','Middle class','Newly rich','Working poor'], correct:2 },
+}
+
+function ProductDemo() {
   const [topicIdx, setTopicIdx] = useState(0)
+  const [phase, setPhase] = useState(0)
   const [typed, setTyped] = useState('')
-  const [showCards, setShowCards] = useState(false)
+  const [visibleCards, setVisibleCards] = useState(0)
+  const [selectedOpt, setSelectedOpt] = useState(null)
+  const [score, setScore] = useState(0)
+  const [fading, setFading] = useState(false)
+  const t = useRef(null)
   const topic = TOPICS[topicIdx]
-  const timerRef = useRef(null)
-
-  useEffect(() => {
-    setTyped('')
-    setShowCards(false)
-    let charIdx = 0
-    const typeNext = () => {
-      charIdx++
-      setTyped(topic.slice(0, charIdx))
-      if (charIdx < topic.length) {
-        timerRef.current = setTimeout(typeNext, 85)
-      } else {
-        timerRef.current = setTimeout(() => setShowCards(true), 400)
-      }
-    }
-    timerRef.current = setTimeout(typeNext, 300)
-    return () => clearTimeout(timerRef.current)
-  }, [topicIdx, topic])
-
-  useEffect(() => {
-    if (!showCards) return
-    timerRef.current = setTimeout(() => setTopicIdx(i => (i+1) % TOPICS.length), 6000)
-    return () => clearTimeout(timerRef.current)
-  }, [showCards])
-
   const cards = CARDS[topic] || []
+  const quiz = QUIZ[topic]
+
+  useEffect(() => {
+    const delay = (fn, ms) => { t.current = setTimeout(fn, ms) }
+    const clear = () => clearTimeout(t.current)
+    if (phase === 0) {
+      setTyped(''); setVisibleCards(0); setSelectedOpt(null); setScore(0)
+      let i = 0
+      const type = () => { setTyped(topic.slice(0,i)); i++; i <= topic.length ? delay(type, 60) : delay(() => setPhase(1), 500) }
+      delay(type, 400)
+      return clear
+    }
+    if (phase === 1) {
+      setVisibleCards(0)
+      let c = 0
+      const show = () => { setVisibleCards(++c); c < cards.length ? delay(show, 420) : delay(() => setPhase(2), 700) }
+      delay(show, 900)
+      return clear
+    }
+    if (phase === 2) {
+      setSelectedOpt(null)
+      delay(() => { setSelectedOpt(quiz.correct); delay(() => setPhase(3), 900) }, 1400)
+      return clear
+    }
+    if (phase === 3) {
+      let s = 0
+      const count = () => { s = Math.min(s+5,80); setScore(s); s < 80 ? delay(count,25) : delay(()=>{ setFading(true); delay(()=>{ setTopicIdx(i=>(i+1)%TOPICS.length); setPhase(0); setFading(false) },400) },1500) }
+      delay(count, 300)
+      return clear
+    }
+  }, [phase, topicIdx])
+
+  const phases = ['Type a topic','Nova generates','Take a quiz','See your score']
+  const frameH = 300
 
   return (
-    <div style={{ background:'#0d1117', border:'1px solid #30363d', borderRadius:12, padding:'12px 16px', maxWidth:580, margin:'0 auto', height:460, overflow:'hidden', fontFamily:'ui-monospace,monospace', fontSize:13 }}>
-      <div style={{ display:'flex', gap:6, marginBottom:12 }}>
-        {['#ff5f57','#febc2e','#28c840'].map(c=>(
-          <div key={c} style={{ width:10,height:10,borderRadius:'50%',background:c }}/>
+    <div style={{ maxWidth:640, margin:'0 auto', opacity:fading?0:1, transition:'opacity 0.35s' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:20, marginBottom:20 }}>
+        {phases.map((label,i)=>(
+          <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, opacity:phase===i?1:0.3, transition:'opacity 0.3s' }}>
+            <div style={{ width:8,height:8,borderRadius:'50%',background:phase===i?'#a78bfa':'#30363d',transition:'background 0.3s' }}/>
+            <span style={{ fontSize:10,color:'#8b949e',whiteSpace:'nowrap' }}>{label}</span>
+          </div>
         ))}
       </div>
-      <div style={{ display:'flex', alignItems:'center', gap:8, background:'#161b22', borderRadius:8, padding:'8px 12px', marginBottom:12, border:'1px solid #30363d' }}>
-        <span style={{ color:'#8b949e' }}>›</span>
-        <span style={{ color:'#e6edf3', flex:1 }}>{typed}<span style={{ color:'#2563eb', animation:'blink 1s step-end infinite' }}>|</span></span>
-      </div>
-      <div style={{ height:320, overflow:'hidden', transition:'opacity 0.4s', opacity: showCards ? 1 : 0 }}>
-        {showCards ? (
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            <div style={{ color:'#8b949e', fontSize:11, marginBottom:2 }}>✦ Nova generated {cards.length} flashcards</div>
-            {cards.map((c,i) => (
-              <div key={i} style={{ background:'#161b22', borderRadius:8, padding:'10px 14px', border:'1px solid #30363d', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12 }}>
-                <span style={{ color:'#e6edf3', flex:1 }}>{c.q}</span>
-                <span style={{ color:'#34d399', fontSize:11, whiteSpace:'nowrap' }}>{c.a}</span>
+      <div style={{ borderRadius:12,overflow:'hidden',border:'1px solid #30363d',background:'#0d1117' }}>
+        <div style={{ background:'#161b22',padding:'9px 14px',display:'flex',alignItems:'center',gap:10,borderBottom:'1px solid #21262d' }}>
+          <div style={{ display:'flex',gap:5 }}>
+            {['#ff5f57','#febc2e','#28c840'].map(c=><div key={c} style={{ width:10,height:10,borderRadius:'50%',background:c }}/>)}
+          </div>
+          <div style={{ flex:1,background:'#0d1117',borderRadius:5,padding:'3px 10px',fontSize:11,color:'#484f58',textAlign:'left',border:'1px solid #21262d' }}>flashfo.org/create</div>
+        </div>
+        <div style={{ padding:'20px',minHeight:frameH,fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
+          {phase===0&&(
+            <div>
+              <p style={{ color:'#8b949e',fontSize:12,marginBottom:8,textAlign:'left' }}>What do you want to study?</p>
+              <div style={{ background:'#161b22',border:'1px solid #30363d',borderRadius:8,padding:'12px 14px',fontSize:14,color:'#e6edf3',textAlign:'left',minHeight:42 }}>
+                {typed}<span style={{ borderRight:'2px solid #a78bfa',animation:'blink 1s step-end infinite',marginLeft:1 }}>&nbsp;</span>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ display:'flex', alignItems:'center', gap:10, color:'#8b949e', fontSize:13, padding:'24px 8px' }}>
-            <span style={{ width:8,height:8,borderRadius:'50%',background:'#a78bfa',display:'inline-block',flexShrink:0 }} className="nova-thinking"/>
-            Nova is building your flashcard kit…
-          </div>
-        )}
-      </div>
-      <div style={{ display:'flex', gap:6, marginTop:12, justifyContent:'center' }}>
-        {TOPICS.map((_,i) => (
-          <button key={i} onClick={() => setTopicIdx(i)} style={{ width:i===topicIdx?20:6,height:6,borderRadius:3,background:i===topicIdx?'#2563eb':'#30363d',border:'none',cursor:'pointer',padding:0,transition:'width 0.3s,background 0.2s' }}/>
-        ))}
+              <div style={{ marginTop:12,display:'flex',gap:8 }}>
+                <div style={{ height:32,padding:'0 14px',background:'rgba(167,139,250,0.12)',borderRadius:6,display:'flex',alignItems:'center',fontSize:12,color:'#a78bfa',border:'1px solid rgba(167,139,250,0.2)' }}>✦ Generate kit</div>
+              </div>
+            </div>
+          )}
+          {phase===1&&(
+            <div>
+              <div style={{ display:'flex',alignItems:'center',gap:6,marginBottom:14,color:'#8b949e',fontSize:12 }}>
+                <span style={{ display:'inline-block',width:8,height:8,borderRadius:'50%',background:'#a78bfa',flexShrink:0 }} className="nova-thinking"/>
+                Nova built <strong style={{ color:'#e6edf3',fontWeight:500,margin:'0 4px' }}>{visibleCards}</strong> of {cards.length} cards for &ldquo;{topic}&rdquo;
+              </div>
+              {cards.slice(0,visibleCards).map((c,i)=>(
+                <div key={i} style={{ background:'#161b22',border:'1px solid #30363d',borderRadius:8,padding:'10px 14px',marginBottom:8,display:'flex',justifyContent:'space-between',gap:12,animation:'card-drop 0.3s ease both' }}>
+                  <span style={{ color:'#e6edf3',fontSize:13,textAlign:'left' }}>{c.q}</span>
+                  <span style={{ color:'#34d399',fontSize:11,whiteSpace:'nowrap' }}>{c.a}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {phase===2&&quiz&&(
+            <div>
+              <div style={{ marginBottom:10,color:'#484f58',fontSize:10,letterSpacing:'0.08em',textAlign:'left' }}>QUIZ · {topic.toUpperCase()}</div>
+              <p style={{ color:'#e6edf3',fontSize:14,fontWeight:500,marginBottom:14,textAlign:'left' }}>{quiz.q}</p>
+              <div style={{ display:'flex',flexDirection:'column',gap:6 }}>
+                {quiz.opts.map((opt,i)=>(
+                  <div key={i} style={{ padding:'9px 14px',borderRadius:8,fontSize:13,textAlign:'left',border:selectedOpt===i?'1px solid #34d399':'1px solid #30363d',background:selectedOpt===i?'rgba(52,211,153,0.08)':'#161b22',color:selectedOpt===i?'#34d399':'#e6edf3',transition:'all 0.25s' }}>
+                    {selectedOpt===i&&<span style={{ marginRight:6 }}>✓</span>}{opt}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {phase===3&&(
+            <div style={{ textAlign:'center',padding:'24px 0' }}>
+              <div style={{ width:80,height:80,borderRadius:'50%',border:'3px solid #34d399',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',background:'rgba(52,211,153,0.06)' }}>
+                <span style={{ fontSize:22,fontWeight:700,color:'#34d399' }}>{score}%</span>
+              </div>
+              <p style={{ color:'#e6edf3',fontWeight:600,marginBottom:4 }}>Study set complete</p>
+              <p style={{ color:'#8b949e',fontSize:13,marginBottom:16 }}>Your flashcards, quiz &amp; guide are ready.</p>
+              <div style={{ display:'flex',gap:8,justifyContent:'center' }}>
+                {['Flashcards','Quiz','Study Guide'].map(label=>(
+                  <div key={label} style={{ padding:'6px 12px',borderRadius:6,background:'#161b22',border:'1px solid #30363d',fontSize:11,color:'#8b949e' }}>{label}</div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -190,7 +249,7 @@ export default function LandingPage() {
           <p style={{ fontSize:12,color:'#484f58',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:16 }}>Nova in action</p>
           <h2 style={{ fontSize:'clamp(24px,4vw,40px)', fontWeight:700, marginBottom:12 }}>Watch Nova work</h2>
           <p style={{ color:'#8b949e', marginBottom:48, fontSize:15 }}>Type any topic and Nova builds your complete study kit instantly.</p>
-          <AnimatedDemo/>
+          <ProductDemo/>
         </div>
       </section>
 
