@@ -1,5 +1,4 @@
 'use client'
-import React from 'react'
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
@@ -22,10 +21,10 @@ const LAUNCH_STEPS = [
 
 // ── Assignment Builder ──────────────────────────────────────────────
 function AssignmentBuilder({ classrooms, user }) {
-  const [form, setForm] = React.useState({ title:'', description:'', type:'flashcards', classroom_id:'', due_date:'' })
-  const [saving, setSaving] = React.useState(false)
-  const [saved, setSaved] = React.useState(false)
-  const [error, setError] = React.useState('')
+  const [form, setForm] = useState({ title:'', description:'', type:'flashcards', classroom_id:'', due_date:'' })
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
   const types = [{id:'flashcards',label:'Flashcard Set'},{id:'quiz',label:'Quiz'},{id:'study_guide',label:'Study Guide'},{id:'reading',label:'Reading / Notes'}]
 
   const save = async () => {
