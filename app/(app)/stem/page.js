@@ -34,7 +34,7 @@ export default function StemPage() {
     <div style={{ display:'flex', flexDirection:'column', height:'calc(100vh - 56px)', maxWidth:760, margin:'0 auto' }}>
       <div style={{ padding:'16px 20px 12px', borderBottom:'1px solid var(--c-line)', flexShrink:0 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
-          <div style={{ width:32, height:32, borderRadius:8, background:'linear-gradient(135deg,#2563eb,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}>⚡</div>
+          <div style={{ width:32, height:32, borderRadius:8, background:'linear-gradient(135deg,#2563eb,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}><svg width='16' height='16' viewBox='0 0 24 24' fill='#fff' stroke='none'><polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'/></svg></div>
           <div>
             <h1 style={{ margin:0, fontSize:16, fontWeight:700, color:'var(--c-t1)' }}>Flashfo STEM</h1>
             <p style={{ margin:0, fontSize:12, color:'var(--c-t2)' }}>Math · Science · Code — deep problem solving</p>
@@ -53,7 +53,7 @@ export default function StemPage() {
             <div style={{ maxWidth:'82%', padding:'10px 14px', borderRadius: m.role==='user'?'12px 12px 2px 12px':'12px 12px 12px 2px', background: m.role==='user'?'#2563eb':'var(--c-surface)', border: m.role==='user'?'none':'1px solid var(--c-line)', color: m.role==='user'?'#fff':'var(--c-t1)', fontSize:13, lineHeight:1.6, whiteSpace:'pre-wrap' }}>{m.text}</div>
           </div>
         ))}
-        {loading && <div style={{ display:'flex', gap:10, marginBottom:16 }}><div style={{ width:28, height:28, borderRadius:7, background:'linear-gradient(135deg,#2563eb,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center' }}>⚡</div><div style={{ padding:'12px 14px', borderRadius:'12px 12px 12px 2px', background:'var(--c-surface)', border:'1px solid var(--c-line)' }}><div style={{ display:'flex', gap:4 }}>{[0,1,2].map(i=><div key={i} style={{ width:6, height:6, borderRadius:'50%', background:'#a78bfa' }} className="nova-thinking"/>)}</div></div></div>}
+        {loading && <div style={{ display:'flex', gap:10, marginBottom:16 }}><div style={{ width:28, height:28, borderRadius:7, background:'linear-gradient(135deg,#2563eb,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center' }}><svg width='14' height='14' viewBox='0 0 24 24' fill='#fff' stroke='none'><polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'/></svg></div><div style={{ padding:'12px 14px', borderRadius:'12px 12px 12px 2px', background:'var(--c-surface)', border:'1px solid var(--c-line)' }}><div style={{ display:'flex', gap:4 }}>{[0,1,2].map(i=><div key={i} style={{ width:6, height:6, borderRadius:'50%', background:'#a78bfa' }} className="nova-thinking"/>)}</div></div></div>}
         <div ref={bottomRef}/>
       </div>
       <div style={{ padding:'12px 16px', borderTop:'1px solid var(--c-line)', flexShrink:0 }}>
