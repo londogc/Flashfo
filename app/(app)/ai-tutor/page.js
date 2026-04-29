@@ -37,7 +37,7 @@ export default function NovaPage() {
     if (!welcomed) {
       setMessages(prev => prev.length === 0 ? [{
         role: 'assistant',
-        content: "Hey, I'm Nova — I'm not just a chatbot. Tell me what classes you're in or what you want to study and I'll make everything specific to you."
+        text: "Hey, I'm Nova — I'm not just a chatbot. Tell me what classes you're in or what you want to study and I'll make everything specific to you."
       }] : prev)
       localStorage.setItem('ff-nova-welcomed', '1')
     }
