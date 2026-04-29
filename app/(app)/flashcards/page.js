@@ -124,7 +124,90 @@ export default function FlashcardsPage() {
   function addCard() { const n = cards.length; setCards(cs => [...cs, { front: 'New question', back: 'New answer' }]); setTimeout(() => startEdit(n), 0) }
   function deleteCard(i) { setCards(cs => cs.filter((_, ci) => ci !== i)); if (current >= i && current > 0) setCurrent(c => c - 1); setDone(d => d.filter(di => di !== i).map(di => di > i ? di - 1 : di)); if (editIdx === i) setEditIdx(null) }
 
-  if (!cards.length) return (
+  if (!cards.length) 
+
+  // ── Spaced Repetition (SM-2) ──────────────────────────────────────
+  const [reviewQueue, setReviewQueue] = useState([])
+  const [dueToday, setDueToday] = useState(0)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const reviews = JSON.parse(localStorage.getItem('ff-card-reviews') || '{}')
+    const now = Date.now()
+    const due = Object.entries(reviews).filter(([,v]) => v.nextReview <= now)
+    setDueToday(due.length)
+    setReviewQueue(due.map(([id]) => id))
+  }, [])
+
+  const recordReview = (cardId, quality) => {
+    if (typeof window === 'undefined') return
+    const reviews = JSON.parse(localStorage.getItem('ff-card-reviews') || '{}')
+    const prev = reviews[cardId] || { easeFactor: 2.5, interval: 1, repetitions: 0 }
+    let { easeFactor, interval, repetitions } = prev
+    if (quality >= 3) {
+      if (repetitions === 0) interval = 1
+      else if (repetitions === 1) interval = 6
+      else interval = Math.round(interval * easeFactor)
+      repetitions++
+    } else {
+      repetitions = 0
+      interval = 1
+    }
+    easeFactor = Math.max(1.3, easeFactor + 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
+    reviews[cardId] = { easeFactor, interval, repetitions, nextReview: Date.now() + interval * 86400000 }
+    localStorage.setItem('ff-card-reviews', JSON.stringify(reviews))
+    setDueToday(d => Math.max(0, d - 1))
+    setReviewQueue(q => q.filter(id => id !== cardId))
+  }
+
+  // ── Voice Mode ───────────────────────────────────────────────────
+  const [voiceOn, setVoiceOn] = useState(false)
+  const [listening, setListening] = useState(false)
+  const synth = typeof window !== 'undefined' ? window.speechSynthesis : null
+  const recognitionRef = useRef(null)
+
+  const speakCard = (text) => {
+    if (!synth) return
+    synth.cancel()
+    const u = new SpeechSynthesisUtterance(text)
+    u.rate = 0.95
+    synth.speak(u)
+  }
+
+  const startListening = (onResult) => {
+    const SpeechRec = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)
+    if (!SpeechRec) return
+    const rec = new SpeechRec()
+    rec.lang = 'en-US'
+    rec.interimResults = false
+    rec.onresult = (e) => { onResult(e.results[0][0].transcript); setListening(false) }
+    rec.onerror = () => setListening(false)
+    rec.onend = () => setListening(false)
+    recognitionRef.current = rec
+    setListening(true)
+    rec.start()
+  }
+
+  // ── Share Link ───────────────────────────────────────────────────
+  const [shareMsg, setShareMsg] = useState('')
+
+  const generateShareLink = (deckId) => {
+    const uuid = ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16))
+    if (typeof window !== 'undefined') {
+      const shared = JSON.parse(localStorage.getItem('ff-shared-decks') || '{}')
+      shared[uuid] = { deckId, created: Date.now() }
+      localStorage.setItem('ff-shared-decks', JSON.stringify(shared))
+    }
+    const url = window.location.origin + '/shared/' + uuid
+    navigator.clipboard?.writeText(url).then(() => {
+      setShareMsg('Link copied!')
+      setTimeout(() => setShareMsg(''), 2500)
+    })
+    return url
+  }
+
+  return (
     <div className="p-6 max-w-2xl mx-auto w-full">
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Flashcards</h1>
       <p className="text-sm text-t2 mb-6">Enter any topic and get study cards instantly.</p>
