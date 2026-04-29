@@ -16,14 +16,14 @@ export default function NovaPage() {
   const [speaking, setSpeaking] = useState(false)
 
   function speak(text) {
-    if (!window.speechSynthesis) return
-    window.speechSynthesis.cancel()
+    if (!(typeof window!=='undefined'&&window.speechSynthesis)) return
+    (typeof window!=='undefined'&&window.speechSynthesis).cancel()
     if (speaking) { setSpeaking(false); return }
     const utt = new SpeechSynthesisUtterance(text)
     utt.rate = 1.05; utt.pitch = 1
     utt.onend = () => setSpeaking(false)
     setSpeaking(true)
-    window.speechSynthesis.speak(utt)
+    (typeof window!=='undefined'&&window.speechSynthesis).speak(utt)
   }
   const [grade, setGrade] = useState('')
   const [classContext, setClassContext] = useState(null)
@@ -84,7 +84,7 @@ export default function NovaPage() {
   }
 
   async function send() {
-    try { localStorage.setItem('ff-nova-visited', '1') } catch(e) {}
+    try { (typeof window!=='undefined'?localStorage:setItem('ff-nova-visited', '1') } catch(e) {}
     const text = input.trim()
     if (!text || loading) return
     setInput('')
@@ -167,7 +167,7 @@ export default function NovaPage() {
               color: msg.role==='user' ? 'white' : 'var(--c-t1)',
               fontSize:14, lineHeight:1.6, whiteSpace:'pre-wrap', wordBreak:'break-word'
             }}>{msg.text}
-              {msg.role === 'nova' && window.speechSynthesis && (
+              {msg.role === 'nova' && (typeof window!=='undefined'&&window.speechSynthesis) && (
                 <button onClick={() => speak(msg.text)} style={{ marginTop:6, display:'flex', alignItems:'center', gap:4, background:'none', border:'none', cursor:'pointer', padding:'2px 4px', borderRadius:6, opacity:0.5 }}
                   onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0.5'}>
                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round"><path d="M3 5H1v6h2l4 3V2L3 5zm8-2a6 6 0 010 10m-2-8a4 4 0 010 6"/></svg>
