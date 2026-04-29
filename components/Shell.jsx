@@ -82,6 +82,7 @@ function Avatar({ user, profile, size = 28 }) {
 }
 
 export default function Shell({ children }) {
+  const pathname = usePathname()
   const router = useRouter()
   const { user, profile, loading: authLoading, signOut } = useAuth()
 
