@@ -26,6 +26,9 @@ function printDeck(cards, topic) {
 
 function SpeakerBtn({ text, audioRef }) {
   const [busy, setBusy] = useState(false)
+  const [speaking, setSpeaking] = useState(false)
+  const [voiceInput, setVoiceInput] = useState(false)
+  const [dueQueue, setDueQueue] = useState([])
   async function speak() {
     if (!text) return
     // Stop any currently playing audio
@@ -42,6 +45,33 @@ function SpeakerBtn({ text, audioRef }) {
       audio.play()
     } catch { setBusy(false) }
   }
+  // Voice: read card aloud
+  const readAloud = (text) => {
+    if (typeof window === 'undefined') return
+    const synth = window.speechSynthesis
+    if (!synth) return
+    synth.cancel()
+    const utt = new SpeechSynthesisUtterance(text)
+    utt.rate = 0.9
+    utt.onstart = () => setSpeaking(true)
+    utt.onend = () => setSpeaking(false)
+    synth.speak(utt)
+  }
+
+  // Voice: listen for answer
+  const listenForAnswer = () => {
+    if (typeof window === 'undefined') return
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SR) return
+    const rec = new SR()
+    rec.lang = 'en-US'
+    rec.onstart = () => setVoiceInput(true)
+    rec.onresult = e => { const t = e.results[0][0].transcript; setVoiceInput(false); /* submit answer */ }
+    rec.onend = () => setVoiceInput(false)
+    rec.start()
+  }
+
+
   return (
     <button onClick={e => { e.stopPropagation(); speak() }} title="Listen"
       className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-blue-500/10 transition-colors"
@@ -209,6 +239,17 @@ export default function FlashcardsPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto w-full">
+      {/* ── Review Queue Banner ── */}
+      {dueQueue.length > 0 && (
+        <div style={{ background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:10, padding:'12px 16px', marginBottom:20, display:'flex', alignItems:'center', gap:12 }}>
+          <span style={{ fontSize:20 }}>⏰</span>
+          <div style={{ flex:1 }}>
+            <p style={{ margin:0, fontWeight:600, fontSize:14, color:'#f59e0b' }}>{dueQueue.length} card{dueQueue.length>1?'s':''} due for review</p>
+            <p style={{ margin:0, fontSize:12, color:'#8b949e' }}>Spaced repetition queue — review these first</p>
+          </div>
+          <button onClick={() => {}} style={{ background:'#f59e0b', color:'#000', fontSize:12, fontWeight:600, padding:'6px 14px', borderRadius:8, border:'none', cursor:'pointer' }}>Review now</button>
+        </div>
+      )}
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Flashcards</h1>
       <p className="text-sm text-t2 mb-6">Enter any topic and get study cards instantly.</p>
       <div className="bg-surface border border-line rounded-2xl p-5">
