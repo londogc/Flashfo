@@ -180,7 +180,7 @@ export default function DashboardPage() {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
         <div>
           <div style={{ fontSize: 12, color: 'var(--c-t3)', fontWeight: 500, marginBottom: 2 }}>{greeting}</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--c-t1)', letterSpacing: '-0.02em' }}>Hey, {firstName} 👋</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--c-t1)', letterSpacing: '-0.02em' }}>Hey, {firstName} </div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {classes.length > 0 && (
@@ -191,7 +191,7 @@ export default function DashboardPage() {
           )}
           {dueToday > 0 && (
             <a href="/flashcards" style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, padding: '4px 12px', textDecoration: 'none' }}>
-              <span style={{ fontSize: 11 }}>🔁</span>
+              <span style={{ fontSize: 11 }}>↻</span>
               <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700 }}>{dueToday} card{dueToday !== 1 ? 's' : ''} due today</span>
             </a>
           )}
