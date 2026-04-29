@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -18,6 +18,82 @@ const LAUNCH_STEPS = [
   { id:'results', label:'Share results', desc:'Review class performance and share a summary with students.', href:'/teach/results', cta:'View results' },
 ]
 
+
+
+// ── Assignment Builder ──────────────────────────────────────────────
+function AssignmentBuilder({ classrooms, user }) {
+  const [form, setForm] = React.useState({ title:'', description:'', type:'flashcards', classroom_id:'', due_date:'' })
+  const [saving, setSaving] = React.useState(false)
+  const [saved, setSaved] = React.useState(false)
+  const [error, setError] = React.useState('')
+  const types = [{id:'flashcards',label:'Flashcard Set'},{id:'quiz',label:'Quiz'},{id:'study_guide',label:'Study Guide'},{id:'reading',label:'Reading / Notes'}]
+
+  const save = async () => {
+    if (!form.title.trim() || !form.classroom_id) { setError('Add a title and select a class'); return }
+    setSaving(true); setError('')
+    const { data, error: err } = await supabase.from('homework_assignments').insert({
+      teacher_id: user.id,
+      classroom_id: form.classroom_id,
+      title: form.title,
+      description: form.description,
+      type: form.type,
+      due_date: form.due_date || null,
+      status: 'open'
+    }).select().single()
+    setSaving(false)
+    if (err) { setError('Failed to save'); return }
+    // Fire notification to all students in classroom
+    const { data: enrollments } = await supabase.from('student_enrollments').select('student_id').eq('classroom_id', form.classroom_id)
+    if (enrollments?.length) {
+      const notifs = enrollments.map(e=>({ user_id: e.student_id, type:'assignment', category: classrooms.find(c=>c.id===form.classroom_id)?.name || 'Class', title:'New assignment: '+form.title, body: form.description || '', link:'/dashboard' }))
+      await supabase.from('notifications').insert(notifs)
+    }
+    setSaved(true); setForm({ title:'', description:'', type:'flashcards', classroom_id:'', due_date:'' })
+    setTimeout(()=>setSaved(false), 3000)
+  }
+
+  return (
+    <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:12, padding:'20px 24px', marginBottom:24 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
+        <span style={{ fontSize:16 }}>📋</span>
+        <h3 style={{ margin:0, fontSize:15, fontWeight:600, color:'var(--c-t1)' }}>Assignment Builder</h3>
+      </div>
+      <div style={{ display:'grid', gap:12 }}>
+        <input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} placeholder="Assignment title e.g. Chapter 5 Flashcard Review"
+          style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13, boxSizing:'border-box' }}/>
+        <textarea value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder="Instructions or notes for students (optional)" rows={2}
+          style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13, resize:'vertical', boxSizing:'border-box' }}/>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+          <div>
+            <label style={{ fontSize:11, color:'var(--c-t3)', display:'block', marginBottom:4 }}>TYPE</label>
+            <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value}))}
+              style={{ width:'100%', padding:'8px 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13 }}>
+              {types.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize:11, color:'var(--c-t3)', display:'block', marginBottom:4 }}>CLASS</label>
+            <select value={form.classroom_id} onChange={e=>setForm(f=>({...f,classroom_id:e.target.value}))}
+              style={{ width:'100%', padding:'8px 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13 }}>
+              <option value="">Select class...</option>
+              {classrooms.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+        </div>
+        <div>
+          <label style={{ fontSize:11, color:'var(--c-t3)', display:'block', marginBottom:4 }}>DUE DATE (optional)</label>
+          <input type="datetime-local" value={form.due_date} onChange={e=>setForm(f=>({...f,due_date:e.target.value}))}
+            style={{ padding:'8px 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13 }}/>
+        </div>
+        {error && <p style={{ margin:0, fontSize:12, color:'#ef4444' }}>{error}</p>}
+        <button onClick={save} disabled={saving}
+          style={{ padding:'9px 20px', borderRadius:8, background: saved?'#34d399':'#2563eb', color:'#fff', border:'none', fontWeight:600, fontSize:13, cursor:'pointer', transition:'background 0.2s', alignSelf:'flex-start' }}>
+          {saving ? 'Saving...' : saved ? '✓ Assigned!' : 'Assign to class'}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export default function TeachPage() {
   const { user, loading: authLoading } = useAuth()
@@ -92,6 +168,8 @@ export default function TeachPage() {
     <div className="p-6 max-w-4xl mx-auto text-center py-20">
       <div className="text-5xl mb-4">🏫</div>
       <h1 className="text-2xl font-bold text-t1 mb-2">Live Classrooms</h1>
+
+      {classrooms.length > 0 && <AssignmentBuilder classrooms={classrooms} user={user} />}
       <p className="text-t2 text-sm mb-6">Sign in to create and manage your classrooms.</p>
       <a href="/auth" className="inline-flex h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl items-center">Sign in →</a>
     </div>
