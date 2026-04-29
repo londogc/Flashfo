@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth'
+import { useAuth } from '@/lib/useAuth'
 
 const TOPICS = ['Civil War causes','Photosynthesis','Quadratic equations','The Great Gatsby']
 const CARDS = {
