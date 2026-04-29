@@ -10,6 +10,15 @@ function genCode() {
   return Array.from({length:6},()=>chars[Math.floor(Math.random()*chars.length)]).join('')
 }
 
+const LAUNCH_STEPS = [
+  { id:'classroom', label:'Create a classroom', desc:'Set up your first class and get a join code for students.', href:'/teach/new', cta:'Create classroom' },
+  { id:'invite', label:'Invite students', desc:'Share your class code or a direct join link with your students.', href:null, cta:'Copy link' },
+  { id:'curriculum', label:'Connect curriculum', desc:'Link a subject or standard so Nova can tailor content.', href:'/teach/curriculum', cta:'Connect now' },
+  { id:'quiz', label:'Launch your first quiz', desc:'Run a live quiz session with your class in real time.', href:'/teach/quiz', cta:'Start quiz' },
+  { id:'results', label:'Share results', desc:'Review class performance and share a summary with students.', href:'/teach/results', cta:'View results' },
+]
+
+
 export default function TeachPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
@@ -19,6 +28,23 @@ export default function TeachPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm]             = useState({ name:'', subject:'' })
   const [creating, setCreating]     = useState(false)
+  const [checklistDone, setChecklistDone] = useState(() => {
+    if (typeof window === 'undefined') return {}
+    try { return JSON.parse((typeof window!=='undefined'&&localStorage).getItem('ff-launch-checklist') || '{}') } catch { return {} }
+  })
+  const [checklistCollapsed, setChecklistCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return (typeof window!=='undefined'&&localStorage).getItem('ff-checklist-done') === '1'
+  })
+  const allDone = LAUNCH_STEPS.every(s => checklistDone[s.id])
+  const markDone = (id) => {
+    const next = {...checklistDone, [id]: true}
+    setChecklistDone(next)
+    if (typeof window !== 'undefined') {
+      ;(typeof window!=='undefined'&&localStorage).setItem('ff-launch-checklist', JSON.stringify(next))
+      if (LAUNCH_STEPS.every(s => next[s.id])) (typeof window!=='undefined'&&localStorage).setItem('ff-checklist-done', '1')
+    }
+  }
 
   const [checklistDone, setChecklistDone] = React.useState(false)
   const [checklistSkipped, setChecklistSkipped] = React.useState(() => {
@@ -90,6 +116,44 @@ export default function TeachPage() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto w-full">
+      {/* ── Teacher Launch Checklist ── */}
+      {!checklistCollapsed && (
+        <div style={{ background:'rgba(37,99,235,0.06)', border:'1px solid rgba(37,99,235,0.2)', borderRadius:14, padding:'20px 24px', marginBottom:28 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+            <div>
+              <p style={{ margin:0, fontWeight:700, fontSize:16, color:'#e6edf3' }}>🚀 Get your class ready</p>
+              <p style={{ margin:0, fontSize:13, color:'#8b949e', marginTop:4 }}>{LAUNCH_STEPS.filter(s=>checklistDone[s.id]).length} of {LAUNCH_STEPS.length} steps complete</p>
+            </div>
+            <button onClick={() => setChecklistCollapsed(true)} style={{ background:'transparent', border:'none', color:'#484f58', fontSize:12, cursor:'pointer', padding:'4px 8px' }}>Skip for now</button>
+          </div>
+          {/* Progress bar */}
+          <div style={{ height:4, background:'#21262d', borderRadius:4, marginBottom:20, overflow:'hidden' }}>
+            <div style={{ height:'100%', background:'#2563eb', borderRadius:4, width:(LAUNCH_STEPS.filter(s=>checklistDone[s.id]).length/LAUNCH_STEPS.length*100)+'%', transition:'width 0.4s' }}/>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {LAUNCH_STEPS.map((step, i) => {
+              const done = !!checklistDone[step.id]
+              return (
+                <div key={step.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', background: done ? 'rgba(52,211,153,0.06)' : 'rgba(255,255,255,0.03)', borderRadius:10, border:'1px solid '+(done?'rgba(52,211,153,0.2)':'rgba(255,255,255,0.06)') }}>
+                  <button onClick={() => markDone(step.id)} style={{ width:22, height:22, borderRadius:'50%', border:'2px solid '+(done?'#34d399':'#30363d'), background: done?'#34d399':'transparent', color:'#fff', fontSize:12, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>{done?'✓':i+1}</button>
+                  <div style={{ flex:1 }}>
+                    <p style={{ margin:0, fontSize:14, fontWeight:done?400:500, color:done?'#8b949e':'#e6edf3', textDecoration:done?'line-through':'none' }}>{step.label}</p>
+                    {!done && <p style={{ margin:0, fontSize:12, color:'#484f58', marginTop:2 }}>{step.desc}</p>}
+                  </div>
+                  {!done && step.href && (
+                    <a href={step.href} style={{ fontSize:12, color:'#2563eb', textDecoration:'none', fontWeight:500, whiteSpace:'nowrap' }}>{step.cta} →</a>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+      {checklistCollapsed && !allDone && (
+        <button onClick={() => setChecklistCollapsed(false)} style={{ background:'rgba(37,99,235,0.08)', border:'1px solid rgba(37,99,235,0.2)', borderRadius:8, padding:'8px 14px', fontSize:13, color:'#2563eb', cursor:'pointer', marginBottom:20, display:'block' }}>
+          📋 {LAUNCH_STEPS.filter(s=>checklistDone[s.id]).length}/{LAUNCH_STEPS.length} setup steps — continue →
+        </button>
+      )}
       {/* Create modal */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{background:'rgba(0,0,0,0.5)'}}>
