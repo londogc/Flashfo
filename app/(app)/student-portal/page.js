@@ -2,326 +2,156 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
+import Link from 'next/link'
 
 export default function StudentPortalPage() {
-  const { user, loading: authLoading } = useAuth()
-  const [classrooms, setClassrooms] = useState([])
-  const [homework, setHomework] = useState([])
-  const [submissions, setSubmissions] = useState([]) // what student already submitted
-  const [messages, setMessages] = useState([])
+  const { user } = useAuth()
+  const [classroom, setClassroom] = useState(null)
+  const [assignments, setAssignments] = useState([])
+  const [scores, setScores] = useState([])
+  const [classmates, setClassmates] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [activeClass, setActiveClass] = useState(null)
   const [joinCode, setJoinCode] = useState('')
-  const [joinName, setJoinName] = useState('')
-  const [joinError, setJoinError] = useState('')
   const [joining, setJoining] = useState(false)
-  const [tab, setTab] = useState('classes') // classes | homework | messages
+  const [joinError, setJoinError] = useState('')
 
-  useEffect(() => { if (!authLoading && user) init() }, [authLoading, user])
+  useEffect(() => {
+    if (!user) return
+    loadData()
+  }, [user])
 
-  async function init() {
+  const loadData = async () => {
     setLoading(true)
-    try {
-      // Load enrolled classrooms
-      const { data: enrollments } = await supabase
-        .from('student_enrollments')
-        .select('*, classroom:classrooms(*)')
-        .eq('student_id', user.id)
-        .order('joined_at', { ascending: false })
+    const { data: enrollment } = await supabase
+      .from('student_enrollments').select('*, classroom:classrooms(*)')
+      .eq('student_id', user.id).order('joined_at', { ascending: false }).limit(1).single()
 
-      const cls = (enrollments || []).map(e => e.classroom).filter(Boolean)
-      setClassrooms(cls)
+    if (enrollment?.classroom) {
+      setClassroom(enrollment.classroom)
+      const [{ data: hw }, { count }] = await Promise.all([
+        supabase.from('homework_assignments').select('*').eq('classroom_id', enrollment.classroom.id).order('due_date'),
+        supabase.from('student_enrollments').select('id', { count:'exact', head:true }).eq('classroom_id', enrollment.classroom.id),
+      ])
+      setAssignments(hw || [])
+      setClassmates(count || 0)
+    }
 
-      if (cls.length > 0) {
-        setActiveClass(cls[0])
-        const classIds = cls.map(c => c.id)
-
-        // Load open homework for enrolled classes
-        const { data: hw } = await supabase
-          .from('homework_assignments')
-          .select('*, classroom:classrooms(name)')
-          .in('classroom_id', classIds)
-          .eq('status', 'open')
-          .lte('opens_at', new Date().toISOString())
-          .order('due_date', { ascending: true })
-        setHomework(hw || [])
-
-        // Load what this student has already submitted
-        if (hw?.length) {
-          const { data: subs } = await supabase
-            .from('homework_submissions')
-            .select('assignment_id')
-            .in('assignment_id', hw.map(h => h.id))
-            .eq('student_name', user.user_metadata?.full_name || user.email)
-          setSubmissions((subs || []).map(s => s.assignment_id))
-        }
-
-        // Load class messages (announcements from teacher)
-        const { data: threads } = await supabase
-          .from('message_threads')
-          .select('*, messages(*)')
-          .in('classroom_id', classIds)
-          .eq('type', 'announcement')
-          .order('created_at', { ascending: false })
-          .limit(20)
-        setMessages(threads || [])
-      }
-    } catch(e) {}
+    const { data: quizHistory } = await supabase
+      .from('saved_items').select('title, metadata, created_at').eq('user_id', user.id)
+      .eq('type','quiz_result').order('created_at', { ascending: false }).limit(5)
+    setScores(quizHistory || [])
     setLoading(false)
   }
 
-  async function joinClass() {
-    if (!joinCode.trim() || !joinName.trim()) return
+  const joinClass = async () => {
+    if (!joinCode.trim()) return
     setJoining(true); setJoinError('')
-    try {
-      const code = joinCode.trim().toUpperCase()
-      const { data: cls, error: clsErr } = await supabase
-        .from('classrooms')
-        .select('*')
-        .eq('code', code)
-        .single()
-      if (clsErr || !cls) { setJoinError('Class code not found. Check with your teacher.'); setJoining(false); return }
-
-      // Check already enrolled
-      const { data: existing } = await supabase
-        .from('student_enrollments')
-        .select('id')
-        .eq('student_id', user.id)
-        .eq('classroom_id', cls.id)
-        .single()
-      if (existing) { setJoinError('You are already enrolled in this class.'); setJoining(false); return }
-
-      const { error: enrollErr } = await supabase.from('student_enrollments').insert({
-        student_id: user.id,
-        classroom_id: cls.id,
-        student_name: joinName.trim()
-      })
-      if (enrollErr) throw enrollErr
-      setJoinCode(''); setJoinName('')
-      await init()
-    } catch(e) { setJoinError(e.message || 'Failed to join. Try again.') }
-    setJoining(false)
+    const { data: cls } = await supabase.from('classrooms').select('*').eq('join_code', joinCode.trim().toUpperCase()).single()
+    if (!cls) { setJoinError('Class not found — check the code and try again'); setJoining(false); return }
+    const { error } = await supabase.from('student_enrollments').insert({ student_id: user.id, classroom_id: cls.id })
+    if (error && error.code !== '23505') { setJoinError('Could not join — try again'); setJoining(false); return }
+    setJoinCode(''); await loadData(); setJoining(false)
   }
 
-  async function leaveClass(classroomId) {
-    if (!confirm('Leave this class? You can rejoin with the class code.')) return
-    await supabase.from('student_enrollments').delete().eq('student_id', user.id).eq('classroom_id', classroomId)
-    await init()
-  }
-
-  function daysUntil(d) {
-    const diff = new Date(d) - new Date()
-    const days = Math.ceil(diff / (1000*60*60*24))
-    if (days < 0) return 'Past due'
-    if (days === 0) return 'Due today'
-    return 'Due in ' + days + ' day' + (days !== 1 ? 's' : '')
-  }
-
-  const overdueCount = homework.filter(h => new Date(h.due_date) < new Date() && !submissions.includes(h.id)).length
-  const pendingCount = homework.filter(h => !submissions.includes(h.id)).length
-
-  if (!authLoading && !user) return (
-    <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] text-center">
-      <div className="text-4xl mb-4">🎒</div>
-      <h2 className="text-xl font-bold text-t1 mb-2">Student Portal</h2>
-      <p className="text-sm text-t2 mb-5">Sign in to access your classes, homework, and Nova tutor.</p>
-      <a href="/auth" className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 flex items-center justify-center">Sign In</a>
-    </div>
-  )
+  const dueToday = assignments.filter(a => { if (!a.due_date) return false; const d=new Date(a.due_date); const now=new Date(); return d.toDateString()===now.toDateString() })
+  const upcoming = assignments.filter(a => { if (!a.due_date) return true; return new Date(a.due_date) > new Date() })
+  const avgScore = scores.length ? Math.round(scores.reduce((acc,s)=>acc+(s.metadata?.score||0),0)/scores.length) : null
 
   if (loading) return (
-    <div className="p-6 flex items-center justify-center min-h-64">
-      <span className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/>
+    <div style={{ maxWidth:700, margin:'0 auto', padding:'40px 16px' }}>
+      {[1,2,3].map(i=><div key={i} style={{ height:80, borderRadius:12, background:'#161b22', marginBottom:12 }} className="skeleton"/>)}
     </div>
   )
 
   return (
-    <div className="p-6 max-w-3xl mx-auto w-full">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-t1 tracking-tight">Student Portal</h1>
-          <p className="text-sm text-t2 mt-0.5">
-            {classrooms.length} class{classrooms.length !== 1 ? 'es' : ''}
-            {pendingCount > 0 && <span className="ml-2 text-amber-500 font-semibold">{pendingCount} assignment{pendingCount !== 1 ? 's' : ''} due</span>}
-          </p>
-        </div>
-        <a href="/ai-tutor" className="h-9 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:opacity-90 flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="8" cy="8" r="7"/><circle cx="8" cy="8" r="3"/></svg>
-          Ask Nova
-        </a>
-      </div>
+    <div style={{ maxWidth:700, margin:'0 auto', padding:'0 16px 48px', fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
+      <h1 style={{ fontSize:22, fontWeight:700, color:'var(--c-t1)', margin:'0 0 4px' }}>Student Portal</h1>
+      <p style={{ color:'var(--c-t2)', fontSize:14, marginBottom:24 }}>Your classes, assignments, and progress in one place.</p>
 
-      {/* My Classes - always visible at top */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider">My Classes</h2>
-          <button onClick={() => setTab('classes')} className="text-[12px] text-blue-500 hover:underline font-medium">+ Join a Class</button>
-        </div>
-        {classrooms.length === 0 ? (
-          <div className="bg-surface border border-dashed border-line rounded-xl p-5 text-center">
-            <p className="text-sm text-t2 mb-3">No classes yet. Get a code from your teacher.</p>
-            <button onClick={() => setTab('classes')} className="h-8 px-4 bg-blue-700 text-white text-[12px] font-semibold rounded-lg hover:bg-blue-800">Join a Class</button>
+      {/* Join a class */}
+      {!classroom && (
+        <div style={{ background:'#161b22', border:'1px solid #21262d', borderRadius:12, padding:24, marginBottom:20 }}>
+          <h2 style={{ fontSize:16, fontWeight:600, color:'var(--c-t1)', marginBottom:4 }}>Join a class</h2>
+          <p style={{ fontSize:13, color:'var(--c-t2)', marginBottom:16 }}>Enter the code your teacher gave you.</p>
+          <div style={{ display:'flex', gap:8 }}>
+            <input value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase())}
+              placeholder="e.g. BIO-3X7" maxLength={10}
+              onKeyDown={e=>e.key==='Enter'&&joinClass()}
+              style={{ flex:1, padding:'10px 14px', borderRadius:9, border:'1px solid #30363d', background:'#0d1117', color:'var(--c-t1)', fontSize:14, letterSpacing:'0.1em', fontFamily:'monospace' }}/>
+            <button onClick={joinClass} disabled={joining||!joinCode.trim()}
+              style={{ padding:'10px 20px', borderRadius:9, background:'#2563eb', color:'#fff', border:'none', fontWeight:600, fontSize:14, cursor:'pointer', opacity:joining?0.6:1 }}>
+              {joining?'Joining...':'Join'}
+            </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {classrooms.map(cls => (
-              <div key={cls.id} className="bg-surface border border-line rounded-xl p-4 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="font-semibold text-t1 text-sm truncate">{cls.name}</div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {cls.subject && <span className="text-[11px] text-t3">{cls.subject}</span>}
-                    <span className="text-[10px] font-mono font-bold bg-surface2 px-1.5 py-0.5 rounded text-t3">{cls.code}</span>
-                  </div>
+          {joinError && <p style={{ fontSize:12, color:'#ef4444', marginTop:8 }}>{joinError}</p>}
+        </div>
+      )}
+
+      {/* Active class card */}
+      {classroom && (
+        <>
+          <div style={{ background:'linear-gradient(135deg,rgba(37,99,235,0.12) 0%,rgba(37,99,235,0.04) 100%)', border:'1px solid rgba(37,99,235,0.2)', borderRadius:12, padding:20, marginBottom:20, display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:16 }}>
+            <div>
+              <div style={{ fontSize:11, color:'#484f58', letterSpacing:'0.07em', marginBottom:4 }}>CLASS</div>
+              <div style={{ fontSize:16, fontWeight:700, color:'var(--c-t1)' }}>{classroom.name}</div>
+              {classroom.subject && <div style={{ fontSize:12, color:'var(--c-t2)', marginTop:2 }}>{classroom.subject}</div>}
+            </div>
+            <div>
+              <div style={{ fontSize:11, color:'#484f58', letterSpacing:'0.07em', marginBottom:4 }}>CLASSMATES</div>
+              <div style={{ fontSize:22, fontWeight:700, color:'#3b82f6' }}>{classmates}</div>
+            </div>
+            <div>
+              <div style={{ fontSize:11, color:'#484f58', letterSpacing:'0.07em', marginBottom:4 }}>AVG SCORE</div>
+              <div style={{ fontSize:22, fontWeight:700, color: avgScore>=80?'#34d399':avgScore>=60?'#f59e0b':'#ef4444' }}>
+                {avgScore !== null ? avgScore+'%' : '—'}
+              </div>
+            </div>
+          </div>
+
+          {/* Due today */}
+          {dueToday.length > 0 && (
+            <div style={{ background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:12, padding:16, marginBottom:16 }}>
+              <div style={{ fontSize:11, color:'#f59e0b', fontWeight:600, letterSpacing:'0.07em', marginBottom:10 }}>DUE TODAY</div>
+              {dueToday.map(a=>(
+                <div key={a.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+                  <span style={{ fontSize:13, color:'var(--c-t1)' }}>{a.title}</span>
+                  <Link href={'/'+a.type} style={{ padding:'4px 10px', borderRadius:6, background:'#f59e0b', color:'#0d1117', fontSize:11, fontWeight:600, textDecoration:'none' }}>Start →</Link>
                 </div>
-                <a href={'/join?code='+cls.code} className="h-7 px-3 bg-blue-700 text-white text-[11px] font-semibold rounded-lg hover:bg-blue-800 flex-shrink-0">Join →</a>
+              ))}
+            </div>
+          )}
+
+          {/* Assignments */}
+          <div style={{ background:'#161b22', border:'1px solid #21262d', borderRadius:12, padding:20, marginBottom:20 }}>
+            <div style={{ fontSize:13, fontWeight:600, color:'var(--c-t1)', marginBottom:14 }}>All assignments</div>
+            {upcoming.length === 0 && <p style={{ fontSize:13, color:'var(--c-t3)', textAlign:'center', padding:16 }}>No assignments yet</p>}
+            {upcoming.map(a=>(
+              <div key={a.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderBottom:'1px solid #21262d' }}>
+                <div style={{ width:32, height:32, borderRadius:8, background:'rgba(37,99,235,0.1)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.8" strokeLinecap="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+                </div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:13, fontWeight:500, color:'var(--c-t1)' }}>{a.title}</div>
+                  {a.due_date && <div style={{ fontSize:11, color:'var(--c-t3)', marginTop:2 }}>Due {new Date(a.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>}
+                </div>
+                <Link href={'/'+a.type} style={{ padding:'5px 12px', borderRadius:7, background:'var(--c-surface2)', color:'var(--c-t2)', fontSize:12, textDecoration:'none', border:'1px solid var(--c-line)' }}>Open</Link>
               </div>
             ))}
           </div>
-        )}
-      </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-5 p-1 bg-surface2 rounded-xl w-fit">
-        {[['classes','Join / Manage'],['homework','Homework'],['messages','Announcements']].map(([id, label]) => (
-          <button key={id} onClick={() => setTab(id)}
-            className={'px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-all ' + (tab === id ? 'bg-surface text-t1 shadow-sm' : 'text-t3 hover:text-t2')}>
-            {label}
-            {id === 'homework' && pendingCount > 0 && <span className={'ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ' + (overdueCount > 0 ? 'bg-red-500 text-white' : 'bg-amber-500 text-white')}>{pendingCount}</span>}
-          </button>
-        ))}
-      </div>
-
-      {/* Classes Tab */}
-      {tab === 'classes' && (
-        <div className="space-y-4">
-          {/* Join new class */}
-          <div className="bg-surface border border-line rounded-2xl p-5">
-            <h3 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-3">Join a Class</h3>
-            <div className="flex gap-2 flex-wrap">
-              <input value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())} maxLength={8}
-                placeholder="Class code" onKeyDown={e => e.key === 'Enter' && joinClass()}
-                className="h-9 flex-1 min-w-32 bg-surface2 border border-line rounded-lg px-3 text-sm text-t1 outline-none focus:border-blue-400 uppercase tracking-wider font-bold placeholder:font-normal placeholder:tracking-normal"/>
-              <input value={joinName} onChange={e => setJoinName(e.target.value)}
-                placeholder="Your name" onKeyDown={e => e.key === 'Enter' && joinClass()}
-                className="h-9 flex-1 min-w-32 bg-surface2 border border-line rounded-lg px-3 text-sm text-t1 outline-none focus:border-blue-400"/>
-              <button onClick={joinClass} disabled={joining || !joinCode.trim() || !joinName.trim()}
-                className="h-9 px-4 bg-blue-700 text-white text-sm font-semibold rounded-lg hover:bg-blue-800 disabled:opacity-40 flex items-center gap-1.5">
-                {joining ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/> : null}
-                Join
-              </button>
-            </div>
-            {joinError && <p className="text-sm text-red-500 mt-2">{joinError}</p>}
-          </div>
-
-          {/* Enrolled classes */}
-          {classrooms.length === 0 ? (
-            <div className="border-2 border-dashed border-line rounded-2xl p-12 text-center">
-              <div className="text-4xl mb-3">🏫</div>
-              <p className="text-t1 font-semibold mb-1">No classes yet</p>
-              <p className="text-sm text-t2">Enter a class code above to join your first class.</p>
-            </div>
-          ) : (
-            classrooms.map(cls => (
-              <div key={cls.id} className="bg-surface border border-line rounded-xl p-5">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-base font-bold text-t1">{cls.name}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      {cls.subject && <span className="text-[11px] text-t3">{cls.subject}</span>}
-                      <span className="text-[11px] font-mono font-bold px-2 py-0.5 bg-surface2 rounded text-t3">{cls.code}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 font-semibold">Enrolled</span>
-                    <button onClick={() => leaveClass(cls.id)} className="text-[11px] text-red-400 hover:text-red-600 hover:underline">Leave</button>
-                  </div>
+          {/* Recent quiz scores */}
+          {scores.length > 0 && (
+            <div style={{ background:'#161b22', border:'1px solid #21262d', borderRadius:12, padding:20 }}>
+              <div style={{ fontSize:13, fontWeight:600, color:'var(--c-t1)', marginBottom:14 }}>Recent quiz scores</div>
+              {scores.map((s,i)=>(
+                <div key={i} style={{ display:'flex', alignItems:'center', gap:12, padding:'8px 0', borderBottom: i<scores.length-1?'1px solid #21262d':'none' }}>
+                  <div style={{ fontSize:13, color:'var(--c-t1)', flex:1 }}>{s.title}</div>
+                  <div style={{ fontSize:14, fontWeight:700, color: (s.metadata?.score||0)>=80?'#34d399':(s.metadata?.score||0)>=60?'#f59e0b':'#ef4444' }}>{s.metadata?.score||'?'}%</div>
                 </div>
-                <div className="mt-3 flex gap-2">
-                  <a href={'/join?code='+cls.code}
-                    className="h-8 px-3 bg-blue-700 text-white text-[12px] font-semibold rounded-lg hover:bg-blue-800 flex items-center gap-1">
-                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 1v14M1 8h14"/></svg>
-                    Join Live Session
-                  </a>
-                  <button onClick={() => { setActiveClass(cls); setTab('homework') }}
-                    className="h-8 px-3 bg-surface2 text-t2 text-[12px] font-medium rounded-lg hover:bg-surface border border-line flex items-center gap-1">
-                    View Homework
-                  </button>
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
-        </div>
-      )}
-
-      {/* Homework Tab */}
-      {tab === 'homework' && (
-        <div className="space-y-3">
-          {homework.length === 0 ? (
-            <div className="border-2 border-dashed border-line rounded-2xl p-12 text-center">
-              <div className="text-4xl mb-3">📚</div>
-              <p className="text-t1 font-semibold mb-1">No assignments right now</p>
-              <p className="text-sm text-t2">Your teacher hasn't posted any homework yet.</p>
-            </div>
-          ) : (
-            homework.map(hw => {
-              const done = submissions.includes(hw.id)
-              const overdue = new Date(hw.due_date) < new Date()
-              return (
-                <div key={hw.id} className={'bg-surface border rounded-xl p-5 ' + (done ? 'border-emerald-400/30 opacity-70' : overdue ? 'border-red-400/30' : 'border-line')}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-base font-bold text-t1">{hw.title}</h3>
-                        {done && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">✓ Submitted</span>}
-                        {!done && overdue && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-500/10 text-red-500">Past Due</span>}
-                      </div>
-                      <div className="flex items-center gap-3 mt-1 text-[12px] text-t3">
-                        <span>{hw.classroom?.name}</span>
-                        <span className={overdue && !done ? 'text-red-400 font-semibold' : ''}>{daysUntil(hw.due_date)}</span>
-                        <span>{hw.quiz_data?.questions?.length || 0} questions</span>
-                      </div>
-                    </div>
-                    {!done && (
-                      <a href={'/join?code='+(classrooms.find(c=>c.id===hw.classroom_id)?.code||'')}
-                        className={'h-9 px-4 text-white text-sm font-semibold rounded-xl flex items-center flex-shrink-0 ' + (overdue ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-700 hover:bg-blue-800')}>
-                        Start →
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )
-            })
-          )}
-        </div>
-      )}
-
-      {/* Announcements Tab */}
-      {tab === 'messages' && (
-        <div className="space-y-3">
-          {messages.length === 0 ? (
-            <div className="border-2 border-dashed border-line rounded-2xl p-12 text-center">
-              <div className="text-4xl mb-3">📢</div>
-              <p className="text-t1 font-semibold mb-1">No announcements yet</p>
-              <p className="text-sm text-t2">Your teacher's announcements will appear here.</p>
-            </div>
-          ) : (
-            messages.map(thread => (
-              <div key={thread.id} className="bg-surface border border-line rounded-xl p-5">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center text-[11px] font-bold flex-shrink-0">T</div>
-                  <div className="flex-1">
-                    <div className="text-sm font-semibold text-t1 mb-1">{thread.title}</div>
-                    {(thread.messages || []).slice(0,3).map((m, i) => (
-                      <p key={i} className="text-[13px] text-t2 mb-1">{m.content}</p>
-                    ))}
-                    <div className="text-[11px] text-t3 mt-2">{new Date(thread.created_at).toLocaleDateString()}</div>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        </>
       )}
     </div>
   )
