@@ -239,7 +239,7 @@ function LiveQuizDemo() {
   }
 
   return (
-    <div style={{ background:'#0d1117', border:'1px solid #21262d', borderRadius:14, overflow:'hidden', fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
+    <div style={{ background:'#0d1117', border:'1px solid #21262d', borderRadius:14, overflow:'hidden', fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', minHeight:420 }}>
 
       {/* Top bar */}
       <div style={{ background:'#161b22', borderBottom:'1px solid #21262d', padding:'10px 18px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -252,10 +252,10 @@ function LiveQuizDemo() {
       </div>
 
       {/* Body */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', minHeight:300 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', height:340 }}>
 
         {/* Left — question */}
-        <div style={{ borderRight:'1px solid #21262d', padding:'20px 18px', display:'flex', flexDirection:'column', gap:14 }}>
+        <div style={{ borderRight:'1px solid #21262d', padding:'20px 18px', display:'flex', flexDirection:'column', gap:14, overflow:'hidden', height:340 }}>
           <div>
             <div style={{ fontSize:10, color:'#484f58', letterSpacing:'0.08em', marginBottom:6 }}>QUESTION {qIdx+2} OF 6</div>
             <div style={{ fontSize:14, fontWeight:500, color:'#e6edf3', lineHeight:1.55, minHeight:52 }}>{q.q}</div>
@@ -283,17 +283,15 @@ function LiveQuizDemo() {
             ))}
           </div>
 
-          {/* Answer reveal label */}
-          {phase === 'reveal' && (
-            <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'#34d399', padding:'8px 12px', background:'rgba(52,211,153,0.07)', border:'1px solid rgba(52,211,153,0.2)', borderRadius:8 }}>
+          {/* Answer reveal label — always rendered, opacity transition so height is always reserved */}
+          <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'#34d399', padding:'8px 12px', background:'rgba(52,211,153,0.07)', border:'1px solid rgba(52,211,153,0.2)', borderRadius:8, opacity: phase==='reveal' ? 1 : 0, transition:'opacity 0.4s ease', pointerEvents: phase==='reveal' ? 'auto' : 'none' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
               {q.pct[q.correct]}% of the class got it right
             </div>
-          )}
         </div>
 
         {/* Right — leaderboard */}
-        <div style={{ padding:'18px 16px', display:'flex', flexDirection:'column', gap:8 }}>
+        <div style={{ padding:'18px 16px', display:'flex', flexDirection:'column', gap:8, overflow:'hidden', height:340 }}>
           <div style={{ fontSize:10, color:'#484f58', letterSpacing:'0.08em', marginBottom:2, display:'flex', justifyContent:'space-between' }}>
             <span>STUDENTS</span>
             <span style={{ color:'#a78bfa' }}>{answered} answered</span>
