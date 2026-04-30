@@ -339,11 +339,15 @@ export default function LandingPage() {
     <div style={{ background:'#0d1117', minHeight:'100dvh', color:'#e6edf3', fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
 
       {/* ── Nav ── */}
+      <style>{`@keyframes lp-spin{to{transform:rotate(360deg)}}@keyframes lp-rock{0%,100%{transform:rotate(-4deg) scale(1)}50%{transform:rotate(4deg) scale(1.08)}}@media(prefers-reduced-motion:reduce){.lp-no-motion *{animation:none!important}}`}</style>
       <nav style={{ position:'sticky',top:0,zIndex:50,background:'rgba(13,17,23,0.92)',backdropFilter:'blur(12px)',borderBottom:'1px solid #21262d' }}>
         <div style={{ maxWidth:1200,margin:'0 auto',padding:'0 16px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <div style={{ width:32,height:32,background:'#2563eb',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <div style={{ position:'relative', width:36, height:36, flexShrink:0 }}>
+                <div style={{ position:'absolute', inset:-3, borderRadius:12, background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)', animation:'lp-spin 3s linear infinite' }}/>
+                <div style={{ position:'absolute', inset:2, borderRadius:9, background:'#0d1117', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#3b82f6"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
               </div>
             <span style={{ fontWeight:600, fontSize:16 }}>Flashfo</span>
           </div>
@@ -440,8 +444,8 @@ export default function LandingPage() {
       <footer style={{ borderTop:'1px solid #21262d', padding:'40px 24px', textAlign:'center' }}>
         <div style={{ maxWidth:700, margin:'0 auto' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginBottom:20 }}>
-            <div style={{ width:28, height:28, background:'#2563eb', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <div style={{ width:32, height:32, borderRadius:9, background:'linear-gradient(135deg,#1e40af,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="white" style={{ animation:'lp-rock 4s ease-in-out infinite', transformOrigin:'center' }}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             </div>
             <span style={{ fontSize:15, fontWeight:700, color:'#e6edf3' }}>Flashfo</span>
           </div>
