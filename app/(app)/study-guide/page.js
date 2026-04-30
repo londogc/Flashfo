@@ -181,68 +181,68 @@ export default function StudyGuidePage() {
     setTimeout(() => setShareMsg(''), 2500)
   }
 
+  useEffect(() => {
+    const id = 'nova-gen-anim'
+    if (document.getElementById(id)) return
+    const s = document.createElement('style')
+    s.id = id
+    s.textContent = '@keyframes nova-pop{0%{opacity:0;transform:translateY(14px) scale(0.97)}60%{opacity:1;transform:translateY(-3px) scale(1.005)}100%{opacity:1;transform:translateY(0) scale(1)}} @keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}} .nova-card{opacity:0;animation:nova-pop .42s cubic-bezier(.22,.68,0,1.2) forwards} .nova-dot-pulse{animation:nova-pulse .9s ease-in-out infinite}'
+    document.head.appendChild(s)
+  }, [])
+
+  const sections = output ? output.split(/(?=## )/).filter(Boolean) : []
+
   return (
-    <div className="p-6 max-w-3xl mx-auto w-full">
-      <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Study Guide Creator</h1>
-      <p className="text-sm text-t2 mb-6">Enter any topic or paste your notes and get a complete structured study guide.</p>
-      <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
-        <textarea value={topic} onChange={e => setTopic(e.target.value)}
-          placeholder="e.g. The French Revolution, Cell Mitosis, World War II, Quadratic equations..."
-          className="w-full h-32 text-sm text-t1 bg-transparent resize-none outline-none placeholder:text-t3 mb-4"/>
-        <div className="mb-5">
-          <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-2">Depth</div>
-          <div className="flex gap-2">
-            {depths.map(d => (
-              <button key={d.id} onClick={() => setDepth(d.id)}
-                className={'flex-1 px-3 py-2.5 rounded-xl border text-left transition-all ' + (depth === d.id ? 'bg-blue-700 border-blue-700 text-white' : 'bg-surface2 border-line text-t2 hover:border-blue-300')}>
-                <div className="text-[12px] font-semibold">{d.label}</div>
-                <div className={'text-[10px] mt-0.5 ' + (depth === d.id ? 'text-blue-200' : 'text-t3')}>{d.desc}</div>
-              </button>
-            ))}
-          </div>
+    <div style={{minHeight:'100vh',background:'#0d1117',padding:'32px 20px',fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"}}>
+      <div style={{maxWidth:660,margin:'0 auto'}}>
+        <div style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(52,211,153,0.08)',border:'1px solid rgba(52,211,153,0.2)',borderRadius:20,padding:'4px 12px',fontSize:11,fontWeight:700,color:'#34d399',marginBottom:20,letterSpacing:'0.04em'}}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          NOVA · STUDY GUIDE
         </div>
-        {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
-        <button onClick={generate} disabled={loading || !topic.trim()}
-          className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 disabled:opacity-40 flex items-center gap-2">
-          {loading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>Building guide...</> : 'Generate Study Guide'}
+        <div style={{marginBottom:24}}>
+          <div style={{fontSize:24,fontWeight:800,color:'#e6edf3',letterSpacing:'-0.02em',marginBottom:6}}>Build a study guide</div>
+          <div style={{fontSize:14,color:'#8b949e'}}>Nova writes a structured, in-depth guide on any topic.</div>
+        </div>
+        <input value={topic} onChange={e=>setTopic(e.target.value)} onKeyDown={e=>e.key==='Enter'&&!loading&&topic.trim()&&generate()}
+          placeholder="Enter a topic — e.g. Photosynthesis, The Cold War..."
+          style={{width:'100%',background:'#161b22',border:'1px solid #30363d',borderRadius:10,padding:'12px 14px',fontSize:14,color:'#e6edf3',outline:'none',marginBottom:10,display:'block'}}/>
+        <div style={{display:'flex',gap:8,marginBottom:14}}>
+          {['brief','standard','deep'].map(d=>(
+            <button key={d} onClick={()=>setDepth(d)}
+              style={{padding:'6px 14px',borderRadius:7,border:'1px solid '+(depth===d?'#2563eb':'#21262d'),background:depth===d?'rgba(37,99,235,0.12)':'transparent',color:depth===d?'#3b82f6':'#6b7280',fontSize:12,fontWeight:600,cursor:'pointer',textTransform:'capitalize'}}>
+              {d}
+            </button>
+          ))}
+        </div>
+        <button onClick={()=>!loading&&topic.trim()&&generate()} disabled={loading}
+          style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',opacity:loading?0.6:1,letterSpacing:'-0.01em',marginBottom:16}}>
+          {loading?'Nova is writing...':'Generate study guide →'}
         </button>
-      </div>
-      {output && (
-        <div className="bg-surface border border-line rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <span className="text-[13px] font-bold text-t1">Study Guide</span>
-            <div className="flex gap-2 items-center flex-wrap">
-              {saved && <span className="text-[11px] text-emerald-500 font-medium">Saved!</span>}
-              {user && <button onClick={doSave} disabled={saving}
-                className="h-7 px-3 bg-emerald-600 text-white text-[11px] font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-40">
-                {saving ? 'Saving...' : 'Save'}
-              </button>}
-              <button onClick={printGuide} title="Print study guide" className="h-7 px-3 bg-surface border border-line text-t2 text-[11px] rounded-lg hover:bg-surface2 flex items-center gap-1">
-                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print
-              </button>
-              <button onClick={generateShareLink} title="Copy share link"
-                style={{ height:34, padding:'0 14px', background:'rgba(167,139,250,0.1)', border:'1px solid rgba(167,139,250,0.25)', borderRadius:8, color:'#a78bfa', fontSize:13, fontWeight:500, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
-                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="13" cy="3" r="2"/><circle cx="3" cy="8" r="2"/><circle cx="13" cy="13" r="2"/><path d="M5 7l6-3M5 9l6 3"/></svg>
-                {shareMsg || 'Share'}
-              </button>
-              <button onClick={() => navigator.clipboard.writeText(output)} className="h-7 px-3 bg-surface border border-line text-t2 text-[11px] rounded-lg hover:bg-surface2">Copy</button>
-            </div>
-          </div>
-          <div>{renderStudyGuide(output)}</div>
+        <div style={{display:'flex',alignItems:'center',gap:8,minHeight:22,marginBottom:12}}>
+          {loading&&<div className="nova-dot-pulse" style={{width:7,height:7,borderRadius:'50%',background:'#a78bfa'}}/>}
+          {loading&&<span style={{fontSize:12,color:'#8b949e'}}>Nova is structuring your guide...</span>}
+          {!loading&&output&&<><div style={{width:7,height:7,borderRadius:'50%',background:'#34d399'}}/><span style={{fontSize:12,color:'#34d399'}}>Study guide ready</span></>}
         </div>
-      )}
+        {error&&<div style={{background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:9,padding:'10px 14px',fontSize:13,color:'#f87171',marginBottom:14}}>{error}</div>}
+        {sections.length>0
+          ? sections.map((section,i)=>(
+              <div key={i} className="nova-card" style={{animationDelay:i*110+'ms',background:'#161b22',border:'1px solid #21262d',borderRadius:12,padding:'18px 20px',marginBottom:10}}>
+                <div style={{fontSize:13,color:'#e6edf3',lineHeight:1.7,whiteSpace:'pre-wrap'}}>{section}</div>
+              </div>
+            ))
+          : output
+            ? <div className="nova-card" style={{background:'#161b22',border:'1px solid #21262d',borderRadius:12,padding:'18px 20px'}}>
+                <div style={{fontSize:13,color:'#e6edf3',lineHeight:1.7,whiteSpace:'pre-wrap'}}>{output}</div>
+              </div>
+            : null
+        }
+        {output&&!loading&&(
+          <div style={{display:'flex',gap:8,marginTop:12}}>
+            <button onClick={()=>navigator.clipboard?.writeText(output)} style={{padding:'6px 14px',borderRadius:7,border:'1px solid #30363d',background:'transparent',color:'#8b949e',fontSize:12,cursor:'pointer'}}>Copy</button>
+            {shareMsg&&<span style={{fontSize:12,color:'#34d399',alignSelf:'center'}}>{shareMsg}</span>}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
-
-  function generateShareLink() {
-    if (!output) return
-    const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ topic, content: output }))))
-    const url = (typeof window !== 'undefined' ? window.location.origin : '') + '/study-guide?share=' + payload
-    if (typeof navigator !== 'undefined') {
-      navigator.clipboard?.writeText(url).then(() => {
-        setShareMsg('Link copied!')
-        setTimeout(() => setShareMsg(''), 2500)
-      }).catch(() => { setShareMsg(url) })
-    }
-  }
