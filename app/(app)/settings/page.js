@@ -26,8 +26,7 @@ export default function SettingsPage() {
   const bannerRef = useRef(null)
 
   useEffect(() => {
-    if (!authLoading && !user) router.push('/auth')
-    if (user) loadProfile()
+        if (user) loadProfile()
     // Read current theme from localStorage
     const saved = localStorage.getItem('ff-theme')
     if (saved) setTheme(saved)
@@ -76,6 +75,17 @@ export default function SettingsPage() {
   if (authLoading || loading) return (
     <div className="p-6 flex items-center justify-center min-h-64">
       <span className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/>
+    </div>
+  )
+
+  if (!user && !authLoading) return (
+    <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
+      <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-5">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20v-2a8 8 0 0116 0v2"/></svg>
+      </div>
+      <h2 className="text-xl font-bold text-t1 mb-2">Settings</h2>
+      <p className="text-sm text-t3 mb-6">Sign in to manage your account preferences.</p>
+      <a href="/auth" className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold text-sm">Sign in →</a>
     </div>
   )
 
