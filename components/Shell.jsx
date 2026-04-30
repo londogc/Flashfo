@@ -287,8 +287,7 @@ export default function Shell({ children }) {
             ? <div style={{ fontSize:10, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.06em', padding:'16px 8px 4px' }}>Tools</div>
             : <div style={{ borderTop:'1px solid var(--c-line)', margin:'8px 0' }}/>}
           {TOOLS.map(item => <NavItem key={item.href} item={item} collapsed={collapsed} active={pathname === item.href}/>)}
-          {!collapsed
-            ? <div style={{ fontSize:10, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.06em', padding:'16px 8px 4px' }}>Advanced</div>        </nav>
+          </nav>
 
         {/* Dark mode toggle — hidden on mid-screen (pill in topbar handles it) */}
         <div style={{ padding:12, borderTop:'1px solid var(--c-line)', flexShrink:0 }}>
