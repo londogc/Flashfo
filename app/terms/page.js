@@ -18,11 +18,11 @@ export default function TermsPage() {
 
         <div style={{ borderTop:'1px solid #21262d', paddingTop:40 }}>
           {[
-            ["1. Agreement to Terms", `These Terms of Service form a legally binding agreement between you and Flashfo governing your access to and use of the Flashfo platform at flashfo.com and all related services (the "Service").
+            ["1. Agreement to Terms", `These Terms of Service form a legally binding agreement between you and Flashfo governing your access to and use of the Flashfo platform at flashfo.org and all related services (the "Service").
 
 By creating an account or using the Service, you confirm that you have read, understood, and agree to these Terms and our Privacy Policy. If you do not agree, do not use the Service.`],
             ["2. Eligibility", `You must be at least 13 years old to create an account. Users under 18 must have parental or guardian consent. Users under 13 may only access the Service through a verified school arrangement with appropriate parental consents. You must provide accurate and complete information when registering.`],
-            ["3. Accounts", `You are responsible for maintaining the confidentiality of your login credentials and all activity under your account. Notify us immediately at support@flashfo.com if you suspect unauthorised access.
+            ["3. Accounts", `You are responsible for maintaining the confidentiality of your login credentials and all activity under your account. Notify us immediately at support@flashfo.org if you suspect unauthorised access.
 
 Teachers who create class codes or live quiz sessions are responsible for appropriate use by students they invite. We may suspend or terminate accounts for violations of these Terms.`],
             ["4. The Service", `Flashfo is an AI-powered educational platform enabling users to create flashcards, quizzes, study guides, summaries, and other study materials using our Nova AI assistant. The Service also includes live quiz tools for teachers, collaborative decks, and spaced-repetition study modes.
@@ -37,9 +37,9 @@ You must not resell or commercialise the Service or generated content without ou
 
 If you share content publicly or with a class, other users may view and use it for educational purposes. We may remove content that violates these Terms.`],
             ["7. Intellectual Property", `The Flashfo name, logo, Nova AI branding, platform design, and software are owned by or licensed to Flashfo and protected by intellectual property laws. You may not use our trademarks without prior written consent. Feedback you provide may be used by us without compensation.`],
-            ["8. Subscription Plans and Payments", `Flashfo offers a free tier and paid plans (Pro, Team, and others as described at flashfo.com/pricing). Paid subscriptions are billed on a recurring basis. You may cancel at any time; cancellation takes effect at period end with no refund for unused time except where required by law.
+            ["8. Subscription Plans and Payments", `Flashfo offers a free tier and paid plans (Pro, Team, and others as described at flashfo.org/pricing). Paid subscriptions are billed on a recurring basis. You may cancel at any time; cancellation takes effect at period end with no refund for unused time except where required by law.
 
-For billing errors, contact billing@flashfo.com within 30 days. We may change pricing with 30 days' notice.`],
+For billing errors, contact billing@flashfo.org within 30 days. We may change pricing with 30 days' notice.`],
             ["9. Disclaimers and Limitation of Liability", `THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED OR ERROR-FREE, OR THAT AI-GENERATED CONTENT IS ACCURATE OR SUITABLE FOR ANY PURPOSE.
 
 TO THE MAXIMUM EXTENT PERMITTED BY LAW, FLASHFO SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES. OUR TOTAL LIABILITY SHALL NOT EXCEED THE GREATER OF THE AMOUNT YOU PAID US IN THE PRECEDING 12 MONTHS OR USD $100.`],
@@ -47,12 +47,12 @@ TO THE MAXIMUM EXTENT PERMITTED BY LAW, FLASHFO SHALL NOT BE LIABLE FOR ANY INDI
             ["11. Privacy", `Your use of the Service is governed by our Privacy Policy, incorporated into these Terms by reference.`],
             ["12. Educational Institutions and COPPA", `School administrators using Flashfo for classrooms represent that they have obtained all required consents under COPPA, FERPA, and applicable state laws before creating accounts for or inviting students. For students under 13, the school acts as agent of parental consent.`],
             ["13. Termination", `You may delete your account at any time. We may suspend or terminate your access for violation of these Terms, non-payment, or extended inactivity. On termination, your right to use the Service ceases and data will be deleted per our Privacy Policy.`],
-            ["14. Governing Law and Dispute Resolution", `These Terms are governed by Delaware law. Before any legal claim, contact legal@flashfo.com to attempt informal resolution within 30 days. Unresolved disputes will be resolved through binding individual arbitration under AAA Consumer Arbitration Rules. Class action claims are waived.`],
+            ["14. Governing Law and Dispute Resolution", `These Terms are governed by Delaware law. Before any legal claim, contact legal@flashfo.org to attempt informal resolution within 30 days. Unresolved disputes will be resolved through binding individual arbitration under AAA Consumer Arbitration Rules. Class action claims are waived.`],
             ["15. General Provisions", `These Terms and the Privacy Policy constitute the entire agreement between you and Flashfo. If any provision is unenforceable, the rest remains in effect. Our failure to enforce any provision is not a waiver. You may not assign your rights without our consent.`],
             ["16. Changes to These Terms", `We may update these Terms and will provide at least 14 days' notice of material changes. Continued use after the effective date constitutes acceptance.`],
-            ["17. Contact Us", `Flashfo · legal@flashfo.com · flashfo.com
+            ["17. Contact Us", `Flashfo · legal@flashfo.org · flashfo.org
 
-Support: support@flashfo.com · Billing: billing@flashfo.com`],
+Support: support@flashfo.org · Billing: billing@flashfo.org`],
           ].map(([heading, body], i) => (
             <div key={i} style={{ marginBottom:36 }}>
               <h2 style={{ fontSize:16, fontWeight:700, color:'#e6edf3', marginBottom:10 }}>{heading}</h2>
