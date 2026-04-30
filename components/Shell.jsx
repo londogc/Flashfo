@@ -24,6 +24,7 @@ const ICONS = {
   lesson:     'M13 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V2a1 1 0 00-1-1zM5 5h6m-6 3h6m-6 3h4',
   search:     'M7 1a6 6 0 100 12A6 6 0 007 1zm7 14l-3-3',
   settings:   'M6.5 1h3l.5 2a5 5 0 011.2.7l2-.7 1.5 2.6-1.5 1.5a5 5 0 010 1.8l1.5 1.5L13.2 13l-2-.7A5 5 0 0110 13l-.5 2h-3L6 13a5 5 0 01-1.2-.7l-2 .7L1.3 10.4l1.5-1.5a5 5 0 010-1.8L1.3 5.6 2.8 3l2 .7A5 5 0 016 3l.5-2zM8 6a2 2 0 100 4 2 2 0 000-4z',
+  nova:       'M8 1a7 7 0 100 14A7 7 0 008 1zm0 3a4 4 0 100 8 4 4 0 000-8zm0 3a1 1 0 100 2 1 1 0 000-2z',
   tutor:      'M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z',
   guide:      'M1 3h6.5L9 4.5h6V13H9l-1.5-1.5H1zm0 0v10',
   studentp:   'M8 1l7 3.5-7 3.5-7-3.5zm-5 5.5v4c0 2 2.2 3 5 3s5-1 5-3V10',
@@ -71,7 +72,14 @@ function NavItem({ item, collapsed, active }) {
         border: active && nova ? '1px solid rgba(124,58,237,0.2)' : '1px solid transparent',
         color: active ? (nova ? '#a78bfa' : '#3b82f6') : 'var(--c-t2)' }}>
       <span style={{ flexShrink:0, position:'relative' }}>
-        <I d={ICONS[item.icon]}/>
+        {nova
+          ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <circle cx="12" cy="12" r="6"/>
+              <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/>
+            </svg>
+          : <I d={ICONS[item.icon] || ICONS.dashboard}/>
+        }
         {nova && <span style={{ position:'absolute', top:-3, right:-3, width:7, height:7, background:'#a78bfa', borderRadius:'50%', border:'1.5px solid var(--c-surface)', animation:'nova-breathe 2.4s ease-in-out infinite' }}/>}
       </span>
       {!collapsed && <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.label}</span>}
