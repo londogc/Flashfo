@@ -1,5 +1,5 @@
 'use client'
-// v5.9.2 — scrubbed for v6.0
+// Flashfo v6 — Shell & Navigation
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -23,16 +23,11 @@ const ICONS = {
   quiz:       'M6 5.5a2.5 2.5 0 014.5 1.5c0 1.5-1.5 2-2 3V11m0 2.5v.5',
   lesson:     'M13 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V2a1 1 0 00-1-1zM5 5h6m-6 3h6m-6 3h4',
   search:     'M7 1a6 6 0 100 12A6 6 0 007 1zm7 14l-3-3',
-  settings:   'M6.5 1h3l.5 2a5 5 0 011.2.7l2-.7 1.5 2.6-1.5 1.5a5 5 0 010 1.8l1.5 1.5L13.2 13l-2-.7A5 5 0 0110 13l-.5 2h-3L6 13a5 5 0 01-1.2-.7l-2 .7L1.3 10.4l1.5-1.5a5 5 0 010-1.8L1.3 5.6 2.8 3l2 .7A5 5 0 016 3l.5-2zM8 6a2 2 0 100 4 2 2 0 000-4z',
   nova:       'M8 1a7 7 0 100 14A7 7 0 008 1zm0 3a4 4 0 100 8 4 4 0 000-8zm0 3a1 1 0 100 2 1 1 0 000-2z',
-  tutor:      'M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z',
   guide:      'M1 3h6.5L9 4.5h6V13H9l-1.5-1.5H1zm0 0v10',
   studentp:   'M8 1l7 3.5-7 3.5-7-3.5zm-5 5.5v4c0 2 2.2 3 5 3s5-1 5-3V10',
   suite:      'M8 1l1.5 4H14l-3.7 2.7 1.4 4.3L8 9.5 4.3 12 5.7 7.7 2 5h4.5z',
   sources:    'M1 5h3v9H1zm4-3h4v12H5zm5 2h4v10h-4z',
-  cL:         'M10 3L5 8l5 5',
-  cR:         'M6 3l5 5-5 5',
-  stem:       'M9 1L4 8h4l-1 7 6-8H9z',
   curriculum: 'M1 2h6v12H1zm8 0h6v12H9zM3 5h2M3 7h2M3 9h2M10 5h3M10 7h3M10 9h3',
   collab:     'M2 5h9v8H2zM4 3h9v8H4zM6 7h4M6 9h3M12 1v4M10 2l2-1 2 1',
 }
@@ -47,19 +42,6 @@ const NAV = [
   { href:'/my-stuff',       label:'My Stuff',      icon:'mystuff'   },
   { href:'/curriculum',     label:'Curriculum',    icon:'curriculum'},
   { href:'/collab-decks',   label:'Collab Decks',  icon:'collab'    },
-]
-const TOOLS = [
-  { href:'/summarize',      label:'Summarize',     icon:'summarize'  },
-  { href:'/study-guide',    label:'Study Guide',   icon:'guide'      },
-  { href:'/flashcards',     label:'Flashcards',    icon:'flashcards' },
-  { href:'/quiz',           label:'Quiz',          icon:'quiz'       },
-  { href:'/lesson-builder', label:'Lesson Builder',icon:'lesson'     },
-  { href:'/search',         label:'Search',        icon:'search'     },
-]
-const ADV = [
-  { href:'/resource-hub',   label:'Resource Hub',  icon:'mystuff' },
-  { href:'/ai-suite',       label:'Create',        icon:'suite'   },
-  { href:'/source-library', label:'Source Library',icon:'sources' },
 ]
 
 function NavItem({ item, collapsed, active }) {
