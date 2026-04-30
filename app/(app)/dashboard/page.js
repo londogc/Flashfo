@@ -31,7 +31,12 @@ function TodayInHistory() {
       .then(r => r.json())
       .then(data => {
         const items = (data.selected || [])
-          .filter(e => e.text && e.year)
+          .filter(e => {
+            if (!e.text || !e.year) return false
+            const BAD = ['kill','killed','murder','assassin','massacre','genocide','execut','suicide','terror','bomb','attack','shot','hung','hanged','beheaded','lynch','slaughter','riot','civil war','world war','holocaust','rape','torture','hostage','hijack','crash killed','died in','casualties','wounded']
+            const low = e.text.toLowerCase()
+            return !BAD.some(w => low.includes(w))
+          })
           .slice(0, 6)
           .map(e => ({ year: e.year, text: e.text }))
         setEvents(items)
