@@ -101,94 +101,122 @@ function AuthPageInner() {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ width: '100%', maxWidth: 400 }}>
+    <div style={{ minHeight:'100dvh', background:'#080c14', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px 16px', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+      <style>{`
+        @keyframes auth-spin { to { transform: rotate(360deg); } }
+        @keyframes auth-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+        @keyframes auth-fadein { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        .auth-input:focus { border-color: #3b82f6 !important; outline: none; }
+        @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+      `}</style>
+
+      <div style={{ width:'100%', maxWidth:420, animation:'auth-fadein 0.4s ease both' }}>
 
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 48, height: 48, background: '#1d4ed8', borderRadius: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-            <svg width="22" height="22" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
+        <div style={{ textAlign:'center', marginBottom:28 }}>
+          <div style={{ position:'relative', width:60, height:60, margin:'0 auto 14px' }}>
+            <div style={{ position:'absolute', inset:-4, borderRadius:19, background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)', animation:'auth-spin 3s linear infinite' }}/>
+            <div style={{ position:'absolute', inset:3, background:'#0d1117', borderRadius:15, display:'flex', alignItems:'center', justifyContent:'center', animation:'auth-float 3s ease-in-out infinite' }}>
+              <svg width="24" height="24" viewBox="0 0 14 14" fill="#3b82f6"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
+            </div>
           </div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>Flashfo</div>
-          <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+          <div style={{ fontSize:22, fontWeight:800, color:'#e6edf3', letterSpacing:'-0.02em', marginBottom:3 }}>Flashfo</div>
+          <div style={{ fontSize:13, color:'#8b949e' }}>
             {mode === 'signin' ? 'Welcome back' : mode === 'signup' ? 'Create your account' : 'Reset your password'}
           </div>
         </div>
 
         {/* Card */}
-        <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e8ecf0', padding: 28, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ background:'#161b22', border:'1px solid #21262d', borderRadius:16, padding:'28px 26px' }}>
 
+          {/* Mode switcher — only on signin/signup */}
+          {mode !== 'reset' && (
+            <div style={{ display:'flex', background:'#0d1117', borderRadius:10, padding:3, marginBottom:22 }}>
+              {['signin','signup'].map(m => (
+                <button key={m} onClick={()=>{ setMode(m); setError(''); setSuccess(''); }}
+                  style={{ flex:1, height:34, borderRadius:8, border:'none', cursor:'pointer', fontSize:13, fontWeight:600, transition:'all 0.15s',
+                    background: mode===m ? '#21262d' : 'transparent',
+                    color: mode===m ? '#e6edf3' : '#8b949e' }}>
+                  {m === 'signin' ? 'Sign in' : 'Sign up'}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+
+            {/* Name field — signup only */}
             {mode === 'signup' && (
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Full Name</label>
-                <input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Your name" required style={inputStyle}
-                  onFocus={e => e.target.style.borderColor='#3b82f6'} onBlur={e => e.target.style.borderColor='#e2e8f0'}/>
+              <div style={{ marginBottom:14 }}>
+                <label style={{ fontSize:10, fontWeight:700, color:'#484f58', letterSpacing:'0.08em', display:'block', marginBottom:5 }}>FULL NAME</label>
+                <input className="auth-input" type="text" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}
+                  placeholder="Your name" required
+                  style={{ width:'100%', height:42, background:'#0d1117', border:'1px solid #30363d', borderRadius:9, padding:'0 13px', color:'#e6edf3', fontSize:14, transition:'border-color 0.15s' }}/>
               </div>
             )}
 
-            <div>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Email</label>
-              <input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="you@example.com" required style={inputStyle}
-                onFocus={e => e.target.style.borderColor='#3b82f6'} onBlur={e => e.target.style.borderColor='#e2e8f0'}/>
+            {/* Email */}
+            <div style={{ marginBottom:14 }}>
+              <label style={{ fontSize:10, fontWeight:700, color:'#484f58', letterSpacing:'0.08em', display:'block', marginBottom:5 }}>EMAIL</label>
+              <input className="auth-input" type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))}
+                placeholder="you@example.com" required
+                style={{ width:'100%', height:42, background:'#0d1117', border:'1px solid #30363d', borderRadius:9, padding:'0 13px', color:'#e6edf3', fontSize:14, transition:'border-color 0.15s' }}/>
             </div>
 
+            {/* Password — not on reset */}
             {mode !== 'reset' && (
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Password</label>
-                <input type="password" value={form.password} onChange={e => set('password', e.target.value)} placeholder="••••••••" required minLength={6} style={inputStyle}
-                  onFocus={e => e.target.style.borderColor='#3b82f6'} onBlur={e => e.target.style.borderColor='#e2e8f0'}/>
+              <div style={{ marginBottom:20 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:5 }}>
+                  <label style={{ fontSize:10, fontWeight:700, color:'#484f58', letterSpacing:'0.08em' }}>PASSWORD</label>
+                  {mode === 'signin' && (
+                    <button type="button" onClick={()=>{ setMode('reset'); setError(''); setSuccess(''); }}
+                      style={{ fontSize:11, color:'#8b949e', background:'none', border:'none', cursor:'pointer', padding:0 }}>
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
+                <input className="auth-input" type="password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))}
+                  placeholder="••••••••" required minLength={6}
+                  style={{ width:'100%', height:42, background:'#0d1117', border:'1px solid #30363d', borderRadius:9, padding:'0 13px', color:'#e6edf3', fontSize:14, transition:'border-color 0.15s' }}/>
               </div>
             )}
 
-            {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#dc2626' }}>{error}</div>}
-            {success && <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#16a34a' }}>{success}</div>}
+            {/* Error / success */}
+            {error && (
+              <div style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:9, padding:'10px 13px', marginBottom:14, fontSize:13, color:'#f87171' }}>{error}</div>
+            )}
+            {success && (
+              <div style={{ background:'rgba(52,211,153,0.08)', border:'1px solid rgba(52,211,153,0.25)', borderRadius:9, padding:'10px 13px', marginBottom:14, fontSize:13, color:'#34d399' }}>{success}</div>
+            )}
 
-            <button type="submit" disabled={loading} style={{
-              height: 46, background: loading ? '#93c5fd' : '#1d4ed8', color: 'white',
-              border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700,
-              cursor: loading ? 'not-allowed' : 'pointer', transition: 'background 0.2s', marginTop: 4,
-            }}>
-              {loading ? 'Please wait...' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset email'}
+            {/* Submit */}
+            <button type="submit" disabled={loading}
+              style={{ width:'100%', height:44, borderRadius:10, border:'none', cursor:loading?'not-allowed':'pointer', fontSize:15, fontWeight:700, color:'#fff', letterSpacing:'-0.01em', opacity:loading?0.6:1, transition:'opacity 0.15s',
+                background:'linear-gradient(90deg,#2563eb,#7c3aed)' }}>
+              {loading ? 'Please wait...' : mode === 'signin' ? 'Sign in →' : mode === 'signup' ? 'Create account →' : 'Send reset link →'}
             </button>
+
           </form>
 
-          {/* Mode switcher */}
-          <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
-            {mode === 'signin' && <>
-              <button onClick={() => { setMode('reset'); setError(''); setSuccess('') }} style={{ background: 'none', border: 'none', fontSize: 13, color: '#64748b', cursor: 'pointer' }}>
-                Forgot password?
-              </button>
-              <div style={{ fontSize: 13, color: '#64748b' }}>
-                No account?{' '}
-                <button onClick={() => { setMode('signup'); setError(''); setSuccess('') }} style={{ background: 'none', border: 'none', fontSize: 13, color: '#1d4ed8', fontWeight: 600, cursor: 'pointer' }}>
-                  Sign up free
-                </button>
-              </div>
-            </>}
-            {mode === 'signup' && (
-              <div style={{ fontSize: 13, color: '#64748b' }}>
-                Already have an account?{' '}
-                <button onClick={() => { setMode('signin'); setError(''); setSuccess('') }} style={{ background: 'none', border: 'none', fontSize: 13, color: '#1d4ed8', fontWeight: 600, cursor: 'pointer' }}>
-                  Sign in
-                </button>
-              </div>
-            )}
-            {mode === 'reset' && (
-              <button onClick={() => { setMode('signin'); setError(''); setSuccess('') }} style={{ background: 'none', border: 'none', fontSize: 13, color: '#1d4ed8', fontWeight: 600, cursor: 'pointer' }}>
-                ← Back to sign in
-              </button>
-            )}
-          </div>
+          {/* Reset back link */}
+          {mode === 'reset' && (
+            <button onClick={()=>{ setMode('signin'); setError(''); setSuccess(''); }}
+              style={{ width:'100%', marginTop:12, background:'none', border:'none', color:'#8b949e', fontSize:12, cursor:'pointer' }}>
+              ← Back to sign in
+            </button>
+          )}
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#94a3b8', marginTop: 20 }}>
-          By signing up you agree to our Terms of Service.
+        {/* Footer */}
+        <p style={{ textAlign:'center', fontSize:12, color:'#484f58', marginTop:20 }}>
+          By signing up you agree to our{' '}
+          <a href="/terms" style={{ color:'#8b949e', textDecoration:'none' }}>Terms of Service</a>
         </p>
       </div>
     </div>
   )
 }
+
 
 export default function AuthPage() {
   return (
