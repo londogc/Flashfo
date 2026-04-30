@@ -37,15 +37,15 @@ const ICONS = {
 }
 
 const NAV = [
-  { href:'/dashboard',               label:'Dashboard',     icon:'dashboard' },
+  { href:'/dashboard',      label:'Dashboard',     icon:'dashboard' },
   { href:'/create',         label:'Create',        icon:'create'    },
   { href:'/study',          label:'Study',         icon:'study'     },
-  { href:'/teach',          label:'Teacher Portal',icon:'teach'     },
+  { href:'/ai-tutor',       label:'Nova',          icon:'nova', nova:true },
+  { href:'/teach',          label:'Teach',         icon:'teach'     },
   { href:'/student-portal', label:'Student Portal',icon:'studentp'  },
   { href:'/my-stuff',       label:'My Stuff',      icon:'mystuff'   },
-  { href:'/stem',          label:'Flashfo STEM',  icon:'stem'      },
-  { href:'/curriculum',    label:'Curriculum',    icon:'curriculum'},
-  { href:'/collab-decks',  label:'Collab Decks',  icon:'collab'    },
+  { href:'/curriculum',     label:'Curriculum',    icon:'curriculum'},
+  { href:'/collab-decks',   label:'Collab Decks',  icon:'collab'    },
 ]
 const TOOLS = [
   { href:'/summarize',      label:'Summarize',     icon:'summarize'  },
@@ -65,6 +65,69 @@ const ADV = [
 function NavItem({ item, collapsed, active }) {
   const nova = item.nova
   return (
+    <>
+      {/* ── Command palette backdrop ── */}
+      {cmdOpen && (
+        <div onClick={() => setCmdOpen(false)}
+          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:200 }}/>
+      )}
+
+      {/* ── Command palette ── */}
+      {cmdOpen && (
+        <div ref={cmdRef} style={{
+          position:'fixed', top:'20%', left:'50%', transform:'translateX(-50%)',
+          width:'min(560px, calc(100vw - 32px))', background:'var(--c-surface)',
+          border:'1px solid var(--c-line)', borderRadius:14,
+          boxShadow:'0 16px 48px rgba(0,0,0,0.5)', zIndex:201, overflow:'hidden',
+        }}>
+          {/* Search input */}
+          <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px', borderBottom:'1px solid var(--c-line)' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--c-t3)" strokeWidth="1.8" strokeLinecap="round">
+              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input ref={cmdInputRef} value={cmdQuery} onChange={e => setCmdQuery(e.target.value)}
+              placeholder="Search pages, tools, actions..."
+              style={{ flex:1, background:'none', border:'none', outline:'none', color:'var(--c-t1)', fontSize:14, fontFamily:'inherit' }}
+            />
+            <kbd style={{ fontSize:10, color:'var(--c-t3)', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:5, padding:'2px 6px' }}>Esc</kbd>
+          </div>
+
+          {/* Results */}
+          <div style={{ maxHeight:320, overflowY:'auto', padding:'6px' }}>
+            {filteredCmds.length === 0 && (
+              <div style={{ padding:'24px 16px', textAlign:'center', color:'var(--c-t3)', fontSize:13 }}>No results</div>
+            )}
+            {filteredCmds.map((item, i) => (
+              <Link key={i} href={item.href} onClick={() => { setCmdOpen(false); setCmdQuery('') }}
+                style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 12px', borderRadius:8,
+                  color:'var(--c-t1)', textDecoration:'none', fontSize:13,
+                  background: pathname === item.href ? 'var(--c-surface2)' : 'none' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--c-surface2)'}
+                onMouseLeave={e => e.currentTarget.style.background = pathname === item.href ? 'var(--c-surface2)' : 'none'}>
+                <div style={{ width:28, height:28, borderRadius:7, background:'var(--c-surface2)', border:'1px solid var(--c-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <I d={ICONS[item.icon] || ICONS.dashboard} s={12}/>
+                </div>
+                <span style={{ flex:1 }}>{item.label}</span>
+                {pathname === item.href && <span style={{ fontSize:10, color:'var(--c-t3)' }}>current</span>}
+              </Link>
+            ))}
+          </div>
+
+          {/* Footer hint */}
+          <div style={{ padding:'8px 16px', borderTop:'1px solid var(--c-line)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <div style={{ display:'flex', gap:12, fontSize:11, color:'var(--c-t3)' }}>
+              <span><kbd style={{ background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:4, padding:'1px 5px', fontSize:10 }}>↑↓</kbd> navigate</span>
+              <span><kbd style={{ background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:4, padding:'1px 5px', fontSize:10 }}>↵</kbd> open</span>
+            </div>
+            <div style={{ fontSize:11, color:'var(--c-t3)' }}>
+              <kbd style={{ background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:4, padding:'1px 5px', fontSize:10 }}>⌘K</kbd>
+              {' / '}
+              <kbd style={{ background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:4, padding:'1px 5px', fontSize:10 }}>Ctrl+K</kbd>
+            </div>
+          </div>
+        </div>
+      )}
+
     <Link href={item.href} title={collapsed ? item.label : undefined}
       style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 8px', borderRadius:10,
         fontSize:13, fontWeight:500, textDecoration:'none', transition:'all 0.1s',
@@ -94,6 +157,10 @@ export default function Shell({ children }) {
 
   // collapsed: sidebar collapsed state — initializes from window width immediately
   const [collapsed, setCollapsed] = useState(() => {
+  const [cmdOpen, setCmdOpen] = useState(false)
+  const cmdRef = useRef(null)
+  const cmdInputRef = useRef(null)
+  const [cmdQuery, setCmdQuery] = useState('')
     if (typeof window === 'undefined') return false
     const w = window.innerWidth
     return w >= 768 && w < 1100
@@ -202,6 +269,43 @@ export default function Shell({ children }) {
 
   const notifCategories = ['all', ...new Set(notifications.map(n => n.category).filter(Boolean))]
 
+  // ── Command palette keyboard shortcut ──
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setCmdOpen(v => !v)
+        setCmdQuery('')
+      }
+      if (e.key === 'Escape') setCmdOpen(false)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
+  useEffect(() => {
+    if (cmdOpen && cmdInputRef.current) cmdInputRef.current.focus()
+  }, [cmdOpen])
+
+  const CMD_ITEMS = [
+    { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
+    { label: 'Create — flashcards, quiz, study guide', href: '/create', icon: 'create' },
+    { label: 'Flashcards', href: '/flashcards', icon: 'mystuff' },
+    { label: 'Quiz', href: '/quiz', icon: 'study' },
+    { label: 'Study Guide', href: '/study-guide', icon: 'guide' },
+    { label: 'Ask Nova', href: '/ai-tutor', icon: 'nova' },
+    { label: 'Teach — teacher portal', href: '/teach', icon: 'teach' },
+    { label: 'Curriculum Standards', href: '/curriculum', icon: 'curriculum' },
+    { label: 'Collab Decks', href: '/collab-decks', icon: 'collab' },
+    { label: 'My Stuff', href: '/my-stuff', icon: 'mystuff' },
+    { label: 'Settings', href: '/settings', icon: 'settings' },
+    { label: 'Student Portal', href: '/student-portal', icon: 'studentp' },
+  ]
+
+  const filteredCmds = cmdQuery
+    ? CMD_ITEMS.filter(c => c.label.toLowerCase().includes(cmdQuery.toLowerCase()))
+    : CMD_ITEMS
+
   return (
     <div style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'var(--c-bg)' }}>
 
@@ -271,6 +375,13 @@ export default function Shell({ children }) {
 
           {/* Right side */}
           <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+            {/* Cmd+K trigger */}
+            <button onClick={() => { setCmdOpen(true); setCmdQuery('') }}
+              title="Command palette (⌘K / Ctrl+K)"
+              style={{ height:30, padding:'0 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', display:'flex', alignItems:'center', gap:6, color:'var(--c-t3)', fontSize:11 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <span className="ff-desktop-only">⌘K</span>
+            </button>
             {/* Notification bell */}
              <div style={{ position:'relative' }}>
                <button ref={bellRef} onClick={() => { setShowNotifs(v=>!v); if(!showNotifs){ /* panel opening */ } }}
@@ -467,5 +578,6 @@ export default function Shell({ children }) {
       @keyframes nova-thinking{0%,100%{box-shadow:0 0 0 2px rgba(167,139,250,0.7)}50%{box-shadow:0 0 0 5px rgba(167,139,250,0.1)}}
     `}</style>
     </div>
+    </>
   )
 }
