@@ -96,6 +96,15 @@ function FlashcardsPageInner() {
   const [topic, setTopic]       = useState('')
   const searchParams = useSearchParams()
   useEffect(() => { const q = searchParams.get('q'); if (q) setTopic(decodeURIComponent(q)) }, [searchParams])
+  useEffect(() => {
+    const id = 'nova-gen-anim'
+    if (document.getElementById(id)) return
+    const s = document.createElement('style')
+    s.id = id
+    s.textContent = '@keyframes nova-pop{0%{opacity:0;transform:translateY(14px) scale(0.97)}60%{opacity:1;transform:translateY(-3px) scale(1.005)}100%{opacity:1;transform:translateY(0) scale(1)}} @keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}} .nova-card{opacity:0;animation:nova-pop .42s cubic-bezier(.22,.68,0,1.2) forwards} .nova-dot-pulse{animation:nova-pulse .9s ease-in-out infinite}'
+    document.head.appendChild(s)
+  }, [])
+
   const [count, setCount]       = useState(10)
   const [cards, setCards]       = useState([])
   const [loading, setLoading]   = useState(false)
@@ -268,8 +277,7 @@ function FlashcardsPageInner() {
           <div className="flex justify-between text-[10px] text-t3 mt-1.5"><span>10</span><span>15</span><span>20</span><span>30</span></div>
         </div>
         {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
-        <button onClick={generate} disabled={loading || !topic.trim()}
-          className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 transition-colors disabled:opacity-40 flex items-center gap-2">
+          <button onClick={generate} disabled={loading} style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',opacity:loading?0.6:1,letterSpacing:'-0.01em'}}>
           {loading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>Generating...</> : 'Generate ' + count + ' Flashcards'}
         </button>
       </div>
