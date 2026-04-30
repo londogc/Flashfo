@@ -180,7 +180,7 @@ export default function TeachPage() {
     <div className="p-6 max-w-4xl mx-auto w-full">
       {/* ── Live Quiz tab bar ── */}
       <div style={{ display:'flex', gap:8, marginBottom:24, borderBottom:'1px solid var(--c-line)', paddingBottom:16 }}>
-        {[['assignments','📋 Assignments'],['live-quiz','⚡ Live Quiz']].map(([v,l])=>(
+        {[['assignments','Assignments'],['live-quiz','Live Quiz']].map(([v,l])=>(
           <button key={v} onClick={()=>setActiveView(v)}
             style={{ height:34, padding:'0 16px', borderRadius:9, border:'1px solid '+(activeView===v?'#2563eb':'var(--c-line)'), background:activeView===v?'rgba(37,99,235,0.1)':'var(--c-surface2)', color:activeView===v?'#3b82f6':'var(--c-t2)', fontSize:13, fontWeight:activeView===v?600:400, cursor:'pointer' }}>
             {l}
