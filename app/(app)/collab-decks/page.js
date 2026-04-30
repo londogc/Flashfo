@@ -81,7 +81,7 @@ export default function CollabDecksPage() {
               <h2 style={{ margin:'0 0 2px', fontSize:17, fontWeight:700, color:'var(--c-t1)' }}>{activeDeck.name}</h2>
               {activeDeck.subject && <span style={{ fontSize:12, color:'#a78bfa' }}>{activeDeck.subject}</span>}
             </div>
-            <span style={{ fontSize:12, color:'var(--c-t3)', background:'var(--c-surface2)', padding:'4px 10px', borderRadius:20, border:'1px solid var(--c-line)' }}>🟢 Live</span>
+            <span style={{ fontSize:12, color:'var(--c-t3)', background:'var(--c-surface2)', padding:'4px 10px', borderRadius:20, border:'1px solid var(--c-line)' }}><span style={{ display:'inline-block', width:7, height:7, borderRadius:'50%', background:'#34d399', marginRight:5, verticalAlign:'middle' }}/>Live</span>
           </div>
 
           {/* Add card */}
