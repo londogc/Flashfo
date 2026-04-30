@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -17,7 +17,14 @@ export default function SettingsPage() {
   const [theme, setTheme] = useState('system')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useSta
+  const [avatarUrl, setAvatarUrl] = useState(null)
+  const [bannerUrl, setBannerUrl] = useState(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [bannerUploading, setBannerUploading] = useState(false)
+  const avatarRef = useRef(null)
+  const bannerRef = useRef(null)
+te(true)
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/auth')
@@ -31,6 +38,8 @@ export default function SettingsPage() {
   async function loadProfile() {
     const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (data) setProfile({ full_name: data.full_name||'', grade_level: data.grade_level||'', role: data.role||'student' })
+    if (data.avatar_url) setAvatarUrl(data.avatar_url)
+    if (data.banner_url) setBannerUrl(data.banner_url)
     setLoading(false)
   }
 
@@ -78,15 +87,53 @@ export default function SettingsPage() {
       {/* Profile */}
       <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
         <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-4">Profile</h2>
-        <div className="flex items-center gap-4 mb-5 pb-5 border-b border-line">
-          <div className="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
-            {(profile.full_name || user?.email || 'U').charAt(0).toUpperCase()}
+        {/* ── Banner ── */}
+        <div
+          onClick={() => bannerRef.current?.click()}
+          className="relative mb-4 rounded-xl overflow-hidden cursor-pointer"
+          style={{ height:120, background: bannerUrl ? 'none' : 'linear-gradient(135deg,rgba(37,99,235,0.25) 0%,rgba(124,58,237,0.25) 100%)', backgroundImage: bannerUrl ? 'url('+bannerUrl+')' : undefined, backgroundSize:'cover', backgroundPosition:'center', border:'1px solid var(--c-line)' }}>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/30 transition-colors">
+            <div className="flex flex-col items-center gap-1 opacity-70">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              <span className="text-white text-xs font-medium">{bannerUploading ? 'Uploading...' : bannerUrl ? 'Change banner' : 'Upload banner'}</span>
+            </div>
           </div>
-          <div>
+          {bannerUrl && (
+            <div className="absolute bottom-2 right-2 flex gap-2">
+              <button onClick={e=>{e.stopPropagation();bannerRef.current?.click()}}
+                className="px-2.5 py-1 rounded-md text-white text-xs font-medium"
+                style={{background:'rgba(0,0,0,0.55)',border:'1px solid rgba(255,255,255,0.25)'}}>Change</button>
+              <button onClick={e=>{e.stopPropagation();setBannerUrl(null)}}
+                className="px-2.5 py-1 rounded-md text-white text-xs font-medium"
+                style={{background:'rgba(0,0,0,0.55)',border:'1px solid rgba(255,255,255,0.25)'}}>Remove</button>
+            </div>
+          )}
+        </div>
+
+        {/* ── Avatar + name ── */}
+        <div className="flex items-center gap-4 mb-5 pb-5 border-b border-line">
+          <div
+            onClick={() => avatarRef.current?.click()}
+            className="w-14 h-14 rounded-full flex-shrink-0 cursor-pointer relative overflow-hidden"
+            style={{ background: avatarUrl ? 'none' : '#1d4ed8', backgroundImage: avatarUrl ? 'url('+avatarUrl+')' : undefined, backgroundSize:'cover', backgroundPosition:'center', border:'2px solid var(--c-line)' }}>
+            {!avatarUrl && <span className="flex items-center justify-center w-full h-full text-white text-xl font-bold">{(profile.full_name || user?.email || 'U').charAt(0).toUpperCase()}</span>}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/40 transition-colors">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" className="opacity-0 hover:opacity-100"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
             <p className="font-semibold text-t1">{profile.full_name || 'No name set'}</p>
             <p className="text-[12px] text-t3">{user?.email}</p>
+            <button onClick={()=>avatarRef.current?.click()} disabled={avatarUploading}
+              className="text-[11px] text-blue-400 hover:text-blue-300 mt-0.5 disabled:opacity-50">
+              {avatarUploading ? 'Uploading...' : avatarUrl ? 'Change photo' : 'Upload photo'}
+            </button>
           </div>
         </div>
+
+        <input ref={bannerRef} type="file" accept="image/*" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f)uploadMedia(f,'banner')}}/>
+        <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f)uploadMedia(f,'avatar')}}/>
+
         <div className="space-y-3">
           <div>
             <label className="block text-[11px] font-semibold text-t3 uppercase tracking-wider mb-1.5">Full Name</label>
@@ -174,4 +221,25 @@ export default function SettingsPage() {
       </div>
     </div>
   )
+
+  const uploadMedia = async (file, type) => {
+    if (!user || !file) return
+    const setter = type === 'avatar' ? setAvatarUploading : setBannerUploading
+    const urlSetter = type === 'avatar' ? setAvatarUrl : setBannerUrl
+    const field = type === 'avatar' ? 'avatar_url' : 'banner_url'
+    setter(true)
+    try {
+      const ext = file.name.split('.').pop()
+      const path = user.id + '/' + type + '.' + ext
+      const bucket = type === 'avatar' ? 'avatars' : 'banners'
+      const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, { upsert:true, contentType: file.type })
+      if (upErr) throw upErr
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path)
+      const url = data.publicUrl
+      urlSetter(url)
+      await supabase.from('profiles').upsert({ id: user.id, [field]: url })
+    } catch (e) { console.error(e) }
+    setter(false)
+  }
+
 }
