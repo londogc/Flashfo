@@ -1,10 +1,11 @@
+'use client'
+import { useState, useEf
   const searchParams = useSearchParams()
   useEffect(() => {
     const q = searchParams.get('q')
-    if (q) setTopic(decodeURIComponent(q))
+    if (q) { setTopic(decodeURIComponent(q)) }
   }, [searchParams])
-'use client'
-import { useState, useEffect, useRef } from 'react'
+fect, useRef, Suspense } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 
