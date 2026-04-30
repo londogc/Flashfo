@@ -361,7 +361,7 @@ export default function LandingPage() {
       <section style={{ maxWidth:1200, margin:'0 auto', padding:'80px 16px 64px', textAlign:'center' }}>
         <div style={{ display:'inline-flex',alignItems:'center',gap:6,background:'rgba(167,139,250,0.08)',border:'1px solid rgba(167,139,250,0.2)',borderRadius:20,padding:'4px 12px',fontSize:12,color:'#a78bfa',marginBottom:24 }}>
           <span style={{ width:6,height:6,borderRadius:'50%',background:'#a78bfa',display:'inline-block' }}/>
-          Powered by Nova AI
+          Welcome to Flashfo
         </div>
         <h1 style={{ fontSize:'clamp(32px,6vw,64px)',fontWeight:700,lineHeight:1.1,marginBottom:20,background:'linear-gradient(135deg,#e6edf3 0%,#a78bfa 50%,#2563eb 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text' }}>
           Study smarter.<br/>Teach better. Together.
