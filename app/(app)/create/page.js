@@ -124,7 +124,7 @@ export default function CreatePage() {
       {error && <p style={{ color:'#ef4444', fontSize:13, marginBottom:12 }}>{error}</p>}
 
       <button onClick={generate} disabled={loading}
-        style={{ padding:'11px 28px', borderRadius:10, background:'#2563eb', color:'#fff', border:'none', fontWeight:600, fontSize:14, cursor:'pointer', opacity:loading?0.6:1 }}>
+        style={{ width:'100%', padding:'13px 0', borderRadius:10, background:'linear-gradient(90deg,#2563eb,#7c3aed)', color:'#fff', border:'none', fontWeight:700, fontSize:14, cursor:loading?'not-allowed':'pointer', opacity:loading?0.6:1, letterSpacing:'-0.01em' }}>
         {loading ? 'Working...' : '✦ Generate with Nova'}
       </button>
 
