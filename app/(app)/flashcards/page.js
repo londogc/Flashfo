@@ -188,7 +188,6 @@ export default function FlashcardsPage() {
   }
 
   // ── Voice Mode ───────────────────────────────────────────────────
-  const [voiceOn, setVoiceOn] = useState(false)
   const [listening, setListening] = useState(false)
   const synth = typeof window !== 'undefined' ? window.speechSynthesis : null
   const recognitionRef = useRef(null)
