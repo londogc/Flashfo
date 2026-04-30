@@ -31,9 +31,9 @@ const ICONS = {
   sources:    'M1 5h3v9H1zm4-3h4v12H5zm5 2h4v10h-4z',
   cL:         'M10 3L5 8l5 5',
   cR:         'M6 3l5 5-5 5',
-  stem:       'M9 1L3 8h5l-1 7 6-8H8z',
-  curriculum: 'M1 3h6v10H1zm8 0h6v10H9zM4 6h0M4 8h0M4 10h0M11 6h2M11 8h2M11 10h2',
-  collab:     'M3 8h13v11H3zM6 5h13v11H6zM9 11h6M9 13h4M17 1v6M14 3l3-2 3 2',
+  stem:       'M9 1L4 8h4l-1 7 6-8H9z',
+  curriculum: 'M1 2h6v12H1zm8 0h6v12H9zM3 5h2M3 7h2M3 9h2M10 5h3M10 7h3M10 9h3',
+  collab:     'M2 5h9v8H2zM4 3h9v8H4zM6 7h4M6 9h3M12 1v4M10 2l2-1 2 1',
 }
 
 const NAV = [
