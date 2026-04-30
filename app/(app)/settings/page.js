@@ -24,7 +24,6 @@ export default function SettingsPage() {
   const [bannerUploading, setBannerUploading] = useState(false)
   const avatarRef = useRef(null)
   const bannerRef = useRef(null)
-te(true)
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/auth')
