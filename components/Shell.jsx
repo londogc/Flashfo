@@ -70,12 +70,12 @@ function NavItem({ item, collapsed, active }) {
         fontSize:13, fontWeight:500, textDecoration:'none', transition:'all 0.1s',
         background: active ? (nova ? 'rgba(124,58,237,0.12)' : 'rgba(29,78,216,0.1)') : 'transparent',
         border: active && nova ? '1px solid rgba(124,58,237,0.2)' : '1px solid transparent',
-        color: active ? (nova ? '#a78bfa' : '#3b82f6') : 'var(--c-t2)',
-        position: 'relative',
-      }}>
-      <I d={ICONS[item.icon] || ICONS.dashboard} s={16}/>
+        color: active ? (nova ? '#a78bfa' : '#3b82f6') : 'var(--c-t2)' }}>
+      <span style={{ flexShrink:0, position:'relative' }}>
+        <I d={ICONS[item.icon]}/>
+        {nova && <span style={{ position:'absolute', top:-3, right:-3, width:7, height:7, background:'#a78bfa', borderRadius:'50%', border:'1.5px solid var(--c-surface)', animation:'nova-breathe 2.4s ease-in-out infinite' }}/>}
+      </span>
       {!collapsed && <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.label}</span>}
-      {nova && <span style={{ position:'absolute', top:6, right:6, width:6, height:6, borderRadius:'50%', background:'#34d399' }} className="nova-thinking"/>}
     </Link>
   )
 }
@@ -94,14 +94,14 @@ export default function Shell({ children }) {
 
   // collapsed: sidebar collapsed state — initializes from window width immediately
   const [collapsed, setCollapsed] = useState(() => {
-  const [cmdOpen, setCmdOpen] = useState(false)
-  const cmdRef = useRef(null)
-  const cmdInputRef = useRef(null)
-  const [cmdQuery, setCmdQuery] = useState('')
     if (typeof window === 'undefined') return false
     const w = window.innerWidth
     return w >= 768 && w < 1100
   })
+  const [cmdOpen, setCmdOpen] = useState(false)
+  const [cmdQuery, setCmdQuery] = useState('')
+  const cmdRef = useRef(null)
+  const cmdInputRef = useRef(null)
 
   // dark: reads localStorage synchronously so no flash on first render
   const [dark, setDark] = useState(() => {
@@ -206,96 +206,58 @@ export default function Shell({ children }) {
 
   const notifCategories = ['all', ...new Set(notifications.map(n => n.category).filter(Boolean))]
 
-  // ── Command palette keyboard shortcut ──
   useEffect(() => {
-    const handler = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setCmdOpen(v => !v)
-        setCmdQuery('')
-      }
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setCmdOpen(v => !v); setCmdQuery('') }
       if (e.key === 'Escape') setCmdOpen(false)
     }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
   }, [])
-
-  useEffect(() => {
-    if (cmdOpen && cmdInputRef.current) cmdInputRef.current.focus()
-  }, [cmdOpen])
-
+  useEffect(() => { if (cmdOpen && cmdInputRef.current) cmdInputRef.current.focus() }, [cmdOpen])
   const CMD_ITEMS = [
-    { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
-    { label: 'Create — flashcards, quiz, study guide', href: '/create', icon: 'create' },
-    { label: 'Flashcards', href: '/flashcards', icon: 'mystuff' },
-    { label: 'Quiz', href: '/quiz', icon: 'study' },
-    { label: 'Study Guide', href: '/study-guide', icon: 'guide' },
-    { label: 'Ask Nova', href: '/ai-tutor', icon: 'nova' },
-    { label: 'Teach — teacher portal', href: '/teach', icon: 'teach' },
-    { label: 'Curriculum Standards', href: '/curriculum', icon: 'curriculum' },
-    { label: 'Collab Decks', href: '/collab-decks', icon: 'collab' },
-    { label: 'My Stuff', href: '/my-stuff', icon: 'mystuff' },
-    { label: 'Settings', href: '/settings', icon: 'settings' },
-    { label: 'Student Portal', href: '/student-portal', icon: 'studentp' },
+    { label:'Dashboard', href:'/dashboard', icon:'dashboard' },
+    { label:'Create', href:'/create', icon:'create' },
+    { label:'Flashcards', href:'/flashcards', icon:'mystuff' },
+    { label:'Quiz', href:'/quiz', icon:'study' },
+    { label:'Study Guide', href:'/study-guide', icon:'guide' },
+    { label:'Ask Nova', href:'/ai-tutor', icon:'nova' },
+    { label:'Teach', href:'/teach', icon:'teach' },
+    { label:'Curriculum Standards', href:'/curriculum', icon:'curriculum' },
+    { label:'Collab Decks', href:'/collab-decks', icon:'collab' },
+    { label:'My Stuff', href:'/my-stuff', icon:'mystuff' },
+    { label:'Student Portal', href:'/student-portal', icon:'studentp' },
   ]
-
-  const filteredCmds = cmdQuery
-    ? CMD_ITEMS.filter(c => c.label.toLowerCase().includes(cmdQuery.toLowerCase()))
-    : CMD_ITEMS
+  const filteredCmds = cmdQuery ? CMD_ITEMS.filter(c => c.label.toLowerCase().includes(cmdQuery.toLowerCase())) : CMD_ITEMS
 
   return (
     <div style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'var(--c-bg)' }}>
-
-      {/* ── Command palette ── */}
+      {cmdOpen && <div onClick={()=>setCmdOpen(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',zIndex:200}}/>}
       {cmdOpen && (
-        <div onClick={() => setCmdOpen(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:200 }}/>
-      )}
-      {cmdOpen && (
-        <div style={{
-          position:'fixed', top:'20%', left:'50%', transform:'translateX(-50%)',
-          width:'min(560px, calc(100vw - 32px))', background:'var(--c-surface)',
-          border:'1px solid var(--c-line)', borderRadius:14,
-          boxShadow:'0 16px 48px rgba(0,0,0,0.5)', zIndex:201, overflow:'hidden',
-        }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px', borderBottom:'1px solid var(--c-line)' }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--c-t3)" strokeWidth="1.8" strokeLinecap="round">
-              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-            </svg>
-            <input ref={cmdInputRef} value={cmdQuery} onChange={e => setCmdQuery(e.target.value)}
-              placeholder="Search pages, tools, actions..."
-              style={{ flex:1, background:'none', border:'none', outline:'none', color:'var(--c-t1)', fontSize:14, fontFamily:'inherit' }}
-            />
-            <kbd style={{ fontSize:10, color:'var(--c-t3)', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:5, padding:'2px 6px' }}>Esc</kbd>
+        <div ref={cmdRef} style={{position:'fixed',top:'18%',left:'50%',transform:'translateX(-50%)',width:'min(560px,calc(100vw - 32px))',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:14,boxShadow:'0 16px 48px rgba(0,0,0,0.5)',zIndex:201,overflow:'hidden'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 16px',borderBottom:'1px solid var(--c-line)'}}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--c-t3)" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input ref={cmdInputRef} value={cmdQuery} onChange={e=>setCmdQuery(e.target.value)} placeholder="Search pages and tools..." style={{flex:1,background:'none',border:'none',outline:'none',color:'var(--c-t1)',fontSize:14,fontFamily:'inherit'}}/>
+            <kbd style={{fontSize:10,color:'var(--c-t3)',background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:5,padding:'2px 6px'}}>Esc</kbd>
           </div>
-          <div style={{ maxHeight:320, overflowY:'auto', padding:'6px' }}>
-            {filteredCmds.length === 0 && (
-              <div style={{ padding:'24px 16px', textAlign:'center', color:'var(--c-t3)', fontSize:13 }}>No results</div>
-            )}
-            {filteredCmds.map((item, idx) => (
-              <Link key={idx} href={item.href} onClick={() => { setCmdOpen(false); setCmdQuery('') }}
-                style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 12px', borderRadius:8,
-                  color:'var(--c-t1)', textDecoration:'none', fontSize:13,
-                  background: pathname === item.href ? 'var(--c-surface2)' : 'none' }}
-                onMouseEnter={e => e.currentTarget.style.background='var(--c-surface2)'}
-                onMouseLeave={e => e.currentTarget.style.background=pathname===item.href?'var(--c-surface2)':'none'}>
-                <div style={{ width:28, height:28, borderRadius:7, background:'var(--c-surface2)', border:'1px solid var(--c-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                  <I d={ICONS[item.icon] || ICONS.dashboard} s={12}/>
+          <div style={{maxHeight:320,overflowY:'auto',padding:6}}>
+            {filteredCmds.length===0 && <div style={{padding:24,textAlign:'center',color:'var(--c-t3)',fontSize:13}}>No results</div>}
+            {filteredCmds.map((item,idx)=>(
+              <Link key={idx} href={item.href} onClick={()=>{setCmdOpen(false);setCmdQuery('')}}
+                style={{display:'flex',alignItems:'center',gap:12,padding:'10px 12px',borderRadius:8,color:'var(--c-t1)',textDecoration:'none',fontSize:13,background:pathname===item.href?'var(--c-surface2)':'none'}}
+                onMouseEnter={e=>e.currentTarget.style.background='var(--c-surface2)'}
+                onMouseLeave={e=>e.currentTarget.style.background=pathname===item.href?'var(--c-surface2)':'none'}>
+                <div style={{width:28,height:28,borderRadius:7,background:'var(--c-surface2)',border:'1px solid var(--c-line)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <I d={ICONS[item.icon]||ICONS.dashboard} s={12}/>
                 </div>
-                <span style={{ flex:1 }}>{item.label}</span>
-                {pathname === item.href && <span style={{ fontSize:10, color:'var(--c-t3)' }}>current</span>}
+                <span style={{flex:1}}>{item.label}</span>
+                {pathname===item.href && <span style={{fontSize:10,color:'var(--c-t3)'}}>current</span>}
               </Link>
             ))}
           </div>
-          <div style={{ padding:'8px 16px', borderTop:'1px solid var(--c-line)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-            <div style={{ display:'flex', gap:12, fontSize:11, color:'var(--c-t3)' }}>
-              <span><kbd style={{ background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:4, padding:'1px 5px', fontSize:10 }}>↑↓</kbd> navigate</span>
-              <span><kbd style={{ background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:4, padding:'1px 5px', fontSize:10 }}>↵</kbd> open</span>
-            </div>
-            <div style={{ fontSize:11, color:'var(--c-t3)' }}>
-              <kbd style={{ background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:4, padding:'1px 5px', fontSize:10 }}>⌘K</kbd>
-              {' / '}
-              <kbd style={{ background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:4, padding:'1px 5px', fontSize:10 }}>Ctrl+K</kbd>
-            </div>
+          <div style={{padding:'8px 16px',borderTop:'1px solid var(--c-line)',display:'flex',justifyContent:'space-between',fontSize:11,color:'var(--c-t3)'}}>
+            <span><kbd style={{background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:4,padding:'1px 5px',fontSize:10}}>↑↓</kbd> navigate</span>
+            <span><kbd style={{background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:4,padding:'1px 5px',fontSize:10}}>⌘K</kbd> / <kbd style={{background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:4,padding:'1px 5px',fontSize:10}}>Ctrl+K</kbd></span>
           </div>
         </div>
       )}
@@ -366,12 +328,11 @@ export default function Shell({ children }) {
 
           {/* Right side */}
           <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-            {/* Cmd+K trigger */}
-            <button onClick={() => { setCmdOpen(true); setCmdQuery('') }}
-              title="Command palette (⌘K / Ctrl+K)"
-              style={{ height:30, padding:'0 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', display:'flex', alignItems:'center', gap:6, color:'var(--c-t3)', fontSize:11 }}>
+            {/* Cmd palette trigger */}
+            <button onClick={()=>{setCmdOpen(true);setCmdQuery('')}} title="Command palette"
+              style={{height:30,padding:'0 10px',borderRadius:8,border:'1px solid var(--c-line)',background:'var(--c-surface2)',cursor:'pointer',display:'flex',alignItems:'center',gap:6,color:'var(--c-t3)',fontSize:11}}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-              <span className="ff-desktop-only">⌘K</span>
+              <span className="ff-desktop-only">⌘K / Ctrl+K</span>
             </button>
             {/* Notification bell */}
              <div style={{ position:'relative' }}>
