@@ -20,7 +20,6 @@ export default function JoinQuizPage() {
   const [results,     setResults]     = useState(null)
   const [error,       setError]       = useState('')
   // Exam mode
-  const [examStarted, setExamStarted] = useState(false)
   const [examAnswers, setExamAnswers] = useState({})
   const [examQIdx,    setExamQIdx]    = useState(0)
   const [submitting,  setSubmitting]  = useState(false)
