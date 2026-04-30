@@ -17,7 +17,7 @@ export default function SettingsPage() {
   const [theme, setTheme] = useState('system')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [loading, setLoading] = useSta
+  const [loading, setLoading] = useState(true)
   const [avatarUrl, setAvatarUrl] = useState(null)
   const [bannerUrl, setBannerUrl] = useState(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
