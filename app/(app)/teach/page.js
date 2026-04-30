@@ -22,7 +22,6 @@ const LAUNCH_STEPS = [
 
 // ── Assignment Builder ──────────────────────────────────────────────
 function AssignmentBuilder({ classrooms, user }) {
-  const [activeView, setActiveView] = useState('assignments') // 'assignments' | 'live-quiz'
   const [form, setForm] = useState({ title:'', description:'', type:'flashcards', classroom_id:'', due_date:'' })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -99,6 +98,7 @@ function AssignmentBuilder({ classrooms, user }) {
 export default function TeachPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const [activeView, setActiveView] = useState('assignments')
   const [classrooms, setClassrooms] = useState([])
   const [enrollments, setEnrollments] = useState({})
   const [fetching, setFetching]     = useState(true)
