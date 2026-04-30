@@ -168,275 +168,164 @@ export default function NovaPage() {
     return dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
   }
 
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column',
-      height: 'calc(100vh - 56px)',
-      maxWidth: 720, margin: '0 auto',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    }}>
 
-      {/* ── Header ──────────────────────────────────────────────────── */}
-      <div style={{
-        background: 'linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(167,139,250,0.05) 100%)',
-        borderBottom: '1px solid rgba(167,139,250,0.15)',
-        padding: '14px 20px', flexShrink: 0,
-      }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:11 }}>
-            {/* Concentric circles icon — Nova's v6 identity */}
-            <div style={{
-              width:38, height:38, borderRadius:10,
-              background:'rgba(124,58,237,0.15)', border:'1px solid rgba(167,139,250,0.3)',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              flexShrink:0, position:'relative',
-            }}>
+  const CHIPS = ['Review my due cards','Quiz me on a topic','Explain a concept','Build me flashcards']
+  const fmt = (d) => { const t=d?new Date(d):new Date(); return t.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) }
+
+  // ── file upload ref ──
+  const fileRef = useRef(null)
+  const handleFile = async (file) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      const base64 = e.target.result.split(',')[1]
+      setInput(prev => prev + (prev?'\n':'') + '[Attached: '+file.name+']')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // ── mic ──
+  const startMic = () => {
+    if (typeof window === 'undefined') return
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SR) { alert('Speech recognition not supported in this browser'); return }
+    const rec = new SR()
+    rec.lang = 'en-US'; rec.interimResults = false; rec.maxAlternatives = 1
+    rec.onresult = (e) => { setInput(prev => prev + e.results[0][0].transcript) }
+    rec.start()
+  }
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',height:'calc(100vh - 56px)',background:'var(--c-bg)',overflow:'hidden'}}>
+
+      {/* ── Header ── */}
+      <div style={{flexShrink:0,background:'linear-gradient(135deg,rgba(124,58,237,0.18) 0%,rgba(167,139,250,0.05) 100%)',borderBottom:'1px solid rgba(167,139,250,0.15)',padding:'14px 20px'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',maxWidth:760,margin:'0 auto'}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <div style={{width:38,height:38,borderRadius:10,background:'rgba(124,58,237,0.15)',border:'1px solid rgba(167,139,250,0.3)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,position:'relative'}}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5">
                 <circle cx="12" cy="12" r="10"/>
                 <circle cx="12" cy="12" r="6"/>
                 <circle cx="12" cy="12" r="2" fill="#a78bfa" stroke="none"/>
               </svg>
-              <span style={{
-                position:'absolute', bottom:2, right:2, width:7, height:7,
-                borderRadius:'50%', background:'#34d399', border:'1.5px solid #0d1117',
-              }} className="nova-thinking"/>
+              <span className="nova-thinking" style={{position:'absolute',bottom:2,right:2,width:7,height:7,borderRadius:'50%',background:'#34d399',border:'1.5px solid var(--c-bg)'}}/>
             </div>
             <div>
-              <div style={{ fontSize:15, fontWeight:600, color:'var(--c-t1)', letterSpacing:'-0.02em' }}>Nova</div>
-              <div style={{ fontSize:11, color:'var(--c-t3)', marginTop:2 }}>built for how you study</div>
+              <div style={{fontSize:15,fontWeight:600,color:'var(--c-t1)',letterSpacing:'-0.02em'}}>Nova</div>
+              <div style={{fontSize:11,color:'#a78bfa',marginTop:1}}>Built for how you study</div>
             </div>
           </div>
-
-          {/* Voice + Clear buttons */}
-          <div style={{ display:'flex', gap:6 }}>
-            <button
-              onClick={() => {
-                if (speaking && typeof window !== 'undefined') {
-                  window.speechSynthesis?.cancel(); setSpeaking(false)
-                }
-              }}
-              title="Voice"
-              style={{
-                width:30, height:30, borderRadius:8, cursor:'pointer',
-                border:'1px solid rgba(167,139,250,0.2)',
-                background: speaking ? 'rgba(167,139,250,0.2)' : 'rgba(167,139,250,0.06)',
-                display:'flex', alignItems:'center', justifyContent:'center',
-                color: speaking ? '#a78bfa' : '#6e7681',
-              }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-                <rect x="9" y="3" width="6" height="11" rx="3"/>
-                <path d="M5 10a7 7 0 0014 0M12 19v3M9 22h6"/>
-              </svg>
+          <div style={{display:'flex',gap:6}}>
+            <button onClick={startMic} title="Voice input" style={{width:30,height:30,borderRadius:8,cursor:'pointer',border:'1px solid rgba(167,139,250,0.2)',background:'rgba(167,139,250,0.06)',display:'flex',alignItems:'center',justifyContent:'center',color:'#a78bfa'}}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0014 0M12 19v3M9 22h6"/></svg>
             </button>
-            <button
-              onClick={() => setMessages([])}
-              title="Clear chat"
-              style={{
-                width:30, height:30, borderRadius:8, cursor:'pointer',
-                border:'1px solid rgba(167,139,250,0.2)',
-                background:'rgba(167,139,250,0.06)',
-                display:'flex', alignItems:'center', justifyContent:'center', color:'#6e7681',
-              }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
-              </svg>
+            <button onClick={()=>setMessages([])} title="Clear chat" style={{width:30,height:30,borderRadius:8,cursor:'pointer',border:'1px solid rgba(167,139,250,0.2)',background:'rgba(167,139,250,0.06)',display:'flex',alignItems:'center',justifyContent:'center',color:'#a78bfa'}}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── Class context pills ──────────────────────────────────────── */}
+      {/* ── Classes pill bar ── */}
       {(allClasses.length > 0 || classContext) && (
-        <div style={{
-          background:'rgba(124,58,237,0.06)',
-          borderBottom:'1px solid rgba(167,139,250,0.1)',
-          padding:'7px 20px', display:'flex', alignItems:'center',
-          gap:6, overflowX:'auto', flexShrink:0,
-        }}>
-          <span style={{ fontSize:10, color:'#484f58', letterSpacing:'0.07em', flexShrink:0 }}>CLASSES</span>
+        <div style={{flexShrink:0,background:'rgba(124,58,237,0.05)',borderBottom:'1px solid rgba(167,139,250,0.1)',padding:'7px 20px',display:'flex',alignItems:'center',gap:6,overflowX:'auto'}}>
+          <span style={{fontSize:10,color:'#484f58',letterSpacing:'0.07em',flexShrink:0}}>CLASSES</span>
           {allClasses.length > 0
-            ? allClasses.map((c,i) => (
-                <span key={i} style={{
-                  padding:'3px 10px', borderRadius:20, whiteSpace:'nowrap', flexShrink:0,
-                  background:'rgba(167,139,250,0.1)', border:'1px solid rgba(167,139,250,0.2)',
-                  fontSize:11, color:'#c4b5fd', cursor:'default',
-                }}>{c.name}</span>
-              ))
-            : classContext && (
-                <span style={{
-                  padding:'3px 10px', borderRadius:20, whiteSpace:'nowrap', flexShrink:0,
-                  background:'rgba(167,139,250,0.1)', border:'1px solid rgba(167,139,250,0.2)',
-                  fontSize:11, color:'#c4b5fd',
-                }}>{classContext.className}</span>
-              )
+            ? allClasses.map((c,i)=>(<span key={i} style={{padding:'3px 10px',borderRadius:20,flexShrink:0,background:'rgba(167,139,250,0.1)',border:'1px solid rgba(167,139,250,0.2)',fontSize:11,color:'#c4b5fd',whiteSpace:'nowrap'}}>{c.name}</span>))
+            : classContext && <span style={{padding:'3px 10px',borderRadius:20,background:'rgba(167,139,250,0.1)',border:'1px solid rgba(167,139,250,0.2)',fontSize:11,color:'#c4b5fd'}}>{classContext.className}</span>
           }
         </div>
       )}
 
-      {/* ── Messages ────────────────────────────────────────────────── */}
-      <div style={{ flex:1, overflowY:'auto', padding:'20px 20px 8px' }}>
+      {/* ── Messages ── */}
+      <div style={{flex:1,overflowY:'auto',padding:'20px'}}>
+        <div style={{maxWidth:760,margin:'0 auto',display:'flex',flexDirection:'column',gap:4}}>
 
-        {messages.length === 0 && (
-          <div style={{ textAlign:'center', padding:'48px 16px' }}>
-            <div style={{
-              width:52, height:52, borderRadius:14, margin:'0 auto 16px',
-              background:'rgba(124,58,237,0.12)', border:'1px solid rgba(167,139,250,0.25)',
-              display:'flex', alignItems:'center', justifyContent:'center',
-            }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="10"/>
-                <circle cx="12" cy="12" r="6"/>
-                <circle cx="12" cy="12" r="2" fill="#a78bfa" stroke="none"/>
-              </svg>
+          {messages.length === 0 && (
+            <div style={{textAlign:'center',padding:'60px 16px 32px'}}>
+              <div style={{width:56,height:56,borderRadius:14,margin:'0 auto 18px',background:'rgba(124,58,237,0.12)',border:'1px solid rgba(167,139,250,0.25)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.4"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa" stroke="none"/></svg>
+              </div>
+              <p style={{fontSize:16,fontWeight:600,color:'var(--c-t1)',marginBottom:8}}>Hey, I'm Nova</p>
+              <p style={{fontSize:13,color:'var(--c-t2)',lineHeight:1.7,maxWidth:320,margin:'0 auto 24px'}}>Ask me anything — I'll explain concepts, quiz you, build flashcards, or help you prep for a test.</p>
+              <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center'}}>
+                {CHIPS.map((c,i)=>(
+                  <button key={i} onClick={()=>setInput(c)} style={{padding:'7px 14px',borderRadius:8,cursor:'pointer',border:'1px solid rgba(167,139,250,0.2)',background:'rgba(167,139,250,0.06)',fontSize:12,color:'#a78bfa'}}>{c}</button>
+                ))}
+              </div>
             </div>
-            <p style={{ fontSize:15, fontWeight:600, color:'var(--c-t1)', marginBottom:6 }}>Hey, I'm Nova</p>
-            <p style={{ fontSize:13, color:'var(--c-t3)', lineHeight:1.6, maxWidth:280, margin:'0 auto 20px' }}>
-              Ask me anything — I'll explain concepts, quiz you, build flashcards, or help you prep for a test.
-            </p>
-            <div style={{ display:'flex', flexWrap:'wrap', gap:8, justifyContent:'center' }}>
-              {SUGGESTION_CHIPS.map((chip,i) => (
-                <button key={i} onClick={() => setInput(chip)}
-                  style={{
-                    padding:'7px 14px', borderRadius:8, cursor:'pointer',
-                    border:'1px solid rgba(167,139,250,0.2)',
-                    background:'rgba(167,139,250,0.06)', fontSize:12, color:'#a78bfa',
-                    transition:'all 0.15s',
-                  }}>
-                  {chip}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
 
-        {messages.map((m, i) => {
-          const isNova = m.role === 'assistant'
-          const showChips = isNova && i === 0 && messages.length === 1
-          return (
-            <div key={i} style={{ marginBottom:16 }}>
-              {isNova ? (
-                <div>
-                  <div style={{
-                    paddingLeft:14,
-                    borderLeft:'2px solid rgba(167,139,250,0.45)',
-                  }}>
-                    <div style={{
-                      fontSize:10, fontWeight:600, color:'#a78bfa',
-                      letterSpacing:'0.08em', marginBottom:5,
-                    }}>NOVA</div>
-                    <div style={{ fontSize:13, color:'var(--c-t1)', lineHeight:1.65, whiteSpace:'pre-wrap' }}>
-                      {m.text}
+          {messages.map((m,i)=>{
+            const isNova = m.role==='assistant'
+            const showChips = isNova && i===0
+            return (
+              <div key={i} style={{marginBottom:14}}>
+                {isNova ? (
+                  <div>
+                    <div style={{paddingLeft:14,borderLeft:'2px solid rgba(167,139,250,0.45)'}}>
+                      <div style={{fontSize:10,fontWeight:600,color:'#a78bfa',letterSpacing:'0.08em',marginBottom:5}}>NOVA</div>
+                      <div style={{fontSize:13,color:'var(--c-t1)',lineHeight:1.7,whiteSpace:'pre-wrap'}}>{m.text}</div>
+                      {showChips && (
+                        <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:10}}>
+                          {CHIPS.map((c,ci)=>(<button key={ci} onClick={()=>setInput(c)} style={{padding:'5px 12px',borderRadius:8,cursor:'pointer',border:'1px solid rgba(167,139,250,0.2)',background:'rgba(167,139,250,0.06)',fontSize:12,color:'#a78bfa'}}>{c}</button>))}
+                        </div>
+                      )}
                     </div>
-                    {showChips && (
-                      <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:10 }}>
-                        {SUGGESTION_CHIPS.map((chip,ci) => (
-                          <button key={ci} onClick={() => setInput(chip)}
-                            style={{
-                              padding:'5px 12px', borderRadius:8, cursor:'pointer',
-                              border:'1px solid rgba(167,139,250,0.2)',
-                              background:'rgba(167,139,250,0.06)', fontSize:12, color:'#a78bfa',
-                            }}>
-                            {chip}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    <div style={{fontSize:10,color:'#30363d',marginTop:5,paddingLeft:16}}>{fmt(m.ts)}</div>
                   </div>
-                  <div style={{ fontSize:10, color:'#30363d', marginTop:5, paddingLeft:16 }}>
-                    {formatTime(m.ts)}
+                ) : (
+                  <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end'}}>
+                    <div style={{background:'#1e3a8a',borderRadius:'12px 12px 2px 12px',padding:'10px 14px',maxWidth:'min(80%, 560px)',fontSize:13,color:'#dbeafe',lineHeight:1.6}}>{m.text}</div>
+                    <div style={{fontSize:10,color:'#30363d',marginTop:5}}>{fmt(m.ts)}</div>
                   </div>
-                </div>
-              ) : (
-                <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end' }}>
-                  <div style={{
-                    background:'#1e3a8a', borderRadius:'12px 12px 2px 12px',
-                    padding:'10px 14px', maxWidth:'80%',
-                    fontSize:13, color:'#dbeafe', lineHeight:1.6,
-                  }}>
-                    {m.text}
-                  </div>
-                  <div style={{ fontSize:10, color:'#30363d', marginTop:5 }}>
-                    {formatTime(m.ts)}
-                  </div>
-                </div>
-              )}
-            </div>
-          )
-        })}
+                )}
+              </div>
+            )
+          })}
 
-        {loading && (
-          <div style={{ paddingLeft:14, borderLeft:'2px solid rgba(167,139,250,0.45)', marginBottom:16 }}>
-            <div style={{ fontSize:10, fontWeight:600, color:'#a78bfa', letterSpacing:'0.08em', marginBottom:6 }}>NOVA</div>
-            <div style={{ display:'flex', gap:4, alignItems:'center', height:20 }}>
-              {[0,1,2].map(i => (
-                <div key={i} style={{
-                  width:5, height:5, borderRadius:'50%', background:'#a78bfa',
-                  animation:'nova-breathe 1.4s ease-in-out '+(i*0.2)+'s infinite',
-                }}/>
-              ))}
+          {loading && (
+            <div style={{marginBottom:14}}>
+              <div style={{paddingLeft:14,borderLeft:'2px solid rgba(167,139,250,0.45)'}}>
+                <div style={{fontSize:10,fontWeight:600,color:'#a78bfa',letterSpacing:'0.08em',marginBottom:6}}>NOVA</div>
+                <div style={{display:'flex',gap:4,alignItems:'center',height:20}}>
+                  {[0,1,2].map(i=>(<div key={i} className="nova-thinking" style={{width:5,height:5,borderRadius:'50%',background:'#a78bfa',animationDelay:i*0.2+'s'}}/>))}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <div ref={bottomRef}/>
+          <div ref={bottomRef}/>
+        </div>
       </div>
 
-      {/* ── Input ───────────────────────────────────────────────────── */}
-      <div style={{
-        borderTop:'1px solid #21262d', background:'#161b22',
-        padding:'12px 16px', flexShrink:0,
-      }}>
-        <div style={{
-          display:'flex', gap:8, alignItems:'flex-end',
-          background:'#0d1117', border:'1px solid #30363d',
-          borderRadius:12, padding:'9px 9px 9px 14px',
-          transition:'border-color 0.2s',
-        }}
-          onFocus={e => e.currentTarget.style.borderColor='rgba(167,139,250,0.45)'}
-          onBlur={e => e.currentTarget.style.borderColor='#30363d'}
-        >
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-            placeholder="Ask Nova anything..."
-            rows={1}
-            style={{
-              flex:1, background:'none', border:'none', outline:'none',
-              color:'var(--c-t1)', fontSize:13, resize:'none', lineHeight:1.5,
-              fontFamily:'inherit', minHeight:18, maxHeight:120, overflow:'auto',
-            }}
-          />
-          <div style={{ display:'flex', gap:5, alignItems:'center', flexShrink:0 }}>
-            <button title="Upload file"
-              style={{
-                width:30, height:30, borderRadius:8, border:'1px solid #30363d',
-                background:'none', cursor:'pointer', display:'flex',
-                alignItems:'center', justifyContent:'center', color:'#484f58',
-              }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-              </svg>
-            </button>
-            <button onClick={send} disabled={loading || !input.trim()}
-              style={{
-                width:32, height:32, borderRadius:9, border:'none',
-                background: input.trim() ? '#7c3aed' : '#21262d',
-                cursor: input.trim() ? 'pointer' : 'not-allowed',
-                display:'flex', alignItems:'center', justifyContent:'center',
-                color: input.trim() ? '#fff' : '#484f58',
-                transition:'all 0.15s',
-              }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                <path d="M12 19V5M5 12l7-7 7 7"/>
-              </svg>
-            </button>
+      {/* ── Input ── */}
+      <div style={{flexShrink:0,borderTop:'1px solid #21262d',background:'var(--c-surface)',padding:'12px 16px'}}>
+        <div style={{maxWidth:760,margin:'0 auto'}}>
+          <input ref={fileRef} type="file" accept=".pdf,.txt,.doc,.docx" style={{display:'none'}} onChange={e=>{const f=e.target.files?.[0];if(f)handleFile(f)}}/>
+          <div style={{display:'flex',gap:8,alignItems:'flex-end',background:'var(--c-bg)',border:'1px solid #30363d',borderRadius:12,padding:'9px 9px 9px 14px'}}
+            onFocus={e=>{const p=e.currentTarget;p.style.borderColor='rgba(167,139,250,0.45)'}}
+            onBlur={e=>{const p=e.currentTarget;p.style.borderColor='#30363d'}}>
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={e=>{setInput(e.target.value);e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px'}}
+              onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}}
+              placeholder="Ask Nova anything..."
+              rows={1}
+              style={{flex:1,background:'none',border:'none',outline:'none',color:'var(--c-t1)',fontSize:13,resize:'none',lineHeight:1.5,fontFamily:'inherit',minHeight:20,maxHeight:120,overflow:'hidden',paddingTop:1,display:'block',width:'100%'}}
+            />
+            <div style={{display:'flex',gap:5,alignItems:'center',flexShrink:0}}>
+              <button onClick={()=>fileRef.current?.click()} title="Upload file" style={{width:30,height:30,borderRadius:8,border:'1px solid #30363d',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#484f58'}}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              </button>
+              <button onClick={send} disabled={loading||!input.trim()} style={{width:32,height:32,borderRadius:9,border:'none',background:input.trim()?'#7c3aed':'#21262d',cursor:input.trim()?'pointer':'not-allowed',display:'flex',alignItems:'center',justifyContent:'center',color:input.trim()?'#fff':'#484f58',transition:'all 0.15s'}}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+              </button>
+            </div>
           </div>
+          <p style={{fontSize:10,color:'#484f58',textAlign:'center',marginTop:7}}>Shift+Enter for new line · Nova knows your classes</p>
         </div>
-        <p style={{ fontSize:10, color:'#484f58', textAlign:'center', marginTop:7 }}>
-          Shift+Enter for new line · Nova knows your classes
-        </p>
       </div>
     </div>
   )
