@@ -182,27 +182,50 @@ export default function NovaPage() {
 
     try {
       const history = [...messages, userMsg]
-      const res = await fetch('/api/nova-stream', {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ messages: history, systemPrompt: buildFullSystemPrompt() })
-      })
-
-      if (!res.ok) throw new Error('Stream failed')
-
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
       let fullText = ''
+      let streamOk = false
 
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        const chunk = decoder.decode(value, { stream: true })
-        fullText += chunk
-        setMessages(prev => prev.map(m => m.id === tempId ? { ...m, text: fullText } : m))
+      try {
+        const res = await fetch('/api/nova-stream', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ messages: history, systemPrompt: buildFullSystemPrompt() })
+        })
+
+        if (res.ok && res.body) {
+          streamOk = true
+          const reader = res.body.getReader()
+          const decoder = new TextDecoder()
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+            const chunk = decoder.decode(value, { stream: true })
+            fullText += chunk
+            setMessages(prev => prev.map(m => m.id === tempId ? { ...m, text: fullText } : m))
+          }
+        }
+      } catch {}
+
+      // Fallback to non-streaming RPC if stream failed or empty
+      if (!streamOk || !fullText.trim()) {
+        const fallback = await fetch('/api/rpc', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ fn:'generateChatResponse', args:[history, buildFullSystemPrompt()] })
+        })
+        const fdata = await fallback.json()
+        fullText = fdata.reply || 'Sorry, I had trouble with that. Try again.'
+
+        // Typewriter effect for fallback
+        let displayed = ''
+        for (let ci = 0; ci < fullText.length; ci++) {
+          displayed += fullText[ci]
+          const snap = displayed
+          setMessages(prev => prev.map(m => m.id === tempId ? { ...m, text: snap } : m))
+          if (ci % 8 === 0) await new Promise(r => setTimeout(r, 10))
+        }
       }
 
-      // Finalize — remove streaming flag
       setMessages(prev => prev.map(m => m.id === tempId ? { ...m, streaming: false } : m))
       await saveMessage('assistant', fullText)
 
