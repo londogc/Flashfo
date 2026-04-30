@@ -22,9 +22,6 @@ export default function NovaPage() {
   const [grade, setGrade]               = useState('')
   const [classContext, setClassContext] = useState(null)
   const [allClasses, setAllClasses]     = useState([])
-  const [showClassManager, setShowClassManager] = useState(false)
-  const [newClassName, setNewClassName] = useState('')
-  const [newClassSubject, setNewClassSubject] = useState('')
   const [register, setRegister]         = useState('normal')
   const [showRegister, setShowRegister] = useState(false)
   const [studySession, setStudySession] = useState(null) // { startTime, topic, questionsAnswered, correct }
