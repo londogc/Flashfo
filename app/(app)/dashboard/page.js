@@ -280,7 +280,37 @@ export default function DashboardPage() {
           </div>
         )}
 
-      {/* Bottom row — 3 columns: Active class | Recent activity | This Day in History */}
+      
+      {/* ── What's due today ── */}
+      {assignments.length > 0 && (
+        <div style={{ background:'rgba(245,158,11,0.06)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:12, padding:'14px 16px', marginBottom:12 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span style={{ fontSize:11, fontWeight:700, color:'#f59e0b', letterSpacing:'0.07em' }}>DUE TODAY</span>
+          </div>
+          {assignments.filter(a => {
+            if (!a.due_date) return false
+            const d = new Date(a.due_date)
+            const now = new Date()
+            return d.toDateString() === now.toDateString()
+          }).length === 0 ? (
+            <p style={{ fontSize:13, color:'var(--c-t3)' }}>Nothing due today — you're all caught up!</p>
+          ) : (
+            assignments.filter(a => {
+              if (!a.due_date) return false
+              const d = new Date(a.due_date)
+              return d.toDateString() === new Date().toDateString()
+            }).map((a,i) => (
+              <div key={a.id||i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 0', borderTop: i>0 ? '1px solid rgba(245,158,11,0.1)' : 'none' }}>
+                <span style={{ fontSize:13, color:'var(--c-t1)', fontWeight:500 }}>{a.title}</span>
+                <a href={'/'+a.type} style={{ padding:'4px 10px', borderRadius:6, background:'#f59e0b', color:'#0d1117', fontSize:11, fontWeight:600, textDecoration:'none' }}>Start →</a>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+{/* Bottom row — 3 columns: Active class | Recent activity | This Day in History */}
       <div className="dash-bottom" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 1fr', gap: 12, paddingBottom: 24 }}>
 
         {/* Active class */}
