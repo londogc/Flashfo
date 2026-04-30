@@ -67,7 +67,7 @@ export default function StandardsPage() {
                   borderColor: subject===s ? '#2563eb' : 'var(--c-line)',
                   background: subject===s ? 'rgba(37,99,235,0.08)' : 'var(--c-surface)',
                   color: subject===s ? '#2563eb' : 'var(--c-t2)', fontSize:13, fontWeight:500 }}>
-                {s === 'Math' ? '📐' : s === 'Science' ? '🔬' : s === 'ELA' ? '📚' : '🌍'} {s}
+                {s}
               </button>
             ))}
           </div>
