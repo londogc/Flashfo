@@ -18,7 +18,7 @@ export default function PrivacyPage() {
 
         <div style={{ borderTop:'1px solid #21262d', paddingTop:40 }}>
           {[
-            ["1. Introduction", `Welcome to Flashfo. We operate the Flashfo platform — an AI-powered study and teaching workspace at flashfo.com — including all related web pages, features, and services (the "Service").
+            ["1. Introduction", `Welcome to Flashfo. We operate the Flashfo platform — an AI-powered study and teaching workspace at flashfo.org — including all related web pages, features, and services (the "Service").
 
 This Privacy Policy explains what information we collect, how we use it, who we share it with, and the choices you have. By using Flashfo, you agree to the practices described in this policy.
 
@@ -51,21 +51,21 @@ Business transfers — In a merger or acquisition, your data may transfer. We wi
             ["5. Data Retention", `We retain your data while your account is active. If you delete your account, we delete or anonymise your personal data within 30 days, except where required by law. Anonymised aggregate analytics may be retained indefinitely.`],
             ["6. Your Rights and Choices", `Depending on your location you may request: access to your data; correction of inaccurate information; deletion of your account and data; a portable copy of your data; and restriction of certain processing.
 
-To exercise any right, email privacy@flashfo.com. We respond within 30 days. You may unsubscribe from non-essential emails at any time.`],
+To exercise any right, email privacy@flashfo.org. We respond within 30 days. You may unsubscribe from non-essential emails at any time.`],
             ["7. Data Security", `We use HTTPS/TLS encryption for all data in transit. Passwords are hashed and never stored in plain text. Database access is restricted to authorised personnel. We conduct periodic security reviews.
 
-For security concerns: security@flashfo.com`],
+For security concerns: security@flashfo.org`],
             ["8. Cookies", `We use only essential cookies required for the Service to function (session management, login state). We do not use third-party advertising cookies or build advertising profiles.`],
             ["9. International Data Transfers", `Flashfo is operated primarily from the United States. If you access the Service from outside the US, your information may be transferred to and processed in the US or other countries where our service providers operate. We use appropriate safeguards including standard contractual clauses where required.`],
             ["10. Children's Privacy", `Flashfo is intended for users 13 and older. We do not knowingly collect data from children under 13 without verifiable parental consent. If a school creates accounts for students under 13, the school is responsible for obtaining required parental consents under COPPA.
 
-If you believe we have inadvertently collected data from a child under 13, contact privacy@flashfo.com and we will promptly delete it.`],
+If you believe we have inadvertently collected data from a child under 13, contact privacy@flashfo.org and we will promptly delete it.`],
             ["11. Educational Institution Users (FERPA)", `When used by US schools, we operate as a "school official" with legitimate educational interest under FERPA. We use student data only to provide the Service, never for advertising, and allow schools to access, correct, and delete student records on request.`],
-            ["12. California Privacy Rights (CCPA/CPRA)", `California residents have the right to know what data we collect, request deletion, and opt out of the sale of personal information. We do not sell personal information. To exercise your rights, email privacy@flashfo.com. We respond within 45 days.`],
+            ["12. California Privacy Rights (CCPA/CPRA)", `California residents have the right to know what data we collect, request deletion, and opt out of the sale of personal information. We do not sell personal information. To exercise your rights, email privacy@flashfo.org. We respond within 45 days.`],
             ["13. Changes to This Policy", `We may update this policy and will notify you of material changes by posting on the Service and, where required by law, by email. Continued use after a change takes effect constitutes acceptance.`],
-            ["14. Contact Us", `Flashfo · privacy@flashfo.com · flashfo.com
+            ["14. Contact Us", `Flashfo · privacy@flashfo.org · flashfo.org
 
-Security concerns: security@flashfo.com`],
+Security concerns: security@flashfo.org`],
           ].map(([heading, body], i) => (
             <div key={i} style={{ marginBottom:36 }}>
               <h2 style={{ fontSize:16, fontWeight:700, color:'#e6edf3', marginBottom:10 }}>{heading}</h2>
