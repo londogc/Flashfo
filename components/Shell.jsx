@@ -62,7 +62,23 @@ const ADV = [
   { href:'/source-library', label:'Source Library',icon:'sources' },
 ]
 
-function NavItem({ item, collapsed, active }
+function NavItem({ item, collapsed, active }) {
+  const nova = item.nova
+  return (
+    <Link href={item.href} title={collapsed ? item.label : undefined}
+      style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 8px', borderRadius:10,
+        fontSize:13, fontWeight:500, textDecoration:'none', transition:'all 0.1s',
+        background: active ? (nova ? 'rgba(124,58,237,0.12)' : 'rgba(29,78,216,0.1)') : 'transparent',
+        border: active && nova ? '1px solid rgba(124,58,237,0.2)' : '1px solid transparent',
+        color: active ? (nova ? '#a78bfa' : '#3b82f6') : 'var(--c-t2)',
+        position: 'relative',
+      }}>
+      <I d={ICONS[item.icon] || ICONS.dashboard} s={16}/>
+      {!collapsed && <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.label}</span>}
+      {nova && <span style={{ position:'absolute', top:6, right:6, width:6, height:6, borderRadius:'50%', background:'#34d399' }} className="nova-thinking"/>}
+    </Link>
+  )
+}
 
 function Avatar({ user, profile, size = 28 }) {
   const initials = (profile?.full_name || user?.email || 'U').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()
