@@ -19,7 +19,6 @@ function TodayInHistory() {
   const [events, setEvents] = useState([])
   const [idx, setIdx] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [dateLabel, setDateLabel] = useState('')
 
   useEffect(() => {
     const now = new Date()
@@ -107,7 +106,6 @@ export default function DashboardPage() {
   const [assignments, setAssignments] = useState([])
   const [quizScore, setQuizScore] = useState(null)
   const [dataLoading, setDataLoading] = useState(true)
-  const [novaNotice, setNovaNotice] = useState(null)
   const [dueToday, setDueToday] = useState(0)
 
   useEffect(() => {
