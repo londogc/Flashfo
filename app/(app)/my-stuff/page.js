@@ -3,11 +3,17 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { getUserItems, deleteItem, updateSavedItem } from '@/lib/savedItems'
 
+const TYPE_ICONS = {
+  quiz:       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>,
+  flashcards: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>,
+  lesson:     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>,
+  summary:    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+}
 const TYPE_META = {
-  quiz:       { label:'Quizzes',      color:'bg-blue-500/10 text-blue-500',    emoji:'❓' },
-  flashcards: { label:'Flashcard Decks', color:'bg-violet-500/10 text-violet-500', emoji:'🃏' },
-  lesson:     { label:'Lesson Plans', color:'bg-amber-500/10 text-amber-500',  emoji:'📋' },
-  summary:    { label:'Summaries',    color:'bg-emerald-500/10 text-emerald-500', emoji:'📝' },
+  quiz:       { label:'Quizzes',        color:'bg-blue-500/10 text-blue-500' },
+  flashcards: { label:'Flashcard Decks',color:'bg-violet-500/10 text-violet-500' },
+  lesson:     { label:'Lesson Plans',   color:'bg-amber-500/10 text-amber-500' },
+  summary:    { label:'Summaries',      color:'bg-emerald-500/10 text-emerald-500' },
 }
 
 function timeAgo(ts) {
@@ -100,18 +106,18 @@ export default function MyStuffPage() {
         ))}</div>
       ) : filtered.length===0 ? (
         <div className="bg-surface border border-line rounded-xl p-10 text-center">
-          <p className="text-t2 text-sm mb-4">{filter==='all'?'Nothing saved yet. Generate something and hit 💾 Save!':('No '+TYPE_META[filter]?.label+' saved yet.')}</p>
+          <p className="text-t2 text-sm mb-4">{filter==='all'?'Nothing saved yet. Generate something and save it!':('No '+TYPE_META[filter]?.label+' saved yet.')}</p>
           
         </div>
       ) : (
         <div className="space-y-3">
           {filtered.map(item=>{
-            const meta = TYPE_META[item.type] || { label:item.type, color:'bg-surface2 text-t2', emoji:'📄' }
+            const meta = TYPE_META[item.type] || { label:item.type, color:'bg-surface2 text-t2' }
             const isOpen = expanded===item.id
             return (
               <div key={item.id} className="bg-surface border border-line rounded-xl overflow-hidden transition-all">
                 <div className="flex items-center gap-3 p-4 cursor-pointer hover:bg-surface2 transition-colors" onClick={()=>setExpanded(isOpen?null:item.id)}>
-                  <span className="text-xl flex-shrink-0">{meta.emoji}</span>
+                  <span className="text-xl flex-shrink-0">{TYPE_ICONS[item.type]}</span>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold text-t1 truncate">{item.title}</div>
                     <div className="flex items-center gap-2 mt-0.5">
