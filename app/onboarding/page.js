@@ -35,6 +35,22 @@ export default function OnboardingPage() {
 
   const toggleSubject = (s) => setSubjects(prev => prev.includes(s) ? prev.filter(x=>x!==s) : [...prev, s])
 
+  if (!user) return (
+    <div style={{ minHeight:'100vh', background:'#0d1117', display:'flex', alignItems:'center', justifyContent:'center', padding:16, fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
+      <div style={{ textAlign:'center' }}>
+        <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginBottom:28 }}>
+          <div style={{ width:36, height:36, background:'#2563eb', borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <span style={{ fontSize:20, fontWeight:700, color:'#e6edf3' }}>Flashfo</span>
+        </div>
+        <h2 style={{ fontSize:20, fontWeight:700, color:'#e6edf3', marginBottom:8 }}>Create your account first</h2>
+        <p style={{ fontSize:14, color:'#8b949e', marginBottom:24 }}>Sign up to set up your profile and get started.</p>
+        <a href="/auth?mode=signup" style={{ display:'inline-block', padding:'11px 28px', background:'#7c3aed', color:'#fff', borderRadius:9, fontWeight:600, fontSize:14, textDecoration:'none' }}>Sign up free →</a>
+      </div>
+    </div>
+  )
+
   return (
     <div style={{ minHeight:'100vh', background:'#0d1117', display:'flex', alignItems:'center', justifyContent:'center', padding:16, fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
       <div style={{ width:'100%', maxWidth:480 }}>
