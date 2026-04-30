@@ -63,6 +63,17 @@ export default function StudentPortalPage() {
     </div>
   )
 
+  if (!user) return (
+    <div style={{ maxWidth:700, margin:'0 auto', padding:'80px 16px', textAlign:'center', fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
+      <div style={{ width:56, height:56, borderRadius:14, background:'rgba(37,99,235,0.1)', border:'1px solid rgba(37,99,235,0.2)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px' }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <h2 style={{ fontSize:20, fontWeight:700, color:'var(--c-t1)', marginBottom:8 }}>Student Portal</h2>
+      <p style={{ fontSize:14, color:'var(--c-t2)', marginBottom:24 }}>Sign in to join a class, view assignments, and track your progress.</p>
+      <a href="/auth" style={{ display:'inline-block', padding:'10px 24px', background:'#2563eb', color:'#fff', borderRadius:9, fontWeight:600, fontSize:14, textDecoration:'none' }}>Sign in →</a>
+    </div>
+  )
+
   return (
     <div style={{ maxWidth:700, margin:'0 auto', padding:'0 16px 48px', fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
       <h1 style={{ fontSize:22, fontWeight:700, color:'var(--c-t1)', margin:'0 0 4px' }}>Student Portal</h1>
