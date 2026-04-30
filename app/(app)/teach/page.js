@@ -319,7 +319,7 @@ export default function TeachPage() {
           </a>
         ))}
       </div>
-    </div>
       </>)}
+    </div>
   )
 }
