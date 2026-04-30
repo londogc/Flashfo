@@ -221,6 +221,7 @@ export default function Shell({ children }) {
 
   return (
     <div style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'var(--c-bg)' }}>
+      <style>{`@keyframes sh-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}`}</style>
       {cmdOpen && <div onClick={()=>setCmdOpen(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',zIndex:200}}/>}
       {cmdOpen && (
         <div ref={cmdRef} style={{position:'fixed',top:'18%',left:'50%',transform:'translateX(-50%)',width:'min(560px,calc(100vw - 32px))',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:14,boxShadow:'0 16px 48px rgba(0,0,0,0.5)',zIndex:201,overflow:'hidden'}}>
@@ -256,8 +257,11 @@ export default function Shell({ children }) {
 
         {/* Logo + collapse button */}
         <div style={{ display:'flex', alignItems:'center', gap:10, padding:'0 14px', height:52, borderBottom:'1px solid var(--c-line)', flexShrink:0 }}>
-          <div style={{ width:28, height:28, background:'#1d4ed8', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
+          <div style={{ width:36, height:36, position:'relative', flexShrink:0 }}>
+            <div style={{ position:'absolute', inset:-3, borderRadius:13, background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)', animation:'sh-spin 3s linear infinite' }}/>
+            <div style={{ position:'absolute', inset:2, borderRadius:10, background:'var(--c-bg)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="#3b82f6"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
+            </div>
           </div>
           {!collapsed && (
             <div style={{ flex:1, minWidth:0 }}>
@@ -294,8 +298,11 @@ export default function Shell({ children }) {
 
           {/* Mobile logo — shown only on mobile via CSS */}
           <div className="ff-mobile-block" style={{ display:'none', alignItems:'center', gap:8 }}>
-            <div style={{ width:28, height:28, background:'#1d4ed8', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
+            <div style={{ width:36, height:36, position:'relative' }}>
+              <div style={{ position:'absolute', inset:-3, borderRadius:13, background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)', animation:'sh-spin 3s linear infinite' }}/>
+              <div style={{ position:'absolute', inset:2, borderRadius:10, background:'var(--c-bg)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="#3b82f6"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
+              </div>
             </div>
             <span style={{ fontSize:14, fontWeight:700, color:'var(--c-t1)' }}>Flashfo</span>
           </div>
