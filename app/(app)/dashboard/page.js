@@ -24,7 +24,6 @@ function TodayInHistory() {
     const now = new Date()
     const month = now.getMonth() + 1
     const day = now.getDate()
-    setDateLabel(now.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }))
 
     fetch(`https://en.wikipedia.org/api/rest_v1/feed/onthisday/selected/${month}/${day}`)
       .then(r => r.json())
@@ -120,7 +119,6 @@ export default function DashboardPage() {
       // Nova noticed — check for repeated topics
       const topicLog = JSON.parse(localStorage.getItem('ff-topic-log') || '{}')
       const topEntry = Object.entries(topicLog).find(([,v]) => v >= 3)
-      if (topEntry) setNovaNotice(topEntry[0])
     } catch(e) {}
     try {
       const sm2 = JSON.parse(localStorage.getItem('ff-sm2') || '{}')
