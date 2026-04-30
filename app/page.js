@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 
@@ -156,6 +156,172 @@ function ProductDemo() {
   )
 }
 
+
+function LiveQuizDemo() {
+  const [phase, setPhase] = React.useState('answering') // 'answering' | 'reveal' | 'next'
+  const [answered, setAnswered] = React.useState(18)
+  const [qIdx, setQIdx] = React.useState(0)
+  const [scores, setScores] = React.useState([420,390,360,310,290])
+  const [studentAnswered, setStudentAnswered] = React.useState([true,true,true,false,false])
+  const [timerSec, setTimerSec] = React.useState(14)
+
+  const QUESTIONS = [
+    { q:'Which organelle produces ATP through cellular respiration?', opts:['Nucleus','Mitochondria','Ribosome','Vacuole'], correct:1, pct:[8,75,14,3] },
+    { q:'What do light-dependent reactions in photosynthesis primarily produce?', opts:['Glucose','Carbon dioxide','ATP + NADPH','Water'], correct:2, pct:[12,5,68,15] },
+    { q:'In which phase of mitosis do chromosomes align at the cell equator?', opts:['Prophase','Anaphase','Telophase','Metaphase'], correct:3, pct:[11,9,6,74] },
+  ]
+  const STUDENTS = [
+    { init:'JL', name:'Jamie L.', color:'rgba(167,139,250,0.15)', text:'#a78bfa' },
+    { init:'MK', name:'Maya K.',  color:'rgba(37,99,235,0.12)',    text:'#3b82f6' },
+    { init:'TR', name:'Tyler R.', color:'rgba(52,211,153,0.1)',    text:'#34d399' },
+    { init:'AS', name:'Ava S.',   color:'rgba(251,146,60,0.1)',    text:'#fb923c' },
+    { init:'BW', name:'Ben W.',   color:'rgba(167,139,250,0.1)',   text:'#a78bfa' },
+  ]
+  const q = QUESTIONS[qIdx]
+
+  React.useEffect(() => {
+    const iv = setInterval(() => setTimerSec(s => s+1), 1000)
+    return () => clearInterval(iv)
+  }, [qIdx])
+
+  React.useEffect(() => {
+    if (phase !== 'answering') return
+    // Trickle remaining students in
+    const remaining = studentAnswered.map((a,i) => !a ? i : -1).filter(i => i >= 0)
+    if (!remaining.length) { setTimeout(() => setPhase('reveal'), 600); return }
+    const delays = remaining.map((_,i) => 1200 + i * 1400)
+    const timers = remaining.map((idx, i) => setTimeout(() => {
+      setStudentAnswered(prev => { const n=[...prev]; n[idx]=true; return n })
+      setAnswered(prev => prev + 1)
+    }, delays[i]))
+    return () => timers.forEach(t => clearTimeout(t))
+  }, [phase, qIdx])
+
+  React.useEffect(() => {
+    if (phase !== 'reveal') return
+    // Animate scores up
+    const adds = [90, 70, 20, 90, 70]
+    const timer = setTimeout(() => {
+      setScores(prev => prev.map((s,i) => s + adds[i]))
+    }, 300)
+    // Auto advance
+    const adv = setTimeout(() => {
+      setQIdx(i => (i+1) % QUESTIONS.length)
+      setPhase('answering')
+      setAnswered(14)
+      setStudentAnswered([true,true,true,false,false])
+      setTimerSec(0)
+      setScores([420,390,360,310,290])
+    }, 4000)
+    return () => { clearTimeout(timer); clearTimeout(adv) }
+  }, [phase])
+
+  const mins = Math.floor(timerSec/60)
+  const secs = timerSec % 60
+
+  const optStyle = (i) => {
+    if (phase === 'reveal') {
+      if (i === q.correct) return { border:'1px solid #34d399', background:'rgba(52,211,153,0.07)', color:'#34d399' }
+      if (i === 1 && q.correct !== 1) return { border:'1px solid #21262d', background:'#161b22', color:'#484f58' }
+    }
+    if (i === (phase==='answering'?q.correct:q.correct)) return { border:'1px solid #2563eb', background:'rgba(37,99,235,0.08)', color:'#93c5fd' }
+    return { border:'1px solid #21262d', background:'#161b22', color:'#8b949e' }
+  }
+  const letStyle = (i) => {
+    if (phase === 'reveal' && i === q.correct) return { background:'#34d399', color:'#0d1117' }
+    if (i === q.correct) return { background:'#2563eb', color:'#fff' }
+    return { background:'#21262d', color:'#484f58' }
+  }
+
+  return (
+    <div style={{ background:'#0d1117', border:'1px solid #21262d', borderRadius:14, overflow:'hidden', fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
+
+      {/* Top bar */}
+      <div style={{ background:'#161b22', borderBottom:'1px solid #21262d', padding:'10px 18px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:7, fontSize:13, fontWeight:500, color:'#e6edf3' }}>
+          <span style={{ width:7, height:7, borderRadius:'50%', background:'#ef4444', display:'inline-block', boxShadow:'0 0 0 3px rgba(239,68,68,0.2)', animation:'livepulse 1.2s ease-in-out infinite' }}/>
+          Live Quiz
+        </div>
+        <span style={{ fontSize:11, color:'#484f58', background:'#21262d', padding:'3px 9px', borderRadius:20 }}>AP Biology · Period 3</span>
+        <span style={{ fontSize:13, fontWeight:600, color:'#f59e0b', fontVariantNumeric:'tabular-nums' }}>{mins}:{secs<10?'0':''}{secs}</span>
+      </div>
+
+      {/* Body */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', minHeight:300 }}>
+
+        {/* Left — question */}
+        <div style={{ borderRight:'1px solid #21262d', padding:'20px 18px', display:'flex', flexDirection:'column', gap:14 }}>
+          <div>
+            <div style={{ fontSize:10, color:'#484f58', letterSpacing:'0.08em', marginBottom:6 }}>QUESTION {qIdx+2} OF 6</div>
+            <div style={{ fontSize:14, fontWeight:500, color:'#e6edf3', lineHeight:1.55, minHeight:52 }}>{q.q}</div>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:8 }}>
+              <div style={{ flex:1, height:3, background:'#21262d', borderRadius:2 }}>
+                <div style={{ height:3, borderRadius:2, background:'#a78bfa', width:((qIdx+2)/6*100)+'%', transition:'width 0.6s ease' }}/>
+              </div>
+              <div style={{ fontSize:10, color:'#484f58', whiteSpace:'nowrap' }}>{answered}/24 answered</div>
+            </div>
+          </div>
+
+          {/* Options */}
+          <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+            {q.opts.map((opt,i) => (
+              <div key={i} style={{ padding:'9px 12px', borderRadius:8, display:'flex', alignItems:'center', gap:8, position:'relative', overflow:'hidden', ...optStyle(i) }}>
+                {phase === 'reveal' && (
+                  <div style={{ position:'absolute', left:0, top:0, height:'100%', width:q.pct[i]+'%', background: i===q.correct?'rgba(52,211,153,0.08)':'rgba(139,148,158,0.04)', transition:'width 0.8s ease', pointerEvents:'none' }}/>
+                )}
+                <div style={{ width:18, height:18, borderRadius:5, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:600, flexShrink:0, ...letStyle(i) }}>
+                  {['A','B','C','D'][i]}
+                </div>
+                <span style={{ fontSize:12, flex:1 }}>{opt}</span>
+                {phase === 'reveal' && <span style={{ fontSize:10, color: i===q.correct?'#34d399':'#484f58' }}>{q.pct[i]}%</span>}
+              </div>
+            ))}
+          </div>
+
+          {/* Answer reveal label */}
+          {phase === 'reveal' && (
+            <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'#34d399', padding:'8px 12px', background:'rgba(52,211,153,0.07)', border:'1px solid rgba(52,211,153,0.2)', borderRadius:8 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              {q.pct[q.correct]}% of the class got it right
+            </div>
+          )}
+        </div>
+
+        {/* Right — leaderboard */}
+        <div style={{ padding:'18px 16px', display:'flex', flexDirection:'column', gap:8 }}>
+          <div style={{ fontSize:10, color:'#484f58', letterSpacing:'0.08em', marginBottom:2, display:'flex', justifyContent:'space-between' }}>
+            <span>STUDENTS</span>
+            <span style={{ color:'#a78bfa' }}>{answered} answered</span>
+          </div>
+          {STUDENTS.map((s,i) => (
+            <div key={i} style={{
+              display:'flex', alignItems:'center', gap:8, padding:'7px 9px', borderRadius:8,
+              border: i===0 ? '1px solid rgba(167,139,250,0.25)' : '1px solid #21262d',
+              background: i===0 ? 'rgba(167,139,250,0.06)' : '#161b22',
+              transition:'all 0.3s'
+            }}>
+              <div style={{ width:26, height:26, borderRadius:7, background:s.color, color:s.text, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:600, flexShrink:0 }}>{s.init}</div>
+              <div style={{ flex:1, fontSize:12, color:'#e6edf3' }}>{s.name}</div>
+              <div style={{ fontSize:11, fontWeight:600, color:'#a78bfa', fontVariantNumeric:'tabular-nums', minWidth:32, textAlign:'right' }}>{scores[i]}</div>
+              <div style={{ width:18, height:18, borderRadius:5, background: studentAnswered[i]?'rgba(52,211,153,0.12)':'#21262d', border: studentAnswered[i]?'1px solid rgba(52,211,153,0.3)':'1px solid #30363d', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.3s' }}>
+                {studentAnswered[i] && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
+              </div>
+            </div>
+          ))}
+          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 9px', borderRadius:8, border:'1px solid #21262d', background:'#161b22' }}>
+            <div style={{ width:26, height:26, borderRadius:7, background:'#21262d', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'#484f58', fontWeight:600 }}>+6</div>
+            <div style={{ fontSize:12, color:'#484f58' }}>more students</div>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes livepulse{0%,100%{box-shadow:0 0 0 3px rgba(239,68,68,0.3)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+      `}</style>
+    </div>
+  )
+}
+
 export default function LandingPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
@@ -211,37 +377,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── How it works — flowchart ── */}
-      <section id="how-it-works" style={{ maxWidth:700, margin:'0 auto', padding:'0 16px 80px' }}>
-        <p style={{ textAlign:'center',fontSize:12,color:'#484f58',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:56 }}>How it works</p>
-        <div style={{ position:'relative', paddingLeft:52 }}>
-          {/* Vertical connector line */}
-          <div style={{ position:'absolute',left:19,top:32,bottom:32,width:2,background:'linear-gradient(180deg,#2563eb 0%,#a78bfa 50%,#34d399 100%)',borderRadius:2 }}/>
-          {[
-            { step:'01', label:'Drop any topic', desc:'Type a subject, paste your notes, or pick a curriculum standard — any format works.', color:'#2563eb', bg:'rgba(37,99,235,0.08)', border:'rgba(37,99,235,0.2)' },
-            { step:'02', label:'Nova builds your kit', desc:'Flashcards, a full study guide, and a quiz appear instantly — tailored to exactly what you pasted.', color:'#a78bfa', bg:'rgba(167,139,250,0.08)', border:'rgba(167,139,250,0.2)' },
-            { step:'03', label:'Study, quiz, repeat', desc:'Spaced repetition surfaces cards you found hard. Share everything with one link.', color:'#34d399', bg:'rgba(52,211,153,0.08)', border:'rgba(52,211,153,0.2)' },
-          ].map((s, i) => (
-            <div key={s.step} style={{ position:'relative', marginBottom: i < 2 ? 12 : 0 }}>
-              {/* Step circle */}
-              <div style={{ position:'absolute', left:-52, top:24, width:40, height:40, borderRadius:'50%', background:s.bg, border:'2px solid '+s.border, display:'flex', alignItems:'center', justifyContent:'center', zIndex:1 }}>
-                <span style={{ fontSize:12, fontWeight:700, color:s.color }}>{s.step}</span>
-              </div>
-              {/* Card */}
-              <div style={{ background:s.bg, border:'1px solid '+s.border, borderRadius:14, padding:'24px 28px' }}>
-                <p style={{ fontWeight:600, fontSize:16, color:'#e6edf3', margin:'0 0 8px' }}>{s.label}</p>
-                <p style={{ fontSize:14, color:'#8b949e', lineHeight:1.6, margin:0 }}>{s.desc}</p>
-              </div>
-              {/* Arrow connector between steps */}
-              {i < 2 && (
-                <div style={{ position:'absolute', left:-33, bottom:-22, display:'flex', flexDirection:'column', alignItems:'center', gap:0 }}>
-                  <div style={{ width:0, height:0, borderLeft:'6px solid transparent', borderRight:'6px solid transparent', borderTop:'8px solid #30363d' }}/>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+      {/* ── Live Quiz Feature ── */}
+      <section id="live-quiz" style={{ maxWidth:720, margin:'0 auto', padding:'0 16px 80px' }}>
+        <p style={{ textAlign:'center',fontSize:12,color:'#484f58',letterSpacing:'0.1em',marginBottom:12 }}>LIVE CLASSROOM</p>
+        <h2 style={{ textAlign:'center',fontSize:28,fontWeight:700,color:'#e6edf3',letterSpacing:'-0.03em',marginBottom:10 }}>Your whole class, in sync</h2>
+        <p style={{ textAlign:'center',fontSize:15,color:'#8b949e',marginBottom:36,maxWidth:440,margin:'0 auto 36px' }}>Run a live quiz and watch every student respond in real time — scores, answers, and who needs help, all on one screen.</p>
+        <LiveQuizDemo/>
       </section>
+
 
       {/* ── Nova in action demo ── */}
       <section id="nova-demo" style={{ borderTop:'1px solid #21262d', borderBottom:'1px solid #21262d', padding:'80px 16px', background:'#0a0e14' }}>
