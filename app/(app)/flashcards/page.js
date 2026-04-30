@@ -1,11 +1,5 @@
 'use client'
-import { useState, useEf
-  const searchParams = useSearchParams()
-  useEffect(() => {
-    const q = searchParams.get('q')
-    if (q) { setTopic(decodeURIComponent(q)) }
-  }, [searchParams])
-fect, useRef, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 
@@ -99,6 +93,8 @@ function FlashcardsPageInner() {
   const { user } = useAuth()
   const [copied, setCopied2] = useState(false)
   const [topic, setTopic]       = useState('')
+  const searchParams = useSearchParams()
+  useEffect(() => { const q = searchParams.get('q'); if (q) setTopic(decodeURIComponent(q)) }, [searchParams])
   const [count, setCount]       = useState(10)
   const [cards, setCards]       = useState([])
   const [loading, setLoading]   = useState(false)
@@ -122,7 +118,7 @@ function FlashcardsPageInner() {
     try {
       const res = await fetch('/api/rpc', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fn: 'generateFlashcardsFromText', args: [topic.trim(), count, 'English'] }) })
-      if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.error || 'API error '+res.status) }
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error || 'Server error ' + res.status) }
       const data = await res.json()
       const raw = data.result
       let parsed = []
@@ -195,6 +191,7 @@ function FlashcardsPageInner() {
   }
 
   // ── Voice Mode ───────────────────────────────────────────────────
+  const [voiceOn, setVoiceOn] = useState(false)
   const [listening, setListening] = useState(false)
   const synth = typeof window !== 'undefined' ? window.speechSynthesis : null
   const recognitionRef = useRef(null)
@@ -411,10 +408,7 @@ function FlashcardsPageInner() {
   )
 }
 
+
 export default function FlashcardsPage() {
-  return (
-    <Suspense fallback={<div style={{minHeight:'100vh'}}/>}>
-      <FlashcardsPageInner/>
-    </Suspense>
-  )
+  return (<Suspense fallback={<div style={{minHeight:'100vh'}}/>}><FlashcardsPageInner/></Suspense>)
 }
