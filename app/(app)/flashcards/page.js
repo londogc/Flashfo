@@ -1,3 +1,8 @@
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (q) setTopic(decodeURIComponent(q))
+  }, [searchParams])
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
@@ -89,7 +94,7 @@ function shareLink(data, topic) {
   return url
 }
 
-export default function FlashcardsPage() {
+function FlashcardsPageInner() {
   const { user } = useAuth()
   const [copied, setCopied2] = useState(false)
   const [topic, setTopic]       = useState('')
@@ -116,6 +121,7 @@ export default function FlashcardsPage() {
     try {
       const res = await fetch('/api/rpc', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fn: 'generateFlashcardsFromText', args: [topic.trim(), count, 'English'] }) })
+      if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.error || 'API error '+res.status) }
       const data = await res.json()
       const raw = data.result
       let parsed = []
@@ -401,5 +407,13 @@ export default function FlashcardsPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function FlashcardsPage() {
+  return (
+    <Suspense fallback={<div style={{minHeight:'100vh'}}/>}>
+      <FlashcardsPageInner/>
+    </Suspense>
   )
 }
