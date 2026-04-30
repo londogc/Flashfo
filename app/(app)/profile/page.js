@@ -303,52 +303,105 @@ export default function ProfilePage() {
       </div>
 
       {/* Banner */}
-      <div style={{ margin:'0 20px 12px' }}>
-        <div style={{ fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:8 }}>Banner Photo</div>
-        {/* Display ratio = outW:outH = 1200:400 = 3:1 → paddingBottom 33.33% */}
-        <div style={{ position:'relative',paddingBottom:'33.33%',borderRadius:16,overflow:'hidden',border:'1px solid var(--c-line)' }}>
-          <div style={{ position:'absolute',inset:0,backgroundColor:bannerUrl?'transparent':'var(--c-surface2)',backgroundImage:bannerUrl?'url('+bannerUrl+')':'none',backgroundSize:'cover',backgroundPosition:'center center',backgroundRepeat:'no-repeat' }}>
-            {!bannerUrl&&!bannerUploading&&(
-              <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8 }}>
-                <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="var(--c-t2)" strokeWidth="1.5" strokeLinecap="round"><path d="M8 11V1m-4 4l4-4 4 4M1 14h14"/></svg>
-                <span style={{ fontSize:13,color:'var(--c-t1)',fontWeight:600 }}>Upload banner photo</span>
-                <span style={{ fontSize:11,color:'var(--c-t3)' }}>Click below to upload · Max 5MB</span>
-              </div>
-            )}
-            {bannerUploading&&(<div style={{ position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.3)' }}><span style={{ fontSize:13,color:'white',fontWeight:600 }}>Uploading...</span></div>)}
-          </div>
-        </div>
-        <div style={{ display:'flex',gap:8,marginTop:10 }}>
-          <button onClick={()=>bannerRef.current?.click()} disabled={bannerUploading}
-            style={{ height:32,padding:'0 14px',background:'var(--c-surface2)',border:'1px solid var(--c-line)',color:'var(--c-t2)',borderRadius:8,fontSize:12,fontWeight:500,cursor:'pointer' }}>
-            {bannerUploading?'Uploading...':bannerUrl?'Change banner':'Upload banner'}
-          </button>
-          {bannerUrl&&(<button onClick={()=>removePhoto('banner')} style={{ height:32,padding:'0 14px',background:'#fef2f2',border:'1px solid #fecaca',color:'#dc2626',borderRadius:8,fontSize:12,fontWeight:500,cursor:'pointer' }}>Remove banner</button>)}
-        </div>
-        <input ref={bannerRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>onFileSelected(e,'banner')}/>
-      </div>
+      {/* ── Banner + Avatar editor ── */}
+      <div style={{ margin:'0 0 4px', position:'relative' }}>
 
-      {/* Avatar */}
-      <div style={{ margin:'0 20px 20px' }}>
-        <div style={{ fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:8 }}>Profile Photo</div>
-        <div style={{ display:'flex',alignItems:'center',gap:16 }}>
-          <div style={{ width:80,height:80,borderRadius:'50%',flexShrink:0,background:avatarUrl?'none':'#1d4ed8',backgroundImage:avatarUrl?'url('+avatarUrl+')':undefined,backgroundSize:'cover', backgroundPosition:'center center',border:'3px solid var(--c-line)',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:24,fontWeight:800 }}>
-            {!avatarUrl&&initials}
-          </div>
-          <div>
-            <div style={{ fontSize:15,fontWeight:700,color:'var(--c-t1)' }}>{form.full_name||'Your Name'}</div>
-            <div style={{ fontSize:12,color:'var(--c-t3)',marginTop:2 }}>{user?.email}</div>
-            <div style={{ display:'flex',gap:8,marginTop:8 }}>
-              <button onClick={()=>avatarRef.current?.click()} disabled={avatarUploading}
-                style={{ height:30,padding:'0 12px',background:'var(--c-surface2)',border:'1px solid var(--c-line)',color:'var(--c-t2)',borderRadius:8,fontSize:12,fontWeight:500,cursor:'pointer' }}>
-                {avatarUploading?'Uploading...':avatarUrl?'Change photo':'Upload photo'}
-              </button>
-              {avatarUrl&&(<button onClick={()=>removePhoto('avatar')} style={{ height:30,padding:'0 12px',background:'#fef2f2',border:'1px solid #fecaca',color:'#dc2626',borderRadius:8,fontSize:12,fontWeight:500,cursor:'pointer' }}>Remove</button>)}
+        {/* Banner — full-width clickable strip */}
+        <div
+          onClick={() => bannerRef.current?.click()}
+          title="Click to change banner"
+          style={{
+            height:160, borderRadius:'12px 12px 0 0',
+            background: bannerUrl ? 'none' : 'linear-gradient(135deg,rgba(37,99,235,0.3) 0%,rgba(124,58,237,0.3) 100%)',
+            backgroundImage: bannerUrl ? 'url('+bannerUrl+')' : undefined,
+            backgroundSize:'cover', backgroundPosition:'center',
+            cursor:'pointer', position:'relative',
+            border:'1px solid var(--c-line)', borderBottom:'none',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            overflow:'hidden',
+          }}>
+          {/* Hover overlay */}
+          <div style={{
+            position:'absolute', inset:0, background:'rgba(0,0,0,0)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            transition:'background 0.2s',
+          }}
+            onMouseEnter={e=>e.currentTarget.style.background='rgba(0,0,0,0.35)'}
+            onMouseLeave={e=>e.currentTarget.style.background='rgba(0,0,0,0)'}>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, opacity:bannerUrl?0:1, transition:'opacity 0.2s' }}
+              onMouseEnter={e=>e.currentTarget.style.opacity=1}
+              onMouseLeave={e=>e.currentTarget.style.opacity=bannerUrl?0:1}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+              </svg>
+              <span style={{ fontSize:12, color:'#fff', fontWeight:500 }}>{bannerUploading ? 'Uploading...' : 'Upload banner'}</span>
             </div>
           </div>
+          {/* Edit badge */}
+          {bannerUrl && (
+            <div style={{ position:'absolute', bottom:10, right:10, display:'flex', gap:6 }}>
+              <button onClick={e=>{e.stopPropagation();bannerRef.current?.click()}}
+                style={{ padding:'5px 10px', borderRadius:7, border:'1px solid rgba(255,255,255,0.3)', background:'rgba(0,0,0,0.55)', color:'#fff', fontSize:11, fontWeight:500, cursor:'pointer', backdropFilter:'blur(4px)' }}>
+                Change
+              </button>
+              <button onClick={e=>{e.stopPropagation();setBannerUrl(null)}}
+                style={{ padding:'5px 10px', borderRadius:7, border:'1px solid rgba(255,255,255,0.3)', background:'rgba(0,0,0,0.55)', color:'#fff', fontSize:11, fontWeight:500, cursor:'pointer', backdropFilter:'blur(4px)' }}>
+                Remove
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Avatar overlapping banner */}
+        <div style={{ position:'relative', padding:'0 20px', marginTop:-40, marginBottom:12, display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
+          <div
+            onClick={() => avatarRef.current?.click()}
+            title="Click to change photo"
+            style={{
+              width:80, height:80, borderRadius:'50%', flexShrink:0,
+              background: avatarUrl ? 'none' : '#1d4ed8',
+              backgroundImage: avatarUrl ? 'url('+avatarUrl+')' : undefined,
+              backgroundSize:'cover', backgroundPosition:'center',
+              border:'3px solid var(--c-surface)',
+              cursor:'pointer', position:'relative', overflow:'hidden',
+              display:'flex', alignItems:'center', justifyContent:'center',
+            }}>
+            {!avatarUrl && (
+              <span style={{ fontSize:22, fontWeight:700, color:'#fff' }}>
+                {(form.full_name || user?.email || 'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+              </span>
+            )}
+            {/* Avatar hover overlay */}
+            <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0)', display:'flex', alignItems:'center', justifyContent:'center', transition:'background 0.2s' }}
+              onMouseEnter={e=>e.currentTarget.style.background='rgba(0,0,0,0.45)'}
+              onMouseLeave={e=>e.currentTarget.style.background='rgba(0,0,0,0)'}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" style={{ opacity:0, transition:'opacity 0.2s' }}
+                onMouseEnter={e=>e.currentTarget.style.opacity=1}
+                onMouseLeave={e=>e.currentTarget.style.opacity=0}>
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </div>
+          </div>
+
+          <div style={{ display:'flex', gap:8, paddingBottom:4 }}>
+            <button type="button" onClick={()=>avatarRef.current?.click()} disabled={avatarUploading}
+              style={{ height:32, padding:'0 14px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:8, fontSize:12, fontWeight:500, cursor:'pointer' }}>
+              {avatarUploading ? 'Uploading...' : 'Change photo'}
+            </button>
+            {avatarUrl && (
+              <button type="button" onClick={()=>setAvatarUrl(null)}
+                style={{ height:32, padding:'0 14px', background:'none', border:'1px solid var(--c-line)', color:'var(--c-t3)', borderRadius:8, fontSize:12, cursor:'pointer' }}>
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
+
+        <input ref={bannerRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>onFileSelected(e,'banner')}/>
         <input ref={avatarRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>onFileSelected(e,'avatar')}/>
       </div>
+
 
       {/* Form */}
       <form onSubmit={save} style={{ margin:'0 20px 16px',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:18,padding:20 }}>
