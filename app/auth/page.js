@@ -74,8 +74,12 @@ function AuthPageInner() {
           options: { data: { full_name: form.name } }
         })
         if (error) throw error
-        if (data.user && !data.session) {
-          setSuccess('Check your email to confirm your account, then sign in.')
+        if (data.session) {
+          // Email confirmation disabled — user is signed in immediately
+          router.push('/dashboard')
+        } else if (data.user && !data.session) {
+          // Email confirmation enabled — guide them to sign in after confirming
+          setSuccess('Account created! Check your email to confirm, then sign in below.')
           setMode('signin')
         } else {
           router.push('/')
