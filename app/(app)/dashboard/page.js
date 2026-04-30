@@ -63,7 +63,7 @@ function TodayInHistory() {
           </div>
           <span style={{ fontSize: 10, color: 'var(--c-t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>This day in history</span>
         </div>
-        <span style={{ fontSize: 10, color: '#fb923c', fontWeight: 600 }}>{dateLabel}</span>
+        <span style={{ fontSize: 10, color: '#fb923c', fontWeight: 600 }}>{new Date().toLocaleDateString('en-US',{month:'long',day:'numeric'})}</span>
       </div>
 
       {/* Content */}
