@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 
@@ -158,12 +158,12 @@ function ProductDemo() {
 
 
 function LiveQuizDemo() {
-  const [phase, setPhase] = React.useState('answering') // 'answering' | 'reveal' | 'next'
-  const [answered, setAnswered] = React.useState(18)
-  const [qIdx, setQIdx] = React.useState(0)
-  const [scores, setScores] = React.useState([420,390,360,310,290])
-  const [studentAnswered, setStudentAnswered] = React.useState([true,true,true,false,false])
-  const [timerSec, setTimerSec] = React.useState(14)
+  const [phase, setPhase] = useState('answering') // 'answering' | 'reveal' | 'next'
+  const [answered, setAnswered] = useState(18)
+  const [qIdx, setQIdx] = useState(0)
+  const [scores, setScores] = useState([420,390,360,310,290])
+  const [studentAnswered, setStudentAnswered] = useState([true,true,true,false,false])
+  const [timerSec, setTimerSec] = useState(14)
 
   const QUESTIONS = [
     { q:'Which organelle produces ATP through cellular respiration?', opts:['Nucleus','Mitochondria','Ribosome','Vacuole'], correct:1, pct:[8,75,14,3] },
@@ -179,25 +179,30 @@ function LiveQuizDemo() {
   ]
   const q = QUESTIONS[qIdx]
 
-  React.useEffect(() => {
+  useEffect(() => {
     const iv = setInterval(() => setTimerSec(s => s+1), 1000)
     return () => clearInterval(iv)
   }, [qIdx])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (phase !== 'answering') return
-    // Trickle remaining students in
-    const remaining = studentAnswered.map((a,i) => !a ? i : -1).filter(i => i >= 0)
-    if (!remaining.length) { setTimeout(() => setPhase('reveal'), 600); return }
-    const delays = remaining.map((_,i) => 1200 + i * 1400)
-    const timers = remaining.map((idx, i) => setTimeout(() => {
-      setStudentAnswered(prev => { const n=[...prev]; n[idx]=true; return n })
+    const timers = []
+    // Student 4 answers at 1.2s
+    timers.push(setTimeout(() => {
+      setStudentAnswered(prev => { const n=[...prev]; n[3]=true; return n })
       setAnswered(prev => prev + 1)
-    }, delays[i]))
+    }, 1200))
+    // Student 5 answers at 2.6s
+    timers.push(setTimeout(() => {
+      setStudentAnswered(prev => { const n=[...prev]; n[4]=true; return n })
+      setAnswered(prev => prev + 1)
+    }, 2600))
+    // All answered — reveal at 3.4s
+    timers.push(setTimeout(() => setPhase('reveal'), 3400))
     return () => timers.forEach(t => clearTimeout(t))
   }, [phase, qIdx])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (phase !== 'reveal') return
     // Animate scores up
     const adds = [90, 70, 20, 90, 70]
