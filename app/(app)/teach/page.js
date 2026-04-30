@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
+import LiveQuizTeacher from './LiveQuizTeacher'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -21,6 +22,7 @@ const LAUNCH_STEPS = [
 
 // ── Assignment Builder ──────────────────────────────────────────────
 function AssignmentBuilder({ classrooms, user }) {
+  const [activeView, setActiveView] = useState('assignments') // 'assignments' | 'live-quiz'
   const [form, setForm] = useState({ title:'', description:'', type:'flashcards', classroom_id:'', due_date:'' })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -176,6 +178,18 @@ export default function TeachPage() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto w-full">
+      {/* ── Live Quiz tab bar ── */}
+      <div style={{ display:'flex', gap:8, marginBottom:24, borderBottom:'1px solid var(--c-line)', paddingBottom:16 }}>
+        {[['assignments','📋 Assignments'],['live-quiz','⚡ Live Quiz']].map(([v,l])=>(
+          <button key={v} onClick={()=>setActiveView(v)}
+            style={{ height:34, padding:'0 16px', borderRadius:9, border:'1px solid '+(activeView===v?'#2563eb':'var(--c-line)'), background:activeView===v?'rgba(37,99,235,0.1)':'var(--c-surface2)', color:activeView===v?'#3b82f6':'var(--c-t2)', fontSize:13, fontWeight:activeView===v?600:400, cursor:'pointer' }}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {activeView === 'live-quiz' && <LiveQuizTeacher/>}
+      {activeView === 'assignments' && (<>
       {/* ── Teacher Launch Checklist ── */}
       {!checklistCollapsed && (
         <div style={{ background:'rgba(37,99,235,0.06)', border:'1px solid rgba(37,99,235,0.2)', borderRadius:14, padding:'20px 24px', marginBottom:28 }}>
@@ -306,5 +320,6 @@ export default function TeachPage() {
         ))}
       </div>
     </div>
+      </>)}
   )
 }
