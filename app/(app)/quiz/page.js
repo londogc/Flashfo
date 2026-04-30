@@ -103,7 +103,7 @@ function AnswerKeyModal({ questions, topic, onClose }) {
         </div>
         <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
           {questions.map((q, i) => (
-            <div key={i} className="border border-line rounded-xl p-4">
+            <div key={i} className="nova-card" style={{animationDelay:i*120+'ms'}} className="border border-line rounded-xl p-4">
               <p className="text-sm font-semibold text-t1 mb-3">{i + 1}. {q.question}</p>
               {q.type === 'fill_blank' && <div className="px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-600 text-[13px] font-medium">✓ {q.correctAnswer || 'See rubric'}</div>}
               {q.type === 'short_answer' && <div className="px-3 py-2 rounded-lg bg-blue-500/10 text-blue-600 text-[13px]">Model: {q.correctAnswer || 'Open-ended'}</div>}
@@ -489,7 +489,7 @@ export default function QuizPage() {
           </div>
 
           {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
-          <button onClick={generate} disabled={loading || !topic.trim()}
+          <button onClick={generate} disabled={loading} style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',opacity:loading?0.6:1,letterSpacing:'-0.01em'}}>
             className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 transition-colors disabled:opacity-40 flex items-center gap-2">
             {loading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>Generating...</> : 'Generate ' + (typeId === 'mixed' ? breakdownTotal : count) + ' Questions'}
           </button>
@@ -585,6 +585,16 @@ export default function QuizPage() {
                           else if (isSel) cls = 'border-red-400 bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400'
                           else cls = 'border-line text-t3 opacity-60'
                         } else if (isSel) cls = 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+
+  useEffect(() => {
+    const id = 'nova-gen-anim'
+    if (document.getElementById(id)) return
+    const s = document.createElement('style')
+    s.id = id
+    s.textContent = '@keyframes nova-pop{0%{opacity:0;transform:translateY(14px) scale(0.97)}60%{opacity:1;transform:translateY(-3px) scale(1.005)}100%{opacity:1;transform:translateY(0) scale(1)}} @keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}} .nova-card{opacity:0;animation:nova-pop .42s cubic-bezier(.22,.68,0,1.2) forwards} .nova-dot-pulse{animation:nova-pulse .9s ease-in-out infinite}'
+    document.head.appendChild(s)
+  }, [])
+
                         return (
                           <button key={j} onClick={() => !submitted && setSelected(s => ({ ...s, [i]: j }))}
                             className={'w-full text-left px-3 py-2.5 rounded-lg border text-[13px] transition-all ' + cls}>
