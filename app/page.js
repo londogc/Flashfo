@@ -346,9 +346,14 @@ export default function LandingPage() {
             <span style={{ fontWeight:600, fontSize:16 }}>Flashfo</span>
           </div>
           <div className="lp-nav-links" style={{ display:'flex', gap:28, fontSize:13 }}>
-            {['Features','For Teachers','Resource Hub','Pricing'].map(l=>(
-              <a key={l} href="#" style={{ color:'#8b949e', textDecoration:'none' }}>{l}</a>
-            ))}
+            {[
+                {l:'Features', h:'#live-quiz'},
+                {l:'For Teachers', h:'#nova-demo'},
+                {l:'Resource Hub', h:'#nova-feature'},
+                {l:'Pricing', h:'/auth'},
+              ].map(({l,h})=>(
+                <a key={l} href={h} style={{ color:'#8b949e', textDecoration:'none' }}>{l}</a>
+              ))}
           </div>
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
             <a href="/auth" style={{ color:'#8b949e', fontSize:13, textDecoration:'none' }}>Sign in</a>
@@ -425,9 +430,33 @@ export default function LandingPage() {
       {/* ── Footer CTA ── */}
       <section style={{ background:'#161b22', borderTop:'1px solid #21262d', padding:'80px 16px', textAlign:'center' }}>
         <h2 style={{ fontSize:'clamp(24px,4vw,40px)', fontWeight:700, marginBottom:16 }}>Ready to study smarter?</h2>
-        <p style={{ color:'#8b949e', fontSize:16, marginBottom:32 }}>Join thousands of students and teachers already using Flashfo.</p>
+        <p style={{ color:'#8b949e', fontSize:16, marginBottom:32 }}>Join students and teachers already using Flashfo.</p>
         <a href="/auth?mode=signup" style={{ background:'#2563eb', color:'#fff', fontSize:15, fontWeight:600, padding:'14px 28px', borderRadius:10, textDecoration:'none' }}>Get started free →</a>
       </section>
+
+      {/* ── Footer ── */}
+      <footer style={{ borderTop:'1px solid #21262d', padding:'40px 24px', textAlign:'center' }}>
+        <div style={{ maxWidth:700, margin:'0 auto' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginBottom:20 }}>
+            <div style={{ width:28, height:28, background:'#2563eb', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <span style={{ fontSize:15, fontWeight:700, color:'#e6edf3' }}>Flashfo</span>
+          </div>
+          <div style={{ display:'flex', gap:24, justifyContent:'center', marginBottom:20, flexWrap:'wrap' }}>
+            {[
+              {l:'Privacy Policy', h:'/privacy'},
+              {l:'Terms of Service', h:'/terms'},
+              {l:'Contact', h:'mailto:hello@flashfo.com'},
+              {l:'Sign up free', h:'/auth?mode=signup'},
+            ].map(({l,h})=>(
+              <a key={l} href={h} style={{ fontSize:13, color:'#8b949e', textDecoration:'none' }}>{l}</a>
+            ))}
+          </div>
+          <p style={{ fontSize:12, color:'#484f58' }}>© {new Date().getFullYear()} Flashfo. Built for students and teachers.</p>
+        </div>
+      </footer>
+
 
     </div>
   )
