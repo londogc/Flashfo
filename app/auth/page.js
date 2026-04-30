@@ -102,13 +102,7 @@ function AuthPageInner() {
 
   return (
     <div style={{ minHeight:'100dvh', background:'#080c14', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px 16px', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
-      <style>{`
-        @keyframes auth-spin { to { transform: rotate(360deg); } }
-        @keyframes auth-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
-        @keyframes auth-fadein { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        .auth-input:focus { border-color: #3b82f6 !important; outline: none; }
-        @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
-      `}</style>
+      <style dangerouslySetInnerHTML={{__html:'@keyframes auth-spin{to{transform:rotate(360deg)}}@keyframes auth-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}@keyframes auth-fadein{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}.auth-input:focus{border-color:#3b82f6!important;outline:none}@media(prefers-reduced-motion:reduce){*{animation:none!important}}'}}/>
 
       <div style={{ width:'100%', maxWidth:420, animation:'auth-fadein 0.4s ease both' }}>
 
@@ -143,7 +137,7 @@ function AuthPageInner() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={e=>{e.preventDefault();handleSubmit(e)}}>
 
             {/* Name field — signup only */}
             {mode === 'signup' && (
