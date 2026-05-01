@@ -1,51 +1,86 @@
 import Stripe from 'stripe'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2024-04-10' })
+export const runtime = 'nodejs'
 
-export const PLANS = {
-  free: { name: 'Free', price: 0 },
-  pro:  { name: 'Pro',  price: 999,  stripePriceId: process.env.STRIPE_PRO_PRICE_ID  || '' },
-  team: { name: 'Team', price: 2999, stripePriceId: process.env.STRIPE_TEAM_PRICE_ID || '' },
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+
+const PRICE_TO_PLAN = {
+  'price_1TS69gLu7zMVJuloo7S44sow': 'student_pro',
+  'price_1TS6BtLu7zMVJuloFSLuTJou': 'student_pro',
+  'price_1TS6DHLu7zMVJuloSHQ9zT1c': 'teacher_pro',
+  'price_1TS6E6Lu7zMVJuloQJP7uNz2': 'teacher_pro',
+  'price_1TS6FOLu7zMVJulorLTheTxO': 'school',
 }
 
-export async function POST(request) {
-  const sig = request.headers.get('stripe-signature')
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+async function updatePlan(userId, plan) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+  const { error } = await supabase
+    .from('profiles')
+    .update({ plan, plan_updated_at: new Date().toISOString() })
+    .eq('id', userId)
+    .eq('lifetime_granted', false) // Never overwrite lifetime users
+  if (error) console.error('Supabase update error:', error)
+}
+
+export async function POST(req) {
+  const body = await req.text()
+  const sig  = req.headers.get('stripe-signature')
+
   let event
   try {
-    const body = await request.text()
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
+    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
   } catch (err) {
-    return Response.json({ error: 'Webhook signature verification failed' }, { status: 400 })
+    console.error('Webhook signature error:', err.message)
+    return new Response('Webhook error: ' + err.message, { status: 400 })
   }
+
   try {
     switch (event.type) {
+
       case 'checkout.session.completed': {
         const session = event.data.object
-        const userId = session.metadata?.userId
-        const plan = session.metadata?.plan || 'pro'
-        if (userId) {
-          await supabase.from('profiles').update({
-            plan,
-            stripe_customer_id: session.customer,
-            stripe_subscription_id: session.subscription,
-          }).eq('id', userId)
-        }
+        const userId  = session.client_reference_id || session.metadata?.userId
+        const priceId = session.metadata?.priceId
+        const plan    = PRICE_TO_PLAN[priceId] || session.metadata?.plan
+        if (userId && plan) await updatePlan(userId, plan)
         break
       }
-      case 'customer.subscription.deleted':
+
       case 'customer.subscription.updated': {
-        const sub = event.data.object
-        const isActive = ['active','trialing'].includes(sub.status)
-        await supabase.from('profiles')
-          .update({ plan: isActive ? 'pro' : 'free' })
-          .eq('stripe_customer_id', sub.customer)
+        const sub     = event.data.object
+        const userId  = sub.metadata?.userId
+        const priceId = sub.items?.data?.[0]?.price?.id
+        const plan    = PRICE_TO_PLAN[priceId]
+        if (userId && plan) await updatePlan(userId, plan)
         break
       }
+
+      case 'customer.subscription.deleted': {
+        // Subscription cancelled — downgrade to free
+        const sub    = event.data.object
+        const userId = sub.metadata?.userId
+        if (userId) await updatePlan(userId, 'free')
+        break
+      }
+
+      case 'invoice.payment_failed': {
+        // Payment failed — keep plan for now, Stripe will retry
+        // You could add a grace period here if needed
+        console.warn('Payment failed for subscription:', event.data.object.subscription)
+        break
+      }
+
+      default:
+        console.log('Unhandled event type:', event.type)
     }
-    return Response.json({ received: true })
   } catch (err) {
-    return Response.json({ error: 'Webhook handler failed' }, { status: 500 })
+    console.error('Webhook handler error:', err)
+    return new Response('Handler error', { status: 500 })
   }
+
+  return new Response('OK', { status: 200 })
 }
