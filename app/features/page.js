@@ -19,7 +19,6 @@ export default function FeaturesPage() {
     {label:'Features',href:'/features'},
     {label:'For Teachers',href:'/for-teachers'},
     {label:'Pricing',href:'/pricing'},
-    {label:"What's new",href:'/whats-new'},
   ]
 
   const S = {
@@ -44,14 +43,14 @@ export default function FeaturesPage() {
           </div>
           <span style={{fontSize:15,fontWeight:700,color:'#e6edf3'}}>Flashfo</span>
         </a>
-        <div style={{display:'flex',gap:22,marginLeft:16}}>
+        <div style={{display:'flex',gap:22,flex:1,justifyContent:'center'}}>
           {NAV_LINKS.map(({label,href})=>(
             <a key={label} href={href} style={{fontSize:13,color:href==='/features'?'#3b82f6':'#8b949e',fontWeight:href==='/features'?600:400,textDecoration:'none',borderBottom:href==='/features'?'2px solid #3b82f6':'none',paddingBottom:2}}>
               {label}
             </a>
           ))}
         </div>
-        <a href="/auth?mode=signup" style={{marginLeft:'auto',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:700,padding:'8px 18px',cursor:'pointer',textDecoration:'none',letterSpacing:'-.01em'}}>
+        <a href="/auth?mode=signup" style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:700,padding:'8px 18px',cursor:'pointer',textDecoration:'none',letterSpacing:'-.01em'}}>
           Sign up free →
         </a>
       </nav>
@@ -59,8 +58,7 @@ export default function FeaturesPage() {
       {/* HERO */}
       <div style={{padding:'64px 24px 40px',textAlign:'center',maxWidth:760,margin:'0 auto'}}>
         <div style={{display:'inline-flex',alignItems:'center',gap:6,borderRadius:20,padding:'4px 12px',fontSize:11,fontWeight:700,letterSpacing:'.05em',background:'rgba(167,139,250,.08)',border:'1px solid rgba(167,139,250,.2)',color:'#a78bfa',marginBottom:18}}>
-          <div className="nova-pulse" style={{width:7,height:7,borderRadius:'50%',background:'#a78bfa'}}/>
-          NOVA AI · STUDENT FEATURES
+          FLASHFO - STUDENT FEATURES
         </div>
         <h1 style={{fontSize:46,fontWeight:800,letterSpacing:'-.03em',lineHeight:1.1,marginBottom:16}}>
           Every study tool you need.<br/>
@@ -232,7 +230,7 @@ export default function FeaturesPage() {
       {/* FEATURE 4: NOVA TUTOR */}
       <div style={{background:'#161b22',borderTop:'1px solid #21262d',borderBottom:'1px solid #21262d',padding:'56px 24px'}}>
         <div style={{maxWidth:900,margin:'0 auto',textAlign:'center'}}>
-          <div style={S.badge('167,139,250')}>NOVA AI TUTOR</div>
+          <div style={S.badge('167,139,250')}>MEET NOVA</div>
           <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Ask Nova anything. Get it explained your way.</h2>
           <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:32,maxWidth:540,margin:'0 auto 32px'}}>Stuck on a concept? Nova explains it step by step, in plain English, with examples tailored to your level — available any time, for any subject.</p>
           <div style={{maxWidth:560,margin:'0 auto',background:'#0d1117',border:'1px solid #21262d',borderRadius:14,overflow:'hidden'}}>
@@ -240,7 +238,7 @@ export default function FeaturesPage() {
               <div style={{width:26,height:26,borderRadius:8,background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center'}}>
                 <svg width="11" height="11" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
               </div>
-              <span style={{fontSize:13,fontWeight:600,color:'#e6edf3'}}>Nova AI Tutor</span>
+              <span style={{fontSize:13,fontWeight:600,color:'#e6edf3'}}>Nova</span>
               <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:5}}>
                 <div style={{width:6,height:6,borderRadius:'50%',background:'#34d399'}}/>
                 <span style={{fontSize:11,color:'#34d399'}}>Online</span>
@@ -251,8 +249,12 @@ export default function FeaturesPage() {
                 Can you explain osmosis? I keep mixing it up with diffusion.
               </div>
               <div style={{display:'flex',gap:8,alignItems:'flex-start'}}>
-                <div style={{width:26,height:26,borderRadius:8,background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  <svg width="11" height="11" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
+                <div style={{width:26,height:26,borderRadius:'50%',background:'#161b22',border:'1px solid #30363d',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="#a78bfa" strokeWidth="1.2"/>
+                    <circle cx="12" cy="12" r="6" stroke="#a78bfa" strokeWidth="1.2"/>
+                    <circle cx="12" cy="12" r="2" fill="#a78bfa"/>
+                  </svg>
                 </div>
                 <div style={{background:'#161b22',border:'1px solid #21262d',borderRadius:'2px 12px 12px 12px',padding:'12px 14px',fontSize:12,color:'#8b949e',lineHeight:1.7,maxWidth:'85%',textAlign:'left'}}>
                   Great question — this trips up a lot of people!<br/><br/>
@@ -296,7 +298,6 @@ export default function FeaturesPage() {
           <button onClick={()=>router.push('/auth?mode=signup')} style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:10,fontSize:15,fontWeight:700,cursor:'pointer',padding:'14px 36px',letterSpacing:'-.01em'}}>
             Start 3-day free trial →
           </button>
-          <div style={{fontSize:12,color:'#484f58',marginTop:12}}>15 free generations/month on the free plan · No credit card needed</div>
         </div>
       </div>
     </div>
