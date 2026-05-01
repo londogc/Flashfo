@@ -49,7 +49,7 @@ const PLANS = [
       'Curriculum planner',
       'Student performance analytics',
       'Student Portal',
-      'Nova AI lesson planning',
+      'Nova AI Lesson Builder',
     ],
   },
   {
