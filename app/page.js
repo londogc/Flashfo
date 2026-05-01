@@ -356,7 +356,7 @@ export default function LandingPage() {
                 {l:'Features', h:'#live-quiz'},
                 {l:'For Teachers', h:'#nova-demo'},
                 {l:'Resource Hub', h:'#nova-feature'},
-                {l:'Pricing', h:'/auth'},
+                {l:'Pricing', h:'/pricing'},
               ].map(({l,h})=>(
                 <a key={l} href={h} style={{ color:'#8b949e', textDecoration:'none' }}>{l}</a>
               ))}
