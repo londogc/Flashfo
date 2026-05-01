@@ -18,6 +18,7 @@ export default function FeaturesPage() {
     {label:'Home',href:'/'},
     {label:'Features',href:'/features'},
     {label:'For Teachers',href:'/for-teachers'},
+    {label:'For Parents',href:'/for-parents'},
     {label:'Pricing',href:'/pricing'},
   ]
 
