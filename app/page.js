@@ -355,7 +355,7 @@ export default function LandingPage() {
             {[
                 {l:'Features', h:'/features'},
                 {l:'For Teachers', h:'/for-teachers'},
-                {l:"What's new", h:'/whats-new'},
+                {l:'For Parents', h:'/for-parents'},
                 {l:'Pricing', h:'/pricing'},
               ].map(({l,h})=>(
                 <a key={l} href={h} style={{ color:'#8b949e', textDecoration:'none' }}>{l}</a>
