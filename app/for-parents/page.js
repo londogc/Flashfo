@@ -105,10 +105,10 @@ export default function ForParentsPage() {
           <div>
             <div style={S.badge('96,165,250')}>HOMEWORK HELP</div>
             <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Stuck on homework? Nova explains it step by step.</h2>
-            <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Your child types in the question or topic they're struggling with. Nova doesn't just give the answer — it walks through the reasoning so they actually understand and can do it again next time.</p>
+            <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Your child types in the question or topic they are struggling with. Nova does not just give the answer — it walks through the reasoning so they actually understand and can do it again next time.</p>
             <div style={S.tick}><div style={S.tickDot('96,165,250')}><CheckIcon col="96,165,250"/></div>Works for math, science, history, English, and more</div>
             <div style={S.tick}><div style={S.tickDot('96,165,250')}><CheckIcon col="96,165,250"/></div>Explains at the right level — not too simple, not over their head</div>
-            <div style={S.tick}><div style={S.tickDot('96,165,250')}><CheckIcon col="96,165,250"/></div>Available at 10pm when you're exhausted and they're panicking</div>
+            <div style={S.tick}><div style={S.tickDot('96,165,250')}><CheckIcon col="96,165,250"/></div>Available at 10pm when you are exhausted and they are panicking</div>
             <div style={S.tick}><div style={S.tickDot('96,165,250')}><CheckIcon col="96,165,250"/></div>No judgment, infinite patience — asking again gets the same quality answer</div>
           </div>
           <div style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,overflow:'hidden'}}>
@@ -128,7 +128,7 @@ export default function ForParentsPage() {
             </div>
             <div style={{padding:14,display:'flex',flexDirection:'column',gap:10}}>
               <div style={{alignSelf:'flex-end',background:'#21262d',borderRadius:'12px 12px 2px 12px',padding:'10px 14px',fontSize:12,color:'#e6edf3',maxWidth:'80%'}}>
-                I don't get how to find the area of a triangle. My homework is due tomorrow
+                I do not get how to find the area of a triangle. My homework is due tomorrow
               </div>
               <div style={{display:'flex',gap:8,alignItems:'flex-start'}}>
                 <div style={{width:22,height:22,borderRadius:'50%',background:'#161b22',border:'1px solid #30363d',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
@@ -179,7 +179,7 @@ export default function ForParentsPage() {
           <div>
             <div style={S.badge('167,139,250')}>REVISION MATERIALS</div>
             <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>A full revision kit, built in seconds</h2>
-            <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Your child tells Nova what they're revising for — a test, an exam, a class topic — and Nova builds a complete set of flashcards, a quiz, and a study guide instantly. No prep needed from you.</p>
+            <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Your child tells Nova what they are revising for — a test, an exam, a class topic — and Nova builds a complete set of flashcards, a quiz, and a study guide instantly. No prep needed from you.</p>
             <div style={S.tick}><div style={S.tickDot('167,139,250')}><CheckIcon col="167,139,250"/></div>Flashcards to memorise key facts and definitions</div>
             <div style={S.tick}><div style={S.tickDot('167,139,250')}><CheckIcon col="167,139,250"/></div>Practice quizzes to test themselves before the real thing</div>
             <div style={S.tick}><div style={S.tickDot('167,139,250')}><CheckIcon col="167,139,250"/></div>Study guides that explain the topic clearly and completely</div>
@@ -193,7 +193,7 @@ export default function ForParentsPage() {
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'center'}}>
           <div>
             <div style={S.badge('52,211,153')}>SMARTER REVISION</div>
-            <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Studying more doesn't mean better grades. Studying right does.</h2>
+            <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Studying more does not mean better grades. Studying right does.</h2>
             <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Flashfo uses spaced repetition — the most evidence-backed revision technique. The cards your child struggles with come back more often. The ones they know fade out. Study time goes exactly where it matters.</p>
             <div style={S.tick}><div style={S.tickDot('52,211,153')}><CheckIcon col="52,211,153"/></div>Proven to improve long-term recall vs re-reading notes</div>
             <div style={S.tick}><div style={S.tickDot('52,211,153')}><CheckIcon col="52,211,153"/></div>Shorter, focused sessions — not hours of aimless revision</div>
@@ -240,8 +240,8 @@ export default function ForParentsPage() {
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
             {[
-              {t:'Explains, doesn't just answer',d:'Nova walks through the reasoning, not just the result. Your child learns how to solve it — not just what the answer is.',c:'#3b82f6'},
-              {t:'Any subject, any level',d:'Primary school times tables to A-level chemistry — Nova adjusts to the right level automatically based on what they're studying.',c:'#a78bfa'},
+              {t:'Explains, does not just answer',d:'Nova walks through the reasoning, not just the result. Your child learns how to solve it — not just what the answer is.',c:'#3b82f6'},
+              {t:'Any subject, any level',d:'Primary school times tables to A-level chemistry — Nova adjusts to the right level automatically based on what they are studying.',c:'#a78bfa'},
               {t:'Focused on education',d:'Flashfo is built specifically for students. Nova stays focused on learning — helping your child study, nothing else.',c:'#34d399'},
             ].map(({t,d,c})=>(
               <div key={t} style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,padding:'18px'}}>
@@ -258,7 +258,7 @@ export default function ForParentsPage() {
       <div style={{padding:'56px 24px',maxWidth:900,margin:'0 auto'}}>
         <div style={{textAlign:'center',marginBottom:28}}>
           <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',color:'#e6edf3',marginBottom:8}}>Simple, honest pricing</h2>
-          <p style={{fontSize:14,color:'#8b949e'}}>Start free. Upgrade when you're ready.</p>
+          <p style={{fontSize:14,color:'#8b949e'}}>Start free. Upgrade when you are ready.</p>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
           {/* Free plan */}
