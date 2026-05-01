@@ -19,7 +19,6 @@ export default function ForTeachersPage() {
     {label:'Features',href:'/features'},
     {label:'For Teachers',href:'/for-teachers'},
     {label:'Pricing',href:'/pricing'},
-    {label:"What's new",href:'/whats-new'},
   ]
 
   const S = {
@@ -43,14 +42,14 @@ export default function ForTeachersPage() {
           </div>
           <span style={{fontSize:15,fontWeight:700,color:'#e6edf3'}}>Flashfo</span>
         </a>
-        <div style={{display:'flex',gap:22,marginLeft:16}}>
+        <div style={{display:'flex',gap:22,flex:1,justifyContent:'center'}}>
           {NAV_LINKS.map(({label,href})=>(
             <a key={label} href={href} style={{fontSize:13,color:href==='/for-teachers'?'#34d399':'#8b949e',fontWeight:href==='/for-teachers'?600:400,textDecoration:'none',borderBottom:href==='/for-teachers'?'2px solid #34d399':'none',paddingBottom:2}}>
               {label}
             </a>
           ))}
         </div>
-        <a href="/auth?mode=signup" style={{marginLeft:'auto',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:700,padding:'8px 18px',cursor:'pointer',textDecoration:'none',letterSpacing:'-.01em'}}>
+        <a href="/auth?mode=signup" style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:700,padding:'8px 18px',cursor:'pointer',textDecoration:'none',letterSpacing:'-.01em'}}>
           Start free trial →
         </a>
       </nav>
@@ -58,8 +57,7 @@ export default function ForTeachersPage() {
       {/* HERO */}
       <div style={{padding:'64px 24px 40px',textAlign:'center',maxWidth:760,margin:'0 auto'}}>
         <div style={{display:'inline-flex',alignItems:'center',gap:6,borderRadius:20,padding:'4px 12px',fontSize:11,fontWeight:700,letterSpacing:'.05em',background:'rgba(52,211,153,.08)',border:'1px solid rgba(52,211,153,.2)',color:'#34d399',marginBottom:18}}>
-          <div className="nova-pulse" style={{width:7,height:7,borderRadius:'50%',background:'#34d399'}}/>
-          NOVA AI · FOR TEACHERS
+          FLASHFO - FOR TEACHERS
         </div>
         <h1 style={{fontSize:46,fontWeight:800,letterSpacing:'-.03em',lineHeight:1.1,marginBottom:16}}>
           Teach smarter.<br/>
@@ -191,7 +189,7 @@ export default function ForTeachersPage() {
             <div style={S.badge('37,99,235')}>LESSON BUILDER</div>
             <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>A complete lesson plan in 30 seconds</h2>
             <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Tell Nova the topic, grade, and duration. Get a fully structured lesson plan with objectives, warm-up, main activity, and assessment — ready to use in class, with zero extra work from you.</p>
-            {['Customisable sections for any teaching style','One click to auto-generate a quiz from the lesson topic','Export as PDF or save to your personal lesson library','Works for any subject and any grade level'].map(t=>(
+            {['Customizable sections for any teaching style','One click to auto-generate a quiz from the lesson topic','Export as PDF or save to your personal lesson library','Works for any subject and any grade level'].map(t=>(
               <div key={t} style={S.tick}>
                 <div style={S.tickDot('37,99,235')}>
                   <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/></svg>
