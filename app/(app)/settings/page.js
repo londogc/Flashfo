@@ -205,9 +205,10 @@ export default function SettingsPage() {
           </div>
           <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-surface text-t3 border border-line">Free</span>
         </div>
-        <button className="w-full h-10 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 1l1.8 5H15l-4.4 3.2 1.7 5.2L8 11.2 3.7 14.4l1.7-5.2L1 6h5.2z"/></svg>
-          Upgrade to Pro — Coming in v6.0
+        <button onClick={()=>router.push('/pricing')}
+          style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 18px', borderRadius:9, border:'none', background:'linear-gradient(90deg,#2563eb,#7c3aed)', color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer', letterSpacing:'-0.01em' }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
+          Upgrade to Pro →
         </button>
       </div>
 
