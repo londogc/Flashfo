@@ -38,6 +38,7 @@ export async function POST(req) {
       success_url: origin + '/dashboard?checkout=success&plan=' + PRICE_TO_PLAN[priceId],
       cancel_url: origin + '/pricing?checkout=cancelled',
       subscription_data: {
+        trial_period_days: 3,
         metadata: { userId, plan: PRICE_TO_PLAN[priceId] },
       },
       allow_promotion_codes: true,
