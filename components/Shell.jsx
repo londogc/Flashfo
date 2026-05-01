@@ -496,24 +496,55 @@ export default function Shell({ children }) {
           }}>
             <div style={{ fontSize:10, color:'#484f58', fontWeight:700, letterSpacing:'.07em', marginBottom:10 }}>MORE TOOLS</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-              {[
-                { href:'/collab-decks', label:'Collab Decks', sub:'Shared decks', icon:'M2 5h9v8H2zM13 3h9v8H13z', col:'#a78bfa' },
-                { href:'/curriculum',   label:'Curriculum',   sub:'Plan your year', icon:'M4 19.5A2.5 2.5 0 016.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z', col:'#34d399' },
-                { href:'/student-portal', label:'Student Portal', sub:'Your classes', icon:'M20 21a8 8 0 10-16 0 M12 4a4 4 0 100 8 4 4 0 000-8z', col:'#f59e0b' },
-                { href:'/lesson-builder', label:'Lesson Builder', sub:'Plan lessons', icon:'M12 20h9 M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z', col:'#3b82f6' },
-              ].map(({href,label,sub,icon,col})=>(
-                <Link key={href} href={href} onClick={()=>setMoreOpen(false)}
-                  style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px',
-                    borderRadius:10, background:'#0d1117', border:'1px solid #21262d', textDecoration:'none' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="1.5" strokeLinecap="round">
-                    {icon.split(' M').map((d,i)=><path key={i} d={(i===0?'':' M')+d}/>)}
-                  </svg>
-                  <div>
-                    <div style={{ fontSize:12, fontWeight:600, color:'#e6edf3' }}>{label}</div>
-                    <div style={{ fontSize:10, color:'#8b949e' }}>{sub}</div>
-                  </div>
-                </Link>
-              ))}
+
+              <Link href="/collab-decks" onClick={()=>setMoreOpen(false)}
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px',
+                  borderRadius:10, background:'#0d1117', border:'1px solid #21262d', textDecoration:'none' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round">
+                  <rect x="2" y="5" width="9" height="8"/><rect x="13" y="3" width="9" height="8"/>
+                </svg>
+                <div>
+                  <div style={{ fontSize:12, fontWeight:600, color:'#e6edf3' }}>Collab Decks</div>
+                  <div style={{ fontSize:10, color:'#8b949e' }}>Shared decks</div>
+                </div>
+              </Link>
+
+              <Link href="/curriculum" onClick={()=>setMoreOpen(false)}
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px',
+                  borderRadius:10, background:'#0d1117', border:'1px solid #21262d', textDecoration:'none' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round">
+                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                </svg>
+                <div>
+                  <div style={{ fontSize:12, fontWeight:600, color:'#e6edf3' }}>Curriculum</div>
+                  <div style={{ fontSize:10, color:'#8b949e' }}>Plan your year</div>
+                </div>
+              </Link>
+
+              <Link href="/student-portal" onClick={()=>setMoreOpen(false)}
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px',
+                  borderRadius:10, background:'#0d1117', border:'1px solid #21262d', textDecoration:'none' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round">
+                  <circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/>
+                </svg>
+                <div>
+                  <div style={{ fontSize:12, fontWeight:600, color:'#e6edf3' }}>Student Portal</div>
+                  <div style={{ fontSize:10, color:'#8b949e' }}>Your classes</div>
+                </div>
+              </Link>
+
+              <Link href="/lesson-builder" onClick={()=>setMoreOpen(false)}
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px',
+                  borderRadius:10, background:'#0d1117', border:'1px solid #21262d', textDecoration:'none' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round">
+                  <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+                <div>
+                  <div style={{ fontSize:12, fontWeight:600, color:'#e6edf3' }}>Lesson Builder</div>
+                  <div style={{ fontSize:10, color:'#8b949e' }}>Plan lessons</div>
+                </div>
+              </Link>
+
             </div>
           </div>
         )}
