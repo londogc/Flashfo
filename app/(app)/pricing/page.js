@@ -24,7 +24,7 @@ const PLANS = [
       'Unlimited AI flashcard generation',
       'Unlimited quizzes & study guides',
       'Unlimited summaries',
-      'Spaced repetition (SM-2)',
+      'Spaced repetition',
       'Progress tracking',
       'Nova AI Tutor',
       'Voice mode',
@@ -69,7 +69,7 @@ const PLANS = [
       'School-wide admin dashboard',
       'Priority support',
       'Billing by invoice available',
-      'Onboarding call included',
+      'Contact us for annual pricing & volume discounts',
     ],
   },
 ]
