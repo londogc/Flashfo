@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
 
 export default function AdminDashboard() {
   const { user, profile } = useAuth()
@@ -27,21 +26,13 @@ export default function AdminDashboard() {
   async function loadData() {
     setLoading(true)
     try {
-      // Load teachers associated with this school admin
-      const { data: teacherData } = await supabase
-        .from('profiles')
-        .select('id, full_name, role, plan, created_at, onboarded')
-        .eq('school_admin_id', user.id)
-        .order('created_at', { ascending: false })
-
-      const { data: authData } = await supabase.auth.admin?.listUsers?.() || { data: null }
-
-      setTeachers(teacherData || [])
-      setStats({
-        teachers: (teacherData||[]).length,
-        students: 0,
-        generations: 0,
+      const res = await fetch('/api/admin/stats', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ adminId: user.id })
       })
+      const d = await res.json()
+      setTeachers(d.teachers || [])
+      setStats({ teachers: d.teacherCount || 0, students: 0, generations: 0 })
     } catch(e) {
       console.error('Admin load error:', e)
     }
@@ -54,12 +45,15 @@ export default function AdminDashboard() {
     try {
       // In production: send invite email via your email provider
       // For now: create a placeholder profile entry or use Supabase inviteUserByEmail
-      const { error } = await supabase.auth.admin?.inviteUserByEmail?.(inviteEmail, {
-        data: { role:'teacher', school_admin_id: user.id, plan:'teacher_pro' }
-      }) || {}
-      if (error) throw error
+      const res = await fetch('/api/admin/invite', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email: inviteEmail.trim(), adminId: user.id })
+      })
+      const d = await res.json()
+      if (!res.ok) throw new Error(d.error)
       setInviteFeedback('Invite sent to '+inviteEmail)
       setInviteEmail('')
+      setTimeout(()=>loadData(), 1500)
     } catch(e) {
       setInviteFeedback('Could not send invite. Please try again.')
     }
