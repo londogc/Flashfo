@@ -355,17 +355,20 @@ export default function LandingPage() {
       {/* ── Nav ── */}
       <style>{`@keyframes lp-spin{to{transform:rotate(360deg)}}@keyframes lp-rock{0%,100%{transform:rotate(-4deg) scale(1)}50%{transform:rotate(4deg) scale(1.08)}}@media(prefers-reduced-motion:reduce){.lp-no-motion *{animation:none!important}}`}</style>
       <nav style={{ position:'sticky',top:0,zIndex:50,background:'rgba(13,17,23,0.92)',backdropFilter:'blur(12px)',borderBottom:'1px solid #21262d' }}>
+        {/* ── Top bar ── */}
         <div style={{ maxWidth:1200,margin:'0 auto',padding:'0 16px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between' }}>
+          {/* Logo */}
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             <div style={{ position:'relative', width:36, height:36, flexShrink:0 }}>
                 <div style={{ position:'absolute', inset:-3, borderRadius:12, background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)', animation:'lp-spin 3s linear infinite' }}/>
                 <div style={{ position:'absolute', inset:2, borderRadius:9, background:'#0d1117', display:'flex', alignItems:'center', justifyContent:'center' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="#3b82f6"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 </div>
-              </div>
+            </div>
             <span style={{ fontWeight:600, fontSize:16 }}>Flashfo</span>
           </div>
-          <div className="lp-nav-links" style={{ display:'flex', gap:28, fontSize:13 }}>
+          {/* Desktop nav links */}
+          <div className="lp-nav-links" style={{ display:'flex', gap:28, fontSize:13, alignItems:'center' }}>
             {[
                 {l:'Features', h:'/features'},
                 {l:'For Teachers', h:'/for-teachers'},
@@ -375,10 +378,11 @@ export default function LandingPage() {
                 <a key={l} href={h} style={{ color:'#8b949e', textDecoration:'none' }}>{l}</a>
               ))}
           </div>
-          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          {/* Desktop sign in / sign up */}
+          <div className="lp-desktop-btns" style={{ display:'flex', gap:8, alignItems:'center' }}>
             <a href="/auth?mode=signup" style={{ color:'#8b949e', fontSize:13, textDecoration:'none' }}>Sign in</a>
             <a href="/auth?mode=signup" style={{ background:'#2563eb', color:'#fff', fontSize:13, fontWeight:500, padding:'7px 14px', borderRadius:8, textDecoration:'none' }}>Sign up today</a>
-
+          </div>
           {/* Hamburger — mobile only */}
           <button className="lp-hamburger" onClick={()=>setMobileMenuOpen(o=>!o)} aria-label="Menu">
             <span className="lp-hb-line" style={{transform:mobileMenuOpen?'rotate(45deg) translateY(7px)':'none'}}/>
@@ -397,8 +401,6 @@ export default function LandingPage() {
             <a className="lp-mobile-signup" href="/auth?mode=signup">Sign up free →</a>
           </div>
         )}
-        </div>
-      </div>
       </nav>
 
       {/* ── Hero ── */}
