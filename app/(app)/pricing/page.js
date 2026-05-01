@@ -134,6 +134,10 @@ export default function PricingPage() {
           </span>
         </div>
 
+        <div style={{ textAlign:'center', fontSize:13, color:'#34d399', marginBottom:32, fontWeight:600 }}>
+          ✦ All paid plans include a 3-day free trial — no charge until day 4
+        </div>
+
         {/* Cards */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:20, alignItems:'start' }}>
           {PLANS.map(plan => {
@@ -192,7 +196,7 @@ export default function PricingPage() {
                   {loading === plan.id ? 'Redirecting to Stripe...' :
                    currentPlan === 'lifetime' ? 'Lifetime access ✦' :
                    isCurrent ? 'Current plan' :
-                   'Get ' + plan.name + ' →'}
+                   'Start 3-day free trial →'}
                 </button>
 
                 {/* Features */}
