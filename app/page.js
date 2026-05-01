@@ -397,6 +397,8 @@ export default function LandingPage() {
             <a className="lp-mobile-signup" href="/auth?mode=signup">Sign up free →</a>
           </div>
         )}
+        </div>
+      </div>
       </nav>
 
       {/* ── Hero ── */}
