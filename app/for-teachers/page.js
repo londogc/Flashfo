@@ -34,30 +34,54 @@ export default function ForTeachersPage() {
 
   return (
     <div style={S.page}>
-      <nav style={{background:'#0d1117',borderBottom:'1px solid #21262d',padding:'12px 24px',display:'flex',alignItems:'center',gap:24,position:'sticky',top:0,zIndex:50}}>
-        <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none'}}>
-          <div style={{position:'relative',width:30,height:30,flexShrink:0}}>
-            <div style={{position:'absolute',inset:-3,borderRadius:11,background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)',animation:'nav-spin 3s linear infinite'}}/>
-            <div style={{position:'absolute',inset:2,background:'#0d1117',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <svg width="12" height="12" viewBox="0 0 14 14" fill="#3b82f6"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
+      <>
+        <style>{`
+          @media(max-width:768px){
+            .spnl{display:none!important}
+            .spcta{display:none!important}
+            .sphb{display:flex!important}
+          }
+          .spnl{display:flex}
+          .spcta{display:inline-flex}
+          .sphb{display:none;flex-direction:column;gap:5px;cursor:pointer;background:transparent;border:none;padding:6px;outline:none}
+          .sphb-line{width:20px;height:2px;background:#8b949e;border-radius:1px;transition:transform .2s,opacity .2s;display:block}
+          .spdrop{background:#0d1117;border-bottom:1px solid #21262d;position:sticky;top:56px;z-index:49}
+          .spdrop-link{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #21262d;font-size:15px;color:#e6edf3;text-decoration:none;font-weight:500}
+          .spdrop-cta{display:block;margin:12px 16px 16px;padding:13px 0;text-align:center;background:linear-gradient(90deg,#2563eb,#7c3aed);color:#fff;font-size:15px;font-weight:700;border-radius:9px;text-decoration:none}
+        `}</style>
+        <nav style={{background:'#0d1117',borderBottom:'1px solid #21262d',padding:'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:56,position:'sticky',top:0,zIndex:50}}>
+          <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',flexShrink:0}}>
+            <div style={{position:'relative',width:28,height:28}}>
+              <div style={{position:'absolute',top:-2,left:-2,right:-2,bottom:-2,borderRadius:9,background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)',animation:'nav-spin 3s linear infinite'}}/>
+              <div style={{position:'absolute',top:2,left:2,right:2,bottom:2,background:'#0d1117',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="#3b82f6"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
+              </div>
             </div>
+            <span style={{fontSize:15,fontWeight:700,color:'#e6edf3'}}>Flashfo</span>
+          </a>
+          <div className="spnl" style={{gap:22,alignItems:'center',flex:1,justifyContent:'center'}}>
+            {[{l:'Home',h:'/'},{l:'Features',h:'/features'},{l:'For Teachers',h:'/for-teachers'},{l:'For Parents',h:'/for-parents'},{l:'Pricing',h:'/pricing'}].map(({l,h})=>(
+              <a key={l} href={h} style={{fontSize:13,color:h==='/for-teachers'?'#34d399':'#8b949e',fontWeight:h==='/for-teachers'?600:400,textDecoration:'none',borderBottom:h==='/for-teachers'?'2px solid #34d399':'none',paddingBottom:2}}>{l}</a>
+            ))}
           </div>
-          <span style={{fontSize:15,fontWeight:700,color:'#e6edf3'}}>Flashfo</span>
-        </a>
-        <div className="sp-nav-links" style={{display:'flex',gap:22,flex:1,justifyContent:'center'}}>
-          {NAV_LINKS.map(({label,href})=>(
-            <a key={label} href={href} style={{fontSize:13,color:href==='/for-teachers'?'#34d399':'#8b949e',fontWeight:href==='/for-teachers'?600:400,textDecoration:'none',borderBottom:href==='/for-teachers'?'2px solid #34d399':'none',paddingBottom:2}}>
-              {label}
-            </a>
-          ))}
-        </div>
-        <a href="/auth?mode=signup" style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:700,padding:'8px 18px',cursor:'pointer',textDecoration:'none',letterSpacing:'-.01em'}}>
-          Start free trial →
-        </a>
-      </nav>
-      {menuOpen && (
-        <div className="sp-mobile-menu">
-          <a className="sp-mobile-link" href="/" onClick={()=>setMenuOpen(false)}>Home <span style={{color:'#484f58'}}>›</span></a>
+          <a href="/auth?mode=signup" className="spcta" style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:700,padding:'8px 16px',cursor:'pointer',textDecoration:'none',letterSpacing:'-.01em',flexShrink:0}}>Sign up free →</a>
+          <button className="sphb" onClick={()=>setMenuOpen(o=>!o)} aria-label="Menu">
+            <span className="sphb-line" style={{transform:menuOpen?'rotate(45deg) translateY(7px)':'none'}}/>
+            <span className="sphb-line" style={{opacity:menuOpen?0:1}}/>
+            <span className="sphb-line" style={{transform:menuOpen?'rotate(-45deg) translateY(-7px)':'none'}}/>
+          </button>
+        </nav>
+        {menuOpen && (
+          <div className="spdrop">
+            <a className="spdrop-link" href="/" onClick={()=>setMenuOpen(false)}>Home <span style={{color:'#484f58'}}>›</span></a>
+            <a className="spdrop-link" href="/features" onClick={()=>setMenuOpen(false)}>Features <span style={{color:'#484f58'}}>›</span></a>
+            <a className="spdrop-link" href="/for-teachers" onClick={()=>setMenuOpen(false)}>For Teachers <span style={{color:'#484f58'}}>›</span></a>
+            <a className="spdrop-link" href="/for-parents" onClick={()=>setMenuOpen(false)}>For Parents <span style={{color:'#484f58'}}>›</span></a>
+            <a className="spdrop-link" href="/pricing" onClick={()=>setMenuOpen(false)}>Pricing <span style={{color:'#484f58'}}>›</span></a>
+            <a className="spdrop-cta" href="/auth?mode=signup">Sign up free →</a>
+          </div>
+        )}
+      </>>Home <span style={{color:'#484f58'}}>›</span></a>
           <a className="sp-mobile-link" href="/features" onClick={()=>setMenuOpen(false)}>Features <span style={{color:'#484f58'}}>›</span></a>
           <a className="sp-mobile-link" href="/for-teachers" onClick={()=>setMenuOpen(false)}>For Teachers <span style={{color:'#484f58'}}>›</span></a>
           <a className="sp-mobile-link" href="/for-parents" onClick={()=>setMenuOpen(false)}>For Parents <span style={{color:'#484f58'}}>›</span></a>
