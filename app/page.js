@@ -36,7 +36,6 @@ const QUIZ = {
 
 function ProductDemo() {
   const [topicIdx, setTopicIdx] = useState(0)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [phase, setPhase] = useState(0)
   const [typed, setTyped] = useState('')
   const [visibleCards, setVisibleCards] = useState(0)
@@ -322,24 +321,19 @@ function LiveQuizDemo() {
       <style>{`
         @keyframes livepulse{0%,100%{box-shadow:0 0 0 3px rgba(239,68,68,0.3)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
       
-        @media (max-width:768px){
-          .lp-nav-links{display:none!important}
-          .lp-desktop-btns{display:none!important}
-          .lp-hamburger{display:flex!important}
-          .lp-mobile-menu{display:block!important}
-        }
-        .lp-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;background:transparent;border:none;}
-        .lp-hb-line{width:20px;height:2px;background:#8b949e;border-radius:1px;transition:all 0.2s;}
-        .lp-mobile-menu{display:none;background:#0d1117;border-bottom:1px solid #21262d;}
-        .lp-mobile-link{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #21262d;font-size:14px;color:#e6edf3;text-decoration:none;font-weight:500;}
-        .lp-mobile-link:last-child{border-bottom:none;}
-        .lp-mobile-link:active{background:#161b22;}
-        .lp-mobile-signup{margin:12px 16px 16px;display:block;text-align:center;background:linear-gradient(90deg,#2563eb,#7c3aed);color:#fff;font-size:14px;font-weight:700;padding:11px 0;border-radius:9px;text-decoration:none;letter-spacing:-.01em;}`}</style>
+        @media(max-width:768px){.lp-nav-links{display:none!important}.lp-desktop-btns{display:none!important}.lp-hamburger{display:flex!important}}
+        .lp-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;background:transparent;border:none;outline:none;}
+        .lp-hb{width:20px;height:2px;background:#8b949e;border-radius:1px;transition:transform 0.2s,opacity 0.2s;}
+        .lp-mobile-menu{background:#0d1117;border-bottom:1px solid #21262d;}
+        .lp-mobile-link{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid #21262d;font-size:14px;color:#e6edf3;text-decoration:none;font-weight:500;}
+        .lp-mobile-link:last-of-type{border-bottom:none;}
+        .lp-mobile-cta{display:block;margin:12px 16px 16px;padding:12px 0;text-align:center;background:linear-gradient(90deg,#2563eb,#7c3aed);color:#fff;font-size:14px;font-weight:700;border-radius:9px;text-decoration:none;}`}</style>
     </div>
   )
 }
 
 export default function LandingPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user, loading } = useAuth()
   const router = useRouter()
 
@@ -349,57 +343,47 @@ export default function LandingPage() {
 
   if (loading) return <div style={{ background:'#0d1117', minHeight:'100dvh' }}/>
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   return (
     <div style={{ background:'#0d1117', minHeight:'100dvh', color:'#e6edf3', fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
 
       {/* ── Nav ── */}
       <style>{`@keyframes lp-spin{to{transform:rotate(360deg)}}@keyframes lp-rock{0%,100%{transform:rotate(-4deg) scale(1)}50%{transform:rotate(4deg) scale(1.08)}}@media(prefers-reduced-motion:reduce){.lp-no-motion *{animation:none!important}}`}</style>
       <nav style={{ position:'sticky',top:0,zIndex:50,background:'rgba(13,17,23,0.92)',backdropFilter:'blur(12px)',borderBottom:'1px solid #21262d' }}>
-        {/* ── Top bar ── */}
         <div style={{ maxWidth:1200,margin:'0 auto',padding:'0 16px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between' }}>
-          {/* Logo */}
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             <div style={{ position:'relative', width:36, height:36, flexShrink:0 }}>
-                <div style={{ position:'absolute', inset:-3, borderRadius:12, background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)', animation:'lp-spin 3s linear infinite' }}/>
-                <div style={{ position:'absolute', inset:2, borderRadius:9, background:'#0d1117', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#3b82f6"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                </div>
+              <div style={{ position:'absolute', inset:-3, borderRadius:12, background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)', animation:'lp-spin 3s linear infinite' }}/>
+              <div style={{ position:'absolute', inset:2, borderRadius:9, background:'#0d1117', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#3b82f6"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
             </div>
             <span style={{ fontWeight:600, fontSize:16 }}>Flashfo</span>
           </div>
-          {/* Desktop nav links */}
-          <div className="lp-nav-links" style={{ display:'flex', gap:28, fontSize:13, alignItems:'center' }}>
+          <div className="lp-nav-links" style={{ display:'flex', gap:24, fontSize:13, alignItems:'center' }}>
             {[
-                {l:'Features', h:'/features'},
-                {l:'For Teachers', h:'/for-teachers'},
-                {l:'For Parents', h:'/for-parents'},
-                {l:'Pricing', h:'/pricing'},
-              ].map(({l,h})=>(
-                <a key={l} href={h} style={{ color:'#8b949e', textDecoration:'none' }}>{l}</a>
-              ))}
+              {l:'Features', h:'/features'},
+              {l:'For Teachers', h:'/for-teachers'},
+              {l:'For Parents', h:'/for-parents'},
+              {l:'Pricing', h:'/pricing'},
+            ].map(({l,h})=>( <a key={l} href={h} style={{ color:'#8b949e', textDecoration:'none' }}>{l}</a> ))}
           </div>
-          {/* Desktop sign in / sign up */}
           <div className="lp-desktop-btns" style={{ display:'flex', gap:8, alignItems:'center' }}>
             <a href="/auth?mode=signup" style={{ color:'#8b949e', fontSize:13, textDecoration:'none' }}>Sign in</a>
             <a href="/auth?mode=signup" style={{ background:'#2563eb', color:'#fff', fontSize:13, fontWeight:500, padding:'7px 14px', borderRadius:8, textDecoration:'none' }}>Sign up today</a>
           </div>
-          {/* Hamburger — mobile only */}
-          <button className="lp-hamburger" onClick={()=>setMobileMenuOpen(o=>!o)} aria-label="Menu">
-            <span className="lp-hb-line" style={{transform:mobileMenuOpen?'rotate(45deg) translateY(7px)':'none'}}/>
-            <span className="lp-hb-line" style={{opacity:mobileMenuOpen?0:1}}/>
-            <span className="lp-hb-line" style={{transform:mobileMenuOpen?'rotate(-45deg) translateY(-7px)':'none'}}/>
+          <button className="lp-hamburger" onClick={()=>setMobileMenuOpen(o=>!o)} aria-label="Open menu">
+            <span className="lp-hb" style={{transform:mobileMenuOpen?'rotate(45deg) translateY(7px)':'none'}}/>
+            <span className="lp-hb" style={{opacity:mobileMenuOpen?0:1}}/>
+            <span className="lp-hb" style={{transform:mobileMenuOpen?'rotate(-45deg) translateY(-7px)':'none'}}/>
           </button>
         </div>
-        {/* Mobile drawer */}
         {mobileMenuOpen && (
           <div className="lp-mobile-menu">
             <a className="lp-mobile-link" href="/features" onClick={()=>setMobileMenuOpen(false)}>Features <span style={{color:'#484f58'}}>›</span></a>
             <a className="lp-mobile-link" href="/for-teachers" onClick={()=>setMobileMenuOpen(false)}>For Teachers <span style={{color:'#484f58'}}>›</span></a>
             <a className="lp-mobile-link" href="/for-parents" onClick={()=>setMobileMenuOpen(false)}>For Parents <span style={{color:'#484f58'}}>›</span></a>
             <a className="lp-mobile-link" href="/pricing" onClick={()=>setMobileMenuOpen(false)}>Pricing <span style={{color:'#484f58'}}>›</span></a>
-            <a className="lp-mobile-link" href="/whats-new" onClick={()=>setMobileMenuOpen(false)}>{"What's new"} <span style={{color:'#484f58'}}>›</span></a>
-            <a className="lp-mobile-signup" href="/auth?mode=signup">Sign up free →</a>
+            <a className="lp-mobile-cta" href="/auth?mode=signup">Sign up free →</a>
           </div>
         )}
       </nav>
