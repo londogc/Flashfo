@@ -57,6 +57,9 @@ const NAV = [
   { href:'/my-stuff',       label:'My Stuff',      icon:'mystuff',    minPlan:'student'  },
   { href:'/curriculum',     label:'Curriculum',    icon:'curriculum', minPlan:'teacher'  },
   { href:'/collab-decks',   label:'Collab Decks',  icon:'collab',     minPlan:'school'   },
+  { href:'/my-progress',    label:'My Progress',   icon:'progress',   minPlan:'student'  },
+  { href:'/study-together',  label:'Study Together', icon:'together',   minPlan:'student'  },
+  { href:'/import',          label:'Import',         icon:'import',     minPlan:'student'  },
 ]
 
 function NavItem({ item, collapsed, active, userPlan }) {
@@ -563,6 +566,60 @@ export default function Shell({ children }) {
                   <div style={{fontSize:10,color:'#8b949e'}}>Plan lessons</div>
                 </div>
               </Link>
+            {canAccess(profile?.plan, 'student') ? (
+              <Link href="/my-progress" onClick={()=>setMoreOpen(false)}
+                style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,background:'#0d1117',border:'1px solid rgba(37,99,235,.15)',textDecoration:'none'}}>
+                <div style={{width:32,height:32,borderRadius:8,background:'rgba(37,99,235,.1)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <I d="M2 13V7h3v6zm4 0V4h3v9zm4 0V9h3v4z" s={14}/>
+                </div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#e6edf3'}}>Weakness Heatmap</div><div style={{fontSize:10,color:'#8b949e'}}>See your weakest topics</div></div>
+              </Link>
+            ) : null}
+            {canAccess(profile?.plan, 'student') ? (
+              <Link href="/study-together" onClick={()=>setMoreOpen(false)}
+                style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,background:'#0d1117',border:'1px solid rgba(37,99,235,.15)',textDecoration:'none'}}>
+                <div style={{width:32,height:32,borderRadius:8,background:'rgba(37,99,235,.1)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <I d="M5 7a3 3 0 100-6 3 3 0 000 6zm6 0a3 3 0 100-6 3 3 0 000 6zM1 15c0-2.2 1.8-4 4-4m10 4c0-2.2-1.8-4-4-4m-2 4c0-2.2-1.3-4-3-4s-3 1.8-3 4" s={14}/>
+                </div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#e6edf3'}}>Study With a Friend</div><div style={{fontSize:10,color:'#8b949e'}}>Live 2-player flashcards</div></div>
+              </Link>
+            ) : null}
+            {canAccess(profile?.plan, 'student') ? (
+              <Link href="/import" onClick={()=>setMoreOpen(false)}
+                style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,background:'#0d1117',border:'1px solid rgba(37,99,235,.15)',textDecoration:'none'}}>
+                <div style={{width:32,height:32,borderRadius:8,background:'rgba(37,99,235,.1)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <I d="M8 1v8m-3-3l3 3 3-3M1 11v2a2 2 0 002 2h10a2 2 0 002-2v-2" s={14}/>
+                </div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#e6edf3'}}>Import from Anywhere</div><div style={{fontSize:10,color:'#8b949e'}}>URL, text, or topic → deck</div></div>
+              </Link>
+            ) : null}
+            {canAccess(profile?.plan, 'teacher') ? (
+              <Link href="/curriculum-generate" onClick={()=>setMoreOpen(false)}
+                style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,background:'#0d1117',border:'1px solid rgba(37,99,235,.15)',textDecoration:'none'}}>
+                <div style={{width:32,height:32,borderRadius:8,background:'rgba(37,99,235,.1)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <I d="M1 2h6v12H1zm8 0h6v12H9zM3 5h2M3 7h2M3 9h2M10 5h3M10 7h3M10 9h3" s={14}/>
+                </div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#e6edf3'}}>Curriculum Decks</div><div style={{fontSize:10,color:'#8b949e'}}>AP, SAT, ACT aligned</div></div>
+              </Link>
+            ) : null}
+            {canAccess(profile?.plan, 'teacher') ? (
+              <Link href="/teach/insights" onClick={()=>setMoreOpen(false)}
+                style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,background:'#0d1117',border:'1px solid rgba(37,99,235,.15)',textDecoration:'none'}}>
+                <div style={{width:32,height:32,borderRadius:8,background:'rgba(37,99,235,.1)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <I d="M1 12l3-7 3 4 2-6 3 5 3-3" s={14}/>
+                </div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#e6edf3'}}>Class Insights</div><div style={{fontSize:10,color:'#8b949e'}}>Nova post-quiz summaries</div></div>
+              </Link>
+            ) : null}
+            {canAccess(profile?.plan, 'free') ? (
+              <Link href="/parent" onClick={()=>setMoreOpen(false)}
+                style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,background:'#0d1117',border:'1px solid rgba(37,99,235,.15)',textDecoration:'none'}}>
+                <div style={{width:32,height:32,borderRadius:8,background:'rgba(37,99,235,.1)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <I d="M8 1a3 3 0 100 6 3 3 0 000-6zM2 15c0-3.3 2.7-6 6-6s6 2.7 6 6" s={14}/>
+                </div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#e6edf3'}}>Parent Dashboard</div><div style={{fontSize:10,color:'#8b949e'}}>Monitor your child's study</div></div>
+              </Link>
+            ) : null}
             </div>
           </div>
         )}
