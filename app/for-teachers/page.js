@@ -294,7 +294,7 @@ export default function ForTeachersPage() {
           <div className="mg3" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
             {[
               {t:'Assignment builder',d:'Create and assign tasks to your class. Students complete them at their own pace.',c:'#3b82f6'},
-              {t:'Curriculum planner',d:'Map your whole year by subject and term. Stay organised across every class.',c:'#a78bfa'},
+              {t:'Curriculum planner',d:'Map your whole year by subject and term. Stay organized across every class.',c:'#a78bfa'},
               {t:'Student Portal',d:'Students see their assignments, scores, and study materials in one personal view.',c:'#34d399'},
               {t:'Class roster management',d:'Add students, create class codes, and manage your classroom from one screen.',c:'#f59e0b'},
               {t:'AI study material generation',d:'Generate flashcards, quizzes, and guides for your students from any topic.',c:'#3b82f6'},
