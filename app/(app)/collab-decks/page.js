@@ -1,12 +1,10 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
 export default function CollabDecks() {
   const { user, profile, loading: authLoading } = useAuth()
-  const router = useRouter()
   const [decks, setDecks] = useState([])
   const [selected, setSelected] = useState(null)
   const [cards, setCards] = useState([])
@@ -18,10 +16,6 @@ export default function CollabDecks() {
   const [deckName, setDeckName] = useState('')
   const channelRef = useRef(null)
 
-  useEffect(() => {
-    if (!user) { router.push('/auth'); return }
-    loadDecks()
-  }, [user])
 
   useEffect(() => {
     if (!selected) return
@@ -102,6 +96,7 @@ export default function CollabDecks() {
 
   const actionLabel = { added_card: '+ Added', deleted_card: '✕ Deleted', edited_card: '✎ Edited', created_deck: '✦ Created' }
 
+  if (!user) return null
   return (
     <div style={{ display: 'flex', height: '100%', gap: 0 }}>
       {/* Sidebar — deck list */}
