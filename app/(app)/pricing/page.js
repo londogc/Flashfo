@@ -110,6 +110,13 @@ export default function PricingPage() {
 
   return (
     <div style={{ minHeight:'100vh', background:'#0d1117', padding:'60px 20px', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+      <style>{`
+        @media(max-width:768px){
+          .pc-wrap{padding:32px 14px 40px!important}
+          .pc-cards{grid-template-columns:1fr!important;max-width:100%!important}
+          .pc-toggle{margin-bottom:24px!important}
+        }
+      `}</style>
       <div style={{ maxWidth:960, margin:'0 auto' }}>
 
         {/* Header */}
@@ -139,7 +146,7 @@ export default function PricingPage() {
         </div>
 
         {/* Cards */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:20, alignItems:'start' }}>
+        <div className="pc-cards" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:20, alignItems:'start' }}>
           {PLANS.map(plan => {
             const isCurrent = isCurrentPlan(plan.id)
             const showAnnual = billing === 'annual' && plan.annual
