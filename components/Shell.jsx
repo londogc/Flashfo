@@ -32,20 +32,44 @@ const ICONS = {
   collab:     'M2 5h9v8H2zM4 3h9v8H4zM6 7h4M6 9h3M12 1v4M10 2l2-1 2 1',
 }
 
+// Plan hierarchy: free < student < teacher < school < lifetime
+const PLAN_RANK = { free:0, student:1, teacher:2, school:3, lifetime:99 }
+
+function canAccess(userPlan, minPlan) {
+  const plan = userPlan || 'free'
+  const isLifetime = plan === 'lifetime'
+  return isLifetime || (PLAN_RANK[plan] ?? 0) >= (PLAN_RANK[minPlan] ?? 0)
+}
+
 const NAV = [
-  { href:'/dashboard',      label:'Dashboard',     icon:'dashboard' },
-  { href:'/create',         label:'Create',        icon:'create'    },
-  { href:'/study',          label:'Study',         icon:'study'     },
-  { href:'/ai-tutor',       label:'Nova',          icon:'nova', nova:true },
-  { href:'/teach',          label:'Teach',         icon:'teach'     },
-  { href:'/student-portal', label:'Student Portal',icon:'studentp'  },
-  { href:'/my-stuff',       label:'My Stuff',      icon:'mystuff'   },
-  { href:'/curriculum',     label:'Curriculum',    icon:'curriculum'},
-  { href:'/collab-decks',   label:'Collab Decks',  icon:'collab'    },
+  { href:'/dashboard',      label:'Dashboard',     icon:'dashboard',  minPlan:'free'     },
+  { href:'/create',         label:'Create',        icon:'create',     minPlan:'student'  },
+  { href:'/study',          label:'Study',         icon:'study',      minPlan:'student'  },
+  { href:'/ai-tutor',       label:'Nova',          icon:'nova',       minPlan:'student',  nova:true },
+  { href:'/teach',          label:'Teach',         icon:'teach',      minPlan:'teacher'  },
+  { href:'/student-portal', label:'Student Portal',icon:'studentp',   minPlan:'student'  },
+  { href:'/my-stuff',       label:'My Stuff',      icon:'mystuff',    minPlan:'student'  },
+  { href:'/curriculum',     label:'Curriculum',    icon:'curriculum', minPlan:'teacher'  },
+  { href:'/collab-decks',   label:'Collab Decks',  icon:'collab',     minPlan:'school'   },
 ]
 
-function NavItem({ item, collapsed, active }) {
+function NavItem({ item, collapsed, active, userPlan }) {
   const nova = item.nova
+  const locked = !canAccess(userPlan, item.minPlan)
+  if (locked) return (
+    <div title={collapsed ? item.label : undefined}
+      style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 8px',
+        borderRadius:10, color:'#484f58', cursor:'pointer', position:'relative',
+        opacity:0.5 }}
+      onClick={() => {
+        const needed = item.minPlan === 'teacher' ? 'Teacher' : item.minPlan === 'school' ? 'School' : 'Student'
+        alert(`Upgrade to ${needed} plan to access ${item.label}.`)
+      }}>
+      <I d={ICONS[item.icon] || ICONS.dashboard} s={18}/>
+      {!collapsed && <span style={{ fontSize:13, fontWeight:500, flex:1 }}>{item.label}</span>}
+      {!collapsed && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#484f58" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
+    </div>
+  )
   return (
     <Link href={item.href} title={collapsed ? item.label : undefined}
       style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 8px', borderRadius:10,
@@ -277,7 +301,7 @@ export default function Shell({ children }) {
 
         {/* Nav links */}
         <nav style={{ flex:1, overflowY:'auto', overflowX:'hidden', padding:8, display:'flex', flexDirection:'column', gap:2 }}>
-          {NAV.map(item => <NavItem key={item.href} item={item} collapsed={collapsed} active={pathname === item.href}/>)}
+          {NAV.map(item => <NavItem key={item.href} item={item} collapsed={collapsed} userPlan={profile?.plan} active={pathname === item.href}/>)}
           </nav>
 
         {/* Dark mode toggle — hidden on mid-screen (pill in topbar handles it) */}
