@@ -545,6 +545,15 @@ async function generateChatResponse(messages, systemPrompt) {
   return { reply: text }
 }
 
+async function generateQuizFromTopic(topic, count = 10, type = 'mixed') {
+  const typeInstr = type === 'multiple_choice' ? 'multiple choice only'
+    : type === 'true_false' ? 'true/false only'
+    : type === 'short_answer' ? 'short answer only'
+    : 'a mix of multiple choice, true/false, and short answer';
+  const systemPrompt = `You are Nova, an expert quiz generator. Generate exactly ${count} quiz questions about the given topic using ${typeInstr}. Return ONLY a valid JSON array, no markdown, no backticks, no explanation. Format: [{"type":"multiple_choice","question":"...","options":["A) ...","B) ...","C) ...","D) ..."],"answer":"A) ..."},{"type":"true_false","question":"...","answer":true},{"type":"short_answer","question":"...","answer":"..."}]`;
+  return callOpenAIJson(topic, systemPrompt);
+}
+
 const handlers = {
   summarizeText,
   summarizeFromUrl,
@@ -552,6 +561,7 @@ const handlers = {
   summarizeImportedFile,
   generateEssayOutlineFromText,
   generateFlashcardsFromText,
+  generateQuizFromTopic,
   generateQuizFromTopic,
   generateFlashcardsFromUrl,
   generateFlashcardsFromImportedFile,
