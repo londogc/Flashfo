@@ -75,6 +75,7 @@ const PLANS = [
 ]
 
 export default function PricingPage() {
+  const [menuOpen, setMenuOpen] = useState(false)
   const [billing, setBilling] = useState('annual')
   const [loading, setLoading] = useState(null)
   const { user, profile } = useAuth()
@@ -109,6 +110,43 @@ export default function PricingPage() {
   }
 
   return (
+      <style>{`
+        @media(max-width:768px){.spnl{display:none!important}.spcta{display:none!important}.sphb{display:flex!important}.pc-wrap{padding:32px 14px 40px!important}.pc-cards{grid-template-columns:1fr!important}}
+        .spnl{display:flex}.spcta{display:inline-flex}.sphb{display:none;flex-direction:column;gap:5px;cursor:pointer;background:transparent;border:none;padding:6px;outline:none}
+        .sphb-line{width:20px;height:2px;background:#8b949e;border-radius:1px;transition:transform .2s,opacity .2s;display:block}
+      `}</style>
+      <nav style={{background:'#0d1117',borderBottom:'1px solid #21262d',padding:'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:56,position:'sticky',top:0,zIndex:50}}>
+        <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',flexShrink:0}}>
+          <div style={{position:'relative',width:28,height:28}}>
+            <div style={{position:'absolute',top:-2,left:-2,right:-2,bottom:-2,borderRadius:9,background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)',animation:'nav-spin 3s linear infinite'}}/>
+            <div style={{position:'absolute',top:2,left:2,right:2,bottom:2,background:'#0d1117',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="#3b82f6"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
+            </div>
+          </div>
+          <span style={{fontSize:15,fontWeight:700,color:'#e6edf3'}}>Flashfo</span>
+        </a>
+        <div className="spnl" style={{gap:20,alignItems:'center',flex:1,justifyContent:'center'}}>
+          {[{l:'Home',h:'/'},{l:'Features',h:'/features'},{l:'For Teachers',h:'/for-teachers'},{l:'For Parents',h:'/for-parents'},{l:'Pricing',h:'/pricing'}].map(({l,h})=>(
+            <a key={l} href={h} style={{fontSize:13,color:h==='/pricing'?'#a78bfa':'#8b949e',fontWeight:h==='/pricing'?600:400,textDecoration:'none',borderBottom:h==='/pricing'?'2px solid #a78bfa':'none',paddingBottom:2}}>{l}</a>
+          ))}
+        </div>
+        <a href="/auth?mode=signup" className="spcta" style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:700,padding:'8px 16px',textDecoration:'none',flexShrink:0}}>Sign up free</a>
+        <button className="sphb" onClick={()=>setMenuOpen(o=>!o)} aria-label="Menu">
+          <span className="sphb-line" style={{transform:menuOpen?'rotate(45deg) translateY(7px)':'none'}}/>
+          <span className="sphb-line" style={{opacity:menuOpen?0:1}}/>
+          <span className="sphb-line" style={{transform:menuOpen?'rotate(-45deg) translateY(-7px)':'none'}}/>
+        </button>
+      </nav>
+      {menuOpen && (
+        <div style={{background:'#0d1117',borderBottom:'1px solid #21262d',position:'sticky',top:56,zIndex:49}}>
+          {[{l:'Home',h:'/'},{l:'Features',h:'/features'},{l:'For Teachers',h:'/for-teachers'},{l:'For Parents',h:'/for-parents'},{l:'Pricing',h:'/pricing'}].map(({l,h})=>(
+            <a key={l} href={h} onClick={()=>setMenuOpen(false)} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px',borderBottom:'1px solid #21262d',fontSize:15,color:'#e6edf3',textDecoration:'none',fontWeight:500}}>
+              {l} <span style={{color:'#484f58'}}>{'›'}</span>
+            </a>
+          ))}
+          <a href="/auth?mode=signup" style={{display:'block',margin:'12px 16px 16px',padding:'13px 0',textAlign:'center',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:15,fontWeight:700,borderRadius:9,textDecoration:'none'}}>Sign up free</a>
+        </div>
+      )}
     <div style={{ minHeight:'100vh', background:'#0d1117', padding:'60px 20px', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
       <style>{`
         @media(max-width:768px){
@@ -141,7 +179,7 @@ export default function PricingPage() {
           </span>
         </div>
 
-        <div style={{ textAlign:'center', fontSize:13, color:'#34d399', marginBottom:32, fontWeight:600 }}>
+        <div style={{ textAlign:'center', fontSize:13, color:'#34d399', marginBottom:32, fontWeight:600, fontSize:14, whiteSpace:'nowrap', overflowX:'auto' }}>
           ✦ All paid plans include a 3-day free trial — no charge until day 4
         </div>
 
