@@ -83,14 +83,14 @@ export default function ForTeachersPage() {
       <div style={{padding:'64px 24px 40px',textAlign:'center',maxWidth:760,margin:'0 auto'}}>
         <div style={{display:'inline-flex',alignItems:'center',gap:6,borderRadius:20,padding:'4px 12px',fontSize:11,fontWeight:700,letterSpacing:'.05em',background:'rgba(52,211,153,.08)',border:'1px solid rgba(52,211,153,.2)',color:'#34d399',marginBottom:18}}>
           <div className="nova-pulse" style={{width:7,height:7,borderRadius:'50%',background:'#34d399'}}/>
-          NOVA AI · FOR TEACHERS
+          FLASHFO · FOR TEACHERS
         </div>
         <h1 style={{fontSize:46,fontWeight:800,letterSpacing:'-.03em',lineHeight:1.1,marginBottom:16}}>
           Teach smarter.<br/>
           <span style={{background:'linear-gradient(90deg,#34d399,#2563eb)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Save hours every week.</span>
         </h1>
         <p style={{fontSize:16,color:'#8b949e',lineHeight:1.7,marginBottom:28,maxWidth:560,margin:'0 auto 28px'}}>
-          Nova AI generates lesson plans, quizzes, and study materials in seconds. Run live classroom quizzes, track student performance, and manage your whole class — all in one workspace.
+          Flashfo generates lesson plans, quizzes, and study materials in seconds. Run live classroom quizzes, track student performance, and manage your whole class — all in one workspace.
         </p>
         <div style={{display:'flex',gap:12,justifyContent:'center'}}>
           <button onClick={()=>router.push('/auth?mode=signup')} style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:10,fontSize:14,fontWeight:700,cursor:'pointer',padding:'12px 28px',letterSpacing:'-.01em'}}>
