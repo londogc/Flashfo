@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useAuth } from '@/lib/useAuth'
 
 const LESSON_TYPES = ['Lecture', 'Discussion', 'Lab / Hands-on', 'Review', 'Assessment']
-const GRADE_LEVELS = ['Middle School (6-8)', 'High School (9-12)', 'AP / College-level']
+const GRADE_LEVELS = ['Elementary (K-2)', 'Elementary (3-5)', 'Middle School (6-8)', 'High School (9-12)', 'AP / College-level']
 const DURATIONS = ['30 minutes', '45 minutes', '60 minutes', '90 minutes']
 
 export default function LessonBuilder() {
@@ -51,23 +51,13 @@ Make it practical and immediately usable in a real classroom.`
     const decoder = new TextDecoder()
     let full = ''
     setPlan('')
-    
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
-      const chunk = decoder.decode(value)
-      // Parse SSE chunks
-      const lines = chunk.split('\n')
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(line.slice(6))
-            if (data.content) { full += data.content; setPlan(full) }
-          } catch {}
-        }
-      }
+      full += decoder.decode(value, { stream: true })
+      setPlan(full)
     }
-    if (!full) setPlan('Lesson plan generated. Please try again if the content appears empty.')
+    if (!full) setPlan('Could not generate. Please try again.')
     setLoading(false)
   }
 
