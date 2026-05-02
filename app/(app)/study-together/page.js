@@ -11,7 +11,7 @@ import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
 function StudyTogetherInner() {
-  const { user, profile } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [sessionCode, setSessionCode] = useState('')
