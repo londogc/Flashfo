@@ -1,5 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
+
+const Ico = ({d, s=14}) => (
+  <svg width={s} height={s} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d={d}/>
+  </svg>
+)
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
@@ -92,7 +98,7 @@ export default function TeacherInsights() {
                   onClick={() => generateInsight(s)}
                   disabled={generating === s.id}
                   style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', background: 'rgba(167,139,250,.08)', border: '1px solid rgba(167,139,250,.2)', borderRadius: 10, cursor: generating === s.id ? 'default' : 'pointer', color: '#a78bfa', fontSize: 14, fontWeight: 600 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
+                  <Ico d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 3a4 4 0 100 8 4 4 0 000-8zm0 3a1 1 0 100 2 1 1 0 000-2z" s={15}/>
                   {generating === s.id ? 'Nova is thinking...' : 'Generate Nova Insight'}
                 </button>
               )}
