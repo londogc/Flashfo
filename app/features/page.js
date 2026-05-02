@@ -1,4 +1,5 @@
 'use client'
+  const [menuOpen, setMenuOpen] = useState(false)
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -10,7 +11,7 @@ export default function FeaturesPage() {
     if (document.getElementById(id)) return
     const s = document.createElement('style')
     s.id = id
-    s.textContent = '@keyframes nav-spin{to{transform:rotate(360deg)}} @keyframes card-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}} .page-card-anim{opacity:0;animation:card-in .42s cubic-bezier(.22,.68,0,1.2) forwards} @keyframes nova-pulse{0%,100%{opacity:1}50%{opacity:.4}} .nova-pulse{animation:nova-pulse .9s ease-in-out infinite}'
+    s.textContent = '@keyframes nav-spin{to{transform:rotate(360deg)}} @keyframes card-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}} .page-card-anim{opacity:0;animation:card-in .42s cubic-bezier(.22,.68,0,1.2) forwards} @keyframes nova-pulse{0%,100%{opacity:1}50%{opacity:.4}} .nova-pulse{animation:nova-pulse .9s ease-in-out infinite}@media(max-width:768px){.sp-nav-links{display:none!important}.sp-nav-cta{display:none!important}.sp-hamburger{display:flex!important}}.sp-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;background:transparent;border:none;outline:none;}.sp-hb{width:20px;height:2px;background:#8b949e;border-radius:1px;transition:transform 0.2s,opacity 0.2s;}.sp-mobile-menu{background:#0d1117;border-bottom:1px solid #21262d;position:sticky;top:56px;z-index:49;}.sp-mobile-link{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #21262d;font-size:14px;color:#e6edf3;text-decoration:none;font-weight:500;}.sp-mobile-cta{display:block;margin:12px 16px 16px;padding:11px 0;text-align:center;background:linear-gradient(90deg,#2563eb,#7c3aed);color:#fff;font-size:14px;font-weight:700;border-radius:9px;text-decoration:none;}'
     document.head.appendChild(s)
   }, [])
 
@@ -44,7 +45,7 @@ export default function FeaturesPage() {
           </div>
           <span style={{fontSize:15,fontWeight:700,color:'#e6edf3'}}>Flashfo</span>
         </a>
-        <div style={{display:'flex',gap:22,flex:1,justifyContent:'center'}}>
+        <div className="sp-nav-links" style={{display:'flex',gap:22,flex:1,justifyContent:'center'}}>
           {NAV_LINKS.map(({label,href})=>(
             <a key={label} href={href} style={{fontSize:13,color:href==='/features'?'#3b82f6':'#8b949e',fontWeight:href==='/features'?600:400,textDecoration:'none',borderBottom:href==='/features'?'2px solid #3b82f6':'none',paddingBottom:2}}>
               {label}
@@ -55,6 +56,16 @@ export default function FeaturesPage() {
           Sign up free →
         </a>
       </nav>
+      {menuOpen && (
+        <div className="sp-mobile-menu">
+          <a className="sp-mobile-link" href="/" onClick={()=>setMenuOpen(false)}>Home <span style={{color:'#484f58'}}>›</span></a>
+          <a className="sp-mobile-link" href="/features" onClick={()=>setMenuOpen(false)}>Features <span style={{color:'#484f58'}}>›</span></a>
+          <a className="sp-mobile-link" href="/for-teachers" onClick={()=>setMenuOpen(false)}>For Teachers <span style={{color:'#484f58'}}>›</span></a>
+          <a className="sp-mobile-link" href="/for-parents" onClick={()=>setMenuOpen(false)}>For Parents <span style={{color:'#484f58'}}>›</span></a>
+          <a className="sp-mobile-link" href="/pricing" onClick={()=>setMenuOpen(false)}>Pricing <span style={{color:'#484f58'}}>›</span></a>
+          <a className="sp-mobile-cta" href="/auth?mode=signup">Sign up free →</a>
+        </div>
+      )}
 
       {/* HERO */}
       <div style={{padding:'64px 24px 40px',textAlign:'center',maxWidth:760,margin:'0 auto'}}>
