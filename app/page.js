@@ -368,7 +368,7 @@ export default function LandingPage() {
             ].map(({l,h})=>( <a key={l} href={h} style={{ color:'#8b949e', textDecoration:'none' }}>{l}</a> ))}
           </div>
           <div className="lp-desktop-btns" style={{ display:'flex', gap:8, alignItems:'center' }}>
-            <a href="/auth?mode=signup" style={{ color:'#8b949e', fontSize:13, textDecoration:'none' }}>Sign in</a>
+            <a href="/auth?mode=signin" style={{ color:'#8b949e', fontSize:13, textDecoration:'none' }}>Sign in</a>
             <a href="/auth?mode=signup" style={{ background:'#2563eb', color:'#fff', fontSize:13, fontWeight:500, padding:'7px 14px', borderRadius:8, textDecoration:'none' }}>Sign up today</a>
           </div>
           <button className="lp-hamburger" onClick={()=>setMobileMenuOpen(o=>!o)} aria-label="Open menu">
