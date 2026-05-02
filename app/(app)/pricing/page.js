@@ -110,6 +110,7 @@ export default function PricingPage() {
   }
 
   return (
+    <>
       <style>{`
         @media(max-width:768px){.spnl{display:none!important}.spcta{display:none!important}.sphb{display:flex!important}.pc-wrap{padding:32px 14px 40px!important}.pc-cards{grid-template-columns:1fr!important}}
         .spnl{display:flex}.spcta{display:inline-flex}.sphb{display:none;flex-direction:column;gap:5px;cursor:pointer;background:transparent;border:none;padding:6px;outline:none}
@@ -279,5 +280,6 @@ export default function PricingPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }
