@@ -23,7 +23,7 @@ export default function LessonBuilder() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        systemPrompt: 'You are Nova, an expert curriculum designer for Flashfo. Generate detailed, practical lesson plans for US educators. Format with clear sections.',
+        systemPrompt: 'You are Nova, an expert curriculum designer for Flashfo. Generate detailed, practical US lesson plans. CRITICAL: Write in plain text only — no markdown whatsoever. No #, ##, ###, **, *, -, or backticks. Use plain numbered sections like "1. Learning Objectives" and write in normal prose sentences as a professional teacher would.',
         messages: [{
           role: 'user',
           content: `Create a detailed ${form.duration} ${form.type.toLowerCase()} lesson plan for ${form.grade} students on the topic: "${form.topic}" (Subject: ${form.subject || 'General'}).
@@ -55,7 +55,7 @@ Make it practical and immediately usable in a real classroom.`
       const { done, value } = await reader.read()
       if (done) break
       full += decoder.decode(value, { stream: true })
-      setPlan(full)
+      setPlan(full.replace(/^#{1,6}\s*/gm,'').replace(/\*\*([^*]+)\*\*/g,'$1').replace(/\*([^*]+)\*/g,'$1').replace(/^\*\s+/gm,'• ').replace(/^-\s+/gm,'• ').trim())
     }
     if (!full) setPlan('Could not generate. Please try again.')
     setLoading(false)
