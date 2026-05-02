@@ -1,12 +1,19 @@
 'use client'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem } from '@/lib/savedItems'
 
-export default function SummarizePage() {
+function SummarizePageInner() {
   const { user } = useAuth()
   const [input, setInput]   = useState('')
-  const [output, setOutput] = useState('')
+
+  const _sumSP = useSearchParams()
+  useEffect(() => {
+    const q = _sumSP.get('q')
+    if (q) setInput(decodeURIComponent(q))
+  }, [_sumSP.get('q')])  const [output, setOutput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState('')
   const [saving, setSaving] = useState(false)
@@ -109,4 +116,8 @@ export default function SummarizePage() {
       </div>
     </div>
   )
+}
+
+export default function SummarizePage() {
+  return <Suspense fallback={<div style={{minHeight:'100vh'}}/>}><SummarizePageInner/></Suspense>
 }
