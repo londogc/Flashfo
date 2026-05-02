@@ -34,7 +34,7 @@ function StudyTogetherInner() {
   async function createSession() {
     const code = Math.random().toString(36).slice(2,8).toUpperCase()
     const { data } = await supabase.from('study_sessions').insert({
-      code, host_id: user.id, status: 'waiting'
+      code, host_id: user?.id, status: 'waiting'
     }).select().single()
     if (data) {
       setSession(data)
@@ -69,7 +69,7 @@ function StudyTogetherInner() {
         }
       })
       .on('broadcast', { event: 'score' }, payload => {
-        setScores(prev => ({ ...prev, [payload.payload.userId]: payload.payload.score }))
+        setScores(prev => ({ ...prev, [payload?.payload?.userId]: payload?.payload?.score }))
       })
       .subscribe()
     channelRef.current = channel
@@ -90,16 +90,17 @@ function StudyTogetherInner() {
   }
 
   async function markCorrect() {
-    const newScore = (scores[user.id] || 0) + 1
+    const newScore = (scores[user?.id] || 0) + 1
     setScores(prev => ({ ...prev, [user.id]: newScore }))
-    channelRef.current?.send({ type: 'broadcast', event: 'score', payload: { userId: user.id, score: newScore } })
+    channelRef.current?.send({ type: 'broadcast', event: 'score', payload: { userId: user?.id, score: newScore } })
     nextCard()
   }
 
   const myName = profile?.full_name || user?.email?.split('@')[0] || 'You'
-  const myScore = scores[user.id] || 0
+  const myScore = scores[user?.id] || 0
   const partnerScore = Object.entries(scores).filter(([k]) => k !== user.id)[0]?.[1] || 0
 
+  if (authLoading) return <div style={{padding:40,textAlign:'center',color:'var(--c-t3)'}}>Loading...</div>
   if (phase === 'lobby') return (
     <div style={{ maxWidth: 600, margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
       <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-.03em', color: 'var(--c-t1)', marginBottom: 8 }}>Study With a Friend</h1>
