@@ -284,7 +284,7 @@ function LiveQuizDemo() {
           </div>
 
           {/* Answer reveal label — always rendered, opacity transition so height is always reserved */}
-          <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'#34d399', padding:'8px 12px', background:'rgba(52,211,153,0.07)', border:'1px solid rgba(52,211,153,0.2)', borderRadius:8, opacity: phase==='reveal' ? 1 : 0, transition:'opacity 0.4s ease', pointerEvents: phase==='reveal' ? 'auto' : 'none' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'#34d399', padding:'8px 12px', background:'rgba(52,211,153,0.07)', border:'1px solid rgba(52,211,153,0.2)', borderRadius:8, opacity: phase==='reveal' ? 1 : 0, transition:'opacity 0.4s ease', pointerEvents: phase==='reveal' ? 'auto' : 'none', overflow:'hidden', maxWidth:'100%' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
               {q.pct[q.correct]}% of the class got it right
             </div>
@@ -327,7 +327,7 @@ function LiveQuizDemo() {
         .lp-mobile-menu{background:#0d1117;border-bottom:1px solid #21262d;}
         .lp-mobile-link{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid #21262d;font-size:14px;color:#e6edf3;text-decoration:none;font-weight:500;}
         .lp-mobile-link:last-of-type{border-bottom:none;}
-        .lp-mobile-cta{display:block;margin:12px 16px 16px;padding:12px 0;text-align:center;background:linear-gradient(90deg,#2563eb,#7c3aed);color:#fff;font-size:14px;font-weight:700;border-radius:9px;text-decoration:none;}`}</style>
+        .lp-mobile-cta{display:block;margin:12px 16px 16px;padding:12px 0;text-align:center;background:linear-gradient(90deg,#2563eb,#7c3aed);color:#fff;font-size:14px;font-weight:700;border-radius:9px;text-decoration:none;}@media(max-width:768px){.lp-quiz-section{overflow:hidden!important}.lp-quiz-bubble{max-width:100%!important;font-size:11px!important}}`}</style>
     </div>
   )
 }
