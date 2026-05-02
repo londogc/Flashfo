@@ -247,7 +247,7 @@ function FlashcardsPageInner() {
     return url
   }
 
-  return (
+  if (!cards.length) return (
     <div className="p-6 max-w-2xl mx-auto w-full">
       {/* ── Review Queue Banner ── */}
       {reviewQueue.length > 0 && (
