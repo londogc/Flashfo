@@ -1,27 +1,12 @@
 'use client'
-import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
 import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem } from '@/lib/savedItems'
 
-function SummarizePageInner() {
+export default function SummarizePage() {
   const { user } = useAuth()
-  const _sp = useSearchParams()
-  useEffect(() => {
-    const _q = _sp.get('q')
-    if (_q) setInput(decodeURIComponent(_q))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const [input, setInput]   = useState('')
-
-  const _sumSP = useSearchParams()
-  useEffect(() => {
-    const q = _sumSP.get('q')
-    if (q) setInput(decodeURIComponent(q))
-  }, [_sumSP.get('q')])  const [output, setOutput] = useState('')
+  const [input, setInput]   = useState('')  const [output, setOutput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState('')
   const [saving, setSaving] = useState(false)
@@ -127,9 +112,5 @@ function SummarizePageInner() {
 }
 
 function SummarizePageInner() {
-  return <Suspense fallback={<div style={{minHeight:'100vh'}}/>}><SummarizePageInner/></Suspense>
-}
-
-export default function SummarizePage() {
   return <Suspense fallback={<div style={{minHeight:'100vh'}}/>}><SummarizePageInner/></Suspense>
 }
