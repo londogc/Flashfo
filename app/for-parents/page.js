@@ -44,7 +44,13 @@ export default function ForParentsPage() {
           @media(max-width:768px){.spnl{display:none!important}.spcta{display:none!important}.sphb{display:flex!important}}
           .spnl{display:flex}.spcta{display:inline-flex}.sphb{display:none;flex-direction:column;gap:5px;cursor:pointer;background:transparent;border:none;padding:6px;outline:none}
           .sphb-line{width:20px;height:2px;background:#8b949e;border-radius:1px;transition:transform .2s,opacity .2s;display:block}
-        `}</style>
+        
+          @media(max-width:768px){
+            .mg2{grid-template-columns:1fr!important}
+            .mg4{grid-template-columns:1fr 1fr!important;gap:10px!important}
+            .mg3{grid-template-columns:1fr!important}
+            .mob-section{padding:40px 16px!important}
+          }`}</style>
           <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',flexShrink:0}}>
             <div style={{position:'relative',width:28,height:28}}>
               <div style={{position:'absolute',top:-2,left:-2,right:-2,bottom:-2,borderRadius:9,background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)',animation:'nav-spin 3s linear infinite'}}/>
@@ -102,7 +108,7 @@ export default function ForParentsPage() {
 
       {/* STATS */}
       <div style={{maxWidth:900,margin:'0 auto 56px',padding:'0 24px'}}>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
+        <div className="mg4" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
           {[
             {num:'24/7',label:'homework help, any night of the week',col:'#60a5fa'},
             {num:'Any',label:'subject — math, science, history, English',col:'#e6edf3'},
@@ -118,8 +124,8 @@ export default function ForParentsPage() {
       </div>
 
       {/* FEATURE 1: HOMEWORK HELP */}
-      <div style={{...S.section,paddingTop:0}}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
+      <div className="mob-section" style={{...S.section,paddingTop:0}}>
+        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
           <div>
             <div style={S.badge('96,165,250')}>HOMEWORK HELP</div>
             <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Stuck on homework? Nova explains it step by step.</h2>
@@ -208,7 +214,7 @@ export default function ForParentsPage() {
 
       {/* FEATURE 3: SMARTER REVISION */}
       <div style={S.section}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'center'}}>
+        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'center'}}>
           <div>
             <div style={S.badge('52,211,153')}>SMARTER REVISION</div>
             <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Studying more does not mean better grades. Studying right does.</h2>
@@ -256,7 +262,7 @@ export default function ForParentsPage() {
             <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',color:'#e6edf3',marginBottom:10}}>A study tool you can feel good about</h2>
             <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,maxWidth:520,margin:'0 auto'}}>Flashfo is built for genuine learning — not shortcuts. Nova explains the why, not just the answer, so your child builds real understanding they can take into any exam.</p>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+          <div className="mg3" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
             {[
               {t:'Explains, does not just answer',d:'Nova walks through the reasoning, not just the result. Your child learns how to solve it — not just what the answer is.',c:'#3b82f6'},
               {t:'Any subject, any level',d:'Primary school times tables to A-level chemistry — Nova adjusts to the right level automatically based on what they are studying.',c:'#a78bfa'},
@@ -278,7 +284,7 @@ export default function ForParentsPage() {
           <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',color:'#e6edf3',marginBottom:8}}>Simple, honest pricing</h2>
           <p style={{fontSize:14,color:'#8b949e'}}>Start free. Upgrade when you are ready.</p>
         </div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
           {/* Free plan */}
           <div style={{background:'#161b22',border:'1px solid #21262d',borderRadius:14,padding:'22px 24px'}}>
             <div style={{fontSize:12,fontWeight:700,color:'#484f58',letterSpacing:'.07em',marginBottom:10}}>FREE PLAN</div>
