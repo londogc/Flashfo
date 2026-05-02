@@ -552,6 +552,7 @@ const handlers = {
   summarizeImportedFile,
   generateEssayOutlineFromText,
   generateFlashcardsFromText,
+  generateQuizFromTopic,
   generateFlashcardsFromUrl,
   generateFlashcardsFromImportedFile,
   generateQuizAdvancedFromText,
@@ -568,6 +569,15 @@ const handlers = {
   readDriveTextFile,
   runLearningFeature,
   generateChatResponse,
+
+async function generateQuizFromTopic(topic, count = 10, type = 'mixed') {
+  const typeInstr = type === 'multiple_choice' ? 'multiple choice only' 
+    : type === 'true_false' ? 'true/false only'
+    : type === 'short_answer' ? 'short answer only'
+    : 'a mix of multiple choice, true/false, and short answer';
+  const systemPrompt = `You are Nova, an expert quiz generator for Flashfo. Generate exactly ${count} quiz questions about the given topic. Use ${typeInstr} questions. Return ONLY a valid JSON array, no markdown, no backticks. Format: [{"type":"multiple_choice","question":"...","options":["A...","B...","C...","D..."],"answer":"A..."},{"type":"true_false","question":"...","answer":true},{"type":"short_answer","question":"...","answer":"..."}]. Cover key concepts, be clear and accurate.`;
+  return callOpenAIJson(topic, systemPrompt);
+}
 };
 
 export async function POST(request) {
