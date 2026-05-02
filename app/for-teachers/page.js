@@ -1,9 +1,9 @@
 'use client'
-  const [menuOpen, setMenuOpen] = useState(false)
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function ForTeachersPage() {
+  const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
