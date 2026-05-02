@@ -30,6 +30,12 @@ const ICONS = {
   sources:    'M1 5h3v9H1zm4-3h4v12H5zm5 2h4v10h-4z',
   curriculum: 'M1 2h6v12H1zm8 0h6v12H9zM3 5h2M3 7h2M3 9h2M10 5h3M10 7h3M10 9h3',
   collab:     'M2 5h9v8H2zM4 3h9v8H4zM6 7h4M6 9h3M12 1v4M10 2l2-1 2 1',
+
+  progress:   'M2 13V7h3v6zm4 0V4h3v9zm4 0V9h3v4z',
+  import:     'M8 1v8m-3-3l3 3 3-3M1 11v2a2 2 0 002 2h10a2 2 0 002-2v-2',
+  together:   'M5 7a3 3 0 100-6 3 3 0 000 6zm6 0a3 3 0 100-6 3 3 0 000 6zM1 15c0-2.2 1.8-4 4-4m10 4c0-2.2-1.8-4-4-4m-2 4c0-2.2-1.3-4-3-4s-3 1.8-3 4',
+  parent:     'M8 1a3 3 0 100 6 3 3 0 000-6zM2 15c0-3.3 2.7-6 6-6s6 2.7 6 6M4 7.5L2 10h3v4M12 7.5l2 2.5h-3v4',
+  insights:   'M1 12l3-7 3 4 2-6 3 5 3-3',
 }
 
 // Plan hierarchy: free < student < teacher < school < lifetime
@@ -655,9 +661,3 @@ export default function Shell({ children }) {
     `}</style>
     </div>
   )
-  progress:   'M2 13V7h3v6zm4 0V4h3v9zm4 0V9h3v4z',
-  import:     'M8 1v8m-3-3l3 3 3-3M1 11v2a2 2 0 002 2h10a2 2 0 002-2v-2',
-  together:   'M5 7a3 3 0 100-6 3 3 0 000 6zm6 0a3 3 0 100-6 3 3 0 000 6zM1 15c0-2.2 1.8-4 4-4m10 4c0-2.2-1.8-4-4-4m-2 4c0-2.2-1.3-4-3-4s-3 1.8-3 4',
-  parent:     'M8 1a3 3 0 100 6 3 3 0 000-6zM2 15c0-3.3 2.7-6 6-6s6 2.7 6 6M4 7.5L2 10h3v4M12 7.5l2 2.5h-3v4',
-  insights:   'M1 12l3-7 3 4 2-6 3 5 3-3',
-}
