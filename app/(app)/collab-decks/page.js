@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
 export default function CollabDecks() {
-  const { user, profile } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const router = useRouter()
   const [decks, setDecks] = useState([])
   const [selected, setSelected] = useState(null)
