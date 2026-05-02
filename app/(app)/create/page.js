@@ -70,7 +70,7 @@ export default function CreatePage() {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:24 }}>
         {TOOLS.map(t=>(
           <button key={t.id} onClick={()=>setTool(t.id)}
-            style={{ padding:'12px 8px', borderRadius:10, border:'1px solid', textAlign:'center', cursor:'pointer', transition:'all 0.15s',
+            style={{ padding:'12px 8px', borderRadius:10, border:'1px solid', display:'flex', flexDirection:'column', alignItems:'center', cursor:'pointer', transition:'all 0.15s',
               borderColor: tool===t.id ? '#2563eb' : 'var(--c-line)',
               background: tool===t.id ? 'rgba(37,99,235,0.08)' : 'var(--c-surface)',
               color: tool===t.id ? '#2563eb' : 'var(--c-t2)' }}>
