@@ -526,6 +526,11 @@ async function runLearningFeature(payload, targetLanguage) {
 
 
 async function generateChatResponse(messages, systemPrompt) {
+  // Handle string input (legacy call pattern)
+  if (typeof messages === 'string') {
+    messages = [{ role: 'user', text: messages }]
+  }
+  if (!Array.isArray(messages)) messages = []
   // messages: [{role:'user'|'assistant', text:'...'}]
   // systemPrompt: string
   const apiMessages = messages.map(m => ({
