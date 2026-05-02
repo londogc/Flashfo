@@ -39,7 +39,13 @@ export default function ForTeachersPage() {
           @media(max-width:768px){.spnl{display:none!important}.spcta{display:none!important}.sphb{display:flex!important}}
           .spnl{display:flex}.spcta{display:inline-flex}.sphb{display:none;flex-direction:column;gap:5px;cursor:pointer;background:transparent;border:none;padding:6px;outline:none}
           .sphb-line{width:20px;height:2px;background:#8b949e;border-radius:1px;transition:transform .2s,opacity .2s;display:block}
-        `}</style>
+        
+          @media(max-width:768px){
+            .mg2{grid-template-columns:1fr!important}
+            .mg4{grid-template-columns:1fr 1fr!important;gap:10px!important}
+            .mg3{grid-template-columns:1fr!important}
+            .mob-section{padding:40px 16px!important}
+          }`}</style>
           <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',flexShrink:0}}>
             <div style={{position:'relative',width:28,height:28}}>
               <div style={{position:'absolute',top:-2,left:-2,right:-2,bottom:-2,borderRadius:9,background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)',animation:'nav-spin 3s linear infinite'}}/>
@@ -98,7 +104,7 @@ export default function ForTeachersPage() {
 
       {/* STATS */}
       <div style={{maxWidth:900,margin:'0 auto 56px',padding:'0 24px'}}>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
+        <div className="mg4" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
           {[
             {num:'4h',label:'saved per week on average',col:'#34d399'},
             {num:'30s',label:'to generate a full lesson plan',col:'#e6edf3'},
@@ -114,8 +120,8 @@ export default function ForTeachersPage() {
       </div>
 
       {/* FEATURE 1: LIVE QUIZ */}
-      <div style={{...S.section,paddingTop:0}}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
+      <div className="mob-section" style={{...S.section,paddingTop:0}}>
+        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
           <div>
             <div style={S.badge('52,211,153')}>LIVE QUIZ</div>
             <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Your whole class, answering in real time</h2>
@@ -176,7 +182,7 @@ export default function ForTeachersPage() {
         <div style={{maxWidth:900,margin:'0 auto',display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
           <div style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,padding:16}}>
             <div style={{fontSize:10,color:'#484f58',letterSpacing:'.07em',marginBottom:8}}>NOVA LESSON BUILDER</div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
+            <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
               <div style={{background:'#161b22',border:'1px solid #30363d',borderRadius:7,padding:'8px 10px',fontSize:11,color:'#e6edf3'}}>The Water Cycle</div>
               <div style={{background:'#161b22',border:'1px solid #30363d',borderRadius:7,padding:'8px 10px',fontSize:11,color:'#e6edf3'}}>Grade 6 · 45 min</div>
             </div>
@@ -228,7 +234,7 @@ export default function ForTeachersPage() {
           <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Know exactly who needs help</h2>
           <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,maxWidth:540,margin:'0 auto'}}>After every quiz, Flashfo shows you which questions tripped up the class and which students need support — without you having to grade a single thing.</p>
         </div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
           <div style={S.card}>
             <div style={{fontSize:12,fontWeight:700,color:'#e6edf3',marginBottom:14}}>Question breakdown · Water Cycle Quiz</div>
             {[
@@ -285,7 +291,7 @@ export default function ForTeachersPage() {
             <div style={S.badge('167,139,250')}>MORE TEACHER TOOLS</div>
             <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',color:'#e6edf3'}}>Everything in one place</h2>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+          <div className="mg3" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
             {[
               {t:'Assignment builder',d:'Create and assign tasks to your class. Students complete them at their own pace.',c:'#3b82f6'},
               {t:'Curriculum planner',d:'Map your whole year by subject and term. Stay organised across every class.',c:'#a78bfa'},
