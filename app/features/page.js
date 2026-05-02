@@ -89,7 +89,7 @@ export default function FeaturesPage() {
           <span style={{background:'linear-gradient(90deg,#2563eb,#a78bfa)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Built by AI in seconds.</span>
         </h1>
         <p style={{fontSize:16,color:'#8b949e',lineHeight:1.7,marginBottom:28,maxWidth:560,margin:'0 auto 28px'}}>
-          Type any topic and Nova generates personalised flashcards, quizzes, study guides, and summaries — tailored to exactly what you're studying.
+          Type any topic and Nova generates personalized flashcards, quizzes, study guides, and summaries — tailored to exactly what you're studying.
         </p>
         <div style={{display:'flex',gap:12,justifyContent:'center'}}>
           <button onClick={()=>router.push('/auth?mode=signup')} style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:10,fontSize:14,fontWeight:700,cursor:'pointer',padding:'12px 28px',letterSpacing:'-.01em'}}>
