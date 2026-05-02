@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 
 const Ico = ({d, s=14}) => (
   <svg width={s} height={s} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
-export default function StudyTogether() {
+function StudyTogetherInner() {
   const { user, profile } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -194,4 +194,8 @@ export default function StudyTogether() {
       )}
     </div>
   )
+}
+
+export default function StudyTogether() {
+  return <Suspense fallback={<div style={{padding:40,textAlign:'center',color:'var(--c-t3)'}}>Loading...</div>}><StudyTogetherInner/></Suspense>
 }
