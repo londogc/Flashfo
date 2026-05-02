@@ -64,7 +64,8 @@ const NAV = [
 
 function NavItem({ item, collapsed, active, userPlan }) {
   const nova = item.nova
-  const locked = !canAccess(userPlan, item.minPlan)
+  // Only show locked state after client mounts to prevent SSR hydration mismatch
+  const locked = typeof window !== 'undefined' && !canAccess(userPlan, item.minPlan)
   if (locked) return (
     <div title={collapsed ? item.label : undefined}
       style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 8px',
@@ -106,10 +107,12 @@ function Avatar({ user, profile, size = 28 }) {
   const initials = (profile?.full_name || user?.email || 'U').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()
   return profile?.avatar_url
     ? <img src={profile.avatar_url} alt="" style={{ width:size, height:size, borderRadius:'50%', objectFit:'cover' }}/>
-    : <div style={{ width:size, height:size, borderRadius:'50%', background:'#1d4ed8', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:size*0.38, fontWeight:700, flexShrink:0 }}>{initials}</div>
+    : <div style={{ width:size, height:size, borderRadius:'50%', background:'#1d4ed8', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:size*0.38, fontWeight:700, flexShrink:0 }} suppressHydrationWarning>{initials}</div>
 }
 
 export default function Shell({ children }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const pathname = usePathname()
   const router = useRouter()
   const { user, profile, loading: authLoading, signOut } = useAuth()
