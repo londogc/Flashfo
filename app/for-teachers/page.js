@@ -215,7 +215,7 @@ export default function ForTeachersPage() {
             <div style={S.badge('37,99,235')}>LESSON BUILDER</div>
             <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>A complete lesson plan in 30 seconds</h2>
             <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Tell Nova the topic, grade, and duration. Get a fully structured lesson plan with objectives, warm-up, main activity, and assessment — ready to use in class, with zero extra work from you.</p>
-            {['Customisable sections for any teaching style','One click to auto-generate a quiz from the lesson topic','Export as PDF or save to your personal lesson library','Works for any subject and any grade level'].map(t=>(
+            {['Customizable sections for any teaching style','One click to auto-generate a quiz from the lesson topic','Export as PDF or save to your personal lesson library','Works for any subject and any grade level'].map(t=>(
               <div key={t} style={S.tick}>
                 <div style={S.tickDot('37,99,235')}>
                   <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/></svg>
