@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
-import { US_CURRICULA, CURRICULUM_LIST, getCurriculumPrompt } from '@/lib/curriculum'
+import { US_CURRICULUM, CURRICULUM_LIST, getCurriculumPrompt } from '@/lib/curriculum'
 
 export default function CurriculumGenerate() {
   const { user } = useAuth()
@@ -15,7 +15,7 @@ export default function CurriculumGenerate() {
   const [deckName, setDeckName] = useState('')
   const [error, setError] = useState('')
 
-  const curriculum = US_CURRICULA[selected]
+  const curriculum = US_CURRICULUM[selected]
 
   async function generate() {
     if (!selected) { setError('Please select a curriculum.'); return }
@@ -67,7 +67,7 @@ export default function CurriculumGenerate() {
             <select value={selectedUnit} onChange={e => setSelectedUnit(e.target.value)}
               style={{ width: '100%', padding: '12px 14px', background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 10, fontSize: 14, color: 'var(--c-t1)', outline: 'none' }}>
               <option value=''>All units</option>
-              {curriculum.units.map(u => <option key={u} value={u}>{u}</option>)}
+              {(curriculum?.units || []).map(u => <option key={u} value={u}>{u}</option>)}
             </select>
           </div>
         )}
@@ -75,7 +75,7 @@ export default function CurriculumGenerate() {
 
       {selected && (
         <div style={{ background: 'rgba(37,99,235,.06)', border: '1px solid rgba(37,99,235,.2)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 13, color: '#60a5fa' }}>
-          Aligned to <strong>{US_CURRICULA[selected]?.exam}</strong> ({US_CURRICULA[selected]?.board}){selectedUnit ? ` — ${selectedUnit}` : ' — All units'}
+          Aligned to <strong>{US_CURRICULUM[selected]?.exam || selected}</strong> ({US_CURRICULUM[selected]?.board || 'US Standards'}){selectedUnit ? ` — ${selectedUnit}` : ' — All units'}
         </div>
       )}
 
