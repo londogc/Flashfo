@@ -59,6 +59,9 @@ function printQuizKey(questions, topic) {
 // ── TTS Button ────────────────────────────────────────────────────────────
 function SpeakerBtn({ text }) {
   const [busy, setBusy] = useState(false)
+  const [novaExplanations, setNovaExplanations] = useState({}) // Feature 1: wrong answer explanations
+  const [explanationLoading, setExplanationLoading] = useState({})
+
   async function speak() {
     if (busy || !text) return
     setBusy(true)
@@ -114,7 +117,29 @@ function AnswerKeyModal({ questions, topic, onClose }) {
                     <span className="font-bold w-4">{['A','B','C','D'][j]}.</span>{o}
                     {j === q.answerIndex && <span className="ml-auto text-emerald-500 text-xs font-bold">✓ Correct</span>}
                   </div>
-                ))}</div>
+                ))}
+          {/* Feature 1: Nova explains wrong answers — practice quiz only */}
+          {q.type === 'mcq' && selected[i] !== undefined && selected[i] !== q.answerIndex && (
+            <div style={{ marginTop: 12 }}>
+              {novaExplanations[i] ? (
+                <div style={{ background: 'rgba(167,139,250,.06)', border: '1px solid rgba(167,139,250,.2)', borderRadius: 10, padding: '14px 16px', marginTop: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#a78bfa', letterSpacing: '.06em', textTransform: 'uppercase' }}>Nova explains</span>
+                  </div>
+                  <p style={{ fontSize: 13, color: 'var(--c-t1)', lineHeight: 1.6, margin: 0 }}>{novaExplanations[i]}</p>
+                </div>
+              ) : (
+                <button
+                  onClick={() => explainWrongAnswer(i, q, q.options?.[selected[i]] || 'Your answer', q.options?.[q.answerIndex] || 'Correct answer')}
+                  disabled={explanationLoading[i]}
+                  style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', background: 'rgba(167,139,250,.07)', border: '1px solid rgba(167,139,250,.18)', borderRadius: 8, cursor: explanationLoading[i] ? 'default' : 'pointer', fontSize: 13, fontWeight: 600, color: '#a78bfa' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
+                  {explanationLoading[i] ? 'Nova is thinking...' : 'Why was I wrong?'}
+                </button>
+              )}
+            </div>
+          )}</div>
               )}
               {q.explanation && <div className="mt-3 text-[11px] text-t2 bg-surface2 px-3 py-2 rounded-lg border border-line"><span className="font-semibold text-t1">Explanation: </span>{q.explanation}</div>}
             </div>
@@ -594,7 +619,29 @@ export default function QuizPage() {
     document.head.appendChild(s)
   }, [])
 
-                        return (
+                      
+  async function explainWrongAnswer(questionIndex, question, studentAnswerText, correctAnswerText) {
+    setExplanationLoading(prev => ({ ...prev, [questionIndex]: true }))
+    try {
+      const res = await fetch('/api/nova/explain-answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: question.question,
+          studentAnswer: studentAnswerText,
+          correctAnswer: correctAnswerText,
+          topic: topic || question.topic || ''
+        })
+      })
+      const data = await res.json()
+      setNovaExplanations(prev => ({ ...prev, [questionIndex]: data.explanation }))
+    } catch {
+      setNovaExplanations(prev => ({ ...prev, [questionIndex]: 'Unable to load explanation right now.' }))
+    } finally {
+      setExplanationLoading(prev => ({ ...prev, [questionIndex]: false }))
+    }
+  }
+  return (
                           <button key={j} onClick={() => !submitted && setSelected(s => ({ ...s, [i]: j }))}
                             className={'w-full text-left px-3 py-2.5 rounded-lg border text-[13px] transition-all ' + cls}>
                             <span className="font-semibold mr-2">{['A','B','C','D'][j]}.</span>{opt}
