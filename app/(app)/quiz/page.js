@@ -1,4 +1,6 @@
 'use client'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { Suspense } from 'react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
@@ -307,6 +309,13 @@ function buildConfig(typeId, count, breakdown) {
 
 function QuizPageInner() {
   const { user } = useAuth()
+  const _sp = useSearchParams()
+  useEffect(() => {
+    const _q = _sp.get('q')
+    if (_q) setTopic(decodeURIComponent(_q))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const [typeId, setTypeId] = useState('mcq')
   const [count, setCount] = useState(5)
   const [breakdown, setBreakdown] = useState({ mcq: 0, tf: 0, sa: 0, fitb: 0, match: 0 })
@@ -703,6 +712,10 @@ function QuizPageInner() {
       )}
     </div>
   )
+}
+
+function QuizPageInner() {
+  return <Suspense fallback={<div style={{minHeight:'100vh'}}/>}><QuizPageInner/></Suspense>
 }
 
 export default function QuizPage() {
