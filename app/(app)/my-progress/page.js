@@ -133,7 +133,7 @@ export default function MyProgress() {
 
           {topics.filter(t=>!t.placeholder).length === 0 && (
             <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--c-t3)' }}>
-              <div style={{ marginBottom: 16 }}><Ico d="M2 13V7h3v6zm4 0V4h3v9zm4 0V9h3v4z" s={40}/></div>
+              <div style={{ marginBottom: 16 }}></div>
               <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--c-t2)', marginBottom: 8 }}>No quiz data yet</div>
               <div style={{ fontSize: 14, color: 'var(--c-t3)' }}>Complete a practice quiz and your heatmap will appear here.</div>
             </div>
