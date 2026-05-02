@@ -39,7 +39,13 @@ export default function FeaturesPage() {
           @media(max-width:768px){.spnl{display:none!important}.spcta{display:none!important}.sphb{display:flex!important}}
           .spnl{display:flex}.spcta{display:inline-flex}.sphb{display:none;flex-direction:column;gap:5px;cursor:pointer;background:transparent;border:none;padding:6px;outline:none}
           .sphb-line{width:20px;height:2px;background:#8b949e;border-radius:1px;transition:transform .2s,opacity .2s;display:block}
-        `}</style>
+        
+          @media(max-width:768px){
+            .mg2{grid-template-columns:1fr!important}
+            .mg4{grid-template-columns:1fr 1fr!important;gap:10px!important}
+            .mg3{grid-template-columns:1fr!important}
+            .mob-section{padding:40px 16px!important}
+          }`}</style>
           <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',flexShrink:0}}>
             <div style={{position:'relative',width:28,height:28}}>
               <div style={{position:'absolute',top:-2,left:-2,right:-2,bottom:-2,borderRadius:9,background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)',animation:'nav-spin 3s linear infinite'}}/>
@@ -97,7 +103,7 @@ export default function FeaturesPage() {
 
       {/* STATS */}
       <div style={{maxWidth:900,margin:'0 auto 56px',padding:'0 24px'}}>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
+        <div className="mg4" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
           {[
             {num:'3×',label:'better retention vs passive reading'},
             {num:'15s',label:'average time to generate a full deck'},
@@ -113,8 +119,8 @@ export default function FeaturesPage() {
       </div>
 
       {/* FEATURE 1: FLASHCARDS */}
-      <div style={{...S.section,paddingTop:0}}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
+      <div className="mob-section" style={{...S.section,paddingTop:0}}>
+        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
           <div>
             <div style={S.badge('37,99,235')}>FLASHCARDS</div>
             <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>A full deck from one sentence</h2>
@@ -206,12 +212,12 @@ export default function FeaturesPage() {
 
       {/* FEATURE 3: QUIZ */}
       <div style={S.section}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
+        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
           <div>
             <div style={S.badge('52,211,153')}>QUIZZES</div>
             <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Test yourself before the test does</h2>
             <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Nova generates multiple choice, true/false, and short-answer questions — complete with detailed explanations for every answer so you actually learn, not just guess.</p>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+            <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
               {[
                 {t:'Multiple choice',c:'#3b82f6'},
                 {t:'True / false',c:'#a78bfa'},
@@ -288,7 +294,7 @@ export default function FeaturesPage() {
 
       {/* FEATURE 5: STUDY GUIDE + SUMMARY */}
       <div style={S.section}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
           <div style={S.card}>
             <div style={S.badge('34,197,94')}>STUDY GUIDES</div>
             <h3 style={{fontSize:20,fontWeight:800,letterSpacing:'-.02em',marginBottom:8,color:'#e6edf3'}}>Deep, structured guides on anything</h3>
