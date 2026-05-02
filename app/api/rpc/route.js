@@ -546,13 +546,18 @@ async function generateChatResponse(messages, systemPrompt) {
 }
 
 
-async function generateQuizFromTopic(topic, count = 10, type = 'mixed') {
-  const typeInstr = type === 'multiple_choice' ? 'multiple choice only'
-    : type === 'true_false' ? 'true/false only'
-    : type === 'short_answer' ? 'short answer only'
-    : 'a mix of multiple choice, true/false, and short answer';
-  const systemPrompt = `You are Nova, an expert quiz generator for Flashfo. Generate exactly ${count} quiz questions about the given topic using ${typeInstr}. Return ONLY a valid JSON array — no markdown, no backticks, no extra text. Format: [{"type":"multiple_choice","question":"...","options":["A) ...","B) ...","C) ...","D) ..."],"answer":"A) ..."},{"type":"true_false","question":"...","answer":true},{"type":"short_answer","question":"...","answer":"..."}]`;
-  return callOpenAIJson(topic, systemPrompt);
+async function generateQuizFromTopic(topic, config) {
+  const cfg = config && typeof config === 'object' ? config : { mcq: 5 };
+  const lines = [];
+  if (cfg.mcq > 0) lines.push(cfg.mcq + ' multiple choice -- type:"mcq", options:["A","B","C","D"], answerIndex:0-3');
+  if (cfg.true_false > 0) lines.push(cfg.true_false + ' true/false -- type:"true_false", options:["True","False"], answerIndex:0 or 1');
+  if (cfg.short_answer > 0) lines.push(cfg.short_answer + ' short answer -- type:"short_answer", correctAnswer:"expected answer"');
+  if (cfg.fill_blank > 0) lines.push(cfg.fill_blank + ' fill-in-the-blank -- type:"fill_blank", question contains "___", correctAnswer:"single word or short phrase"');
+  if (cfg.matching > 0) lines.push(cfg.matching + ' matching -- type:"matching", pairs:[{"left":"term","right":"definition"}] with 4-5 pairs each');
+  if (!lines.length) lines.push('5 multiple choice -- type:"mcq", options:["A","B","C","D"], answerIndex:0-3');
+  const systemPrompt = 'You are an expert quiz generator for Flashfo. Return ONLY valid JSON with no markdown, no backticks, no extra text.';
+  const userPrompt = 'Generate a quiz about: ' + String(topic || '').trim() + '\n\nCreate exactly:\n' + lines.join('\n') + '\n\nReturn JSON in this exact format:\n{"questions":[{"type":"mcq","question":"...","options":["A","B","C","D"],"answerIndex":0,"explanation":"..."},{"type":"true_false","question":"...","options":["True","False"],"answerIndex":0,"explanation":"..."},{"type":"short_answer","question":"...","correctAnswer":"...","explanation":"..."},{"type":"fill_blank","question":"The ___ is ...","correctAnswer":"word","explanation":"..."},{"type":"matching","question":"Match each term to its definition","pairs":[{"left":"term","right":"definition"}]}]}';
+  return callOpenAIJson(systemPrompt, userPrompt);
 }
 
 const handlers = {
