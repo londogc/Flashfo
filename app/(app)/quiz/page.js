@@ -123,7 +123,7 @@ function AnswerKeyModal({ questions, topic, onClose }) {
             <div style={{ marginTop: 12 }}>
               {novaExplanations[i] ? (
                 <div style={{ background: 'rgba(167,139,250,.06)', border: '1px solid rgba(167,139,250,.2)', borderRadius: 10, padding: '14px 16px', marginTop: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 8 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
                     <span style={{ fontSize: 12, fontWeight: 700, color: '#a78bfa', letterSpacing: '.06em', textTransform: 'uppercase' }}>Nova explains</span>
                   </div>
@@ -133,7 +133,7 @@ function AnswerKeyModal({ questions, topic, onClose }) {
                 <button
                   onClick={() => explainWrongAnswer(i, q, q.options?.[selected[i]] || 'Your answer', q.options?.[q.answerIndex] || 'Correct answer')}
                   disabled={explanationLoading[i]}
-                  style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', background: 'rgba(167,139,250,.07)', border: '1px solid rgba(167,139,250,.18)', borderRadius: 8, cursor: explanationLoading[i] ? 'default' : 'pointer', fontSize: 13, fontWeight: 600, color: '#a78bfa' }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', padding: '8px 14px', background: 'rgba(167,139,250,.07)', border: '1px solid rgba(167,139,250,.18)', borderRadius: 8, cursor: explanationLoading[i] ? 'default' : 'pointer', fontSize: 13, fontWeight: 600, color: '#a78bfa' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
                   {explanationLoading[i] ? 'Nova is thinking...' : 'Why was I wrong?'}
                 </button>
@@ -329,6 +329,12 @@ export default function QuizPage() {
   const [pendingNav, setPendingNav] = useState(null)
 
   // Warn before leaving with unsaved generated quiz
+  // Read ?q= param from URL to prefill topic (from Create page)
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('q')
+    if (q && !topic) setTopic(decodeURIComponent(q))
+  }, [])
+
   useEffect(() => {
     if (!questions.length || savedId) return
     const handler = (e) => { e.preventDefault(); e.returnValue = '' }
@@ -363,7 +369,7 @@ export default function QuizPage() {
       }).filter(Boolean).join(', ')
       const prompt = 'Generate a quiz about: ' + topic.trim() + '\n\nCreate exactly: ' + typeInstructions + '\n\nReturn ONLY valid JSON in this exact format, no other text:\n{\n  "questions": [\n    {\n      "type": "mcq",\n      "question": "Question text",\n      "options": ["A","B","C","D"],\n      "answerIndex": 0,\n      "explanation": "Why this is correct"\n    },\n    {\n      "type": "true_false",\n      "question": "Statement",\n      "options": ["True","False"],\n      "answerIndex": 0,\n      "explanation": "Explanation"\n    },\n    {\n      "type": "short_answer",\n      "question": "Question",\n      "correctAnswer": "Expected answer",\n      "explanation": "Explanation"\n    },\n    {\n      "type": "fill_blank",\n      "question": "The ___ is ...",\n      "correctAnswer": "word",\n      "explanation": "Explanation"\n    },\n    {\n      "type": "matching",\n      "question": "Match each term to its definition",\n      "pairs": [{"left":"Term","right":"Definition"}]\n    }\n  ]\n}'
       const res = await fetch('/api/rpc', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fn: 'generateChatResponse', args: [[{role:'user',content:prompt}], 'You are a quiz generator. Return ONLY valid JSON. No markdown, no backticks, no explanation. Just the raw JSON object.'] }) })
+        body: JSON.stringify({ fn: 'generateQuizFromTopic', args: [topic.trim(), count, type] }) })
       const data = await res.json()
       const raw = data.result?.content || data.result || ''
       const text = typeof raw === 'string' ? raw : JSON.stringify(raw)
