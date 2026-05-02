@@ -58,8 +58,12 @@ export async function POST(request) {
                 const evt = JSON.parse(data)
                 // OpenAI Responses API stream event types
                 const delta =
+                  // OpenAI Responses API: delta is a plain string
+                  (typeof evt?.delta === 'string' ? evt.delta : null) ??
+                  // Responses API output text delta
+                  evt?.output_text?.text ??
                   evt?.delta?.text ??
-                  evt?.output_text_delta ??
+                  // Chat Completions API fallback
                   evt?.choices?.[0]?.delta?.content ??
                   null
                 if (delta) controller.enqueue(encoder.encode(delta))
