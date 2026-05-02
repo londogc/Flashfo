@@ -23,6 +23,7 @@ export default function ImportPage() {
   const [input, setInput] = useState('')
   const [deckName, setDeckName] = useState('')
   const [loading, setLoading] = useState(false)
+  const [outputType, setOutputType] = useState('flashcards')
   const [preview, setPreview] = useState(null)
   const [error, setError] = useState('')
   const fileRef = useRef(null)
@@ -38,7 +39,7 @@ export default function ImportPage() {
     else if (importType === 'topic') payload.topic = input.trim()
     else payload.content = input.trim()
 
-    const res = await fetch('/api/nova/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    const res = await fetch('/api/nova/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({...payload, outputType}) })
     const data = await res.json()
     setLoading(false)
 
@@ -94,6 +95,14 @@ export default function ImportPage() {
 
       {error && <div style={{ color: '#f87171', fontSize: 13, marginBottom: 12 }}>{error}</div>}
 
+      <div style={{ display:'flex', gap:10, marginBottom:16 }}>
+        {['flashcards','quiz'].map(t => (
+          <button key={t} onClick={() => setOutputType(t)}
+            style={{ flex:1, padding:'10px 0', background:outputType===t?'rgba(37,99,235,.15)':'var(--c-surface)', border:'1.5px solid '+(outputType===t?'rgba(37,99,235,.4)':'var(--c-line)'), borderRadius:10, cursor:'pointer', fontSize:14, fontWeight:600, color:outputType===t?'#3b82f6':'var(--c-t2)' }}>
+            {t === 'flashcards' ? 'Flashcards' : 'Quiz Questions'}
+          </button>
+        ))}
+      </div>
       <button onClick={handleImport} disabled={loading}
         style={{ width: '100%', padding: '14px', background: loading ? 'var(--c-surface)' : 'linear-gradient(90deg,#2563eb,#7c3aed)', color: loading ? 'var(--c-t2)' : '#fff', border: '1px solid var(--c-line)', borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: loading ? 'default' : 'pointer', marginBottom: 28 }}>
         {loading ? 'Nova is generating your deck...' : 'Generate Flashcards'}
