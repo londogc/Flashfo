@@ -1,5 +1,11 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+
+const Ico = ({d, s=14}) => (
+  <svg width={s} height={s} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d={d}/>
+  </svg>
+)
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
@@ -133,7 +139,7 @@ export default function StudyTogether() {
 
   if (phase === 'done') return (
     <div style={{ maxWidth: 500, margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
+      <div style={{ marginBottom: 20 }}><Ico d="M5 1h6v5a3 3 0 01-6 0V1zm-3 0h3m6 0h3M4 14h8m-4-8v8M2 1c0 3 1 5 3 6m9-6c0 3-1 5-3 6" s={42}/></div>
       <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--c-t1)', marginBottom: 24 }}>Session complete!</h2>
       <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginBottom: 32 }}>
         <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: '20px 32px' }}>
