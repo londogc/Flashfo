@@ -27,10 +27,8 @@ function printDeck(cards, topic) {
 
 function SpeakerBtn({ text, audioRef }) {
   const [busy, setBusy] = useState(false)
-  const [speaking, setSpeaking] = useState(false)
   async function speak() {
     if (!text) return
-    // Stop any currently playing audio
     if (audioRef?.current) { audioRef.current.pause(); audioRef.current = null }
     if (busy) { setBusy(false); return }
     setBusy(true)
@@ -44,33 +42,6 @@ function SpeakerBtn({ text, audioRef }) {
       audio.play()
     } catch { setBusy(false) }
   }
-  // Voice: read card aloud
-  const readAloud = (text) => {
-    if (typeof window === 'undefined') return
-    const synth = window.speechSynthesis
-    if (!synth) return
-    synth.cancel()
-    const utt = new SpeechSynthesisUtterance(text)
-    utt.rate = 0.9
-    utt.onstart = () => setSpeaking(true)
-    utt.onend = () => setSpeaking(false)
-    synth.speak(utt)
-  }
-
-  // Voice: listen for answer
-  const listenForAnswer = () => {
-    if (typeof window === 'undefined') return
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SR) return
-    const rec = new SR()
-    rec.lang = 'en-US'
-    rec.onstart = () => setVoiceInput(true)
-    rec.onresult = e => { const t = e.results[0][0].transcript; setVoiceInput(false); /* submit answer */ }
-    rec.onend = () => setVoiceInput(false)
-    rec.start()
-  }
-
-
   return (
     <button onClick={e => { e.stopPropagation(); speak() }} title="Listen"
       className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-blue-500/10 transition-colors"
@@ -92,10 +63,37 @@ function shareLink(data, topic) {
 
 function FlashcardsPageInner() {
   const { user } = useAuth()
-  const [copied, setCopied2] = useState(false)
-  const [topic, setTopic]       = useState('')
   const searchParams = useSearchParams()
-  useEffect(() => { const q = searchParams.get('q'); if (q) setTopic(decodeURIComponent(q)) }, [searchParams.get('q')])
+  const audioRef = useRef(null)
+
+  // All state at the top
+  const [topic, setTopic] = useState('')
+  const [count, setCount] = useState(10)
+  const [cards, setCards] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [current, setCurrent] = useState(0)
+  const [flipped, setFlipped] = useState(false)
+  const [done, setDone] = useState([])
+  const [error, setError] = useState('')
+  const [showEdit, setShowEdit] = useState(false)
+  const [editIdx, setEditIdx] = useState(null)
+  const [editVals, setEditVals] = useState({ front: '', back: '' })
+  const [savedId, setSavedId] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [saveFeedback, setSaveFeedback] = useState('')
+  const [showSave, setShowSave] = useState(false)
+  const [saveTitle, setSaveTitle] = useState('')
+  const [copied, setCopied] = useState(false)
+  const [shareMsg, setShareMsg] = useState('')
+  const [reviewQueue, setReviewQueue] = useState([])
+  const [dueToday, setDueToday] = useState(0)
+
+  // Effects
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (q) setTopic(decodeURIComponent(q))
+  }, [searchParams.get('q')])
+
   useEffect(() => {
     const id = 'nova-gen-anim'
     if (document.getElementById(id)) return
@@ -105,23 +103,16 @@ function FlashcardsPageInner() {
     document.head.appendChild(s)
   }, [])
 
-  const [count, setCount]       = useState(10)
-  const [cards, setCards]       = useState([])
-  const [loading, setLoading]   = useState(false)
-  const [current, setCurrent]   = useState(0)
-  const [flipped, setFlipped]   = useState(false)
-  const [done, setDone]         = useState([])
-  const [error, setError]       = useState('')
-  const [showEdit, setShowEdit] = useState(false)
-  const [editIdx, setEditIdx]   = useState(null)
-  const [editVals, setEditVals] = useState({ front: '', back: '' })
-  const [savedId, setSavedId]   = useState(null)
-  const [saving, setSaving]     = useState(false)
-  const [saveFeedback, setSaveFeedback] = useState('')
-  const audioRef = useRef(null)
-  const [showSave, setShowSave] = useState(false)
-  const [saveTitle, setSaveTitle] = useState('')
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const reviews = JSON.parse(localStorage.getItem('ff-card-reviews') || '{}')
+    const now = Date.now()
+    const due = Object.entries(reviews).filter(([,v]) => v.nextReview <= now)
+    setDueToday(due.length)
+    setReviewQueue(due.map(([id]) => id))
+  }, [])
 
+  // Handlers
   async function generate() {
     if (!topic.trim()) return
     setLoading(true); setCards([]); setDone([]); setCurrent(0); setFlipped(false); setError(''); setSavedId(null)
@@ -165,20 +156,6 @@ function FlashcardsPageInner() {
   function addCard() { const n = cards.length; setCards(cs => [...cs, { front: 'New question', back: 'New answer' }]); setTimeout(() => startEdit(n), 0) }
   function deleteCard(i) { setCards(cs => cs.filter((_, ci) => ci !== i)); if (current >= i && current > 0) setCurrent(c => c - 1); setDone(d => d.filter(di => di !== i).map(di => di > i ? di - 1 : di)); if (editIdx === i) setEditIdx(null) }
 
-
-  // ── Spaced Repetition (SM-2) ──────────────────────────────────────
-  const [reviewQueue, setReviewQueue] = useState([])
-  const [dueToday, setDueToday] = useState(0)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const reviews = JSON.parse(localStorage.getItem('ff-card-reviews') || '{}')
-    const now = Date.now()
-    const due = Object.entries(reviews).filter(([,v]) => v.nextReview <= now)
-    setDueToday(due.length)
-    setReviewQueue(due.map(([id]) => id))
-  }, [])
-
   const recordReview = (cardId, quality) => {
     if (typeof window === 'undefined') return
     const reviews = JSON.parse(localStorage.getItem('ff-card-reviews') || '{}')
@@ -189,10 +166,7 @@ function FlashcardsPageInner() {
       else if (repetitions === 1) interval = 6
       else interval = Math.round(interval * easeFactor)
       repetitions++
-    } else {
-      repetitions = 0
-      interval = 1
-    }
+    } else { repetitions = 0; interval = 1 }
     easeFactor = Math.max(1.3, easeFactor + 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
     reviews[cardId] = { easeFactor, interval, repetitions, nextReview: Date.now() + interval * 86400000 }
     localStorage.setItem('ff-card-reviews', JSON.stringify(reviews))
@@ -200,64 +174,16 @@ function FlashcardsPageInner() {
     setReviewQueue(q => q.filter(id => id !== cardId))
   }
 
-  // ── Voice Mode ───────────────────────────────────────────────────
-  const [voiceOn, setVoiceOn] = useState(false)
-  const [listening, setListening] = useState(false)
-  const synth = typeof window !== 'undefined' ? window.speechSynthesis : null
-  const recognitionRef = useRef(null)
-
-  const speakCard = (text) => {
-    if (!synth) return
-    synth.cancel()
-    const u = new SpeechSynthesisUtterance(text)
-    u.rate = 0.95
-    synth.speak(u)
-  }
-
-  const startListening = (onResult) => {
-    const SpeechRec = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)
-    if (!SpeechRec) return
-    const rec = new SpeechRec()
-    rec.lang = 'en-US'
-    rec.interimResults = false
-    rec.onresult = (e) => { onResult(e.results[0][0].transcript); setListening(false) }
-    rec.onerror = () => setListening(false)
-    rec.onend = () => setListening(false)
-    recognitionRef.current = rec
-    setListening(true)
-    rec.start()
-  }
-
-  // ── Share Link ───────────────────────────────────────────────────
-  const [shareMsg, setShareMsg] = useState('')
-
-  const generateShareLink = (deckId) => {
-    const uuid = ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
-      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16))
-    if (typeof window !== 'undefined') {
-      const shared = JSON.parse(localStorage.getItem('ff-shared-decks') || '{}')
-      shared[uuid] = { deckId, created: Date.now() }
-      localStorage.setItem('ff-shared-decks', JSON.stringify(shared))
-    }
-    const url = window.location.origin + '/shared/' + uuid
-    navigator.clipboard?.writeText(url).then(() => {
-      setShareMsg('Link copied!')
-      setTimeout(() => setShareMsg(''), 2500)
-    })
-    return url
-  }
-
+  // Render: input form
   if (!cards.length) return (
     <div className="p-6 max-w-2xl mx-auto w-full">
-      {/* ── Review Queue Banner ── */}
       {reviewQueue.length > 0 && (
         <div style={{ background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:10, padding:'12px 16px', marginBottom:20, display:'flex', alignItems:'center', gap:12 }}>
-          <span style={{ fontSize:20 }}>⏰</span>
+          <span style={{ fontSize:20 }}>&#9200;</span>
           <div style={{ flex:1 }}>
             <p style={{ margin:0, fontWeight:600, fontSize:14, color:'#f59e0b' }}>{reviewQueue.length} card{reviewQueue.length>1?'s':''} due for review</p>
-            <p style={{ margin:0, fontSize:12, color:'#8b949e' }}>Spaced repetition queue — review these first</p>
+            <p style={{ margin:0, fontSize:12, color:'#8b949e' }}>Spaced repetition queue &mdash; review these first</p>
           </div>
-          <button onClick={() => {}} style={{ background:'#f59e0b', color:'#000', fontSize:12, fontWeight:600, padding:'6px 14px', borderRadius:8, border:'none', cursor:'pointer' }}>Review now</button>
         </div>
       )}
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Flashcards</h1>
@@ -277,7 +203,7 @@ function FlashcardsPageInner() {
           <div className="flex justify-between text-[10px] text-t3 mt-1.5"><span>10</span><span>15</span><span>20</span><span>30</span></div>
         </div>
         {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
-          <button onClick={generate} disabled={loading} style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',opacity:loading?0.6:1,letterSpacing:'-0.01em'}}>
+        <button onClick={generate} disabled={loading} style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',opacity:loading?0.6:1,letterSpacing:'-0.01em'}}>
           {loading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>Generating...</> : 'Generate ' + count + ' Flashcards'}
         </button>
       </div>
@@ -287,6 +213,7 @@ function FlashcardsPageInner() {
   const card = cards[current]
   const progress = Math.round((done.length / cards.length) * 100)
 
+  // Render: edit view
   if (showEdit) return (
     <div className="p-6 max-w-2xl mx-auto w-full">
       <div className="flex items-center justify-between mb-5">
@@ -321,7 +248,7 @@ function FlashcardsPageInner() {
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
                   <button onClick={() => startEdit(i)} className="h-7 px-2 text-[11px] text-t2 border border-line rounded-lg hover:bg-surface2">Edit</button>
-                  <button onClick={() => deleteCard(i)} className="h-7 px-2 text-[11px] text-red-500 border border-red-200 dark:border-red-500/30 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10">✕</button>
+                  <button onClick={() => deleteCard(i)} className="h-7 px-2 text-[11px] text-red-500 border border-red-200 dark:border-red-500/30 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10">&#x2715;</button>
                 </div>
               </div>
             )}
@@ -331,6 +258,7 @@ function FlashcardsPageInner() {
     </div>
   )
 
+  // Render: card viewer
   return (
     <div className="p-6 max-w-2xl mx-auto w-full">
       {showSave && (
@@ -351,30 +279,30 @@ function FlashcardsPageInner() {
       )}
       {!savedId && cards.length > 0 && (
         <div className="mb-4 px-4 py-2.5 bg-amber-500/10 border border-amber-400/30 rounded-xl flex items-center justify-between">
-          <span className="text-[12px] text-amber-600 font-medium">💾 Don't forget to save your deck to My Stuff!</span>
+          <span className="text-[12px] text-amber-600 font-medium">&#128190; Don't forget to save your deck to My Stuff!</span>
           <button onClick={() => { setSaveTitle(topic); setShowSave(true) }} className="h-7 px-3 bg-amber-500 text-white text-[11px] font-bold rounded-lg hover:bg-amber-600">Save Now</button>
         </div>
       )}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-t1 tracking-tight">Flashcards</h1>
-          <p className="text-sm text-t2">{cards.length} cards · {done.length} learned</p>
+          <p className="text-sm text-t2">{cards.length} cards &middot; {done.length} learned</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap justify-end">
           {user && <button onClick={() => { setSaveTitle(topic); setShowSave(true) }}
             className="h-8 px-3 bg-emerald-600 text-white text-[12px] font-semibold rounded-lg hover:bg-emerald-700 flex items-center gap-1">
-            💾 {savedId ? 'Update' : 'Save'}
+            &#128190; {savedId ? 'Update' : 'Save'}
           </button>}
           {saveFeedback && <span className="text-[11px] text-emerald-500 font-medium">{saveFeedback}</span>}
           <button onClick={() => printDeck(cards, topic)}
             className="h-8 px-3 text-[12px] text-t2 border border-line rounded-lg hover:bg-surface2 flex items-center gap-1">
             <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print
           </button>
-          <button onClick={() => { shareLink(cards, topic); setCopied2(true); setTimeout(() => setCopied2(false), 2000) }}
+          <button onClick={() => { shareLink(cards, topic); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
             className="h-8 px-3 text-[12px] border border-line rounded-lg hover:bg-surface2 flex items-center gap-1"
-            style={{ color: copied2 ? '#34d399' : undefined, borderColor: copied2 ? '#34d399' : undefined }}>
+            style={{ color: copied ? '#34d399' : undefined, borderColor: copied ? '#34d399' : undefined }}>
             <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 2h4v4m0-4L6 10M7 4H2v10h10V9"/></svg>
-            {copied2 ? 'Link copied!' : 'Share'}
+            {copied ? 'Link copied!' : 'Share'}
           </button>
           <button onClick={() => { setShowEdit(true); setEditIdx(null) }}
             className="h-8 px-3 text-[12px] text-t2 border border-line rounded-lg hover:bg-surface2">Edit Deck</button>
@@ -387,7 +315,7 @@ function FlashcardsPageInner() {
       <div onClick={() => { stopAudio(); setFlipped(f => !f) }}
         className="bg-surface border border-line rounded-2xl p-10 text-center cursor-pointer hover:border-blue-300 transition-all min-h-[220px] flex flex-col items-center justify-center gap-4 relative">
         <div className="text-[10px] font-bold text-t3 uppercase tracking-widest">
-          {flipped ? 'Answer' : 'Question'} · {current + 1} of {cards.length}
+          {flipped ? 'Answer' : 'Question'} &middot; {current + 1} of {cards.length}
         </div>
         <div className="text-lg font-semibold text-t1 leading-relaxed max-w-md">
           {flipped ? (card.back || card.answer) : (card.front || card.question)}
@@ -399,13 +327,13 @@ function FlashcardsPageInner() {
       </div>
       <div className="flex gap-3 mt-4 justify-center">
         <button onClick={() => { stopAudio(); setCurrent(c => Math.max(0, c - 1)); setFlipped(false) }} disabled={current === 0}
-          className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">← Prev</button>
+          className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">&#8592; Prev</button>
         {flipped && (
           <button onClick={() => { stopAudio(); setDone(d => [...new Set([...d, current])]); setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false) }}
-            className="h-9 px-4 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700">✓ Got it</button>
+            className="h-9 px-4 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700">&#10003; Got it</button>
         )}
         <button onClick={() => { stopAudio(); setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false) }} disabled={current === cards.length - 1}
-          className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">Next →</button>
+          className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">Next &#8594;</button>
       </div>
       {done.length === cards.length && cards.length > 1 && (
         <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
@@ -416,7 +344,6 @@ function FlashcardsPageInner() {
     </div>
   )
 }
-
 
 export default function FlashcardsPage() {
   return (<Suspense fallback={<div style={{minHeight:'100vh'}}/>}><FlashcardsPageInner/></Suspense>)
