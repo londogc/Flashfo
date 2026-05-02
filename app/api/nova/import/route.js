@@ -6,7 +6,7 @@ const MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-mini'
 
 export async function POST(request) {
   try {
-    const { type, content, url, topic } = await request.json()
+    const { type, content, url, topic, outputType } = await request.json()
 
     let sourceText = content || ''
 
@@ -26,17 +26,14 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Not enough content to generate flashcards from.' }, { status: 400 })
     }
 
-    const systemPrompt = `You are Nova, an AI study assistant for Flashfo. Generate exactly 10 high-quality flashcards from the provided source material. Return ONLY a valid JSON array with no markdown, no backticks, no explanation — just the raw JSON array.
-
+    const isQuiz = outputType === 'quiz'
+    const systemPrompt = isQuiz
+      ? `You are Nova, an AI study assistant for Flashfo. Generate exactly 10 multiple-choice quiz questions from the provided source material. Return ONLY a valid JSON array — no markdown, no backticks, no explanation.
+Format: [{"front": "question text", "back": "A) option  B) option  C) option  D) option  \nAnswer: A) correct option"}, ...]
+Rules: Questions must be clear and unambiguous. 4 answer choices each. Mark the correct answer. Cover key concepts. Do not reproduce copyrighted text verbatim.`
+      : `You are Nova, an AI study assistant for Flashfo. Generate exactly 10 high-quality flashcards from the provided source material. Return ONLY a valid JSON array with no markdown, no backticks, no explanation — just the raw JSON array.
 Format: [{"front": "question or term", "back": "answer or definition"}, ...]
-
-Rules:
-- Each card must test a single, specific concept
-- Questions should be clear and unambiguous  
-- Answers should be concise but complete (1-3 sentences max)
-- Cover the most important concepts in the material
-- Do not include any personally identifiable information
-- Do not reproduce copyrighted text verbatim — paraphrase and test comprehension`
+Rules: Each card must test a single, specific concept. Questions should be clear and unambiguous. Answers should be concise but complete (1-3 sentences max). Cover the most important concepts. Do not reproduce copyrighted text verbatim — paraphrase and test comprehension.`
 
     const userPrompt = sourceText.length > 100
       ? `Generate 10 flashcards from this content:\n\n${sourceText.slice(0, 6000)}`
