@@ -1,9 +1,8 @@
 'use client'
-import { Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem } from '@/lib/savedItems'
+
 
 function renderStudyGuide(text) {
   // Split into sections by --- or ###
@@ -162,6 +161,7 @@ export default function StudyGuidePage() {
     { id: 'deep',     label: 'Deep Dive', desc: 'Comprehensive' },
   ]
 
+
   const generateShareLink = async () => {
     if (!output) return
     const uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2)+Date.now().toString(36)
@@ -245,8 +245,4 @@ export default function StudyGuidePage() {
       </div>
     </div>
   )
-}
-
-function StudyGuidePageInner() {
-  return <Suspense fallback={<div style={{minHeight:'100vh'}}/>}><StudyGuidePageInner/></Suspense>
 }
