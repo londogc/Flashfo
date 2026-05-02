@@ -1,135 +1,220 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
-export default function CollabDecksPage() {
-  const { user } = useAuth()
+export default function CollabDecks() {
+  const { user, profile } = useAuth()
+  const router = useRouter()
   const [decks, setDecks] = useState([])
-  const [activeDeck, setActiveDeck] = useState(null)
+  const [selected, setSelected] = useState(null)
   const [cards, setCards] = useState([])
-  const [newCard, setNewCard] = useState({ question:'', answer:'' })
-  const [newDeck, setNewDeck] = useState({ name:'', subject:'' })
-  const [showCreate, setShowCreate] = useState(false)
+  const [history, setHistory] = useState([])
+  const [newCard, setNewCard] = useState({ front: '', back: '' })
   const [loading, setLoading] = useState(true)
+  const [showHistory, setShowHistory] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [deckName, setDeckName] = useState('')
+  const channelRef = useRef(null)
 
   useEffect(() => {
-    if (!user) return
+    if (!user) { router.push('/auth'); return }
     loadDecks()
   }, [user])
 
-  const loadDecks = async () => {
-    setLoading(true)
-    const { data } = await supabase.from('collaborative_decks').select('*, owner:owner_id(email)').order('created_at', { ascending: false })
+  useEffect(() => {
+    if (!selected) return
+    loadCards(selected.id)
+    loadHistory(selected.id)
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('collab-deck-' + selected.id)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'collab_cards',
+        filter: 'deck_id=eq.' + selected.id
+      }, () => {
+        loadCards(selected.id)
+        loadHistory(selected.id)
+      })
+      .subscribe()
+    channelRef.current = channel
+    return () => { supabase.removeChannel(channel) }
+  }, [selected])
+
+  async function loadDecks() {
+    const { data } = await supabase
+      .from('collab_decks')
+      .select('*')
+      .order('created_at', { ascending: false })
     setDecks(data || [])
+    if (data?.length > 0) setSelected(data[0])
     setLoading(false)
   }
 
-  const loadCards = async (deck) => {
-    setActiveDeck(deck)
-    const { data } = await supabase.from('collaborative_deck_cards').select('*, added_by_user:added_by(email)').eq('deck_id', deck.id).order('created_at')
+  async function loadCards(deckId) {
+    const { data } = await supabase
+      .from('collab_cards')
+      .select('*')
+      .eq('deck_id', deckId)
+      .order('created_at', { ascending: true })
     setCards(data || [])
-    // Subscribe to real-time additions
-    supabase.channel('deck_'+deck.id)
-      .on('postgres_changes', { event:'INSERT', schema:'public', table:'collaborative_deck_cards', filter:'deck_id=eq.'+deck.id },
-        payload => setCards(prev => [...prev, payload.new]))
-      .subscribe()
   }
 
-  const createDeck = async () => {
-    if (!newDeck.name.trim()) return
-    const { data } = await supabase.from('collaborative_decks').insert({ name:newDeck.name, subject:newDeck.subject, owner_id:user.id }).select().single()
-    if (data) { setDecks(prev=>[data,...prev]); setNewDeck({name:'',subject:''}); setShowCreate(false) }
+  async function loadHistory(deckId) {
+    const { data } = await supabase
+      .from('collab_edit_history')
+      .select('*, profiles(full_name, email)')
+      .eq('deck_id', deckId)
+      .order('created_at', { ascending: false })
+      .limit(30)
+    setHistory(data || [])
   }
 
-  const addCard = async () => {
-    if (!newCard.question.trim() || !newCard.answer.trim() || !activeDeck) return
-    await supabase.from('collaborative_deck_cards').insert({ deck_id:activeDeck.id, added_by:user.id, question:newCard.question, answer:newCard.answer })
-    setNewCard({ question:'', answer:'' })
+  async function createDeck() {
+    if (!deckName.trim()) return
+    const { data } = await supabase.from('collab_decks').insert({
+      name: deckName.trim(), created_by: user.id, subject: ''
+    }).select().single()
+    if (data) { setDecks(prev => [data, ...prev]); setSelected(data); setDeckName(''); setCreating(false) }
   }
 
-  const deleteCard = async (id) => {
-    await supabase.from('collaborative_deck_cards').delete().eq('id', id).eq('added_by', user.id)
-    setCards(prev=>prev.filter(c=>c.id!==id))
+  async function addCard() {
+    if (!newCard.front.trim() || !newCard.back.trim() || !selected) return
+    await supabase.from('collab_cards').insert({
+      deck_id: selected.id, front: newCard.front.trim(), back: newCard.back.trim(), added_by: user.id
+    })
+    // Log to edit history
+    await supabase.from('collab_edit_history').insert({
+      deck_id: selected.id, user_id: user.id,
+      action: 'added_card', detail: newCard.front.trim().slice(0, 60)
+    })
+    setNewCard({ front: '', back: '' })
   }
+
+  async function deleteCard(card) {
+    await supabase.from('collab_cards').delete().eq('id', card.id)
+    await supabase.from('collab_edit_history').insert({
+      deck_id: selected.id, user_id: user.id,
+      action: 'deleted_card', detail: card.front.slice(0, 60)
+    })
+  }
+
+  const actionLabel = { added_card: '+ Added', deleted_card: '✕ Deleted', edited_card: '✎ Edited', created_deck: '✦ Created' }
 
   return (
-    <div style={{ maxWidth:800, margin:'0 auto', padding:'0 16px 40px' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
-        <div>
-          <h1 style={{ fontSize:22, fontWeight:700, color:'var(--c-t1)', margin:'0 0 4px' }}>Collaborative Decks</h1>
-          <p style={{ color:'var(--c-t2)', fontSize:13, margin:0 }}>Shared flashcard sets — anyone in the class can add cards in real time.</p>
+    <div style={{ display: 'flex', height: '100%', gap: 0 }}>
+      {/* Sidebar — deck list */}
+      <div style={{ width: 280, borderRight: '1px solid var(--c-line)', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-t2)', letterSpacing: '.06em', textTransform: 'uppercase' }}>Collab Decks</span>
+          <button onClick={() => setCreating(true)} style={{ width: 28, height: 28, borderRadius: 7, background: '#2563eb', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
         </div>
-        <button onClick={()=>setShowCreate(v=>!v)} style={{ padding:'8px 16px', borderRadius:8, background:'#2563eb', color:'#fff', border:'none', fontWeight:600, fontSize:13, cursor:'pointer' }}>+ New Deck</button>
+        {creating && (
+          <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 10, padding: 12, marginBottom: 8 }}>
+            <input value={deckName} onChange={e => setDeckName(e.target.value)} placeholder="Deck name..." onKeyDown={e => e.key === 'Enter' && createDeck()}
+              style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontSize: 14, color: 'var(--c-t1)', marginBottom: 8 }} autoFocus/>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={createDeck} style={{ flex: 1, padding: '6px 0', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Create</button>
+              <button onClick={() => setCreating(false)} style={{ flex: 1, padding: '6px 0', background: 'var(--c-surface2)', color: 'var(--c-t2)', border: '1px solid var(--c-line)', borderRadius: 7, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
+            </div>
+          </div>
+        )}
+        {loading ? <div style={{ color: 'var(--c-t3)', fontSize: 13, padding: '20px 0', textAlign: 'center' }}>Loading...</div>
+          : decks.length === 0 ? <div style={{ color: 'var(--c-t3)', fontSize: 13, padding: '20px 0', textAlign: 'center' }}>No decks yet. Create one!</div>
+          : decks.map(d => (
+            <button key={d.id} onClick={() => setSelected(d)}
+              style={{ padding: '10px 14px', borderRadius: 10, background: selected?.id === d.id ? 'rgba(37,99,235,.1)' : 'transparent', border: selected?.id === d.id ? '1px solid rgba(37,99,235,.3)' : '1px solid transparent', textAlign: 'left', cursor: 'pointer', color: selected?.id === d.id ? '#3b82f6' : 'var(--c-t1)', fontSize: 14, fontWeight: selected?.id === d.id ? 600 : 400 }}>
+              {d.name}
+              <div style={{ fontSize: 11, color: 'var(--c-t3)', marginTop: 2 }}>{d.card_count || 0} cards</div>
+            </button>
+          ))
+        }
       </div>
 
-      {showCreate && (
-        <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:12, padding:20, marginBottom:20 }}>
-          <input value={newDeck.name} onChange={e=>setNewDeck(d=>({...d,name:e.target.value}))} placeholder="Deck name e.g. Bio Chapter 3"
-            style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13, marginBottom:8, boxSizing:'border-box' }}/>
-          <input value={newDeck.subject} onChange={e=>setNewDeck(d=>({...d,subject:e.target.value}))} placeholder="Subject (optional)"
-            style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13, marginBottom:12, boxSizing:'border-box' }}/>
-          <button onClick={createDeck} style={{ padding:'8px 18px', borderRadius:8, background:'#34d399', color:'#0d1117', border:'none', fontWeight:600, fontSize:13, cursor:'pointer' }}>Create Deck</button>
-        </div>
-      )}
-
-      {activeDeck ? (
-        <div>
-          <button onClick={()=>setActiveDeck(null)} style={{ background:'none', border:'none', color:'var(--c-t2)', cursor:'pointer', fontSize:13, marginBottom:16, display:'flex', alignItems:'center', gap:4 }}>← Back to decks</button>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+      {/* Main area */}
+      {selected ? (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* Deck header */}
+          <div style={{ padding: '20px 28px', borderBottom: '1px solid var(--c-line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <h2 style={{ margin:'0 0 2px', fontSize:17, fontWeight:700, color:'var(--c-t1)' }}>{activeDeck.name}</h2>
-              {activeDeck.subject && <span style={{ fontSize:12, color:'#a78bfa' }}>{activeDeck.subject}</span>}
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--c-t1)', marginBottom: 2 }}>{selected.name}</h2>
+              <div style={{ fontSize: 13, color: 'var(--c-t2)' }}>{cards.length} cards</div>
             </div>
-            <span style={{ fontSize:12, color:'var(--c-t3)', background:'var(--c-surface2)', padding:'4px 10px', borderRadius:20, border:'1px solid var(--c-line)' }}><span style={{ display:'inline-block', width:7, height:7, borderRadius:'50%', background:'#34d399', marginRight:5, verticalAlign:'middle' }}/>Live</span>
+            <button onClick={() => setShowHistory(!showHistory)}
+              style={{ padding: '8px 16px', background: showHistory ? 'rgba(167,139,250,.1)' : 'var(--c-surface)', border: `1px solid ${showHistory ? 'rgba(167,139,250,.3)' : 'var(--c-line)'}`, borderRadius: 9, fontSize: 13, color: showHistory ? '#a78bfa' : 'var(--c-t2)', cursor: 'pointer', fontWeight: 500 }}>
+              Edit History {history.length > 0 && `(${history.length})`}
+            </button>
           </div>
 
-          {/* Add card */}
-          <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:10, padding:16, marginBottom:20 }}>
-            <p style={{ margin:'0 0 10px', fontSize:12, fontWeight:600, color:'var(--c-t3)', letterSpacing:'0.06em' }}>ADD A CARD</p>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8 }}>
-              <input value={newCard.question} onChange={e=>setNewCard(c=>({...c,question:e.target.value}))} placeholder="Question"
-                style={{ padding:'8px 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13 }}/>
-              <input value={newCard.answer} onChange={e=>setNewCard(c=>({...c,answer:e.target.value}))} placeholder="Answer"
-                onKeyDown={e=>e.key==='Enter'&&addCard()}
-                style={{ padding:'8px 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13 }}/>
-            </div>
-            <button onClick={addCard} style={{ padding:'7px 16px', borderRadius:8, background:'#2563eb', color:'#fff', border:'none', fontSize:13, fontWeight:600, cursor:'pointer' }}>Add card</button>
-          </div>
-
-          {/* Cards list */}
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            {cards.length === 0 && <p style={{ color:'var(--c-t3)', fontSize:13, textAlign:'center', padding:24 }}>No cards yet — be the first to add one!</p>}
-            {cards.map(c=>(
-              <div key={c.id} style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:10, padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12 }}>
-                <div style={{ flex:1 }}>
-                  <p style={{ margin:'0 0 4px', fontSize:13, color:'var(--c-t1)', fontWeight:500 }}>{c.question}</p>
-                  <p style={{ margin:0, fontSize:13, color:'#34d399' }}>{c.answer}</p>
+          <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            {/* Cards list */}
+            <div style={{ flex: 1, padding: '20px 28px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* Add card form */}
+              <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: '18px 20px', display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: 'var(--c-t3)', marginBottom: 4, fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase' }}>Front</div>
+                  <input value={newCard.front} onChange={e => setNewCard(p => ({...p, front: e.target.value}))} placeholder="Question or term..."
+                    style={{ width: '100%', padding: '8px 12px', background: 'var(--c-bg)', border: '1px solid var(--c-line)', borderRadius: 8, fontSize: 14, color: 'var(--c-t1)', outline: 'none' }}/>
                 </div>
-                <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0 }}>
-                  {c.added_by_user?.email && <span style={{ fontSize:10, color:'var(--c-t3)' }}>{c.added_by_user.email.split('@')[0]}</span>}
-                  {c.added_by === user?.id && <button onClick={()=>deleteCard(c.id)} style={{ background:'none', border:'none', color:'var(--c-t3)', cursor:'pointer', fontSize:14, padding:2 }}>×</button>}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: 'var(--c-t3)', marginBottom: 4, fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase' }}>Back</div>
+                  <input value={newCard.back} onChange={e => setNewCard(p => ({...p, back: e.target.value}))} placeholder="Answer or definition..."
+                    onKeyDown={e => e.key === 'Enter' && addCard()}
+                    style={{ width: '100%', padding: '8px 12px', background: 'var(--c-bg)', border: '1px solid var(--c-line)', borderRadius: 8, fontSize: 14, color: 'var(--c-t1)', outline: 'none' }}/>
                 </div>
+                <button onClick={addCard} style={{ padding: '9px 20px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>Add Card</button>
               </div>
-            ))}
+
+              {/* Card list */}
+              {cards.map((c, i) => (
+                <div key={c.id} style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(37,99,235,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#3b82f6', flexShrink: 0 }}>{i+1}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-t1)', marginBottom: 4 }}>{c.front}</div>
+                    <div style={{ fontSize: 13, color: 'var(--c-t2)' }}>{c.back}</div>
+                  </div>
+                  {c.added_by === user.id && (
+                    <button onClick={() => deleteCard(c)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--c-t3)', fontSize: 16, padding: '2px 6px', flexShrink: 0 }}>✕</button>
+                  )}
+                </div>
+              ))}
+              {cards.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--c-t3)' }}>No cards yet. Add the first one above!</div>
+              )}
+            </div>
+
+            {/* Edit history panel */}
+            {showHistory && (
+              <div style={{ width: 320, borderLeft: '1px solid var(--c-line)', padding: '20px 20px', overflowY: 'auto' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-t2)', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 16 }}>Edit History</div>
+                {history.length === 0 ? (
+                  <div style={{ fontSize: 13, color: 'var(--c-t3)', textAlign: 'center', padding: '30px 0' }}>No edits yet</div>
+                ) : history.map((h, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'flex-start' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(167,139,250,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#a78bfa', flexShrink: 0 }}>
+                      {(h.profiles?.full_name || h.profiles?.email || 'U').slice(0,1).toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: 'var(--c-t1)', fontWeight: 500 }}>
+                        {h.profiles?.full_name || h.profiles?.email || 'Unknown'}
+                      </div>
+                      <div style={{ fontSize: 12, color: h.action === 'added_card' ? '#34d399' : h.action === 'deleted_card' ? '#f87171' : '#a78bfa' }}>
+                        {actionLabel[h.action] || h.action} — {h.detail}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--c-t3)', marginTop: 2 }}>
+                        {new Date(h.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       ) : (
-        <div style={{ display:'grid', gap:12 }}>
-          {loading && [1,2,3].map(i=><div key={i} style={{ height:72, borderRadius:10, background:'var(--c-surface2)' }} className="skeleton"/>)}
-          {!loading && decks.length === 0 && <p style={{ color:'var(--c-t3)', textAlign:'center', padding:32 }}>No shared decks yet. Create one to get started.</p>}
-          {decks.map(deck=>(
-            <div key={deck.id} onClick={()=>loadCards(deck)}
-              style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:10, padding:'14px 18px', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', transition:'border-color 0.15s' }}
-              onMouseEnter={e=>e.currentTarget.style.borderColor='#2563eb'}
-              onMouseLeave={e=>e.currentTarget.style.borderColor='var(--c-line)'}>
-              <div>
-                <p style={{ margin:'0 0 2px', fontSize:14, fontWeight:600, color:'var(--c-t1)' }}>{deck.name}</p>
-                {deck.subject && <span style={{ fontSize:12, color:'var(--c-t3)' }}>{deck.subject}</span>}
-              </div>
-              <span style={{ fontSize:12, color:'var(--c-t3)' }}>Open →</span>
-            </div>
-          ))}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--c-t3)' }}>
+          Select a deck or create a new one
         </div>
       )}
     </div>
