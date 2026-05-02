@@ -95,7 +95,7 @@ function FlashcardsPageInner() {
   const [copied, setCopied2] = useState(false)
   const [topic, setTopic]       = useState('')
   const searchParams = useSearchParams()
-  useEffect(() => { const q = searchParams.get('q'); if (q) setTopic(decodeURIComponent(q)) }, [searchParams])
+  useEffect(() => { const q = searchParams.get('q'); if (q) setTopic(decodeURIComponent(q)) }, [searchParams.get('q')])
   useEffect(() => {
     const id = 'nova-gen-anim'
     if (document.getElementById(id)) return
