@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 
-// ── Print helpers ──────────────────────────────────────────────────────
+// ââ Print helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function printQuizBlank(questions, topic) {
   const win = window.open('', '_blank')
   const qHtml = questions.map(function(q, i) {
@@ -48,7 +48,7 @@ function printQuizKey(questions, topic) {
   win.document.close()
 }
 
-// ── TTS Button ─────────────────────────────────────────────────────────
+// ââ TTS Button âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function SpeakerBtn({ text }) {
   const [busy, setBusy] = useState(false)
   async function speak() {
@@ -75,7 +75,7 @@ function SpeakerBtn({ text }) {
   )
 }
 
-// ── Answer Key Modal ───────────────────────────────────────────────────
+// ââ Answer Key Modal âââââââââââââââââââââââââââââââââââââââââââââââââââ
 function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations, explanationLoading, explainWrongAnswer }) {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center" style={{ background: 'rgba(0,0,0,0.5)', padding: '24px 16px', overflowY: 'auto' }}>
@@ -140,7 +140,7 @@ function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations,
   )
 }
 
-// ── Edit Panel ──────────────────────────────────────────────────────────
+// ââ Edit Panel ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function EditPanel({ questions, onSave, onCancel }) {
   const [qs, setQs] = useState(questions.map(q => ({ ...q, options: [...(q.options || ['True','False'])] })))
   const [addType, setAddType] = useState(null)
@@ -269,7 +269,7 @@ function EditPanel({ questions, onSave, onCancel }) {
   )
 }
 
-// ── Question type config ───────────────────────────────────────────────
+// ââ Question type config âââââââââââââââââââââââââââââââââââââââââââââââ
 const BASE_TYPES = [
   { id: 'mcq', label: 'Multiple Choice' },
   { id: 'true_false', label: 'True / False' },
@@ -294,7 +294,7 @@ function buildConfig(typeId, count, breakdown) {
   return cfg
 }
 
-// ── Main Component ─────────────────────────────────────────────────────
+// ââ Main Component âââââââââââââââââââââââââââââââââââââââââââââââââââââ
 export default function QuizPage() {
   const { user } = useAuth()
 
@@ -492,12 +492,7 @@ export default function QuizPage() {
               <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-3">
                 Breakdown <span className="text-emerald-500">({breakdownTotal} QUESTIONS)</span>
               </div>
-              <style>{`
-                .bd-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-                @media(max-width:640px){.bd-grid{grid-template-columns:1fr 1fr;gap:10px}}
-                @media(max-width:480px){.bd-grid{grid-template-columns:1fr;gap:8px}}
-              `}</style>
-              <div className="bd-grid">
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(130px, 1fr))',gap:8}}>
                 {[{k:'mcq',label:'Multiple Choice'},{k:'tf',label:'True / False'},{k:'sa',label:'Short Answer'},{k:'fitb',label:'Fill in Blank'},{k:'match',label:'Matching'}].map(({k,label}) => (
                   <div key={k} style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:10,padding:'8px 12px'}}>
                     <span style={{fontSize:12,fontWeight:600,color:'var(--c-t2)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',paddingRight:6}}>{label}</span>
