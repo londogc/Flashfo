@@ -398,7 +398,7 @@ export default function LandingPage() {
           Study smarter.<br/>Teach better. Together.
         </h1>
         <p style={{ fontSize:18, color:'#8b949e', maxWidth:520, margin:'0 auto 36px', lineHeight:1.6 }}>
-          Nova builds personalised flashcards, quizzes, and study guides in seconds — tailored to your exact curriculum.
+          Nova builds personalized flashcards, quizzes, and study guides in seconds — tailored to your exact curriculum.
         </p>
         <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
           <a href="/auth?mode=signup" style={{ background:'#2563eb',color:'#fff',fontSize:15,fontWeight:600,padding:'12px 24px',borderRadius:10,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8 }}>
@@ -444,7 +444,7 @@ export default function LandingPage() {
             <p style={{ color:'#8b949e', fontSize:15, lineHeight:1.6 }}>Nova learns which classes you're in, what you're studying, and where you're stuck. Every resource she creates is built around your exact curriculum.</p>
           </div>
           <div style={{ flex:'0 0 auto', display:'flex', flexDirection:'column', gap:12 }}>
-            {['Personalised to your syllabus','Aware of your teacher\'s assignments','Remembers what you find hard','Works across all your subjects'].map(f => (
+            {['Personalized to your syllabus','Aware of your teacher\'s assignments','Remembers what you find hard','Works across all your subjects'].map(f => (
               <div key={f} style={{ display:'flex', alignItems:'center', gap:10, fontSize:14, color:'#e6edf3' }}>
                 <span style={{ color:'#34d399', fontWeight:600, fontSize:16 }}>✓</span>{f}
               </div>
