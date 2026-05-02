@@ -17,7 +17,7 @@ export default function MyProgress() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) { router.push('/auth'); return; }
+    if (!user) return // Shell layout handles redirect
     loadProgress()
   }, [user])
 
