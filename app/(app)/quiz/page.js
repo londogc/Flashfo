@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
@@ -304,13 +305,18 @@ function buildConfig(typeId, count, breakdown) {
   return cfg
 }
 
-export default function QuizPage() {
+function QuizPageInner() {
   const { user } = useAuth()
   const [typeId, setTypeId] = useState('mcq')
   const [count, setCount] = useState(5)
   const [breakdown, setBreakdown] = useState({ mcq: 0, tf: 0, sa: 0, fitb: 0, match: 0 })
   const [topic, setTopic] = useState('')
-  const [questions, setQuestions] = useState([])
+
+  const _searchParams = useSearchParams()
+  useEffect(() => {
+    const q = _searchParams.get('q')
+    if (q) setTopic(decodeURIComponent(q))
+  }, [_searchParams.get('q')])  const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState({})
   const [saInputs, setSaInputs] = useState({})
@@ -484,7 +490,7 @@ export default function QuizPage() {
               <div className="bd-grid">
                 {[{k:'mcq',label:'Multiple Choice'},{k:'tf',label:'True / False'},{k:'sa',label:'Short Answer'},{k:'fitb',label:'Fill in Blank'},{k:'match',label:'Matching'}].map(({k,label}) => (
                   <div key={k} style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:10,padding:'8px 12px'}}>
-                    <span style={{fontSize:12,fontWeight:600,color:'var(--c-t2)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',paddingRight:6}}>{label}</span>
+                    <span style={{fontSize:12,fontWeight:600,color:'var(--c-t2)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'normal',paddingRight:6}}>{label}</span>
                     <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
                       <button onClick={() => setBreakdown(b => ({ ...b, [k]: Math.max(0, (b[k]||0) - 1) }))}
                         style={{width:30,height:30,borderRadius:8,border:'1px solid var(--c-line)',background:'none',color:'var(--c-t2)',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>−</button>
@@ -697,4 +703,8 @@ export default function QuizPage() {
       )}
     </div>
   )
+}
+
+export default function QuizPage() {
+  return <Suspense fallback={<div style={{minHeight:'100vh'}}/>}><QuizPageInner/></Suspense>
 }
