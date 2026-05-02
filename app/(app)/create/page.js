@@ -56,7 +56,7 @@ export default function CreatePage() {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('ff-create-content', JSON.stringify({ inputMode, content, topic: inputMode==='topic'?content:pdfName||'Imported content' }))
     }
-    const routes = { flashcards:'/flashcards', quiz:'/quiz', study_guide:'/study-guide', summary:'/study-guide' }
+    const routes = { flashcards:'/flashcards', quiz:'/quiz', study_guide:'/study-guide', summary:'/summarize' }
     const dest = routes[tool] || '/flashcards'
     router.push(dest + '?q=' + encodeURIComponent(content.trim()))
   }
