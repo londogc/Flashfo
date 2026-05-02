@@ -20,7 +20,7 @@ export async function POST(request) {
       stream: true,
       input,
     }
-    if (systemPrompt) payload.system = systemPrompt
+    if (systemPrompt) payload.instructions = systemPrompt
 
     const res = await fetch(RESPONSES_URL, {
       method: 'POST',
