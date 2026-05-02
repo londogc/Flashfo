@@ -1,4 +1,6 @@
 'use client'
+import { Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem } from '@/lib/savedItems'
@@ -109,8 +111,13 @@ function renderStudyGuide(text) {
   return <div>{elements}</div>
 }
 
-export default function StudyGuidePage() {
-  const { user } = useAuth()
+function StudyGuidePageInner() {
+  const { user } = useAu
+  const _sgSearchParams = useSearchParams()
+  useEffect(() => {
+    const q = _sgSearchParams.get('q')
+    if (q) setTopic(decodeURIComponent(q))
+  }, [_sgSearchParams.get('q')])th()
   const [topic, setTopic]     = useState('')
   const [depth, setDepth]     = useState('standard')
   const [output, setOutput]   = useState('')
@@ -245,4 +252,8 @@ export default function StudyGuidePage() {
       </div>
     </div>
   )
+}
+
+export default function StudyGuidePage() {
+  return <Suspense fallback={<div style={{minHeight:'100vh'}}/>}><StudyGuidePageInner/></Suspense>
 }
