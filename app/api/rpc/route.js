@@ -342,7 +342,7 @@ async function generateLessonPlanFromItems(items, educationLevel, targetLanguage
     'Create a teacher-ready lesson plan that integrates ALL source items below.\n' +
     'Do not ignore short keyword topics just because another source is longer.\n' +
     'Every source item should influence the final lesson plan.\n\n' +
-    `The selected education level is: ${String(educationLevel || 'Grade 9–12')}. Write for that exact level.\n` +
+    `The selected education level is: ${String(educationLevel || 'Grade 9â12')}. Write for that exact level.\n` +
     `Write the lesson plan in the selected site language when provided.${getLanguageInstruction(targetLanguage)}\n` +
     'The lesson plan should feel like something a real teacher could actually use.\n' +
     'Make it clear, practical, classroom-ready, and not robotic.\n\n' +
@@ -583,6 +583,7 @@ const handlers = {
   readDriveTextFile,
   runLearningFeature,
   generateChatResponse,
+  generateQuizFromTopic,
 
 };
 
