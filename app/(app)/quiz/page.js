@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 
-// ── Print helpers (no template literals) ──────────────────────────────────
+// ── Print helpers ──────────────────────────────────────────────────────
 function printQuizBlank(questions, topic) {
   const win = window.open('', '_blank')
   const qHtml = questions.map(function(q, i) {
@@ -20,11 +20,7 @@ function printQuizBlank(questions, topic) {
     }
     return '<div style="margin-bottom:18px;page-break-inside:avoid"><div style="font-weight:600;margin-bottom:6px">'+(i+1)+'. '+q.question+'</div>'+body+'</div>'
   }).join('')
-  win.document.write('<!DOCTYPE html><html><head><title>Quiz</title>' +
-    '<style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#111;font-size:13px}h1{font-size:20px}' +
-    '.sub{color:#666;font-size:12px;margin-bottom:24px}@media print{body{margin:20px}}</style></head><body>' +
-    '<h1>'+(topic||'Quiz')+'</h1><div class="sub">'+questions.length+' questions</div>'+qHtml+
-    '<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>')
+  win.document.write('<!DOCTYPE html><html><head><title>Quiz</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#111;font-size:13px}h1{font-size:20px}.sub{color:#666;font-size:12px;margin-bottom:24px}@media print{body{margin:20px}}</style></head><body><h1>'+(topic||'Quiz')+'</h1><div class="sub">'+questions.length+' questions</div>'+qHtml+'<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>')
   win.document.close()
 }
 
@@ -38,30 +34,23 @@ function printQuizKey(questions, topic) {
     } else if (q.type === 'short_answer') {
       body = '<div style="padding:4px 8px;background:#dbeafe;border-radius:4px;font-size:12px">Model: '+(q.correctAnswer||'Open-ended')+'</div>'
     } else if (q.type === 'matching') {
-      body = (q.pairs||[]).map(function(p,j){ return '<div style="font-size:12px;margin:2px 0"><strong>'+(j+1)+'. '+p.left+'</strong> → '+p.right+'</div>' }).join('')
+      body = (q.pairs||[]).map(function(p,j){ return '<div style="font-size:12px;margin:2px 0"><strong>'+(j+1)+'. '+p.left+'</strong> &rarr; '+p.right+'</div>' }).join('')
     } else {
       body = (q.options||(q.type==='true_false'?['True','False']:[])).map(function(o,j){
         var correct = j === q.answerIndex
-        return '<div style="padding:4px 8px;border:1px solid '+(correct?'#6ee7b7':'#e5e7eb')+';background:'+(correct?'#d1fae5':'transparent')+';border-radius:4px;margin:3px 0;font-size:12px;font-weight:'+(correct?'600':'normal')+'">'+labels[j]+'. '+o+(correct?' ✓':'')+'</div>'
+        return '<div style="padding:4px 8px;border:1px solid '+(correct?'#6ee7b7':'#e5e7eb')+';background:'+(correct?'#d1fae5':'transparent')+';border-radius:4px;margin:3px 0;font-size:12px;font-weight:'+(correct?'600':'normal')+'">'+labels[j]+'. '+o+(correct?' &#10003;':'')+'</div>'
       }).join('')
     }
     var exp = q.explanation ? '<div style="margin-top:6px;font-size:11px;color:#555;background:#f9fafb;padding:5px 8px;border-radius:4px;border-left:3px solid #3b82f6"><strong>Explanation:</strong> '+q.explanation+'</div>' : ''
     return '<div style="margin-bottom:18px;page-break-inside:avoid"><div style="font-weight:600;margin-bottom:6px">'+(i+1)+'. '+q.question+'</div>'+body+exp+'</div>'
   }).join('')
-  win.document.write('<!DOCTYPE html><html><head><title>Answer Key</title>' +
-    '<style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#111;font-size:13px}h1{font-size:20px}' +
-    '.sub{color:#666;font-size:12px;margin-bottom:24px}@media print{body{margin:20px}}</style></head><body>' +
-    '<h1>'+(topic||'Quiz')+' — Answer Key</h1><div class="sub">'+questions.length+' questions</div>'+qHtml+
-    '<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>')
+  win.document.write('<!DOCTYPE html><html><head><title>Answer Key</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#111;font-size:13px}h1{font-size:20px}.sub{color:#666;font-size:12px;margin-bottom:24px}@media print{body{margin:20px}}</style></head><body><h1>'+(topic||'Quiz')+' &mdash; Answer Key</h1><div class="sub">'+questions.length+' questions</div>'+qHtml+'<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>')
   win.document.close()
 }
 
-// ── TTS Button ────────────────────────────────────────────────────────────
+// ── TTS Button ─────────────────────────────────────────────────────────
 function SpeakerBtn({ text }) {
   const [busy, setBusy] = useState(false)
-  const [novaExplanations, setNovaExplanations] = useState({}) // Feature 1: wrong answer explanations
-  const [explanationLoading, setExplanationLoading] = useState({})
-
   async function speak() {
     if (busy || !text) return
     setBusy(true)
@@ -86,60 +75,61 @@ function SpeakerBtn({ text }) {
   )
 }
 
-// ── Answer Key Modal ──────────────────────────────────────────────────────
-function AnswerKeyModal({ questions, topic, onClose }) {
+// ── Answer Key Modal ───────────────────────────────────────────────────
+function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations, explanationLoading, explainWrongAnswer }) {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center" style={{ background: 'rgba(0,0,0,0.5)', padding: '24px 16px', overflowY: 'auto' }}>
       <div className="bg-surface border border-line rounded-2xl w-full max-w-2xl shadow-2xl">
         <div className="flex items-center justify-between p-5 border-b border-line">
           <div>
             <div className="text-base font-bold text-t1">Answer Key</div>
-            <div className="text-[12px] text-t3 mt-0.5">{topic} · {questions.length} questions</div>
+            <div className="text-[12px] text-t3 mt-0.5">{topic} &middot; {questions.length} questions</div>
           </div>
           <div className="flex gap-2">
             <button onClick={() => printQuizKey(questions, topic)}
               className="h-8 px-3 bg-blue-700 text-white text-[12px] font-semibold rounded-lg hover:bg-blue-800 flex items-center gap-1.5">
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print
             </button>
-            <button onClick={onClose} className="h-8 w-8 flex items-center justify-center text-t3 hover:text-t1 hover:bg-surface2 rounded-lg text-lg">✕</button>
+            <button onClick={onClose} className="h-8 w-8 flex items-center justify-center text-t3 hover:text-t1 hover:bg-surface2 rounded-lg text-lg">&#x2715;</button>
           </div>
         </div>
         <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
           {questions.map((q, i) => (
-            <div key={i} className="nova-card" style={{animationDelay:i*120+'ms'}} className="border border-line rounded-xl p-4">
+            <div key={i} className="nova-card border border-line rounded-xl p-4" style={{animationDelay:i*120+'ms'}}>
               <p className="text-sm font-semibold text-t1 mb-3">{i + 1}. {q.question}</p>
-              {q.type === 'fill_blank' && <div className="px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-600 text-[13px] font-medium">✓ {q.correctAnswer || 'See rubric'}</div>}
+              {q.type === 'fill_blank' && <div className="px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-600 text-[13px] font-medium">&#10003; {q.correctAnswer || 'See rubric'}</div>}
               {q.type === 'short_answer' && <div className="px-3 py-2 rounded-lg bg-blue-500/10 text-blue-600 text-[13px]">Model: {q.correctAnswer || 'Open-ended'}</div>}
-              {q.type === 'matching' && <div className="space-y-1">{(q.pairs||[]).map((p,j)=><div key={j} className="text-[12px] text-t2"><strong>{p.left}</strong> → {p.right}</div>)}</div>}
+              {q.type === 'matching' && <div className="space-y-1">{(q.pairs||[]).map((p,j)=><div key={j} className="text-[12px] text-t2"><strong>{p.left}</strong> &rarr; {p.right}</div>)}</div>}
               {(q.type === 'mcq' || q.type === 'true_false' || !q.type) && (
-                <div className="space-y-1.5">{(q.options || ['True','False']).map((o, j) => (
-                  <div key={j} className={'px-3 py-2 rounded-lg text-[13px] flex items-center gap-2 ' + (j === q.answerIndex ? 'bg-emerald-500/10 text-emerald-600 font-semibold border border-emerald-300/50' : 'text-t3')}>
-                    <span className="font-bold w-4">{['A','B','C','D'][j]}.</span>{o}
-                    {j === q.answerIndex && <span className="ml-auto text-emerald-500 text-xs font-bold">✓ Correct</span>}
-                  </div>
-                ))}
-          {/* Feature 1: Nova explains wrong answers — practice quiz only */}
-          {q.type === 'mcq' && selected[i] !== undefined && selected[i] !== q.answerIndex && (
-            <div style={{ marginTop: 12 }}>
-              {novaExplanations[i] ? (
-                <div style={{ background: 'rgba(167,139,250,.06)', border: '1px solid rgba(167,139,250,.2)', borderRadius: 10, padding: '14px 16px', marginTop: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 8 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#a78bfa', letterSpacing: '.06em', textTransform: 'uppercase' }}>Nova explains</span>
-                  </div>
-                  <p style={{ fontSize: 13, color: 'var(--c-t1)', lineHeight: 1.6, margin: 0 }}>{novaExplanations[i]}</p>
+                <div className="space-y-1.5">
+                  {(q.options || ['True','False']).map((o, j) => (
+                    <div key={j} className={'px-3 py-2 rounded-lg text-[13px] flex items-center gap-2 ' + (j === q.answerIndex ? 'bg-emerald-500/10 text-emerald-600 font-semibold border border-emerald-300/50' : 'text-t3')}>
+                      <span className="font-bold w-4">{['A','B','C','D'][j]}.</span>{o}
+                      {j === q.answerIndex && <span className="ml-auto text-emerald-500 text-xs font-bold">&#10003; Correct</span>}
+                    </div>
+                  ))}
+                  {q.type === 'mcq' && selected && selected[i] !== undefined && selected[i] !== q.answerIndex && (
+                    <div style={{ marginTop: 12 }}>
+                      {novaExplanations && novaExplanations[i] ? (
+                        <div style={{ background: 'rgba(167,139,250,.06)', border: '1px solid rgba(167,139,250,.2)', borderRadius: 10, padding: '14px 16px', marginTop: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#a78bfa', letterSpacing: '.06em', textTransform: 'uppercase' }}>Nova explains</span>
+                          </div>
+                          <p style={{ fontSize: 13, color: 'var(--c-t1)', lineHeight: 1.6, margin: 0 }}>{novaExplanations[i]}</p>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => explainWrongAnswer && explainWrongAnswer(i, q, q.options?.[selected[i]] || 'Your answer', q.options?.[q.answerIndex] || 'Correct answer')}
+                          disabled={explanationLoading && explanationLoading[i]}
+                          style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', background: 'rgba(167,139,250,.07)', border: '1px solid rgba(167,139,250,.18)', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#a78bfa' }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
+                          {explanationLoading && explanationLoading[i] ? 'Nova is thinking...' : 'Why was I wrong?'}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <button
-                  onClick={() => explainWrongAnswer(i, q, q.options?.[selected[i]] || 'Your answer', q.options?.[q.answerIndex] || 'Correct answer')}
-                  disabled={explanationLoading[i]}
-                  style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', padding: '8px 14px', background: 'rgba(167,139,250,.07)', border: '1px solid rgba(167,139,250,.18)', borderRadius: 8, cursor: explanationLoading[i] ? 'default' : 'pointer', fontSize: 13, fontWeight: 600, color: '#a78bfa' }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
-                  {explanationLoading[i] ? 'Nova is thinking...' : 'Why was I wrong?'}
-                </button>
-              )}
-            </div>
-          )}</div>
               )}
               {q.explanation && <div className="mt-3 text-[11px] text-t2 bg-surface2 px-3 py-2 rounded-lg border border-line"><span className="font-semibold text-t1">Explanation: </span>{q.explanation}</div>}
             </div>
@@ -150,7 +140,7 @@ function AnswerKeyModal({ questions, topic, onClose }) {
   )
 }
 
-// ── Edit Panel ────────────────────────────────────────────────────────────
+// ── Edit Panel ──────────────────────────────────────────────────────────
 function EditPanel({ questions, onSave, onCancel }) {
   const [qs, setQs] = useState(questions.map(q => ({ ...q, options: [...(q.options || ['True','False'])] })))
   const [addType, setAddType] = useState(null)
@@ -187,7 +177,7 @@ function EditPanel({ questions, onSave, onCancel }) {
           <div key={i} className="bg-surface border border-line rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 uppercase">{q.type || 'mcq'}</span>
-              <button onClick={() => deleteQ(i)} className="ml-auto text-[11px] text-red-400 hover:text-red-600 px-2 h-6 border border-red-200 dark:border-red-500/30 rounded-lg">✕ Delete</button>
+              <button onClick={() => deleteQ(i)} className="ml-auto text-[11px] text-red-400 hover:text-red-600 px-2 h-6 border border-red-200 dark:border-red-500/30 rounded-lg">&#x2715; Delete</button>
             </div>
             <textarea value={q.question} onChange={e => updateQ(i, 'question', e.target.value)}
               className="w-full text-sm text-t1 bg-surface2 border border-line rounded-lg p-2 resize-none outline-none focus:border-blue-400 mb-2" rows={2}/>
@@ -200,7 +190,7 @@ function EditPanel({ questions, onSave, onCancel }) {
                 <div key={j} className="flex items-center gap-2">
                   <button onClick={() => updateQ(i, 'answerIndex', j)}
                     className={'w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] flex-shrink-0 transition-colors ' + (q.answerIndex === j ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-line text-t3 hover:border-emerald-400')}>
-                    {q.answerIndex === j ? '✓' : ['A','B','C','D'][j]}
+                    {q.answerIndex === j ? '\u2713' : ['A','B','C','D'][j]}
                   </button>
                   {q.type === 'true_false' ? <span className="flex-1 text-[13px] text-t1 px-2">{o}</span>
                     : <input value={o} onChange={e => updateOpt(i, j, e.target.value)}
@@ -227,7 +217,7 @@ function EditPanel({ questions, onSave, onCancel }) {
         <div className="border-2 border-blue-300/40 rounded-xl p-4 bg-blue-500/5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[12px] font-bold text-blue-500 uppercase">New {addType.replace('_',' ')}</span>
-            <button onClick={() => setAddType(null)} className="text-t3 hover:text-t1 text-sm">✕</button>
+            <button onClick={() => setAddType(null)} className="text-t3 hover:text-t1 text-sm">&#x2715;</button>
           </div>
           <textarea value={newQ.question} onChange={e => setNewQ(q => ({ ...q, question: e.target.value }))}
             placeholder="Question text..." rows={2}
@@ -241,7 +231,7 @@ function EditPanel({ questions, onSave, onCancel }) {
               <div key={j} className="flex items-center gap-2">
                 <button onClick={() => setNewQ(q => ({ ...q, answerIndex: j }))}
                   className={'w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] flex-shrink-0 ' + (newQ.answerIndex === j ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-line text-t3')}>
-                  {newQ.answerIndex === j ? '✓' : ['A','B','C','D'][j]}
+                  {newQ.answerIndex === j ? '\u2713' : ['A','B','C','D'][j]}
                 </button>
                 <input value={o} onChange={e => setNewQ(q => ({ ...q, options: q.options.map((op, oi) => oi === j ? e.target.value : op) }))}
                   placeholder={'Option ' + ['A','B','C','D'][j]}
@@ -279,7 +269,7 @@ function EditPanel({ questions, onSave, onCancel }) {
   )
 }
 
-// ── Main Quiz Component ───────────────────────────────────────────────────
+// ── Question type config ───────────────────────────────────────────────
 const BASE_TYPES = [
   { id: 'mcq', label: 'Multiple Choice' },
   { id: 'true_false', label: 'True / False' },
@@ -304,8 +294,11 @@ function buildConfig(typeId, count, breakdown) {
   return cfg
 }
 
+// ── Main Component ─────────────────────────────────────────────────────
 export default function QuizPage() {
   const { user } = useAuth()
+
+  // State
   const [typeId, setTypeId] = useState('mcq')
   const [count, setCount] = useState(5)
   const [breakdown, setBreakdown] = useState({ mcq: 0, tf: 0, sa: 0, fitb: 0, match: 0 })
@@ -326,10 +319,12 @@ export default function QuizPage() {
   const [saving, setSaving] = useState(false)
   const [saveFeedback, setSaveFeedback] = useState('')
   const [showUnsavedModal, setShowUnsavedModal] = useState(false)
-  const [pendingNav, setPendingNav] = useState(null)
+  const [showSave, setShowSave] = useState(false)
+  const [saveTitle, setSaveTitle] = useState('')
+  const [novaExplanations, setNovaExplanations] = useState({})
+  const [explanationLoading, setExplanationLoading] = useState({})
 
-  // Warn before leaving with unsaved generated quiz
-  // Read ?q= param from URL to prefill topic (from Create page)
+  // Effects
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get('q')
     if (q && !topic) setTopic(decodeURIComponent(q))
@@ -341,8 +336,15 @@ export default function QuizPage() {
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
   }, [questions.length, savedId])
-  const [showSave, setShowSave] = useState(false)
-  const [saveTitle, setSaveTitle] = useState('')
+
+  useEffect(() => {
+    const id = 'nova-gen-anim'
+    if (document.getElementById(id)) return
+    const s = document.createElement('style')
+    s.id = id
+    s.textContent = '@keyframes nova-pop{0%{opacity:0;transform:translateY(14px) scale(0.97)}60%{opacity:1;transform:translateY(-3px) scale(1.005)}100%{opacity:1;transform:translateY(0) scale(1)}} @keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}} .nova-card{opacity:0;animation:nova-pop .42s cubic-bezier(.22,.68,0,1.2) forwards} .nova-dot-pulse{animation:nova-pulse .9s ease-in-out infinite}'
+    document.head.appendChild(s)
+  }, [])
 
   const breakdownTotal = (breakdown.mcq||0) + (breakdown.tf||0) + (breakdown.sa||0) + (breakdown.fitb||0) + (breakdown.match||0)
 
@@ -359,32 +361,18 @@ export default function QuizPage() {
     setLoading(true); setQuestions([]); setSelected({}); setSaInputs({}); setFitbInputs({}); setMatchAnswers({}); setSaGrades({}); setSubmitted(false); setError(''); setSavedId(null)
     try {
       const cfg = buildConfig(typeId, count, breakdown)
-      const typeInstructions = Object.entries(cfg).map(([t, n]) => {
-        if (t === 'mcq') return n + ' multiple choice questions (4 options A-D, one correct)'
-        if (t === 'true_false') return n + ' true/false questions'
-        if (t === 'short_answer') return n + ' short answer questions'
-        if (t === 'fill_blank') return n + ' fill-in-the-blank questions (single word or short phrase answer)'
-        if (t === 'matching') return n + ' matching questions (4-5 pairs, term to definition)'
-        return ''
-      }).filter(Boolean).join(', ')
-      const prompt = 'Generate a quiz about: ' + topic.trim() + '\n\nCreate exactly: ' + typeInstructions + '\n\nReturn ONLY valid JSON in this exact format, no other text:\n{\n  "questions": [\n    {\n      "type": "mcq",\n      "question": "Question text",\n      "options": ["A","B","C","D"],\n      "answerIndex": 0,\n      "explanation": "Why this is correct"\n    },\n    {\n      "type": "true_false",\n      "question": "Statement",\n      "options": ["True","False"],\n      "answerIndex": 0,\n      "explanation": "Explanation"\n    },\n    {\n      "type": "short_answer",\n      "question": "Question",\n      "correctAnswer": "Expected answer",\n      "explanation": "Explanation"\n    },\n    {\n      "type": "fill_blank",\n      "question": "The ___ is ...",\n      "correctAnswer": "word",\n      "explanation": "Explanation"\n    },\n    {\n      "type": "matching",\n      "question": "Match each term to its definition",\n      "pairs": [{"left":"Term","right":"Definition"}]\n    }\n  ]\n}'
-      const res = await fetch('/api/rpc', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fn: 'generateQuizFromTopic', args: [topic.trim(), count, type] }) })
+      const res = await fetch('/api/rpc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fn: 'generateQuizFromTopic', args: [topic.trim(), cfg] })
+      })
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error || 'Server error ' + res.status) }
       const data = await res.json()
-      const raw = data.result?.content || data.result || ''
-      const text = typeof raw === 'string' ? raw : JSON.stringify(raw)
-      const clean = text.replace(/```json|```/g,'').trim()
-      let parsed
-      try { parsed = JSON.parse(clean) } catch(e) {
-        // Try to extract JSON from response
-        const match = clean.match(/\{[\s\S]*\}/)
-        if (match) parsed = JSON.parse(match[0])
-        else { setError('Could not parse quiz response. Try again.'); return }
-      }
-      const qs = parsed?.questions || []
+      if (data.error) throw new Error(data.error)
+      const qs = data.result?.questions || []
       if (!qs.length) { setError('Could not generate quiz. Try a more specific topic.'); return }
       setQuestions(qs); initMatching(qs)
-    } catch(e) { setError('Something went wrong. Please try again.') }
+    } catch(e) { setError(e?.message || 'Something went wrong. Please try again.') }
     finally { setLoading(false) }
   }
 
@@ -405,6 +393,23 @@ export default function QuizPage() {
       setTimeout(() => setSaveFeedback(''), 3000)
     } catch { setSaveFeedback('Save failed') }
     finally { setSaving(false) }
+  }
+
+  async function explainWrongAnswer(questionIndex, question, studentAnswerText, correctAnswerText) {
+    setExplanationLoading(prev => ({ ...prev, [questionIndex]: true }))
+    try {
+      const res = await fetch('/api/nova/explain-answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: question.question, studentAnswer: studentAnswerText, correctAnswer: correctAnswerText, topic: topic || '' })
+      })
+      const data = await res.json()
+      setNovaExplanations(prev => ({ ...prev, [questionIndex]: data.explanation }))
+    } catch {
+      setNovaExplanations(prev => ({ ...prev, [questionIndex]: 'Unable to load explanation right now.' }))
+    } finally {
+      setExplanationLoading(prev => ({ ...prev, [questionIndex]: false }))
+    }
   }
 
   const autoScore = submitted ? questions.filter((q, i) => {
@@ -428,7 +433,7 @@ export default function QuizPage() {
       {showUnsavedModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{background:'rgba(0,0,0,0.6)'}}>
           <div className="bg-surface border border-line rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center">
-            <div className="text-3xl mb-3">⚠️</div>
+            <div className="text-3xl mb-3">&#9888;&#65039;</div>
             <h3 className="text-base font-bold text-t1 mb-2">Unsaved Progress</h3>
             <p className="text-sm text-t2 mb-5">You have a generated quiz that hasn't been saved. Save it to My Stuff before leaving?</p>
             <div className="flex gap-2">
@@ -440,7 +445,12 @@ export default function QuizPage() {
           </div>
         </div>
       )}
-      {showKey && <AnswerKeyModal questions={questions} topic={topic} onClose={() => setShowKey(false)}/>}
+
+      {showKey && <AnswerKeyModal
+        questions={questions} topic={topic} onClose={() => setShowKey(false)}
+        selected={selected} novaExplanations={novaExplanations}
+        explanationLoading={explanationLoading} explainWrongAnswer={explainWrongAnswer}
+      />}
 
       {showSave && (
         <div className="fixed inset-0 z-40 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
@@ -493,7 +503,7 @@ export default function QuizPage() {
                     <span style={{fontSize:12,fontWeight:600,color:'var(--c-t2)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',paddingRight:6}}>{label}</span>
                     <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
                       <button onClick={() => setBreakdown(b => ({ ...b, [k]: Math.max(0, (b[k]||0) - 1) }))}
-                        style={{width:30,height:30,borderRadius:8,border:'1px solid var(--c-line)',background:'none',color:'var(--c-t2)',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>−</button>
+                        style={{width:30,height:30,borderRadius:8,border:'1px solid var(--c-line)',background:'none',color:'var(--c-t2)',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>&#8722;</button>
                       <span style={{fontSize:15,fontWeight:700,color:'#3b82f6',width:22,textAlign:'center'}}>{breakdown[k]||0}</span>
                       <button onClick={() => setBreakdown(b => ({ ...b, [k]: (b[k]||0) + 1 }))}
                         style={{width:30,height:30,borderRadius:8,border:'1px solid var(--c-line)',background:'none',color:'var(--c-t2)',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>+</button>
@@ -528,7 +538,7 @@ export default function QuizPage() {
         <div>
           {submitted && (
             <div className={'mb-5 p-4 rounded-xl border text-sm font-semibold ' + (pct === 100 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : pct >= 60 ? 'bg-blue-500/10 border-blue-500/20 text-blue-600' : 'bg-amber-500/10 border-amber-500/20 text-amber-600')}>
-              {score}/{questions.length} correct ({pct}%) — {pct === 100 ? 'Perfect!' : pct >= 60 ? 'Good job!' : 'Keep practising.'}
+              {score}/{questions.length} correct ({pct}%) &mdash; {pct === 100 ? 'Perfect!' : pct >= 60 ? 'Good job!' : 'Keep practising.'}
             </div>
           )}
 
@@ -555,7 +565,7 @@ export default function QuizPage() {
                       </div>
                       {submitted && (
                         <div className={'text-[12px] px-3 py-2 rounded-lg ' + ((fitbInputs[i]||'').toLowerCase().trim() === (q.correctAnswer||'').toLowerCase().trim() ? 'bg-emerald-500/10 text-emerald-600 font-semibold' : 'bg-red-500/10 text-red-500')}>
-                          {(fitbInputs[i]||'').toLowerCase().trim() === (q.correctAnswer||'').toLowerCase().trim() ? '✓ Correct!' : '✗ Answer: ' + q.correctAnswer}
+                          {(fitbInputs[i]||'').toLowerCase().trim() === (q.correctAnswer||'').toLowerCase().trim() ? '\u2713 Correct!' : '\u2717 Answer: ' + q.correctAnswer}
                         </div>
                       )}
                     </div>
@@ -576,7 +586,7 @@ export default function QuizPage() {
                           </select>
                         </div>
                       ))}
-                      {submitted && <div className="text-[11px] text-t3 mt-1">{(q.pairs||[]).map(p => p.left + ' → ' + p.right).join(' · ')}</div>}
+                      {submitted && <div className="text-[11px] text-t3 mt-1">{(q.pairs||[]).map(p => p.left + ' \u2192 ' + p.right).join(' \u00b7 ')}</div>}
                     </div>
                   )}
 
@@ -595,7 +605,7 @@ export default function QuizPage() {
                             {['correct','wrong'].map(g => (
                               <button key={g} onClick={() => setSaGrades(s => ({ ...s, [i]: g }))}
                                 className={'h-7 px-3 rounded-lg text-[12px] font-medium border transition-colors ' + (saGrades[i] === g ? (g === 'correct' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-red-500 text-white border-red-500') : 'border-line text-t2 hover:bg-surface2')}>
-                                {g === 'correct' ? '✓ Correct' : '✗ Wrong'}
+                                {g === 'correct' ? '\u2713 Correct' : '\u2717 Wrong'}
                               </button>
                             ))}
                           </div>
@@ -615,39 +625,7 @@ export default function QuizPage() {
                           else if (isSel) cls = 'border-red-400 bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400'
                           else cls = 'border-line text-t3 opacity-60'
                         } else if (isSel) cls = 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
-
-  useEffect(() => {
-    const id = 'nova-gen-anim'
-    if (document.getElementById(id)) return
-    const s = document.createElement('style')
-    s.id = id
-    s.textContent = '@keyframes nova-pop{0%{opacity:0;transform:translateY(14px) scale(0.97)}60%{opacity:1;transform:translateY(-3px) scale(1.005)}100%{opacity:1;transform:translateY(0) scale(1)}} @keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}} .nova-card{opacity:0;animation:nova-pop .42s cubic-bezier(.22,.68,0,1.2) forwards} .nova-dot-pulse{animation:nova-pulse .9s ease-in-out infinite}'
-    document.head.appendChild(s)
-  }, [])
-
-                      
-  async function explainWrongAnswer(questionIndex, question, studentAnswerText, correctAnswerText) {
-    setExplanationLoading(prev => ({ ...prev, [questionIndex]: true }))
-    try {
-      const res = await fetch('/api/nova/explain-answer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: question.question,
-          studentAnswer: studentAnswerText,
-          correctAnswer: correctAnswerText,
-          topic: topic || question.topic || ''
-        })
-      })
-      const data = await res.json()
-      setNovaExplanations(prev => ({ ...prev, [questionIndex]: data.explanation }))
-    } catch {
-      setNovaExplanations(prev => ({ ...prev, [questionIndex]: 'Unable to load explanation right now.' }))
-    } finally {
-      setExplanationLoading(prev => ({ ...prev, [questionIndex]: false }))
-    }
-  }
-  return (
+                        return (
                           <button key={j} onClick={() => !submitted && setSelected(s => ({ ...s, [i]: j }))}
                             className={'w-full text-left px-3 py-2.5 rounded-lg border text-[13px] transition-all ' + cls}>
                             <span className="font-semibold mr-2">{['A','B','C','D'][j]}.</span>{opt}
@@ -690,7 +668,7 @@ export default function QuizPage() {
             {user && (
               <button onClick={() => { setSaveTitle(topic); setShowSave(true) }}
                 className="h-9 px-4 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 flex items-center gap-1.5">
-                💾 {savedId ? 'Update Save' : 'Save Quiz'}
+                &#128190; {savedId ? 'Update Save' : 'Save Quiz'}
               </button>
             )}
             {saveFeedback && <span className="text-[12px] text-emerald-500 font-medium">{saveFeedback}</span>}
