@@ -349,6 +349,7 @@ export default function LandingPage() {
 
   if (loading) return <div style={{ background:'#0d1117', minHeight:'100dvh' }}/>
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   return (
     <div style={{ background:'#0d1117', minHeight:'100dvh', color:'#e6edf3', fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
 
