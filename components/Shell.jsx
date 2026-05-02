@@ -109,7 +109,6 @@ export default function Shell({ children }) {
   const panelRef = useRef(null)
 
   const [plusOpen, setPlusOpen] = useState(false)
-  const [moreOpen, setMoreOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
   useEffect(() => {
@@ -222,9 +221,7 @@ export default function Shell({ children }) {
 
   return (
     <div style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'var(--c-bg)' }}>
-      <style>{`@keyframes sh-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}
-    @keyframes ff-nova-spin { to { transform: rotate(360deg) } }
-    @keyframes ff-more-slide { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }`}</style>
+      <style>{`@keyframes sh-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}`}</style>
       {cmdOpen && <div onClick={()=>setCmdOpen(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',zIndex:200}}/>}
       {cmdOpen && (
         <div ref={cmdRef} style={{position:'fixed',top:'18%',left:'50%',transform:'translateX(-50%)',width:'min(560px,calc(100vw - 32px))',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:14,boxShadow:'0 16px 48px rgba(0,0,0,0.5)',zIndex:201,overflow:'hidden'}}>
@@ -483,85 +480,39 @@ export default function Shell({ children }) {
         </div>
       )}
 
-      {/* Mobile nav */}
+      {/* Mobile nav — CSS wrapper hides on desktop */}
       <div className="ff-mobile-only">
-
-        {moreOpen && (
-          <div style={{position:'fixed',bottom:64,left:8,right:8,zIndex:99,background:'#161b22',border:'1px solid #21262d',borderRadius:16,padding:'12px 12px 8px',boxShadow:'0 -8px 32px rgba(0,0,0,0.4)'}}>
-            <div style={{fontSize:10,color:'#484f58',fontWeight:700,letterSpacing:'.07em',marginBottom:10}}>MORE TOOLS</div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-              <Link href="/collab-decks" onClick={()=>setMoreOpen(false)} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,background:'#0d1117',border:'1px solid rgba(167,139,250,0.2)',textDecoration:'none'}}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="5" width="9" height="8" rx="1"/><rect x="13" y="3" width="9" height="8" rx="1"/></svg>
-                <div><div style={{fontSize:12,fontWeight:600,color:'#e6edf3'}}>Collab Decks</div><div style={{fontSize:10,color:'#8b949e'}}>Shared decks</div></div>
-              </Link>
-              <Link href="/curriculum" onClick={()=>setMoreOpen(false)} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,background:'#0d1117',border:'1px solid rgba(52,211,153,0.2)',textDecoration:'none'}}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-                <div><div style={{fontSize:12,fontWeight:600,color:'#e6edf3'}}>Curriculum</div><div style={{fontSize:10,color:'#8b949e'}}>Plan your year</div></div>
-              </Link>
-              <Link href="/student-portal" onClick={()=>setMoreOpen(false)} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,background:'#0d1117',border:'1px solid rgba(245,158,11,0.2)',textDecoration:'none'}}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
-                <div><div style={{fontSize:12,fontWeight:600,color:'#e6edf3'}}>Student Portal</div><div style={{fontSize:10,color:'#8b949e'}}>Your classes</div></div>
-              </Link>
-              <Link href="/lesson-builder" onClick={()=>setMoreOpen(false)} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,background:'#0d1117',border:'1px solid rgba(37,99,235,0.2)',textDecoration:'none'}}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                <div><div style={{fontSize:12,fontWeight:600,color:'#e6edf3'}}>Lesson Builder</div><div style={{fontSize:10,color:'#8b949e'}}>Plan lessons</div></div>
-              </Link>
-            </div>
-          </div>
-        )}
-
-        <nav style={{position:'fixed',bottom:0,left:0,right:0,zIndex:100,background:'#0d1117',borderTop:'1px solid #21262d',height:64,paddingBottom:'env(safe-area-inset-bottom,0px)',display:'flex',alignItems:'flex-end',justifyContent:'space-around',paddingTop:6,paddingLeft:4,paddingRight:4}}>
-
-          <Link href="/dashboard" onClick={()=>setMoreOpen(false)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'4px 6px',textDecoration:'none',minWidth:52}}>
-            <div style={{width:44,height:36,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:12,background:pathname==='/dashboard'?'rgba(59,130,246,.14)':'transparent',transition:'background .2s'}}>
-              <div style={{color:pathname==='/dashboard'?'#3b82f6':'#6b7280'}}><I d={ICONS.dashboard} s={22}/></div>
-            </div>
-            <span style={{fontSize:9,fontWeight:600,color:pathname==='/dashboard'?'#e6edf3':'#484f58'}}>Home</span>
+        <button onClick={() => setPlusOpen(o => !o)}
+          style={{ position:'fixed', bottom:'calc(12px + env(safe-area-inset-bottom, 0px))', left:'calc(50% - 26px)',
+            transform: plusOpen ? 'rotate(45deg)' : 'none',
+            width:52, height:52, background:'#2563eb', border:'none', borderRadius:16,
+            cursor:'pointer', zIndex:101, transition:'transform 0.2s',
+            display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+            <path d="M8 2v12M2 8h12"/>
+          </svg>
+        </button>
+        <nav style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:100,
+          background:'var(--c-surface)', borderTop:'1px solid var(--c-line)',
+          height:64, paddingBottom:'env(safe-area-inset-bottom, 0px)',
+          display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr', alignItems:'center' }}>
+          <Link href="/dashboard" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 4px', borderRadius:12, textDecoration:'none', justifyContent:'center', color: pathname==='/dashboard'?'#3b82f6':'var(--c-t3)' }}>
+            <I d={ICONS.dashboard} s={20}/><span style={{ fontSize:9, fontWeight:600 }}>Dashboard</span>
           </Link>
-
-          <Link href="/create" onClick={()=>setMoreOpen(false)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'4px 6px',textDecoration:'none',minWidth:52}}>
-            <div style={{width:44,height:36,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:12,background:pathname==='/create'?'rgba(167,139,250,.14)':'transparent',transition:'background .2s'}}>
-              <div style={{color:pathname==='/create'?'#a78bfa':'#6b7280'}}><I d={ICONS.create} s={22}/></div>
-            </div>
-            <span style={{fontSize:9,fontWeight:600,color:pathname==='/create'?'#e6edf3':'#484f58'}}>Create</span>
+          <Link href="/my-stuff" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 4px', borderRadius:12, textDecoration:'none', justifyContent:'center', color: pathname==='/my-stuff'?'#3b82f6':'var(--c-t3)' }}>
+            <I d={ICONS.mystuff} s={20}/><span style={{ fontSize:9, fontWeight:600 }}>My Stuff</span>
           </Link>
-
-          <Link href="/ai-tutor" onClick={()=>setMoreOpen(false)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,textDecoration:'none',minWidth:52,marginTop:-14}}>
-            <div style={{position:'relative',width:52,height:52,flexShrink:0}}>
-              <div style={{position:'absolute',top:-3,left:-3,right:-3,bottom:-3,borderRadius:21,background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#34d399,#3b82f6)',animation:'sh-spin 3s linear infinite'}}/>
-              <div style={{position:'absolute',top:2,left:2,right:2,bottom:2,background:'#0d1117',borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="#a78bfa" strokeWidth="1.4"/>
-                  <circle cx="12" cy="12" r="6" stroke="#a78bfa" strokeWidth="1.4"/>
-                  <circle cx="12" cy="12" r="2" fill="#a78bfa"/>
-                </svg>
-              </div>
-            </div>
-            <span style={{fontSize:9,fontWeight:600,color:'#a78bfa'}}>Nova</span>
+          <div/>
+          <Link href="/ai-tutor" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 4px', borderRadius:12, textDecoration:'none', justifyContent:'center', color: pathname==='/ai-tutor'?'#6366f1':'var(--c-t3)' }}>
+            <I d={ICONS.tutor} s={20}/><span style={{ fontSize:9, fontWeight:600 }}>Nova</span>
           </Link>
-
-          <Link href="/study" onClick={()=>setMoreOpen(false)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'4px 6px',textDecoration:'none',minWidth:52}}>
-            <div style={{width:44,height:36,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:12,background:pathname==='/study'?'rgba(52,211,153,.14)':'transparent',transition:'background .2s'}}>
-              <div style={{color:pathname==='/study'?'#34d399':'#6b7280'}}><I d={ICONS.study} s={22}/></div>
-            </div>
-            <span style={{fontSize:9,fontWeight:600,color:pathname==='/study'?'#e6edf3':'#484f58'}}>Study</span>
+          <Link href="/settings" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 4px', borderRadius:12, textDecoration:'none', justifyContent:'center', color: pathname==='/settings'?'#3b82f6':'var(--c-t3)' }}>
+            <I d={ICONS.settings} s={20}/><span style={{ fontSize:9, fontWeight:600 }}>Settings</span>
           </Link>
-
-          <button onClick={()=>setMoreOpen(o=>!o)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'4px 6px',background:'transparent',border:'none',cursor:'pointer',minWidth:52}}>
-            <div style={{width:44,height:36,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:12,background:moreOpen?'rgba(245,158,11,.14)':'transparent',transition:'background .2s'}}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <circle cx="5" cy="12" r="1.5" fill={moreOpen?'#f59e0b':'#6b7280'}/>
-                <circle cx="12" cy="12" r="1.5" fill={moreOpen?'#f59e0b':'#6b7280'}/>
-                <circle cx="19" cy="12" r="1.5" fill={moreOpen?'#f59e0b':'#6b7280'}/>
-              </svg>
-            </div>
-            <span style={{fontSize:9,fontWeight:600,color:moreOpen?'#e6edf3':'#484f58'}}>More</span>
-          </button>
-
         </nav>
       </div>
 
-      <style>{`
+    <style>{`
       @keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.75)}}
       @keyframes nova-breathe{0%,100%{box-shadow:0 0 0 0 rgba(167,139,250,0.5)}50%{box-shadow:0 0 0 6px rgba(167,139,250,0)}}
       @keyframes nova-thinking{0%,100%{box-shadow:0 0 0 2px rgba(167,139,250,0.7)}50%{box-shadow:0 0 0 5px rgba(167,139,250,0.1)}}
