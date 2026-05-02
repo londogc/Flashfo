@@ -181,6 +181,14 @@ export default function StudyGuidePage() {
     setTimeout(() => setShareMsg(''), 2500)
   }
 
+  // Prefill topic from Create page URL param
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const q = new URLSearchParams(window.location.search).get('q')
+      if (q) setTopic(decodeURIComponent(q))
+    }
+  }, [])
+
   useEffect(() => {
     const id = 'nova-gen-anim'
     if (document.getElementById(id)) return
