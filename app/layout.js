@@ -2,6 +2,8 @@ import './globals.css'
 import PageTransition from '@/components/PageTransition'
 
 export const metadata = {
+  // PRE-LAUNCH: Remove robots line on June 1st before deploying
+  robots: 'noindex, nofollow',
   title: 'Flashfo — AI Study & Teaching Workspace',
   description: 'AI-powered study and teaching tools in one calm workspace.',
   icons: {
