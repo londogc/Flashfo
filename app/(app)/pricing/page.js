@@ -115,7 +115,8 @@ export default function PricingPage() {
         @media(max-width:768px){.spnl{display:none!important}.spcta{display:none!important}.sphb{display:flex!important}.pc-wrap{padding:32px 14px 40px!important}.pc-cards{grid-template-columns:1fr!important}}
         .spnl{display:flex}.spcta{display:inline-flex}.sphb{display:none;flex-direction:column;gap:5px;cursor:pointer;background:transparent;border:none;padding:6px;outline:none}
         .sphb-line{width:20px;height:2px;background:#8b949e;border-radius:1px;transition:transform .2s,opacity .2s;display:block}
-      `}</style>
+      
+        @keyframes nav-spin{to{transform:rotate(360deg)}}`}</style>
       <nav style={{background:'#0d1117',borderBottom:'1px solid #21262d',padding:'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:56,position:'sticky',top:0,zIndex:50}}>
         <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',flexShrink:0}}>
           <div style={{position:'relative',width:28,height:28}}>
@@ -180,8 +181,8 @@ export default function PricingPage() {
           </span>
         </div>
 
-        <div style={{ textAlign:'center', fontSize:13, color:'#34d399', marginBottom:32, fontWeight:600, fontSize:14, whiteSpace:'nowrap', overflowX:'auto' }}>
-          ✦ All paid plans include a 3-day free trial — no charge until day 4
+        <div style={{ textAlign:'center', fontSize:13, color:'#34d399', marginBottom:32, fontWeight:600, fontSize:14, textAlign:'center' }}>
+          ✦ 3-day free trial on all plans · no charge until day 4
         </div>
 
         {/* Cards */}
