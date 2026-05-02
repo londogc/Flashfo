@@ -6,13 +6,12 @@ const Ico = ({d, s=14}) => (
     <path d={d}/>
   </svg>
 )
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
 function StudyTogetherInner() {
   const { user, profile, loading: authLoading } = useAuth()
-  const router = useRouter()
   const searchParams = useSearchParams()
   const [sessionCode, setSessionCode] = useState('')
   const [joinCode, setJoinCode] = useState('')
@@ -26,7 +25,7 @@ function StudyTogetherInner() {
   const channelRef = useRef(null)
 
   useEffect(() => {
-    if (!user) { router.push('/auth'); return }
+    if (!user) return
     const code = searchParams.get('code')
     if (code) joinSession(code)
   }, [user])
