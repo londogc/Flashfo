@@ -1,5 +1,6 @@
 'use client'
 import { Suspense } from 'react'
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/useAuth'
@@ -118,6 +119,13 @@ function StudyGuidePageInner() {
     const q = _sgSearchParams.get('q')
     if (q) setTopic(decodeURIComponent(q))
   }, [_sgSearchParams.get('q')])th()
+  const _sp = useSearchParams()
+  useEffect(() => {
+    const _q = _sp.get('q')
+    if (_q) setTopic(decodeURIComponent(_q))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const [topic, setTopic]     = useState('')
   const [depth, setDepth]     = useState('standard')
   const [output, setOutput]   = useState('')
@@ -252,6 +260,10 @@ function StudyGuidePageInner() {
       </div>
     </div>
   )
+}
+
+function StudyGuidePageInner() {
+  return <Suspense fallback={<div style={{minHeight:'100vh'}}/>}><StudyGuidePageInner/></Suspense>
 }
 
 export default function StudyGuidePage() {
