@@ -1,11 +1,9 @@
 'use client'
 import { Suspense } from 'react'
-import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem } from '@/lib/savedItems'
-
 
 function renderStudyGuide(text) {
   // Split into sections by --- or ###
@@ -112,20 +110,8 @@ function renderStudyGuide(text) {
   return <div>{elements}</div>
 }
 
-function StudyGuidePageInner() {
-  const { user } = useAu
-  const _sgSearchParams = useSearchParams()
-  useEffect(() => {
-    const q = _sgSearchParams.get('q')
-    if (q) setTopic(decodeURIComponent(q))
-  }, [_sgSearchParams.get('q')])th()
-  const _sp = useSearchParams()
-  useEffect(() => {
-    const _q = _sp.get('q')
-    if (_q) setTopic(decodeURIComponent(_q))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
+export default function StudyGuidePage() {
+  const { user } = useAuth()
   const [topic, setTopic]     = useState('')
   const [depth, setDepth]     = useState('standard')
   const [output, setOutput]   = useState('')
@@ -175,7 +161,6 @@ function StudyGuidePageInner() {
     { id: 'standard', label: 'Standard',  desc: 'Balanced overview' },
     { id: 'deep',     label: 'Deep Dive', desc: 'Comprehensive' },
   ]
-
 
   const generateShareLink = async () => {
     if (!output) return
@@ -263,9 +248,5 @@ function StudyGuidePageInner() {
 }
 
 function StudyGuidePageInner() {
-  return <Suspense fallback={<div style={{minHeight:'100vh'}}/>}><StudyGuidePageInner/></Suspense>
-}
-
-export default function StudyGuidePage() {
   return <Suspense fallback={<div style={{minHeight:'100vh'}}/>}><StudyGuidePageInner/></Suspense>
 }
