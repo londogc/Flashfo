@@ -1,13 +1,19 @@
 'use client'
 import { useState, useRef } from 'react'
+
+const Ico = ({d, s=14}) => (
+  <svg width={s} height={s} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d={d}/>
+  </svg>
+)
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
 const IMPORT_TYPES = [
-  { id: 'text',  icon: '📝', label: 'Paste text',     desc: 'Paste notes, paragraphs, or any text' },
-  { id: 'url',   icon: '🔗', label: 'Website URL',    desc: 'Any article, blog post, or web page' },
-  { id: 'topic', icon: '💡', label: 'Just a topic',   desc: 'Type any subject — Nova knows the content' },
+  { id: 'text',  icon: 'M2 3h12v2H2zm0 4h8v2H2zm0 4h10v2H2', label: 'Paste text',     desc: 'Paste notes, paragraphs, or any text' },
+  { id: 'url',   icon: 'M6.5 9.5l3-3m-4.5.5L3.5 8.5a2.83 2.83 0 004 4L9 11m1.5-5.5L12 4a2.83 2.83 0 00-4-4L6.5 1.5', label: 'Website URL',    desc: 'Any article, blog post, or web page' },
+  { id: 'topic', icon: 'M8 1a4 4 0 00-1.5 7.7V11h3V8.7A4 4 0 008 1zM6.5 13h3m-1.5 2v-2', label: 'Just a topic',   desc: 'Type any subject — Nova knows the content' },
 ]
 
 export default function ImportPage() {
@@ -67,7 +73,7 @@ export default function ImportPage() {
         {IMPORT_TYPES.map(t => (
           <button key={t.id} onClick={() => { setImportType(t.id); setInput(''); setPreview(null); setError('') }}
             style={{ padding: '16px', background: importType === t.id ? 'rgba(37,99,235,.1)' : 'var(--c-surface)', border: `1.5px solid ${importType === t.id ? 'rgba(37,99,235,.4)' : 'var(--c-line)'}`, borderRadius: 12, cursor: 'pointer', textAlign: 'left' }}>
-            <div style={{ fontSize: 22, marginBottom: 6 }}>{t.icon}</div>
+            <div style={{ marginBottom: 8 }}><Ico d={t.icon} s={20}/></div>
             <div style={{ fontSize: 14, fontWeight: 600, color: importType === t.id ? '#3b82f6' : 'var(--c-t1)', marginBottom: 2 }}>{t.label}</div>
             <div style={{ fontSize: 12, color: 'var(--c-t3)' }}>{t.desc}</div>
           </button>
