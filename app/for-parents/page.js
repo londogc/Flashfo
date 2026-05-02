@@ -265,7 +265,7 @@ export default function ForParentsPage() {
           <div className="mg3" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
             {[
               {t:'Explains, does not just answer',d:'Nova walks through the reasoning, not just the result. Your child learns how to solve it — not just what the answer is.',c:'#3b82f6'},
-              {t:'Any subject, any level',d:'Primary school times tables to A-level chemistry — Nova adjusts to the right level automatically based on what they are studying.',c:'#a78bfa'},
+              {t:'Any subject, any level',d:'Primary school times tables to AP exam chemistry — Nova adjusts to the right level automatically based on what they are studying.',c:'#a78bfa'},
               {t:'Focused on education',d:'Flashfo is built specifically for students. Nova stays focused on learning — helping your child study, nothing else.',c:'#34d399'},
             ].map(({t,d,c})=>(
               <div key={t} style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,padding:'18px'}}>
