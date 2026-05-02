@@ -1,7 +1,6 @@
 'use client'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
-import { Suspense } from 'react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
@@ -307,25 +306,12 @@ function buildConfig(typeId, count, breakdown) {
   return cfg
 }
 
-function QuizPageInner() {
+export default function QuizPage() {
   const { user } = useAuth()
-  const _sp = useSearchParams()
-  useEffect(() => {
-    const _q = _sp.get('q')
-    if (_q) setTopic(decodeURIComponent(_q))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   const [typeId, setTypeId] = useState('mcq')
   const [count, setCount] = useState(5)
   const [breakdown, setBreakdown] = useState({ mcq: 0, tf: 0, sa: 0, fitb: 0, match: 0 })
-  const [topic, setTopic] = useState('')
-
-  const _searchParams = useSearchParams()
-  useEffect(() => {
-    const q = _searchParams.get('q')
-    if (q) setTopic(decodeURIComponent(q))
-  }, [_searchParams.get('q')])  const [questions, setQuestions] = useState([])
+  const [topic, setTopic] = useState('')  const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState({})
   const [saInputs, setSaInputs] = useState({})
@@ -715,9 +701,5 @@ function QuizPageInner() {
 }
 
 function QuizPageInner() {
-  return <Suspense fallback={<div style={{minHeight:'100vh'}}/>}><QuizPageInner/></Suspense>
-}
-
-export default function QuizPage() {
   return <Suspense fallback={<div style={{minHeight:'100vh'}}/>}><QuizPageInner/></Suspense>
 }
