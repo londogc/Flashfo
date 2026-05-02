@@ -539,7 +539,7 @@ async function generateChatResponse(messages, systemPrompt) {
   }))
   const text = await callOpenAI({
     model: DEFAULT_MODEL,
-    system: systemPrompt,
+    instructions: systemPrompt,
     input: apiMessages
   })
   return { reply: text }
