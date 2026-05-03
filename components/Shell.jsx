@@ -129,16 +129,14 @@ export default function Shell({ children }) {
   const cmdInputRef = useRef(null)
 
   // dark: reads localStorage synchronously so no flash on first render
-  const [dark, setDark] = useState(false)
-
-  // Apply theme from localStorage — default is dark unless user explicitly chose light
-  useEffect(() => {
+  const [dark, setDark] = useState(() => {
+    if (typeof window === 'undefined') return true
     const saved = localStorage.getItem('ff-theme')
     const isDark = saved !== 'light'
-    setDark(isDark)
-    document.documentElement.classList.toggle('dark', isDark)
-    document.documentElement.style.backgroundColor = isDark ? '#0d1117' : '#f1f5f9'
-  }, [])
+    if (isDark) document.documentElement.classList.add('dark')
+    else document.documentElement.classList.remove('dark')
+    return isDark
+  })
 
   const [showNotifs, setShowNotifs] = useState(false)
   const [notifications, setNotifications] = useState([])
@@ -150,6 +148,15 @@ export default function Shell({ children }) {
   const [plusOpen, setPlusOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+
+  useEffect(() => {
+    const id = 'shell-anim'
+    if (document.getElementById(id)) return
+    const s = document.createElement('style')
+    s.id = id
+    s.textContent = '@keyframes sh-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}@keyframes ff-more-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}@keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.75)}}@keyframes nova-breathe{0%,100%{box-shadow:0 0 0 0 rgba(167,139,250,0.5)}50%{box-shadow:0 0 0 6px rgba(167,139,250,0)}}@keyframes nova-thinking{0%,100%{box-shadow:0 0 0 2px rgba(167,139,250,0.7)}50%{box-shadow:0 0 0 5px rgba(167,139,250,0.1)}}'
+    document.head.appendChild(s)
+  }, [])
 
   useEffect(() => {
     // Handle sidebar auto-collapse on window resize
@@ -261,7 +268,7 @@ export default function Shell({ children }) {
 
   return (
     <div style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'var(--c-bg)' }}>
-      <style>{`@keyframes sh-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}@keyframes ff-more-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
       {cmdOpen && <div onClick={()=>setCmdOpen(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',zIndex:200}}/>}
       {cmdOpen && (
         <div ref={cmdRef} style={{position:'fixed',top:'18%',left:'50%',transform:'translateX(-50%)',width:'min(560px,calc(100vw - 32px))',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:14,boxShadow:'0 16px 48px rgba(0,0,0,0.5)',zIndex:201,overflow:'hidden'}}>
@@ -717,11 +724,7 @@ export default function Shell({ children }) {
         </nav>
       </div>
 
-      <style>{`
-      @keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.75)}}
-      @keyframes nova-breathe{0%,100%{box-shadow:0 0 0 0 rgba(167,139,250,0.5)}50%{box-shadow:0 0 0 6px rgba(167,139,250,0)}}
-      @keyframes nova-thinking{0%,100%{box-shadow:0 0 0 2px rgba(167,139,250,0.7)}50%{box-shadow:0 0 0 5px rgba(167,139,250,0.1)}}
-    `}</style>
+
     </div>
   )
 }
