@@ -302,6 +302,90 @@ export default function NovaPage() {
       // Update study session
       if (studySession) setStudySession(prev => ({ ...prev, questionsAnswered: (prev?.questionsAnswered||0) + 1 }))
 
+      // ── Detect study material intent and actually generate it ──────────────
+      const studyIntent = /\b(prepare|make|create|generate|build|give me|can you make|i need)\b.{0,50}\b(study material|study kit|study guide|flashcard|flash card|quiz me|quiz)\b/i.test(msg)
+        || /\b(flashcard|quiz)s?\b.{0,30}\b(about|on|for|covering)\b/i.test(msg)
+
+      if (studyIntent && fullText.trim()) {
+        // Extract topic
+        const topicFromMsg = msg.match(/\b(?:about|on|for|covering|regarding)\s+(.{3,80}?)(?:\?|$|\.)/i)?.[1]?.trim()
+        const topicFromNova = fullText.match(/(?:study kit on|focused on|covering)\s+([^,.\n]{3,60})/i)?.[1]?.trim()
+          || fullText.match(/on\s+([^,.\n]+),\s+covering/i)?.[1]?.trim()
+        const topic = (topicFromMsg || topicFromNova || studySession?.topic || '').trim().slice(0, 80)
+
+        if (topic) {
+          setLoading(true)
+
+          // Generate flashcards
+          const fcMsgId = (Date.now() + 10).toString()
+          setMessages(prev => [...prev, { role:'assistant', text:'Generating flashcards...', ts: new Date().toISOString(), id: fcMsgId, streaming: true }])
+
+          try {
+            const fcRes = await fetch('/api/rpc', { method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({ fn:'generateFlashcardsFromText', args:[topic, 12, 'English'] }) })
+            const fcData = await fcRes.json()
+            const cards = (fcData.result?.cards || [])
+
+            if (cards.length) {
+              // Save to My Stuff if signed in
+              let savedId = null
+              if (user) {
+                const { data: saved } = await supabase.from('saved_items').insert({
+                  user_id: user.id, type:'flashcards', title: topic,
+                  data: { topic, cards }
+                }).select('id').single()
+                savedId = saved?.id
+              }
+
+              const fcText = 'Your flashcard deck is ready — ' + cards.length + ' cards on **' + topic + '**.' + (savedId ? ' Saved to My Stuff.' : '')
+              setMessages(prev => prev.map(m => m.id === fcMsgId
+                ? { ...m, text: fcText, streaming: false, generatedCards: cards, generatedTopic: topic, savedItemId: savedId }
+                : m))
+              await saveMessage('assistant', fcText)
+            } else {
+              setMessages(prev => prev.filter(m => m.id !== fcMsgId))
+            }
+          } catch {
+            setMessages(prev => prev.filter(m => m.id !== fcMsgId))
+          }
+
+          // Generate quiz
+          const qzMsgId = (Date.now() + 20).toString()
+          setMessages(prev => [...prev, { role:'assistant', text:'Generating quiz...', ts: new Date().toISOString(), id: qzMsgId, streaming: true }])
+
+          try {
+            const qzRes = await fetch('/api/rpc', { method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({ fn:'generateQuizFromTopic', args:[topic, { mcq: 5, true_false: 3 }] }) })
+            const qzData = await qzRes.json()
+            const questions = qzData.result?.questions || []
+
+            if (questions.length) {
+              let savedQzId = null
+              if (user) {
+                const { data: savedQz } = await supabase.from('saved_items').insert({
+                  user_id: user.id, type:'quiz', title: topic,
+                  data: { topic, questions }
+                }).select('id').single()
+                savedQzId = savedQz?.id
+              }
+
+              const qzText = 'Your quiz is ready — ' + questions.length + ' questions on **' + topic + '**.' + (savedQzId ? ' Saved to My Stuff.' : '')
+              setMessages(prev => prev.map(m => m.id === qzMsgId
+                ? { ...m, text: qzText, streaming: false, generatedQuestions: questions, generatedTopic: topic, savedItemId: savedQzId }
+                : m))
+              await saveMessage('assistant', qzText)
+            } else {
+              setMessages(prev => prev.filter(m => m.id !== qzMsgId))
+            }
+          } catch {
+            setMessages(prev => prev.filter(m => m.id !== qzMsgId))
+          }
+
+          setLoading(false)
+        }
+      }
+      // ── End study material generation ─────────────────────────────────────
+
     } catch (err) {
       setMessages(prev => prev.map(m => m.id === tempId ? { ...m, text: 'Something went wrong — try again.', streaming: false } : m))
     }
@@ -500,8 +584,25 @@ export default function NovaPage() {
                           {CHIPS.map((c,ci)=>(<button key={ci} onClick={()=>send(c)} style={{padding:'5px 12px',borderRadius:8,cursor:'pointer',border:'1px solid rgba(167,139,250,0.2)',background:'rgba(167,139,250,0.06)',fontSize:12,color:'#a78bfa'}}>{c}</button>))}
                         </div>
                       )}
+                      {/* Generated study material action buttons */}
+                      {!m.streaming && m.generatedCards && (
+                        <div style={{display:'flex',gap:6,marginTop:10,flexWrap:'wrap'}}>
+                          <a href={'/flashcards?q=' + encodeURIComponent(m.generatedTopic||'')}
+                            style={{padding:'5px 12px',borderRadius:8,border:'1px solid rgba(59,130,246,0.3)',background:'rgba(37,99,235,0.1)',fontSize:12,color:'#60a5fa',textDecoration:'none',fontWeight:600}}>
+                            Study Flashcards →
+                          </a>
+                        </div>
+                      )}
+                      {!m.streaming && m.generatedQuestions && (
+                        <div style={{display:'flex',gap:6,marginTop:10,flexWrap:'wrap'}}>
+                          <a href={'/quiz?q=' + encodeURIComponent(m.generatedTopic||'')}
+                            style={{padding:'5px 12px',borderRadius:8,border:'1px solid rgba(139,92,246,0.3)',background:'rgba(109,40,217,0.1)',fontSize:12,color:'#a78bfa',textDecoration:'none',fontWeight:600}}>
+                            Take Quiz →
+                          </a>
+                        </div>
+                      )}
                       {/* Action buttons on completed Nova messages */}
-                      {!m.streaming && m.text && m.text.length > 100 && (
+                      {!m.streaming && m.text && m.text.length > 100 && !m.generatedCards && !m.generatedQuestions && (
                         <div style={{display:'flex',gap:6,marginTop:8}}>
                           <button onClick={()=>readAloud(m.text)} style={{padding:'3px 9px',borderRadius:6,border:'1px solid #30363d',background:'none',fontSize:11,color:'#484f58',cursor:'pointer'}}>
                             {speaking?'Stop':'Read aloud'}
