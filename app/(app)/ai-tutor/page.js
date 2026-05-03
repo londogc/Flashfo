@@ -465,7 +465,12 @@ export default function NovaPage() {
 
 
   return (
-    <div style={{display:'flex',flexDirection:'column',height:'calc(100dvh - 56px)',background:'var(--c-bg)',overflow:'hidden'}}>
+    <>
+      <style>{`
+        .nova-outer-wrap{display:flex;flex-direction:column;height:calc(100dvh - 56px);background:var(--c-bg);overflow:hidden}
+        @media(max-width:768px){.nova-outer-wrap{height:calc(100dvh - 120px)}}
+      `}</style>
+      <div className="nova-outer-wrap">
 
       {/* ââ Header ââ */}
       <div style={{flexShrink:0,background:'linear-gradient(135deg,rgba(124,58,237,0.18) 0%,rgba(167,139,250,0.05) 100%)',borderBottom:'1px solid rgba(167,139,250,0.15)',padding:'12px 20px'}}>
@@ -632,7 +637,7 @@ export default function NovaPage() {
       {/* ââ Input ââ */}
       <style>{`
         .nova-input-bar{padding:10px 14px}
-        @media(max-width:768px){.nova-input-bar{padding:10px 14px calc(74px + env(safe-area-inset-bottom,0px))}}
+        @media(max-width:768px){.nova-input-bar{padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px))}}
         .nova-pill-wrap{display:flex;align-items:flex-end;gap:10px;background:rgba(124,58,237,0.05);border:1.5px solid rgba(124,58,237,0.22);border-radius:26px;padding:10px 10px 10px 18px;transition:border-color 0.2s,box-shadow 0.2s}
         .nova-pill-wrap:focus-within{border-color:rgba(167,139,250,0.55);box-shadow:0 0 0 3px rgba(124,58,237,0.08)}
         .nova-pill-hint{font-size:10px;color:rgba(167,139,250,0.55);margin-top:3px;letter-spacing:0.01em}
@@ -665,5 +670,6 @@ export default function NovaPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }
