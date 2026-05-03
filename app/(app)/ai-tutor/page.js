@@ -91,6 +91,15 @@ export default function NovaPage() {
   const timerRef   = useRef(null)
 
   // ââ Scroll to bottom ââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  useEffect(() => {
+    const id = 'tutor-anim'
+    if (document.getElementById(id)) return
+    const s = document.createElement('style')
+    s.id = id
+    s.textContent = ".nova-outer-wrap{display:flex;flex-direction:column;height:calc(100dvh - 56px);background:var(--c-bg);overflow:hidden} @media(max-width:768px){.nova-outer-wrap{height:calc(100dvh - 120px)}} .nova-input-bar{padding:10px 14px} @media(max-width:768px){.nova-input-bar{padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px))}} .nova-pill-wrap{display:flex;align-items:flex-end;gap:10px;background:rgba(124,58,237,0.05);border:1.5px solid rgba(124,58,237,0.22);border-radius:26px;padding:10px 10px 10px 18px;transition:border-color 0.2s,box-shadow 0.2s} .nova-pill-wrap:focus-within{border-color:rgba(167,139,250,0.55);box-shadow:0 0 0 3px rgba(124,58,237,0.08)} .nova-pill-hint{font-size:10px;color:rgba(167,139,250,0.55);margin-top:3px;letter-spacing:0.01em}"
+    document.head.appendChild(s)
+  }, [])
+
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:'smooth' }) }, [messages, loading])
 
   // ââ Load session memory + context on mount âââââââââââââââââââââââââââââââ
@@ -470,11 +479,7 @@ export default function NovaPage() {
 
   return (
     <>
-      <style>{`
-        .nova-outer-wrap{display:flex;flex-direction:column;height:calc(100dvh - 56px);background:var(--c-bg);overflow:hidden}
-        @media(max-width:768px){.nova-outer-wrap{height:calc(100dvh - 120px)}}
-      `}</style>
-      <div className="nova-outer-wrap">
+            <div className="nova-outer-wrap">
 
       {/* ââ Header ââ */}
       <div style={{flexShrink:0,background:'linear-gradient(135deg,rgba(124,58,237,0.18) 0%,rgba(167,139,250,0.05) 100%)',borderBottom:'1px solid rgba(167,139,250,0.15)',padding:'12px 20px'}}>
@@ -639,14 +644,7 @@ export default function NovaPage() {
       </div>
 
       {/* ââ Input ââ */}
-      <style>{`
-        .nova-input-bar{padding:10px 14px}
-        @media(max-width:768px){.nova-input-bar{padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px))}}
-        .nova-pill-wrap{display:flex;align-items:flex-end;gap:10px;background:rgba(124,58,237,0.05);border:1.5px solid rgba(124,58,237,0.22);border-radius:26px;padding:10px 10px 10px 18px;transition:border-color 0.2s,box-shadow 0.2s}
-        .nova-pill-wrap:focus-within{border-color:rgba(167,139,250,0.55);box-shadow:0 0 0 3px rgba(124,58,237,0.08)}
-        .nova-pill-hint{font-size:10px;color:rgba(167,139,250,0.55);margin-top:3px;letter-spacing:0.01em}
-      `}</style>
-      <div className="nova-input-bar" style={{flexShrink:0,background:'var(--c-bg)'}}>
+            <div className="nova-input-bar" style={{flexShrink:0,background:'var(--c-bg)'}}>
         <div style={{maxWidth:760,margin:'0 auto'}}>
           <input ref={fileRef} type="file" accept=".pdf,.txt,.doc,.docx" style={{display:'none'}} onChange={e=>{const f=e.target.files?.[0];if(f)handleFile(f)}}/>
           <div className="nova-pill-wrap">
