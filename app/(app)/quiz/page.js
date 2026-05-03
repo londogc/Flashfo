@@ -295,6 +295,20 @@ function buildConfig(typeId, count, breakdown) {
 }
 
 // ââ Main Component âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+const TYPE_LABELS = { mcq:'Multiple Choice', true_false:'True / False', short_answer:'Short Answer', fill_blank:'Fill in the Blank', matching:'Matching' }
+function prettifyType(t) { return TYPE_LABELS[t] || (t||'mcq').replace(/_/g,' ') }
+
+function checkFitbAnswer(userAns, correctAns) {
+  if (!userAns || !correctAns) return false
+  const u = userAns.toLowerCase().trim()
+  const correct = correctAns.toLowerCase().trim()
+  if (u === correct) return true
+  const variants = correct.split(/[|/,]/).map(v => v.trim()).filter(Boolean)
+  if (variants.some(v => u === v)) return true
+  if (variants.some(v => v.includes(u) || u.includes(v))) return true
+  return false
+}
+
 export default function QuizPage() {
   const { user } = useAuth()
 
@@ -344,6 +358,12 @@ export default function QuizPage() {
     s.id = id
     s.textContent = '@keyframes nova-pop{0%{opacity:0;transform:translateY(14px) scale(0.97)}60%{opacity:1;transform:translateY(-3px) scale(1.005)}100%{opacity:1;transform:translateY(0) scale(1)}} @keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}} .nova-card{opacity:0;animation:nova-pop .42s cubic-bezier(.22,.68,0,1.2) forwards} .nova-dot-pulse{animation:nova-pulse .9s ease-in-out infinite}'
     document.head.appendChild(s)
+  }, [])
+
+  useEffect(() => {
+    const id='quiz-spin-kf'; if(document.getElementById(id)) return
+    const s=document.createElement('style'); s.id=id
+    s.textContent='@keyframes spin{to{transform:rotate(360deg)}}'; document.head.appendChild(s)
   }, [])
 
   const breakdownTotal = (breakdown.mcq||0) + (breakdown.tf||0) + (breakdown.sa||0) + (breakdown.fitb||0) + (breakdown.match||0)
@@ -414,7 +434,7 @@ export default function QuizPage() {
 
   const autoScore = submitted ? questions.filter((q, i) => {
     if (q.type === 'short_answer' || q.type === 'matching') return false
-    if (q.type === 'fill_blank') return (fitbInputs[i]||'').toLowerCase().trim() === (q.correctAnswer||'').toLowerCase().trim()
+    if (q.type === 'fill_blank') return checkFitbAnswer(fitbInputs[i], q.correctAnswer)
     return selected[i] === q.answerIndex
   }).length : 0
   const saScore = submitted ? Object.values(saGrades).filter(g => g === 'correct').length : 0
@@ -531,7 +551,7 @@ export default function QuizPage() {
 
           {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
           <button onClick={generate} disabled={loading} style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',opacity:loading?0.6:1,letterSpacing:'-0.01em'}}>
-            {loading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>Generating...</> : 'Generate ' + (typeId === 'mixed' ? breakdownTotal : count) + ' Questions'}
+            {loading ? <span style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}><span style={{width:14,height:14,border:'2px solid rgba(255,255,255,0.3)',borderTopColor:'#fff',borderRadius:'50%',display:'inline-block',animation:'spin 0.7s linear infinite',flexShrink:0}}/> Generating...</span> : 'Generate ' + (typeId === 'mixed' ? breakdownTotal : count) + ' Questions'}
           </button>
         </div>
       ) : (
@@ -550,7 +570,7 @@ export default function QuizPage() {
               return (
                 <div key={i} className="bg-surface border border-line rounded-xl p-4">
                   <div className="flex items-start gap-2 mb-3">
-                    <span className="text-[10px] font-bold bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full uppercase flex-shrink-0 mt-0.5">{q.type || 'mcq'}</span>
+                    <span className="text-[10px] font-bold bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5" style={{whiteSpace:'nowrap'}}>{prettifyType(q.type)}</span>
                     <p className="text-sm font-semibold text-t1 flex-1">{i + 1}. {q.question}</p>
                     <SpeakerBtn text={q.question}/>
                   </div>
@@ -564,8 +584,8 @@ export default function QuizPage() {
                           className="flex-1 h-9 bg-surface2 border border-line rounded-lg px-3 text-sm text-t1 outline-none focus:border-blue-400 disabled:opacity-70"/>
                       </div>
                       {submitted && (
-                        <div className={'text-[12px] px-3 py-2 rounded-lg ' + ((fitbInputs[i]||'').toLowerCase().trim() === (q.correctAnswer||'').toLowerCase().trim() ? 'bg-emerald-500/10 text-emerald-600 font-semibold' : 'bg-red-500/10 text-red-500')}>
-                          {(fitbInputs[i]||'').toLowerCase().trim() === (q.correctAnswer||'').toLowerCase().trim() ? '\u2713 Correct!' : '\u2717 Answer: ' + q.correctAnswer}
+                        <div className={'text-[12px] px-3 py-2 rounded-lg ' + (checkFitbAnswer(fitbInputs[i], q.correctAnswer) ? 'bg-emerald-500/10 text-emerald-600 font-semibold' : 'bg-red-500/10 text-red-500')}>
+                          {checkFitbAnswer(fitbInputs[i], q.correctAnswer) ? '\u2713 Correct!' : '\u2717 Answer: ' + q.correctAnswer}
                         </div>
                       )}
                     </div>
