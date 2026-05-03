@@ -631,34 +631,37 @@ export default function NovaPage() {
 
       {/* ââ Input ââ */}
       <style>{`
-        .nova-input-bar{padding:12px 16px}
-        @media(max-width:768px){.nova-input-bar{padding:12px 16px calc(80px + env(safe-area-inset-bottom,0px))}}
+        .nova-input-bar{padding:10px 14px}
+        @media(max-width:768px){.nova-input-bar{padding:10px 14px calc(74px + env(safe-area-inset-bottom,0px))}}
+        .nova-pill-wrap{display:flex;align-items:flex-end;gap:10px;background:rgba(124,58,237,0.05);border:1.5px solid rgba(124,58,237,0.22);border-radius:26px;padding:10px 10px 10px 18px;transition:border-color 0.2s,box-shadow 0.2s}
+        .nova-pill-wrap:focus-within{border-color:rgba(167,139,250,0.55);box-shadow:0 0 0 3px rgba(124,58,237,0.08)}
+        .nova-pill-hint{font-size:10px;color:rgba(167,139,250,0.55);margin-top:3px;letter-spacing:0.01em}
       `}</style>
-      <div className="nova-input-bar" style={{flexShrink:0,borderTop:'1px solid #21262d',background:'var(--c-surface)'}}>
+      <div className="nova-input-bar" style={{flexShrink:0,background:'var(--c-bg)'}}>
         <div style={{maxWidth:760,margin:'0 auto'}}>
           <input ref={fileRef} type="file" accept=".pdf,.txt,.doc,.docx" style={{display:'none'}} onChange={e=>{const f=e.target.files?.[0];if(f)handleFile(f)}}/>
-          <div style={{display:'flex',gap:8,alignItems:'flex-end',background:'var(--c-bg)',border:'1px solid #30363d',borderRadius:12,padding:'9px 9px 9px 14px',transition:'border-color 0.2s'}}
-            onFocus={e=>e.currentTarget.style.borderColor='rgba(167,139,250,0.45)'}
-            onBlur={e=>e.currentTarget.style.borderColor='#30363d'}>
-            <textarea ref={textareaRef} value={input}
-              onChange={e=>{setInput(e.target.value);e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px'}}
-              onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}}
-              placeholder="Ask Nova anything..."
-              rows={1}
-              style={{flex:1,background:'none',border:'none',outline:'none',color:'var(--c-t1)',fontSize:13,resize:'none',lineHeight:1.5,fontFamily:'inherit',minHeight:20,maxHeight:120,overflow:'hidden',paddingTop:1,width:'100%'}}
-            />
-            <div style={{display:'flex',gap:5,alignItems:'center',flexShrink:0}}>
+          <div className="nova-pill-wrap">
+            <div style={{flex:1,minWidth:0}}>
+              <textarea ref={textareaRef} value={input}
+                onChange={e=>{setInput(e.target.value);e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px'}}
+                onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}}
+                placeholder="Ask Nova anything..."
+                rows={1}
+                style={{display:'block',width:'100%',background:'none',border:'none',outline:'none',color:'var(--c-t1)',fontSize:13,resize:'none',lineHeight:1.5,fontFamily:'inherit',minHeight:20,maxHeight:120,overflow:'hidden',paddingTop:1}}
+              />
+              <div className="nova-pill-hint">Nova · Built for how you study</div>
+            </div>
+            <div style={{display:'flex',gap:6,alignItems:'center',flexShrink:0,paddingBottom:2}}>
               <button onClick={()=>fileRef.current?.click()} title="Upload PDF or notes"
-                style={{width:30,height:30,borderRadius:8,border:'1px solid #30363d',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#484f58'}}>
+                style={{width:30,height:30,borderRadius:'50%',border:'1px solid rgba(124,58,237,0.2)',background:'rgba(124,58,237,0.06)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(167,139,250,0.7)',flexShrink:0}}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
               </button>
               <button onClick={()=>send()} disabled={loading||!input.trim()}
-                style={{width:32,height:32,borderRadius:9,border:'none',background:input.trim()?'#7c3aed':'#21262d',cursor:input.trim()?'pointer':'not-allowed',display:'flex',alignItems:'center',justifyContent:'center',color:input.trim()?'#fff':'#484f58',transition:'all 0.15s'}}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                style={{width:36,height:36,borderRadius:'50%',border:'none',background:input.trim()?'#7c3aed':'rgba(124,58,237,0.15)',cursor:input.trim()?'pointer':'not-allowed',display:'flex',alignItems:'center',justifyContent:'center',color:input.trim()?'#fff':'rgba(167,139,250,0.35)',transition:'all 0.18s',flexShrink:0}}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
               </button>
             </div>
           </div>
-          <p style={{fontSize:10,color:'#484f58',textAlign:'center',marginTop:7}}>Shift+Enter for new line · Nova remembers your sessions</p>
         </div>
       </div>
     </div>
