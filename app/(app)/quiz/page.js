@@ -480,7 +480,7 @@ export default function QuizPage() {
             <div className="flex gap-2 flex-wrap">
               {BASE_TYPES.map(t => (
                 <button key={t.id} onClick={() => { setTypeId(t.id); if(t.id==='mixed') setBreakdown({mcq:0,tf:0,sa:0,fitb:0,match:0}) }}
-                  className={'h-8 px-3 rounded-lg text-[12px] font-medium border transition-all ' + (typeId === t.id ? 'bg-blue-700 text-white border-blue-700' : 'bg-surface2 text-t2 border-line hover:border-blue-300')}>
+                  style={{height:38,padding:'0 12px',borderRadius:9,fontSize:12,fontWeight:600,border:'1px solid '+(typeId===t.id?'#1d4ed8':'var(--c-line)'),background:typeId===t.id?'#1d4ed8':'var(--c-surface2)',color:typeId===t.id?'#fff':'var(--c-t2)',cursor:'pointer',transition:'all 0.15s',whiteSpace:'nowrap'}}>
                   {t.label}
                 </button>
               ))}
@@ -489,22 +489,27 @@ export default function QuizPage() {
 
           {typeId === 'mixed' && (
             <div className="mb-5 p-4 bg-surface2 rounded-xl border border-line">
-              <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-3">
-                Breakdown <span className="text-emerald-500">({breakdownTotal} QUESTIONS)</span>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+                <span className="text-[11px] font-semibold text-t3 uppercase tracking-wider">Breakdown</span>
+                <span style={{fontSize:13,fontWeight:700,color:breakdownTotal>0?'#3b82f6':'var(--c-t3)'}}>{breakdownTotal} {breakdownTotal===1?'question':'questions'}</span>
               </div>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(130px, 1fr))',gap:8}}>
-                {[{k:'mcq',label:'Multiple Choice'},{k:'tf',label:'True / False'},{k:'sa',label:'Short Answer'},{k:'fitb',label:'Fill in Blank'},{k:'match',label:'Matching'}].map(({k,label}) => (
-                  <div key={k} style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:10,padding:'8px 12px'}}>
-                    <span style={{fontSize:12,fontWeight:600,color:'var(--c-t2)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',paddingRight:6}}>{label}</span>
-                    <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
-                      <button onClick={() => setBreakdown(b => ({ ...b, [k]: Math.max(0, (b[k]||0) - 1) }))}
-                        style={{width:30,height:30,borderRadius:8,border:'1px solid var(--c-line)',background:'none',color:'var(--c-t2)',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>&#8722;</button>
-                      <span style={{fontSize:15,fontWeight:700,color:'#3b82f6',width:22,textAlign:'center'}}>{breakdown[k]||0}</span>
-                      <button onClick={() => setBreakdown(b => ({ ...b, [k]: (b[k]||0) + 1 }))}
-                        style={{width:30,height:30,borderRadius:8,border:'1px solid var(--c-line)',background:'none',color:'var(--c-t2)',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>+</button>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {[{k:'mcq',label:'Multiple Choice'},{k:'tf',label:'True / False'},{k:'sa',label:'Short Answer'},{k:'fitb',label:'Fill in the Blank'},{k:'match',label:'Matching'}].map(({k,label}) => {
+                  const val = breakdown[k]||0
+                  const active = val > 0
+                  return (
+                    <div key={k} style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:active?'rgba(37,99,235,0.07)':'var(--c-surface)',border:'1px solid '+(active?'rgba(59,130,246,0.3)':'var(--c-line)'),borderRadius:12,padding:'0 8px 0 16px',height:56,transition:'all 0.15s'}}>
+                      <span style={{fontSize:14,fontWeight:500,color:active?'#93c5fd':'var(--c-t1)',flex:1}}>{label}</span>
+                      <div style={{display:'flex',alignItems:'center',gap:2,flexShrink:0}}>
+                        <button onClick={() => setBreakdown(b => ({ ...b, [k]: Math.max(0,(b[k]||0)-1) }))}
+                          style={{width:44,height:44,borderRadius:10,border:'none',background:'none',color:active?'#3b82f6':'var(--c-t3)',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:300,lineHeight:1}}>&#8722;</button>
+                        <span style={{fontSize:18,fontWeight:700,color:active?'#3b82f6':'rgba(255,255,255,0.2)',minWidth:28,textAlign:'center',transition:'color 0.15s'}}>{val}</span>
+                        <button onClick={() => setBreakdown(b => ({ ...b, [k]: (b[k]||0)+1 }))}
+                          style={{width:44,height:44,borderRadius:10,border:'none',background:'none',color:active?'#3b82f6':'var(--c-t3)',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:300,lineHeight:1}}>+</button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
