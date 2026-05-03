@@ -465,7 +465,7 @@ export default function NovaPage() {
 
 
   return (
-    <div style={{display:'flex',flexDirection:'column',height:'calc(100vh - 56px)',background:'var(--c-bg)',overflow:'hidden'}}>
+    <div style={{display:'flex',flexDirection:'column',height:'calc(100dvh - 56px)',background:'var(--c-bg)',overflow:'hidden'}}>
 
       {/* ââ Header ââ */}
       <div style={{flexShrink:0,background:'linear-gradient(135deg,rgba(124,58,237,0.18) 0%,rgba(167,139,250,0.05) 100%)',borderBottom:'1px solid rgba(167,139,250,0.15)',padding:'12px 20px'}}>
@@ -630,7 +630,11 @@ export default function NovaPage() {
       </div>
 
       {/* ââ Input ââ */}
-      <div style={{flexShrink:0,borderTop:'1px solid #21262d',background:'var(--c-surface)',padding:'12px 16px'}}>
+      <style>{`
+        .nova-input-bar{padding:12px 16px}
+        @media(max-width:768px){.nova-input-bar{padding:12px 16px calc(80px + env(safe-area-inset-bottom,0px))}}
+      `}</style>
+      <div className="nova-input-bar" style={{flexShrink:0,borderTop:'1px solid #21262d',background:'var(--c-surface)'}}>
         <div style={{maxWidth:760,margin:'0 auto'}}>
           <input ref={fileRef} type="file" accept=".pdf,.txt,.doc,.docx" style={{display:'none'}} onChange={e=>{const f=e.target.files?.[0];if(f)handleFile(f)}}/>
           <div style={{display:'flex',gap:8,alignItems:'flex-end',background:'var(--c-bg)',border:'1px solid #30363d',borderRadius:12,padding:'9px 9px 9px 14px',transition:'border-color 0.2s'}}
