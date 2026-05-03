@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 
-// ââ Print helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ Print helpers Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 function printQuizBlank(questions, topic) {
   const win = window.open('', '_blank')
   const qHtml = questions.map(function(q, i) {
@@ -48,7 +48,7 @@ function printQuizKey(questions, topic) {
   win.document.close()
 }
 
-// ââ TTS Button âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ TTS Button Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 function SpeakerBtn({ text }) {
   const [busy, setBusy] = useState(false)
   async function speak() {
@@ -75,7 +75,7 @@ function SpeakerBtn({ text }) {
   )
 }
 
-// ââ Answer Key Modal âââââââââââââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ Answer Key Modal Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations, explanationLoading, explainWrongAnswer }) {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center" style={{ background: 'rgba(0,0,0,0.5)', padding: '24px 16px', overflowY: 'auto' }}>
@@ -140,7 +140,7 @@ function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations,
   )
 }
 
-// ââ Edit Panel ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ Edit Panel Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 function EditPanel({ questions, onSave, onCancel }) {
   const [qs, setQs] = useState(questions.map(q => ({ ...q, options: [...(q.options || ['True','False'])] })))
   const [addType, setAddType] = useState(null)
@@ -269,7 +269,16 @@ function EditPanel({ questions, onSave, onCancel }) {
   )
 }
 
-// ââ Question type config âââââââââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ Question type config Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+
+const TYPE_META = {
+  mcq: { color:'#3b82f6', bg:'rgba(59,130,246,0.1)', border:'rgba(59,130,246,0.25)', desc:'4 options, one correct answer' },
+  true_false: { color:'#10b981', bg:'rgba(16,185,129,0.1)', border:'rgba(16,185,129,0.25)', desc:'Two-option true or false' },
+  short_answer: { color:'#f59e0b', bg:'rgba(245,158,11,0.1)', border:'rgba(245,158,11,0.25)', desc:'Open-ended written response' },
+  fill_blank: { color:'#8b5cf6', bg:'rgba(139,92,246,0.1)', border:'rgba(139,92,246,0.25)', desc:'Complete the missing word' },
+  matching: { color:'#ec4899', bg:'rgba(236,72,153,0.1)', border:'rgba(236,72,153,0.25)', desc:'Match terms to definitions' },
+  mixed: { color:'#60a5fa', bg:'rgba(96,165,250,0.1)', border:'rgba(96,165,250,0.25)', desc:'Combine multiple types' },
+}
 const BASE_TYPES = [
   { id: 'mcq', label: 'Multiple Choice' },
   { id: 'true_false', label: 'True / False' },
@@ -294,7 +303,7 @@ function buildConfig(typeId, count, breakdown) {
   return cfg
 }
 
-// ââ Main Component âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ Main Component Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 export default function QuizPage() {
   const { user } = useAuth()
 
@@ -476,14 +485,25 @@ export default function QuizPage() {
             className="w-full h-28 text-sm text-t1 bg-transparent resize-none outline-none placeholder:text-t3 mb-5"/>
 
           <div className="mb-5">
-            <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-2">Question Type</div>
-            <div className="flex gap-2 flex-wrap">
-              {BASE_TYPES.map(t => (
-                <button key={t.id} onClick={() => { setTypeId(t.id); if(t.id==='mixed') setBreakdown({mcq:0,tf:0,sa:0,fitb:0,match:0}) }}
-                  className={'h-8 px-3 rounded-lg text-[12px] font-medium border transition-all ' + (typeId === t.id ? 'bg-blue-700 text-white border-blue-700' : 'bg-surface2 text-t2 border-line hover:border-blue-300')}>
-                  {t.label}
-                </button>
-              ))}
+            <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-3">Question Type</div>
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              {BASE_TYPES.map(t => {
+                const meta = TYPE_META[t.id] || {}
+                const sel = typeId === t.id
+                return (
+                  <button key={t.id} onClick={() => { setTypeId(t.id); if(t.id==='mixed') setBreakdown({mcq:0,tf:0,sa:0,fitb:0,match:0}) }}
+                    style={{display:'flex',alignItems:'center',gap:10,padding:'9px 12px',borderRadius:10,border:'1px solid ' + (sel ? meta.border : 'var(--c-line)'),background: sel ? meta.bg : 'var(--c-surface2)',cursor:'pointer',textAlign:'left',transition:'all 0.15s',outline:'none'}}>
+                    <div style={{width:22,height:22,borderRadius:6,background: sel ? meta.color+'30' : 'rgba(255,255,255,0.04)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                      <div style={{width:7,height:7,borderRadius:'50%',background: sel ? meta.color : 'var(--c-t3)'}}/>
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:12,fontWeight:600,color: sel ? 'var(--c-t1)' : 'var(--c-t2)'}}>{t.label}</div>
+                      <div style={{fontSize:10,color:'var(--c-t3)',marginTop:1}}>{meta.desc || ''}</div>
+                    </div>
+                    {sel && <div style={{width:14,height:14,borderRadius:'50%',background:meta.color,flexShrink:0}}/>}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
@@ -525,17 +545,40 @@ export default function QuizPage() {
           </div>
 
           {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
-          <button onClick={generate} disabled={loading} style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',opacity:loading?0.6:1,letterSpacing:'-0.01em'}}>
-            {loading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>Generating...</> : 'Generate ' + (typeId === 'mixed' ? breakdownTotal : count) + ' Questions'}
+          <button onClick={generate} disabled={loading}
+            style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:loading?'#1e3a8a':'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',position:'relative',overflow:'hidden',letterSpacing:'-0.01em',transition:'background 0.3s'}}>
+            {loading && <span style={{position:'absolute',inset:0,background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent)',animation:'shimmer 1.6s ease-in-out infinite'}}/>}
+            {loading ? <span style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}><span style={{width:14,height:14,border:'2px solid rgba(255,255,255,0.3)',borderTopColor:'#fff',borderRadius:'50%',display:'inline-block',animation:'spin 0.7s linear infinite'}}/> Generating questions...</span> : 'Generate ' + (typeId === 'mixed' ? breakdownTotal : count) + ' Questions'}
           </button>
+          {loading && (
+            <div style={{marginTop:16,display:'flex',flexDirection:'column',gap:8}}>
+              {[1,2,3].map(i => (
+                <div key={i} style={{background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:12,padding:'14px 16px'}}>
+                  <div style={{height:13,borderRadius:4,background:'linear-gradient(90deg,var(--c-surface2) 25%,var(--c-line) 50%,var(--c-surface2) 75%)',backgroundSize:'600px 100%',animation:'shimmer 1.4s infinite linear',marginBottom:8,width:'85%'}}/>
+                  <div style={{height:11,borderRadius:4,background:'linear-gradient(90deg,var(--c-surface2) 25%,var(--c-line) 50%,var(--c-surface2) 75%)',backgroundSize:'600px 100%',animation:'shimmer 1.4s infinite linear',animationDelay:'0.15s',width:'60%'}}/>
+                  <div style={{display:'flex',gap:6,marginTop:10}}>{[0,1,2,3].map(j => <div key={j} style={{height:34,flex:1,borderRadius:8,background:'linear-gradient(90deg,var(--c-surface2) 25%,var(--c-line) 50%,var(--c-surface2) 75%)',backgroundSize:'600px 100%',animation:'shimmer 1.4s infinite linear',animationDelay:(j*0.1)+'s'}}/>)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          <style>{`@keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
       ) : (
         <div>
           {submitted && (
-            <div className={'mb-5 p-4 rounded-xl border text-sm font-semibold ' + (pct === 100 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : pct >= 60 ? 'bg-blue-500/10 border-blue-500/20 text-blue-600' : 'bg-amber-500/10 border-amber-500/20 text-amber-600')}>
-              {score}/{questions.length} correct ({pct}%) &mdash; {pct === 100 ? 'Perfect!' : pct >= 60 ? 'Good job!' : 'Keep practising.'}
+            <div style={{animation:'score-reveal 0.45s cubic-bezier(.22,.68,0,1.2) both',marginBottom:20,padding:'16px 20px',borderRadius:14,border:'1px solid ' + (pct===100?'rgba(16,185,129,0.3)':pct>=60?'rgba(59,130,246,0.3)':'rgba(245,158,11,0.3)'),background:pct===100?'rgba(16,185,129,0.08)':pct>=60?'rgba(59,130,246,0.08)':'rgba(245,158,11,0.08)',display:'flex',alignItems:'center',gap:16}}>
+              <div style={{textAlign:'center',flexShrink:0}}>
+                <div style={{fontSize:36,fontWeight:800,lineHeight:1,letterSpacing:'-0.03em',color:pct===100?'#34d399':pct>=60?'#60a5fa':'#fbbf24'}}>{pct}%</div>
+                <div style={{fontSize:10,fontWeight:600,color:pct===100?'#34d399':pct>=60?'#60a5fa':'#fbbf24',marginTop:2}}>{pct===100?'Perfect!':pct>=60?'Good work':'Keep at it'}</div>
+              </div>
+              <div style={{width:'1px',height:40,background:'rgba(255,255,255,0.08)',flexShrink:0}}/>
+              <div>
+                <div style={{fontSize:14,fontWeight:600,color:'var(--c-t1)'}}>{score} of {questions.length} correct</div>
+                <div style={{fontSize:11,color:'var(--c-t3)',marginTop:3}}>{pct===100?'Flawless — you know this material cold.':pct>=80?'Almost there — review the ones you missed.':pct>=60?'Solid attempt — worth another run through.':'This topic needs more practice. Try flashcards first.'}</div>
+              </div>
             </div>
           )}
+          <style>{`@keyframes score-reveal{from{opacity:0;transform:scale(0.92) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
 
           <div className="space-y-4 mb-6">
             {questions.map((q, i) => {
