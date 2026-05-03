@@ -12,7 +12,7 @@ export async function POST(request) {
 
     const input = messages.map(m => ({
       role: m.role === 'assistant' ? 'assistant' : 'user',
-      content: [{ type: 'input_text', text: m.text || m.content || '' }]
+      content: [{ type: m.role === 'assistant' ? 'output_text' : 'input_text', text: m.text || m.content || '' }]
     }))
 
     const payload = {
