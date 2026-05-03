@@ -131,10 +131,10 @@ export default function Shell({ children }) {
   // dark: reads localStorage synchronously so no flash on first render
   const [dark, setDark] = useState(false)
 
-  // Apply theme from localStorage immediately after mount — fixes Windows hydration race
+  // Apply theme from localStorage — default is dark unless user explicitly chose light
   useEffect(() => {
     const saved = localStorage.getItem('ff-theme')
-    const isDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    const isDark = saved !== 'light'
     setDark(isDark)
     document.documentElement.classList.toggle('dark', isDark)
     document.documentElement.style.backgroundColor = isDark ? '#0d1117' : '#f1f5f9'
