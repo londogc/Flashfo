@@ -553,7 +553,12 @@ export default function QuizPage() {
                 <input type="range" min={5} max={35} step={1} value={count}
                   onChange={e => setCount(Number(e.target.value))} onInput={e => setCount(Number(e.target.value))}
                   className="w-full accent-blue-600 cursor-pointer" style={{ height: 4 }}/>
-                <div className="flex justify-between text-[10px] text-t3 mt-1.5"><span>5</span><span>10</span><span>20</span><span>35</span></div>
+                <div style={{position:'relative',height:14,marginTop:6}}>
+                  <span style={{position:'absolute',left:0,fontSize:10,color:'var(--c-t3)'}}>5</span>
+                  <span style={{position:'absolute',left:'16.7%',transform:'translateX(-50%)',fontSize:10,color:'var(--c-t3)'}}>10</span>
+                  <span style={{position:'absolute',left:'50%',transform:'translateX(-50%)',fontSize:10,color:'var(--c-t3)'}}>20</span>
+                  <span style={{position:'absolute',right:0,fontSize:10,color:'var(--c-t3)'}}>35</span>
+                </div>
               </>
             )}
           </div>
