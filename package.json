@@ -1,4 +1,5 @@
 {
+  "_build": "v7.0",
   "name": "flashfo",
   "version": "0.1.0",
   "private": true,
