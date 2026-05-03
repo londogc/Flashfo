@@ -88,6 +88,7 @@ function FlashcardsPageInner() {
   const [reviewQueue, setReviewQueue] = useState([])
   const [dueToday, setDueToday] = useState(0)
   const [sessionRatings, setSessionRatings] = useState({ again: 0, hard: 0, easy: 0 })
+  const [mounted, setMounted] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
 
   // Effects
@@ -117,6 +118,7 @@ function FlashcardsPageInner() {
   useEffect(() => {
     const check = () => setIsDesktop(window.innerWidth >= 900)
     check()
+    setMounted(true)
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
   }, [])
@@ -308,7 +310,7 @@ function FlashcardsPageInner() {
       )}
 
       {/* ── Mobile layout ─────────────────────────────────────── */}
-      <div style={{display: isDesktop ? 'none' : 'block'}} className="p-6 max-w-2xl mx-auto w-full">
+      <div style={{display: mounted && isDesktop ? 'none' : 'block'}} className="p-6 max-w-2xl mx-auto w-full">
         {!savedId && cards.length > 0 && (
           <div className="mb-4 px-4 py-2.5 bg-amber-500/10 border border-amber-400/30 rounded-xl flex items-center justify-between">
             <span className="text-[12px] text-amber-600 font-medium">&#128190; Don't forget to save your deck to My Stuff!</span>
@@ -357,7 +359,8 @@ function FlashcardsPageInner() {
       </div>
 
       {/* ── Desktop 3-panel deck stack (≥900px) ────────────────── */}
-      <div style={{display: isDesktop ? 'grid' : 'none', gridTemplateColumns:'200px 1fr 200px', minHeight:'calc(100dvh - 130px)'}}>
+      {mounted && (
+        <div style={{display: isDesktop ? 'grid' : 'none', gridTemplateColumns:'200px 1fr 200px', minHeight:'calc(100dvh - 130px)'}}>
         {/* Left panel — stats */}
         <div style={{padding:'22px 18px',borderRight:'1px solid var(--c-line)',display:'flex',flexDirection:'column',gap:14}}>
           <div>
@@ -434,6 +437,7 @@ function FlashcardsPageInner() {
           </div>
         </div>
       </div>
+      )}
     </>
   )
 }
