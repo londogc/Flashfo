@@ -302,8 +302,12 @@ export default function NovaPage() {
       // Update study session
       if (studySession) setStudySession(prev => ({ ...prev, questionsAnswered: (prev?.questionsAnswered||0) + 1 }))
 
+      // ── Safety filter — never generate study material on harmful topics ─────
+      const HARM_RE_TUTOR = /\b(kill\s*(my)?self|suicide|self.?harm|how\s+to\s+die|how\s+to\s+(make|build)\s+(a\s+)?(bomb|gun|weapon|poison)|murder|school\s+shooting|terrorism|meth|heroin|fentanyl|rape|assault|child\s+porn)\b/i
+      const harmBlocked = HARM_RE_TUTOR.test(msg) || HARM_RE_TUTOR.test(fullText)
+
       // ── Detect study material intent and actually generate it ──────────────
-      const studyIntent = /\b(prepare|make|create|generate|build|give me|can you make|i need)\b.{0,50}\b(study material|study kit|study guide|flashcard|flash card|quiz me|quiz)\b/i.test(msg)
+      const studyIntent = !harmBlocked && /\b(prepare|make|create|generate|build|give me|can you make|i need)\b.{0,50}\b(study material|study kit|study guide|flashcard|flash card|quiz me|quiz)\b/i.test(msg)
         || /\b(flashcard|quiz)s?\b.{0,30}\b(about|on|for|covering)\b/i.test(msg)
 
       if (studyIntent && fullText.trim()) {
