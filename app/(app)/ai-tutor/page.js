@@ -48,8 +48,8 @@ export default function NovaPage() {
         if (data && data.length > 0) {
           setMessages(data.reverse().map(m => ({ role: m.role, text: m.content, ts: m.created_at })))
         } else {
-          // First time â show welcome
-          const welcome = { role:'assistant', text:"Hey! I'm Nova â built for how you study. Tell me what you're working on or pick something below.", ts: new Date().toISOString() }
+          // First time — show welcome
+          const welcome = { role:'assistant', text:"Hey! I'm Nova — built for how you study. Tell me what you're working on or pick something below.", ts: new Date().toISOString() }
           setMessages([welcome])
           supabase.from('nova_messages').insert({ user_id: user.id, role:'assistant', content: welcome.text }).then(()=>{})
           if (typeof window !== 'undefined') localStorage.setItem('ff-nova-welcomed','1')
@@ -102,7 +102,7 @@ export default function NovaPage() {
 
   // ââ Build system prompt âââââââââââââââââââââââââââââââââââââââââââââââââ
   function buildSystemPrompt(allClasses) {
-    let prompt = 'You are Nova, a proactive AI study tutor inside Flashfo. You are warm, encouraging, and specific â not generic. '
+    let prompt = 'You are Nova, a proactive AI study tutor inside Flashfo. You are warm, encouraging, and specific — not generic. '
     if (grade) {
       prompt += 'The student is in ' + grade + '. Calibrate language and depth accordingly. '
     }
@@ -230,7 +230,7 @@ export default function NovaPage() {
       if (studySession) setStudySession(prev => ({ ...prev, questionsAnswered: (prev?.questionsAnswered||0) + 1 }))
 
     } catch (err) {
-      setMessages(prev => prev.map(m => m.id === tempId ? { ...m, text: 'Something went wrong â try again.', streaming: false } : m))
+      setMessages(prev => prev.map(m => m.id === tempId ? { ...m, text: 'Something went wrong — try again.', streaming: false } : m))
     }
 
     setLoading(false)
@@ -300,8 +300,8 @@ export default function NovaPage() {
       const data = await res.json()
       if (data.result) {
         await supabase.from('saved_items').insert({ user_id: user.id, type:'flashcards', title:'Nova: ' + (studySession?.topic || 'Study session'), content: JSON.stringify(data.result) })
-        setMessages(prev => [...prev, { role:'assistant', text:'Saved as a flashcard deck â find it in My Stuff.', ts: new Date().toISOString() }])
-        saveMessage('assistant', 'Saved as a flashcard deck â find it in My Stuff.')
+        setMessages(prev => [...prev, { role:'assistant', text:'Saved as a flashcard deck — find it in My Stuff.', ts: new Date().toISOString() }])
+        saveMessage('assistant', 'Saved as a flashcard deck — find it in My Stuff.')
       }
     } catch {}
   }
@@ -402,7 +402,7 @@ export default function NovaPage() {
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.4"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa" stroke="none"/></svg>
               </div>
               <p style={{fontSize:16,fontWeight:600,color:'var(--c-t1)',marginBottom:8}}>Hey, I'm Nova</p>
-              <p style={{fontSize:13,color:'var(--c-t2)',lineHeight:1.7,maxWidth:320,margin:'0 auto 24px'}}>Ask me anything â I'll explain concepts, quiz you, build flashcards, or help you prep for a test.</p>
+              <p style={{fontSize:13,color:'var(--c-t2)',lineHeight:1.7,maxWidth:320,margin:'0 auto 24px'}}>Ask me anything — I'll explain concepts, quiz you, build flashcards, or help you prep for a test.</p>
               <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center'}}>
                 {CHIPS.map((c,i)=>(<button key={i} onClick={()=>send(c)} style={{padding:'7px 14px',borderRadius:8,cursor:'pointer',border:'1px solid rgba(167,139,250,0.2)',background:'rgba(167,139,250,0.06)',fontSize:12,color:'#a78bfa'}}>{c}</button>))}
               </div>
