@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 const CHIPS = ['Review my due cards', 'Quiz me on a topic', 'Explain a concept', 'Build me flashcards']
 const fmt = (d) => { try { const t=d?new Date(d):new Date(); return t.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) } catch { return '' } }
 
-// ── Register levels ─────────────────────────────────────────────────────────
+// ââ Register levels âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const REGISTERS = [
   { id:'simple', label:'Simple', desc:'Plain language, analogies' },
   { id:'normal', label:'Normal', desc:'Standard explanation' },
@@ -34,10 +34,10 @@ export default function NovaPage() {
   const fileRef    = useRef(null)
   const timerRef   = useRef(null)
 
-  // ── Scroll to bottom ────────────────────────────────────────────────────
+  // ââ Scroll to bottom ââââââââââââââââââââââââââââââââââââââââââââââââââââ
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:'smooth' }) }, [messages, loading])
 
-  // ── Load session memory + context on mount ───────────────────────────────
+  // ââ Load session memory + context on mount âââââââââââââââââââââââââââââââ
   useEffect(() => {
     if (!user) return
 
@@ -48,8 +48,8 @@ export default function NovaPage() {
         if (data && data.length > 0) {
           setMessages(data.reverse().map(m => ({ role: m.role, text: m.content, ts: m.created_at })))
         } else {
-          // First time — show welcome
-          const welcome = { role:'assistant', text:"Hey! I'm Nova — built for how you study. Tell me what you're working on or pick something below.", ts: new Date().toISOString() }
+          // First time â show welcome
+          const welcome = { role:'assistant', text:"Hey! I'm Nova â built for how you study. Tell me what you're working on or pick something below.", ts: new Date().toISOString() }
           setMessages([welcome])
           supabase.from('nova_messages').insert({ user_id: user.id, role:'assistant', content: welcome.text }).then(()=>{})
           if (typeof window !== 'undefined') localStorage.setItem('ff-nova-welcomed','1')
@@ -89,7 +89,7 @@ export default function NovaPage() {
 
   }, [user])
 
-  // ── Study session timer ─────────────────────────────────────────────────
+  // ââ Study session timer âââââââââââââââââââââââââââââââââââââââââââââââââ
   useEffect(() => {
     if (studySession) {
       timerRef.current = setInterval(() => setSessionTimer(s => s+1), 1000)
@@ -100,9 +100,9 @@ export default function NovaPage() {
     return () => clearInterval(timerRef.current)
   }, [studySession])
 
-  // ── Build system prompt ─────────────────────────────────────────────────
+  // ââ Build system prompt âââââââââââââââââââââââââââââââââââââââââââââââââ
   function buildSystemPrompt(allClasses) {
-    let prompt = 'You are Nova, a proactive AI study tutor inside Flashfo. You are warm, encouraging, and specific — not generic. '
+    let prompt = 'You are Nova, a proactive AI study tutor inside Flashfo. You are warm, encouraging, and specific â not generic. '
     if (grade) {
       prompt += 'The student is in ' + grade + '. Calibrate language and depth accordingly. '
     }
@@ -134,19 +134,19 @@ export default function NovaPage() {
     return prompt
   }
 
-  // ── Detect topic from message ───────────────────────────────────────────
+  // ââ Detect topic from message âââââââââââââââââââââââââââââââââââââââââââ
   const detectTopic = (text) => {
     const topicMatch = text.match(/(?:about|on|for|studying|review|quiz(?:ze)? me on|explain|understand)s+([A-Za-z][^.!?]{3,40})/i)
     return topicMatch ? topicMatch[1].trim() : null
   }
 
-  // ── Save message to Supabase ────────────────────────────────────────────
+  // ââ Save message to Supabase ââââââââââââââââââââââââââââââââââââââââââââ
   const saveMessage = async (role, content) => {
     if (!user) return
     await supabase.from('nova_messages').insert({ user_id: user.id, role, content })
   }
 
-  // ── Streaming send ──────────────────────────────────────────────────────
+  // ââ Streaming send ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   const send = async (overrideText) => {
     const msg = (overrideText || input).trim()
     if (!msg || loading) return
@@ -211,7 +211,7 @@ export default function NovaPage() {
           body: JSON.stringify({ fn:'generateChatResponse', args:[history, buildFullSystemPrompt()] })
         })
         const fdata = await fallback.json()
-        fullText = fdata.reply || 'Sorry, I had trouble with that. Try again.'
+        fullText = fdata.result?.reply || fdata.reply || 'Sorry, I had trouble with that. Try again.'
 
         // Typewriter effect for fallback
         let displayed = ''
@@ -230,14 +230,14 @@ export default function NovaPage() {
       if (studySession) setStudySession(prev => ({ ...prev, questionsAnswered: (prev?.questionsAnswered||0) + 1 }))
 
     } catch (err) {
-      setMessages(prev => prev.map(m => m.id === tempId ? { ...m, text: 'Something went wrong — try again.', streaming: false } : m))
+      setMessages(prev => prev.map(m => m.id === tempId ? { ...m, text: 'Something went wrong â try again.', streaming: false } : m))
     }
 
     setLoading(false)
     setStreamingId(null)
   }
 
-  // ── Voice input ─────────────────────────────────────────────────────────
+  // ââ Voice input âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   const startMic = () => {
     if (typeof window === 'undefined') return
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -249,7 +249,7 @@ export default function NovaPage() {
     rec.start()
   }
 
-  // ── Read aloud ──────────────────────────────────────────────────────────
+  // ââ Read aloud ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   const readAloud = (text) => {
     if (typeof window === 'undefined') return
     const synth = window.speechSynthesis
@@ -260,7 +260,7 @@ export default function NovaPage() {
     setSpeaking(true); synth.speak(utt)
   }
 
-  // ── File upload ─────────────────────────────────────────────────────────
+  // ââ File upload âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   const handleFile = (file) => {
     if (!file) return
     const reader = new FileReader()
@@ -281,7 +281,7 @@ export default function NovaPage() {
     reader.readAsDataURL(file)
   }
 
-  // ── End study session ───────────────────────────────────────────────────
+  // ââ End study session âââââââââââââââââââââââââââââââââââââââââââââââââââ
   const endSession = () => {
     if (!studySession) return
     const mins = Math.round(sessionTimer / 60)
@@ -291,7 +291,7 @@ export default function NovaPage() {
     setStudySession(null)
   }
 
-  // ── Save as flashcards ──────────────────────────────────────────────────
+  // ââ Save as flashcards ââââââââââââââââââââââââââââââââââââââââââââââââââ
   const saveAsFlashcards = async (text) => {
     if (!user || !text) return
     try {
@@ -300,8 +300,8 @@ export default function NovaPage() {
       const data = await res.json()
       if (data.result) {
         await supabase.from('saved_items').insert({ user_id: user.id, type:'flashcards', title:'Nova: ' + (studySession?.topic || 'Study session'), content: JSON.stringify(data.result) })
-        setMessages(prev => [...prev, { role:'assistant', text:'Saved as a flashcard deck — find it in My Stuff.', ts: new Date().toISOString() }])
-        saveMessage('assistant', 'Saved as a flashcard deck — find it in My Stuff.')
+        setMessages(prev => [...prev, { role:'assistant', text:'Saved as a flashcard deck â find it in My Stuff.', ts: new Date().toISOString() }])
+        saveMessage('assistant', 'Saved as a flashcard deck â find it in My Stuff.')
       }
     } catch {}
   }
@@ -310,7 +310,7 @@ export default function NovaPage() {
   return (
     <div style={{display:'flex',flexDirection:'column',height:'calc(100vh - 56px)',background:'var(--c-bg)',overflow:'hidden'}}>
 
-      {/* ── Header ── */}
+      {/* ââ Header ââ */}
       <div style={{flexShrink:0,background:'linear-gradient(135deg,rgba(124,58,237,0.18) 0%,rgba(167,139,250,0.05) 100%)',borderBottom:'1px solid rgba(167,139,250,0.15)',padding:'12px 20px'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',maxWidth:760,margin:'0 auto'}}>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
@@ -377,7 +377,7 @@ export default function NovaPage() {
         </div>
       </div>
 
-      {/* ── Context bar ── */}
+      {/* ââ Context bar ââ */}
       {(allClasses.length > 0 || classContext || dueCards > 0 || recentActivity) && (
         <div style={{flexShrink:0,background:'rgba(124,58,237,0.05)',borderBottom:'1px solid rgba(167,139,250,0.1)',padding:'6px 20px',display:'flex',alignItems:'center',gap:8,overflowX:'auto'}}>
           {(allClasses.length > 0 || classContext) && (
@@ -392,7 +392,7 @@ export default function NovaPage() {
         </div>
       )}
 
-      {/* ── Messages ── */}
+      {/* ââ Messages ââ */}
       <div style={{flex:1,overflowY:'auto',padding:'20px'}}>
         <div style={{maxWidth:760,margin:'0 auto'}}>
 
@@ -402,7 +402,7 @@ export default function NovaPage() {
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.4"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa" stroke="none"/></svg>
               </div>
               <p style={{fontSize:16,fontWeight:600,color:'var(--c-t1)',marginBottom:8}}>Hey, I'm Nova</p>
-              <p style={{fontSize:13,color:'var(--c-t2)',lineHeight:1.7,maxWidth:320,margin:'0 auto 24px'}}>Ask me anything — I'll explain concepts, quiz you, build flashcards, or help you prep for a test.</p>
+              <p style={{fontSize:13,color:'var(--c-t2)',lineHeight:1.7,maxWidth:320,margin:'0 auto 24px'}}>Ask me anything â I'll explain concepts, quiz you, build flashcards, or help you prep for a test.</p>
               <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center'}}>
                 {CHIPS.map((c,i)=>(<button key={i} onClick={()=>send(c)} style={{padding:'7px 14px',borderRadius:8,cursor:'pointer',border:'1px solid rgba(167,139,250,0.2)',background:'rgba(167,139,250,0.06)',fontSize:12,color:'#a78bfa'}}>{c}</button>))}
               </div>
@@ -417,7 +417,7 @@ export default function NovaPage() {
                 {isNova ? (
                   <div>
                     <div style={{paddingLeft:14,borderLeft:'2px solid rgba(167,139,250,0.45)'}}>
-                      <div style={{fontSize:10,fontWeight:600,color:'#a78bfa',letterSpacing:'0.08em',marginBottom:5}}>NOVA{m.streaming?' · typing...':''}</div>
+                      <div style={{fontSize:10,fontWeight:600,color:'#a78bfa',letterSpacing:'0.08em',marginBottom:5}}>NOVA{m.streaming?' Â· typing...':''}</div>
                       <div style={{fontSize:13,color:'var(--c-t1)',lineHeight:1.7,whiteSpace:'pre-wrap'}}>{m.text}</div>
                       {m.streaming && (
                         <span style={{display:'inline-block',width:8,height:13,background:'#a78bfa',animation:'nova-breathe 0.8s ease-in-out infinite',verticalAlign:'text-bottom',marginLeft:2,borderRadius:1}}/>
@@ -455,7 +455,7 @@ export default function NovaPage() {
         </div>
       </div>
 
-      {/* ── Input ── */}
+      {/* ââ Input ââ */}
       <div style={{flexShrink:0,borderTop:'1px solid #21262d',background:'var(--c-surface)',padding:'12px 16px'}}>
         <div style={{maxWidth:760,margin:'0 auto'}}>
           <input ref={fileRef} type="file" accept=".pdf,.txt,.doc,.docx" style={{display:'none'}} onChange={e=>{const f=e.target.files?.[0];if(f)handleFile(f)}}/>
@@ -480,7 +480,7 @@ export default function NovaPage() {
               </button>
             </div>
           </div>
-          <p style={{fontSize:10,color:'#484f58',textAlign:'center',marginTop:7}}>Shift+Enter for new line · Nova remembers your sessions</p>
+          <p style={{fontSize:10,color:'#484f58',textAlign:'center',marginTop:7}}>Shift+Enter for new line Â· Nova remembers your sessions</p>
         </div>
       </div>
     </div>
