@@ -88,6 +88,7 @@ function FlashcardsPageInner() {
   const [reviewQueue, setReviewQueue] = useState([])
   const [dueToday, setDueToday] = useState(0)
   const [sessionRatings, setSessionRatings] = useState({ again: 0, hard: 0, easy: 0 })
+  const [isDesktop, setIsDesktop] = useState(false)
 
   // Effects
   useEffect(() => {
@@ -102,6 +103,13 @@ function FlashcardsPageInner() {
     s.id = id
     s.textContent = '@keyframes nova-pop{0%{opacity:0;transform:translateY(14px) scale(0.97)}60%{opacity:1;transform:translateY(-3px) scale(1.005)}100%{opacity:1;transform:translateY(0) scale(1)}} @keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}} .nova-card{opacity:0;animation:nova-pop .42s cubic-bezier(.22,.68,0,1.2) forwards} .nova-dot-pulse{animation:nova-pulse .9s ease-in-out infinite}'
     document.head.appendChild(s)
+  }, [])
+
+  useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth >= 900)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
   }, [])
 
   useEffect(() => {
@@ -277,22 +285,6 @@ function FlashcardsPageInner() {
   // Render: card viewer — responsive (mobile=current, desktop=3-panel Option 1)
   return (
     <>
-      <style>{`
-        .fc-mobile{display:block}.fc-desktop{display:none}
-        @media(min-width:900px){.fc-mobile{display:none}.fc-desktop{display:grid;grid-template-columns:200px 1fr 200px;min-height:calc(100vh - 130px)}}
-        .fc-left{padding:22px 18px;border-right:1px solid var(--c-line);display:flex;flex-direction:column;gap:14px}
-        .fc-center{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 36px}
-        .fc-right{padding:22px 18px;border-left:1px solid var(--c-line)}
-        .fc-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-        .fc-stat{background:var(--c-surface2);border:1px solid var(--c-line);border-radius:8px;padding:10px 11px}
-        .fc-stack{position:relative;width:100%;max-width:440px;height:230px;margin-bottom:22px}
-        .fc-bg2{position:absolute;top:12px;left:12px;right:-12px;bottom:-12px;background:var(--c-surface2);border:1px solid var(--c-line);border-radius:14px}
-        .fc-bg1{position:absolute;top:6px;left:6px;right:-6px;bottom:-6px;background:var(--c-surface);border:1px solid var(--c-line);border-radius:14px}
-        .fc-card{position:absolute;inset:0;background:var(--c-surface);border:1.5px solid rgba(59,130,246,0.35);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;cursor:pointer;transition:border-color 0.2s}
-        .fc-card:hover{border-color:rgba(59,130,246,0.6)}
-        .fc-key{background:var(--c-surface2);border:1px solid var(--c-line);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;color:var(--c-t2);display:inline-block;font-family:monospace}
-      `}</style>
-
       {showSave && (
         <div className="fixed inset-0 z-40 flex items-center justify-center" style={{background:'rgba(0,0,0,0.4)'}}>
           <div className="bg-surface border border-line rounded-2xl p-6 w-full max-w-sm shadow-2xl">
@@ -306,8 +298,8 @@ function FlashcardsPageInner() {
         </div>
       )}
 
-      {/* ── Mobile (unchanged) ─────────────────────────────────── */}
-      <div className="fc-mobile p-6 max-w-2xl mx-auto w-full">
+      {/* ── Mobile layout ─────────────────────────────────────── */}
+      <div style={{display: isDesktop ? 'none' : 'block'}} className="p-6 max-w-2xl mx-auto w-full">
         {!savedId && cards.length > 0 && (
           <div className="mb-4 px-4 py-2.5 bg-amber-500/10 border border-amber-400/30 rounded-xl flex items-center justify-between">
             <span className="text-[12px] text-amber-600 font-medium">&#128190; Don't forget to save your deck to My Stuff!</span>
@@ -356,9 +348,9 @@ function FlashcardsPageInner() {
       </div>
 
       {/* ── Desktop 3-panel deck stack (≥900px) ────────────────── */}
-      <div className="fc-desktop">
+      <div style={{display: isDesktop ? 'grid' : 'none', gridTemplateColumns:'200px 1fr 200px', minHeight:'calc(100dvh - 130px)'}}>
         {/* Left panel — stats */}
-        <div className="fc-left">
+        <div style={{padding:'22px 18px',borderRight:'1px solid var(--c-line)',display:'flex',flexDirection:'column',gap:14}}>
           <div>
             <div style={{fontSize:14,fontWeight:700,color:'var(--c-t1)',marginBottom:2}}>{topic||'Flashcards'}</div>
             <div style={{fontSize:11,color:'var(--c-t3)'}}>{cards.length} cards in deck</div>
@@ -367,11 +359,11 @@ function FlashcardsPageInner() {
             <div style={{height:3,background:'var(--c-line)',borderRadius:2,overflow:'hidden',marginBottom:5}}><div style={{height:'100%',width:progress+'%',background:'#3b82f6',borderRadius:2}}/></div>
             <div style={{fontSize:10,color:'var(--c-t3)'}}>Card {current+1} of {cards.length}</div>
           </div>
-          <div className="fc-stat-grid">
-            <div className="fc-stat"><div style={{fontSize:20,fontWeight:700,color:'#34d399',lineHeight:1}}>{done.length}</div><div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>Mastered</div></div>
-            <div className="fc-stat"><div style={{fontSize:20,fontWeight:700,color:'#f87171',lineHeight:1}}>{cards.length-done.length}</div><div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>To review</div></div>
-            <div className="fc-stat"><div style={{fontSize:20,fontWeight:700,color:'#fbbf24',lineHeight:1}}>{sessionRatings.again}</div><div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>Again</div></div>
-            <div className="fc-stat"><div style={{fontSize:20,fontWeight:700,color:'#34d399',lineHeight:1}}>{sessionRatings.easy}</div><div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>Easy</div></div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7}}>
+            <div style={{background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:8,padding:'10px 11px'}}><div style={{fontSize:20,fontWeight:700,color:'#34d399',lineHeight:1}}>{done.length}</div><div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>Mastered</div></div>
+            <div style={{background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:8,padding:'10px 11px'}}><div style={{fontSize:20,fontWeight:700,color:'#f87171',lineHeight:1}}>{cards.length-done.length}</div><div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>To review</div></div>
+            <div style={{background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:8,padding:'10px 11px'}}><div style={{fontSize:20,fontWeight:700,color:'#fbbf24',lineHeight:1}}>{sessionRatings.again}</div><div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>Again</div></div>
+            <div style={{background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:8,padding:'10px 11px'}}><div style={{fontSize:20,fontWeight:700,color:'#34d399',lineHeight:1}}>{sessionRatings.easy}</div><div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>Easy</div></div>
           </div>
           {!savedId && <div style={{padding:'8px 10px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,fontSize:10,color:'#f59e0b',lineHeight:1.4}}>Deck not saved yet</div>}
           <div style={{marginTop:'auto',display:'flex',flexDirection:'column',gap:6}}>
@@ -381,16 +373,16 @@ function FlashcardsPageInner() {
         </div>
 
         {/* Center panel — card + navigation */}
-        <div className="fc-center">
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'28px 36px'}}>
           <div style={{display:'flex',gap:5,marginBottom:20,flexWrap:'wrap',justifyContent:'center',maxWidth:380}}>
             {cards.map((_,i)=>(
               <div key={i} onClick={()=>{setCurrent(i);setFlipped(false)}} style={{width:8,height:8,borderRadius:'50%',cursor:'pointer',transition:'all 0.2s',background:i===current?'#3b82f6':done.includes(i)?'#34d399':'rgba(255,255,255,0.12)',transform:i===current?'scale(1.4)':'scale(1)'}}/>
             ))}
           </div>
-          <div className="fc-stack">
-            <div className="fc-bg2"/>
-            <div className="fc-bg1"/>
-            <div className="fc-card" onClick={()=>{stopAudio();setFlipped(f=>!f)}} style={{borderColor:flipped?'rgba(99,102,241,0.45)':'rgba(59,130,246,0.35)'}}>
+          <div style={{position:'relative',width:'100%',maxWidth:440,height:230,marginBottom:22}}>
+            <div style={{position:'absolute',top:12,left:12,right:-12,bottom:-12,background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:14}}/>
+            <div style={{position:'absolute',top:6,left:6,right:-6,bottom:-6,background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:14}}/>
+            <div style={{position:'absolute',inset:0,background:'var(--c-surface)',border:'1.5px solid rgba(59,130,246,0.35)',borderRadius:14,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:28,cursor:'pointer',transition:'border-color 0.2s'}} onClick={()=>{stopAudio();setFlipped(f=>!f)}} style={{borderColor:flipped?'rgba(99,102,241,0.45)':'rgba(59,130,246,0.35)'}}>
               <div style={{fontSize:9,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',padding:'3px 10px',borderRadius:20,background:flipped?'rgba(99,102,241,0.1)':'rgba(59,130,246,0.1)',color:flipped?'#818cf8':'#60a5fa',border:'1px solid '+(flipped?'rgba(99,102,241,0.2)':'rgba(59,130,246,0.18)'),marginBottom:14}}>{flipped?'Answer':'Question'}</div>
               <div style={{fontSize:17,fontWeight:600,color:'var(--c-t1)',textAlign:'center',lineHeight:1.45}}>{flipped?(card.back||card.answer):(card.front||card.question)}</div>
               {!flipped && <div style={{fontSize:11,color:'var(--c-t3)',marginTop:10}}>Click or press Space to flip</div>}
@@ -415,14 +407,14 @@ function FlashcardsPageInner() {
         </div>
 
         {/* Right panel — shortcuts + actions */}
-        <div className="fc-right">
+        <div style={{padding:'22px 18px',borderLeft:'1px solid var(--c-line)'}}>
           <div style={{fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'.07em',marginBottom:14}}>Shortcuts</div>
           <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:24}}>
-            <div><span className="fc-key">Space</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Flip card</span></div>
-            <div><span className="fc-key">&#8592; &#8594;</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Prev / Next</span></div>
-            <div><span className="fc-key">1</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Again</span></div>
-            <div><span className="fc-key">2</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Hard</span></div>
-            <div><span className="fc-key">3</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Easy</span></div>
+            <div><span style={{background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:5,padding:'2px 8px',fontSize:11,fontWeight:600,color:'var(--c-t2)',display:'inline-block',fontFamily:'monospace'}}>Space</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Flip card</span></div>
+            <div><span style={{background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:5,padding:'2px 8px',fontSize:11,fontWeight:600,color:'var(--c-t2)',display:'inline-block',fontFamily:'monospace'}}>&#8592; &#8594;</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Prev / Next</span></div>
+            <div><span style={{background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:5,padding:'2px 8px',fontSize:11,fontWeight:600,color:'var(--c-t2)',display:'inline-block',fontFamily:'monospace'}}>1</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Again</span></div>
+            <div><span style={{background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:5,padding:'2px 8px',fontSize:11,fontWeight:600,color:'var(--c-t2)',display:'inline-block',fontFamily:'monospace'}}>2</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Hard</span></div>
+            <div><span style={{background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:5,padding:'2px 8px',fontSize:11,fontWeight:600,color:'var(--c-t2)',display:'inline-block',fontFamily:'monospace'}}>3</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Easy</span></div>
           </div>
           <div style={{fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'.07em',marginBottom:12}}>Actions</div>
           <div style={{display:'flex',flexDirection:'column',gap:7}}>
