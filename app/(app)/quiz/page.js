@@ -176,7 +176,7 @@ function EditPanel({ questions, onSave, onCancel }) {
         {qs.map((q, i) => (
           <div key={i} className="bg-surface border border-line rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 uppercase">{q.type || 'mcq'}</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 uppercase">{prettifyType(q.type || 'mcq')}</span>
               <button onClick={() => deleteQ(i)} className="ml-auto text-[11px] text-red-400 hover:text-red-600 px-2 h-6 border border-red-200 dark:border-red-500/30 rounded-lg">&#x2715; Delete</button>
             </div>
             <textarea value={q.question} onChange={e => updateQ(i, 'question', e.target.value)}
@@ -550,7 +550,10 @@ export default function QuizPage() {
           </div>
 
           {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
-          <button onClick={generate} disabled={loading} style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',opacity:loading?0.6:1,letterSpacing:'-0.01em'}}>
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+          <button onClick={generate} disabled={loading} style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:loading?'linear-gradient(90deg,#1e3a8a,#4c1d95)':'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',letterSpacing:'-0.01em',transition:'background 0.3s',position:'relative',overflow:'hidden'}}>
+            {loading && <span style={{position:'absolute',bottom:0,left:0,height:3,background:'rgba(255,255,255,0.4)',borderRadius:'0 2px 2px 0',animation:'progress 3s cubic-bezier(.4,0,.2,1) forwards'}}/>}
+            <style>{`@keyframes progress{0%{width:0%}100%{width:88%}}`}</style>
             {loading ? <span style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}><span style={{width:14,height:14,border:'2px solid rgba(255,255,255,0.3)',borderTopColor:'#fff',borderRadius:'50%',display:'inline-block',animation:'spin 0.7s linear infinite',flexShrink:0}}/> Generating...</span> : 'Generate ' + (typeId === 'mixed' ? breakdownTotal : count) + ' Questions'}
           </button>
         </div>
