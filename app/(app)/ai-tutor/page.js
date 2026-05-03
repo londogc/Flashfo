@@ -4,6 +4,62 @@ import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
 const CHIPS = ['Review my due cards', 'Quiz me on a topic', 'Explain a concept', 'Build me flashcards']
+
+// ── Persist messages to localStorage ─────────────────────────────────────
+const CACHE_KEY = (uid) => 'ff-nova-msgs-' + (uid || 'guest')
+
+function saveMsgCache(msgs, uid) {
+  try {
+    const toSave = msgs.filter(m => !m.streaming).slice(-60)
+    localStorage.setItem(CACHE_KEY(uid), JSON.stringify(toSave))
+  } catch(e) {}
+}
+
+function loadMsgCache(uid) {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY(uid))
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null
+  } catch(e) { return null }
+}
+
+// ── Clean markdown + render links ─────────────────────────────────────────
+function renderNovaText(text) {
+  if (!text) return null
+  // Strip heading markers (## Heading → Heading)
+  let cleaned = text.replace(/^#{1,6}\s+/gm, '')
+  // Strip bold (**text** → text)
+  cleaned = cleaned.replace(/\*\*([^*\n]+)\*\*/g, '$1')
+  // Strip italic (*text* → text, _text_ → text) — but not list bullets
+  cleaned = cleaned.replace(/(?<![\-*])\*([^*\n]+)\*(?!\*)/g, '$1')
+  cleaned = cleaned.replace(/(?<!\w)_([^_\n]+)_(?!\w)/g, '$1')
+
+  // Split on markdown links [text](url) and render each part
+  const linkRe = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g
+  const parts = []
+  let last = 0
+  let match
+  while ((match = linkRe.exec(cleaned)) !== null) {
+    if (match.index > last) parts.push({ type:'text', val: cleaned.slice(last, match.index) })
+    try {
+      const url = match[2]
+      const host = new URL(url).hostname.replace(/^www\./, '')
+      parts.push({ type:'link', url, label: host })
+    } catch {
+      parts.push({ type:'text', val: match[0] })
+    }
+    last = match.index + match[0].length
+  }
+  if (last < cleaned.length) parts.push({ type:'text', val: cleaned.slice(last) })
+
+  return parts.map((p, i) =>
+    p.type === 'link'
+      ? <a key={i} href={p.url} target="_blank" rel="noopener noreferrer"
+          style={{color:'#60a5fa',textDecoration:'none',borderBottom:'1px solid rgba(96,165,250,0.3)',fontWeight:500}}>{p.label}</a>
+      : <span key={i} style={{whiteSpace:'pre-wrap'}}>{p.val}</span>
+  )
+}
 const fmt = (d) => { try { const t=d?new Date(d):new Date(); return t.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) } catch { return '' } }
 
 // ââ Register levels âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
@@ -39,19 +95,30 @@ export default function NovaPage() {
 
   // ââ Load session memory + context on mount âââââââââââââââââââââââââââââââ
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      // Guest: load from localStorage only
+      const cached = loadMsgCache('guest')
+      if (cached) setMessages(cached)
+      return
+    }
 
-    // Load last 30 messages from Supabase for session memory
+    // Load messages: localStorage first (instant), Supabase supplements
+    const cached = loadMsgCache(user.id)
+    if (cached) setMessages(cached)
+
     supabase.from('nova_messages').select('*').eq('user_id', user.id)
-      .order('created_at', { ascending: false }).limit(30)
+      .order('created_at', { ascending: false }).limit(60)
       .then(({ data }) => {
         if (data && data.length > 0) {
-          setMessages(data.reverse().map(m => ({ role: m.role, text: m.content, ts: m.created_at })))
-        } else {
+          const msgs = data.reverse().map(m => ({ role: m.role, text: m.content, ts: m.created_at }))
+          setMessages(msgs)
+          saveMsgCache(msgs, user.id)
+        } else if (!cached) {
           // First time — show welcome
           const welcome = { role:'assistant', text:"Hey! I'm Nova — built for how you study. Tell me what you're working on or pick something below.", ts: new Date().toISOString() }
           setMessages([welcome])
           supabase.from('nova_messages').insert({ user_id: user.id, role:'assistant', content: welcome.text }).then(()=>{})
+          saveMsgCache([welcome], user.id)
           if (typeof window !== 'undefined') localStorage.setItem('ff-nova-welcomed','1')
         }
       })
@@ -142,6 +209,12 @@ export default function NovaPage() {
 
   // ââ Save message to Supabase ââââââââââââââââââââââââââââââââââââââââââââ
   const saveMessage = async (role, content) => {
+    // Cache to localStorage immediately (works for guests too)
+    setMessages(prev => {
+      const updated = prev.filter(m => !m.streaming)
+      saveMsgCache(updated, user?.id)
+      return prev
+    })
     if (!user) return
     await supabase.from('nova_messages').insert({ user_id: user.id, role, content })
   }
@@ -417,8 +490,8 @@ export default function NovaPage() {
                 {isNova ? (
                   <div>
                     <div style={{paddingLeft:14,borderLeft:'2px solid rgba(167,139,250,0.45)'}}>
-                      <div style={{fontSize:10,fontWeight:600,color:'#a78bfa',letterSpacing:'0.08em',marginBottom:5}}>NOVA{m.streaming?' Â· typing...':''}</div>
-                      <div style={{fontSize:13,color:'var(--c-t1)',lineHeight:1.7,whiteSpace:'pre-wrap'}}>{m.text}</div>
+                      <div style={{fontSize:10,fontWeight:600,color:'#a78bfa',letterSpacing:'0.08em',marginBottom:5}}>NOVA{m.streaming?' · typing...':''}</div>
+                      <div style={{fontSize:13,color:'var(--c-t1)',lineHeight:1.7}}>{renderNovaText(m.text)}</div>
                       {m.streaming && (
                         <span style={{display:'inline-block',width:8,height:13,background:'#a78bfa',animation:'nova-breathe 0.8s ease-in-out infinite',verticalAlign:'text-bottom',marginLeft:2,borderRadius:1}}/>
                       )}
@@ -480,7 +553,7 @@ export default function NovaPage() {
               </button>
             </div>
           </div>
-          <p style={{fontSize:10,color:'#484f58',textAlign:'center',marginTop:7}}>Shift+Enter for new line Â· Nova remembers your sessions</p>
+          <p style={{fontSize:10,color:'#484f58',textAlign:'center',marginTop:7}}>Shift+Enter for new line · Nova remembers your sessions</p>
         </div>
       </div>
     </div>
