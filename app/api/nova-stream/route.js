@@ -19,6 +19,7 @@ export async function POST(request) {
       model: MODEL,
       stream: true,
       input,
+      tools: [{ type: 'web_search_preview' }],
     }
     if (systemPrompt) payload.instructions = systemPrompt
 
