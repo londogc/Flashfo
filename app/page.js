@@ -394,7 +394,7 @@ export default function LandingPage() {
           <span style={{ width:6,height:6,borderRadius:'50%',background:'#a78bfa',display:'inline-block' }}/>
           Welcome to Flashfo
         </div>
-        <h1 style={{ fontSize:'clamp(32px,6vw,64px)',fontWeight:700,lineHeight:1.1,marginBottom:20,background:'linear-gradient(135deg,#e6edf3 0%,#a78bfa 50%,#2563eb 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text' }}>
+        <h1 style={{ fontSize:'clamp(32px,6vw,64px)',fontWeight:700,lineHeight:1.15,marginBottom:20,paddingBottom:6,background:'linear-gradient(135deg,#e6edf3 0%,#a78bfa 50%,#2563eb 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text' }}>
           Study smarter.<br/>Teach better. Together.
         </h1>
         <p style={{ fontSize:18, color:'#8b949e', maxWidth:520, margin:'0 auto 36px', lineHeight:1.6 }}>
