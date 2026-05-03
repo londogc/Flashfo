@@ -221,9 +221,9 @@ function FlashcardsPageInner() {
             onChange={e => setCount(Number(e.target.value))} onInput={e => setCount(Number(e.target.value))}
             className="w-full accent-blue-600 cursor-pointer h-2 rounded-full" style={{ display:'block' }}/>
           <div style={{position:'relative',height:14,marginTop:6}}>
-            {[[10,0],[15,25],[20,50],[30,100]].map(([val,pct])=>(
-              <span key={val} style={{position:'absolute',left:pct+'%',transform:'translateX(-50%)',fontSize:10,color:'var(--c-t3)',lineHeight:1}}>{val}</span>
-            ))}
+            <span style={{position:'absolute',left:0,fontSize:10,color:'var(--c-t3)'}}>10</span>
+            <span style={{position:'absolute',left:'50%',transform:'translateX(-50%)',fontSize:10,color:'var(--c-t3)'}}>20</span>
+            <span style={{position:'absolute',right:0,fontSize:10,color:'var(--c-t3)'}}>30</span>
           </div>
         </div>
         {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
