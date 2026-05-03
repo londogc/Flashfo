@@ -312,29 +312,47 @@ function FlashcardsPageInner() {
       <div className="w-full bg-line rounded-full h-1.5 mb-6">
         <div className="bg-blue-600 h-1.5 rounded-full transition-all" style={{ width: progress + '%' }}/>
       </div>
+      <style>{`
+        @keyframes card-flip{0%{opacity:0;transform:translateY(8px) scale(0.98)}100%{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes rating-pop{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
+        .fc-card-face{animation:card-flip 0.22s ease}
+        .rating-row{animation:rating-pop 0.2s ease both}
+      `}</style>
+      <div className="text-[10px] font-semibold text-t3 uppercase tracking-widest text-right mb-2">{current + 1} / {cards.length}</div>
+      <div className="w-full bg-line rounded-full mb-4" style={{height:3}}>
+        <div className="bg-blue-500 rounded-full transition-all" style={{height:3,width:(done.length/cards.length*100)+'%'}}/>
+      </div>
       <div onClick={() => { stopAudio(); setFlipped(f => !f) }}
-        className="bg-surface border border-line rounded-2xl p-10 text-center cursor-pointer hover:border-blue-300 transition-all min-h-[220px] flex flex-col items-center justify-center gap-4 relative">
-        <div className="text-[10px] font-bold text-t3 uppercase tracking-widest">
-          {flipped ? 'Answer' : 'Question'} &middot; {current + 1} of {cards.length}
+        className="bg-surface border border-line rounded-2xl p-10 text-center cursor-pointer hover:border-blue-300 transition-all min-h-[220px] flex flex-col items-center justify-center gap-4 relative"
+        style={{borderColor: flipped ? 'rgba(99,102,241,0.3)' : undefined}}>
+        <div style={{fontSize:9,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',padding:'3px 10px',borderRadius:20,background:flipped?'rgba(99,102,241,0.1)':'rgba(96,165,250,0.1)',color:flipped?'#818cf8':'#60a5fa',marginBottom:4}} className="fc-card-face">
+          {flipped ? 'Answer' : 'Question'}
         </div>
-        <div className="text-lg font-semibold text-t1 leading-relaxed max-w-md">
+        <div className="text-lg font-semibold text-t1 leading-relaxed max-w-md fc-card-face">
           {flipped ? (card.back || card.answer) : (card.front || card.question)}
         </div>
-        <div className="text-[11px] text-t3">Tap to {flipped ? 'see question' : 'reveal answer'}</div>
+        {!flipped && <div className="text-[11px] text-t3">Tap to reveal answer</div>}
         <div className="absolute bottom-3 right-3" onClick={e => e.stopPropagation()}>
           <SpeakerBtn text={flipped ? (card.back || card.answer || '') : (card.front || card.question || '')} audioRef={audioRef}/>
         </div>
       </div>
-      <div className="flex gap-3 mt-4 justify-center">
-        <button onClick={() => { stopAudio(); setCurrent(c => Math.max(0, c - 1)); setFlipped(false) }} disabled={current === 0}
-          className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">&#8592; Prev</button>
-        {flipped && (
-          <button onClick={() => { stopAudio(); setDone(d => [...new Set([...d, current])]); setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false) }}
-            className="h-9 px-4 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700">&#10003; Got it</button>
-        )}
-        <button onClick={() => { stopAudio(); setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false) }} disabled={current === cards.length - 1}
-          className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">Next &#8594;</button>
-      </div>
+      {flipped ? (
+        <div className="rating-row" style={{display:'flex',gap:8,marginTop:12,justifyContent:'center'}}>
+          <button onClick={() => { stopAudio(); recordReview('card-'+current, 1); setCurrent(c => Math.max(0,c-1)); setFlipped(false) }}
+            style={{flex:1,maxWidth:120,padding:'10px 4px',borderRadius:10,border:'1px solid rgba(239,68,68,0.25)',background:'rgba(239,68,68,0.06)',color:'#f87171',fontSize:11,fontWeight:700,cursor:'pointer',letterSpacing:'.02em'}}>Again</button>
+          <button onClick={() => { stopAudio(); recordReview('card-'+current, 3); setDone(d => [...new Set([...d,current])]); setCurrent(c => Math.min(cards.length-1,c+1)); setFlipped(false) }}
+            style={{flex:1,maxWidth:120,padding:'10px 4px',borderRadius:10,border:'1px solid rgba(245,158,11,0.25)',background:'rgba(245,158,11,0.06)',color:'#fbbf24',fontSize:11,fontWeight:700,cursor:'pointer',letterSpacing:'.02em'}}>Hard</button>
+          <button onClick={() => { stopAudio(); recordReview('card-'+current, 5); setDone(d => [...new Set([...d,current])]); setCurrent(c => Math.min(cards.length-1,c+1)); setFlipped(false) }}
+            style={{flex:1,maxWidth:120,padding:'10px 4px',borderRadius:10,border:'1px solid rgba(16,185,129,0.3)',background:'rgba(16,185,129,0.08)',color:'#34d399',fontSize:11,fontWeight:700,cursor:'pointer',letterSpacing:'.02em'}}>Easy</button>
+        </div>
+      ) : (
+        <div className="flex gap-3 mt-4 justify-center">
+          <button onClick={() => { stopAudio(); setCurrent(c => Math.max(0, c - 1)); setFlipped(false) }} disabled={current === 0}
+            className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">&#8592; Prev</button>
+          <button onClick={() => { stopAudio(); setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false) }} disabled={current === cards.length - 1}
+            className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">Skip &#8594;</button>
+        </div>
+      )}
       {done.length === cards.length && cards.length > 1 && (
         <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
           <div className="text-sm font-bold text-emerald-600 mb-1">Deck complete!</div>
