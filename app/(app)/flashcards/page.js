@@ -220,7 +220,11 @@ function FlashcardsPageInner() {
           <input type="range" min={10} max={30} step={1} value={count}
             onChange={e => setCount(Number(e.target.value))} onInput={e => setCount(Number(e.target.value))}
             className="w-full accent-blue-600 cursor-pointer h-2 rounded-full" style={{ display:'block' }}/>
-          <div className="flex justify-between text-[10px] text-t3 mt-1.5"><span>10</span><span>15</span><span>20</span><span>30</span></div>
+          <div style={{position:'relative',height:14,marginTop:6}}>
+            {[[10,0],[15,25],[20,50],[30,100]].map(([val,pct])=>(
+              <span key={val} style={{position:'absolute',left:pct+'%',transform:'translateX(-50%)',fontSize:10,color:'var(--c-t3)',lineHeight:1}}>{val}</span>
+            ))}
+          </div>
         </div>
         {error && <div className="mb-3 text-sm text-red-500">{error}</div>}
         <button onClick={generate} disabled={loading} style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',opacity:loading?0.6:1,letterSpacing:'-0.01em'}}>
@@ -354,7 +358,7 @@ function FlashcardsPageInner() {
         ) : (
           <div className="flex gap-3 mt-4 justify-center">
             <button onClick={()=>{stopAudio();setCurrent(c=>Math.max(0,c-1));setFlipped(false)}} disabled={current===0} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">&#8592; Prev</button>
-            <button onClick={()=>{stopAudio();setCurrent(c=>Math.min(cards.length-1,c+1));setFlipped(false)}} disabled={current===cards.length-1} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">Skip &#8594;</button>
+            <button onClick={()=>{stopAudio();setCurrent(c=>Math.min(cards.length-1,c+1));setFlipped(false)}} disabled={current===cards.length-1} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">Next &#8594;</button>
           </div>
         )}
         {deckComplete}
