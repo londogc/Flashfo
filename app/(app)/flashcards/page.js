@@ -87,6 +87,7 @@ function FlashcardsPageInner() {
   const [shareMsg, setShareMsg] = useState('')
   const [reviewQueue, setReviewQueue] = useState([])
   const [dueToday, setDueToday] = useState(0)
+  const [sessionRatings, setSessionRatings] = useState({ again: 0, hard: 0, easy: 0 })
 
   // Effects
   useEffect(() => {
@@ -213,6 +214,21 @@ function FlashcardsPageInner() {
   const card = cards[current]
   const progress = Math.round((done.length / cards.length) * 100)
 
+  useEffect(() => {
+    if (!cards.length || showEdit) return
+    const handler = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      if (e.key === ' ' || e.code === 'Space') { e.preventDefault(); stopAudio(); setFlipped(f => !f); return }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); stopAudio(); setCurrent(c => Math.max(0, c - 1)); setFlipped(false); return }
+      if (e.key === 'ArrowRight') { e.preventDefault(); stopAudio(); setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false); return }
+      if (e.key === '1') { stopAudio(); recordReview('card-' + current, 1); setSessionRatings(r => ({ ...r, again: r.again + 1 })); return }
+      if (e.key === '2') { stopAudio(); recordReview('card-' + current, 3); setSessionRatings(r => ({ ...r, hard: r.hard + 1 })); setDone(d => [...new Set([...d, current])]); setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false); return }
+      if (e.key === '3') { stopAudio(); recordReview('card-' + current, 5); setSessionRatings(r => ({ ...r, easy: r.easy + 1 })); setDone(d => [...new Set([...d, current])]); setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false); return }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [cards.length, current, showEdit])
+
   // Render: edit view
   if (showEdit) return (
     <div className="p-6 max-w-2xl mx-auto w-full">
@@ -258,90 +274,166 @@ function FlashcardsPageInner() {
     </div>
   )
 
-  // Render: card viewer
+  // Render: card viewer — responsive (mobile=current, desktop=3-panel Option 1)
   return (
-    <div className="p-6 max-w-2xl mx-auto w-full">
+    <>
+      <style>{`
+        .fc-mobile{display:block}.fc-desktop{display:none}
+        @media(min-width:900px){.fc-mobile{display:none}.fc-desktop{display:grid;grid-template-columns:200px 1fr 200px;min-height:calc(100vh - 130px)}}
+        .fc-left{padding:22px 18px;border-right:1px solid var(--c-line);display:flex;flex-direction:column;gap:14px}
+        .fc-center{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 36px}
+        .fc-right{padding:22px 18px;border-left:1px solid var(--c-line)}
+        .fc-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+        .fc-stat{background:var(--c-surface2);border:1px solid var(--c-line);border-radius:8px;padding:10px 11px}
+        .fc-stack{position:relative;width:100%;max-width:440px;height:230px;margin-bottom:22px}
+        .fc-bg2{position:absolute;top:12px;left:12px;right:-12px;bottom:-12px;background:var(--c-surface2);border:1px solid var(--c-line);border-radius:14px}
+        .fc-bg1{position:absolute;top:6px;left:6px;right:-6px;bottom:-6px;background:var(--c-surface);border:1px solid var(--c-line);border-radius:14px}
+        .fc-card{position:absolute;inset:0;background:var(--c-surface);border:1.5px solid rgba(59,130,246,0.35);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;cursor:pointer;transition:border-color 0.2s}
+        .fc-card:hover{border-color:rgba(59,130,246,0.6)}
+        .fc-key{background:var(--c-surface2);border:1px solid var(--c-line);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;color:var(--c-t2);display:inline-block;font-family:monospace}
+      `}</style>
+
       {showSave && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
+        <div className="fixed inset-0 z-40 flex items-center justify-center" style={{background:'rgba(0,0,0,0.4)'}}>
           <div className="bg-surface border border-line rounded-2xl p-6 w-full max-w-sm shadow-2xl">
             <div className="text-base font-bold text-t1 mb-4">Save Deck</div>
-            <input value={saveTitle} onChange={e => setSaveTitle(e.target.value)} placeholder={topic || 'Deck title...'}
-              className="w-full h-9 bg-surface2 border border-line rounded-lg px-3 text-sm text-t1 outline-none focus:border-blue-400 mb-4"/>
+            <input value={saveTitle} onChange={e=>setSaveTitle(e.target.value)} placeholder={topic||'Deck title...'} className="w-full h-9 bg-surface2 border border-line rounded-lg px-3 text-sm text-t1 outline-none focus:border-blue-400 mb-4"/>
             <div className="flex gap-2">
-              <button onClick={doSave} disabled={saving}
-                className="flex-1 h-9 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 disabled:opacity-40">
-                {saving ? 'Saving...' : 'Save to My Stuff'}
-              </button>
-              <button onClick={() => setShowSave(false)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm rounded-xl hover:bg-surface2">Cancel</button>
+              <button onClick={doSave} disabled={saving} className="flex-1 h-9 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 disabled:opacity-40">{saving?'Saving...':'Save to My Stuff'}</button>
+              <button onClick={()=>setShowSave(false)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm rounded-xl hover:bg-surface2">Cancel</button>
             </div>
           </div>
         </div>
       )}
-      {!savedId && cards.length > 0 && (
-        <div className="mb-4 px-4 py-2.5 bg-amber-500/10 border border-amber-400/30 rounded-xl flex items-center justify-between">
-          <span className="text-[12px] text-amber-600 font-medium">&#128190; Don't forget to save your deck to My Stuff!</span>
-          <button onClick={() => { setSaveTitle(topic); setShowSave(true) }} className="h-7 px-3 bg-amber-500 text-white text-[11px] font-bold rounded-lg hover:bg-amber-600">Save Now</button>
-        </div>
-      )}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-t1 tracking-tight">Flashcards</h1>
-          <p className="text-sm text-t2">{cards.length} cards &middot; {done.length} learned</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
-          {user && <button onClick={() => { setSaveTitle(topic); setShowSave(true) }}
-            className="h-8 px-3 bg-emerald-600 text-white text-[12px] font-semibold rounded-lg hover:bg-emerald-700 flex items-center gap-1">
-            &#128190; {savedId ? 'Update' : 'Save'}
-          </button>}
-          {saveFeedback && <span className="text-[11px] text-emerald-500 font-medium">{saveFeedback}</span>}
-          <button onClick={() => printDeck(cards, topic)}
-            className="h-8 px-3 text-[12px] text-t2 border border-line rounded-lg hover:bg-surface2 flex items-center gap-1">
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print
-          </button>
-          <button onClick={() => { shareLink(cards, topic); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-            className="h-8 px-3 text-[12px] border border-line rounded-lg hover:bg-surface2 flex items-center gap-1"
-            style={{ color: copied ? '#34d399' : undefined, borderColor: copied ? '#34d399' : undefined }}>
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 2h4v4m0-4L6 10M7 4H2v10h10V9"/></svg>
-            {copied ? 'Link copied!' : 'Share'}
-          </button>
-          <button onClick={() => { setShowEdit(true); setEditIdx(null) }}
-            className="h-8 px-3 text-[12px] text-t2 border border-line rounded-lg hover:bg-surface2">Edit Deck</button>
-          <button onClick={() => setCards([])} className="text-sm text-blue-500 font-medium hover:underline">New deck</button>
-        </div>
-      </div>
-      <div className="w-full bg-line rounded-full h-1.5 mb-6">
-        <div className="bg-blue-600 h-1.5 rounded-full transition-all" style={{ width: progress + '%' }}/>
-      </div>
-      <div onClick={() => { stopAudio(); setFlipped(f => !f) }}
-        className="bg-surface border border-line rounded-2xl p-10 text-center cursor-pointer hover:border-blue-300 transition-all min-h-[220px] flex flex-col items-center justify-center gap-4 relative">
-        <div className="text-[10px] font-bold text-t3 uppercase tracking-widest">
-          {flipped ? 'Answer' : 'Question'} &middot; {current + 1} of {cards.length}
-        </div>
-        <div className="text-lg font-semibold text-t1 leading-relaxed max-w-md">
-          {flipped ? (card.back || card.answer) : (card.front || card.question)}
-        </div>
-        <div className="text-[11px] text-t3">Tap to {flipped ? 'see question' : 'reveal answer'}</div>
-        <div className="absolute bottom-3 right-3" onClick={e => e.stopPropagation()}>
-          <SpeakerBtn text={flipped ? (card.back || card.answer || '') : (card.front || card.question || '')} audioRef={audioRef}/>
-        </div>
-      </div>
-      <div className="flex gap-3 mt-4 justify-center">
-        <button onClick={() => { stopAudio(); setCurrent(c => Math.max(0, c - 1)); setFlipped(false) }} disabled={current === 0}
-          className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">&#8592; Prev</button>
-        {flipped && (
-          <button onClick={() => { stopAudio(); setDone(d => [...new Set([...d, current])]); setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false) }}
-            className="h-9 px-4 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700">&#10003; Got it</button>
+
+      {/* ── Mobile (unchanged) ─────────────────────────────────── */}
+      <div className="fc-mobile p-6 max-w-2xl mx-auto w-full">
+        {!savedId && cards.length > 0 && (
+          <div className="mb-4 px-4 py-2.5 bg-amber-500/10 border border-amber-400/30 rounded-xl flex items-center justify-between">
+            <span className="text-[12px] text-amber-600 font-medium">&#128190; Don't forget to save your deck to My Stuff!</span>
+            <button onClick={()=>{setSaveTitle(topic);setShowSave(true)}} className="h-7 px-3 bg-amber-500 text-white text-[11px] font-bold rounded-lg hover:bg-amber-600">Save Now</button>
+          </div>
         )}
-        <button onClick={() => { stopAudio(); setCurrent(c => Math.min(cards.length - 1, c + 1)); setFlipped(false) }} disabled={current === cards.length - 1}
-          className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">Next &#8594;</button>
-      </div>
-      {done.length === cards.length && cards.length > 1 && (
-        <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
-          <div className="text-sm font-bold text-emerald-600 mb-1">Deck complete!</div>
-          <button onClick={() => { setDone([]); setCurrent(0); setFlipped(false) }} className="text-xs text-emerald-600 hover:underline">Review again</button>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-t1 tracking-tight">Flashcards</h1>
+            <p className="text-sm text-t2">{cards.length} cards &middot; {done.length} learned</p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            {user && <button onClick={()=>{setSaveTitle(topic);setShowSave(true)}} className="h-8 px-3 bg-emerald-600 text-white text-[12px] font-semibold rounded-lg hover:bg-emerald-700 flex items-center gap-1">&#128190; {savedId?'Update':'Save'}</button>}
+            {saveFeedback && <span className="text-[11px] text-emerald-500 font-medium">{saveFeedback}</span>}
+            <button onClick={()=>printDeck(cards,topic)} className="h-8 px-3 text-[12px] text-t2 border border-line rounded-lg hover:bg-surface2 flex items-center gap-1"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print</button>
+            <button onClick={()=>{shareLink(cards,topic);setCopied(true);setTimeout(()=>setCopied(false),2000)}} className="h-8 px-3 text-[12px] border border-line rounded-lg hover:bg-surface2 flex items-center gap-1" style={{color:copied?'#34d399':undefined,borderColor:copied?'#34d399':undefined}}><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 2h4v4m0-4L6 10M7 4H2v10h10V9"/></svg>{copied?'Link copied!':'Share'}</button>
+            <button onClick={()=>{setShowEdit(true);setEditIdx(null)}} className="h-8 px-3 text-[12px] text-t2 border border-line rounded-lg hover:bg-surface2">Edit Deck</button>
+            <button onClick={()=>setCards([])} className="text-sm text-blue-500 font-medium hover:underline">New deck</button>
+          </div>
         </div>
-      )}
-    </div>
+        <div className="w-full bg-line rounded-full h-1.5 mb-6"><div className="bg-blue-600 h-1.5 rounded-full transition-all" style={{width:progress+'%'}}/></div>
+        <div onClick={()=>{stopAudio();setFlipped(f=>!f)}} className="bg-surface border border-line rounded-2xl p-10 text-center cursor-pointer hover:border-blue-300 transition-all min-h-[220px] flex flex-col items-center justify-center gap-4 relative" style={{borderColor:flipped?'rgba(99,102,241,0.3)':undefined}}>
+          <div style={{fontSize:9,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',padding:'3px 10px',borderRadius:20,background:flipped?'rgba(99,102,241,0.1)':'rgba(96,165,250,0.1)',color:flipped?'#818cf8':'#60a5fa',marginBottom:4}}>{flipped?'Answer':'Question'}</div>
+          <div className="text-lg font-semibold text-t1 leading-relaxed max-w-md">{flipped?(card.back||card.answer):(card.front||card.question)}</div>
+          {!flipped && <div className="text-[11px] text-t3">Tap to reveal answer</div>}
+          <div className="absolute bottom-3 right-3" onClick={e=>e.stopPropagation()}><SpeakerBtn text={flipped?(card.back||card.answer||''):(card.front||card.question||'')} audioRef={audioRef}/></div>
+        </div>
+        {flipped ? (
+          <div style={{display:'flex',gap:8,marginTop:12,justifyContent:'center'}}>
+            <button onClick={()=>{stopAudio();recordReview('card-'+current,1);setSessionRatings(r=>({...r,again:r.again+1}));}} style={{flex:1,maxWidth:120,padding:'10px 4px',borderRadius:10,border:'1px solid rgba(239,68,68,0.25)',background:'rgba(239,68,68,0.06)',color:'#f87171',fontSize:11,fontWeight:700,cursor:'pointer'}}>Again</button>
+            <button onClick={()=>{stopAudio();recordReview('card-'+current,3);setSessionRatings(r=>({...r,hard:r.hard+1}));setDone(d=>[...new Set([...d,current])]);setCurrent(c=>Math.min(cards.length-1,c+1));setFlipped(false);}} style={{flex:1,maxWidth:120,padding:'10px 4px',borderRadius:10,border:'1px solid rgba(245,158,11,0.25)',background:'rgba(245,158,11,0.06)',color:'#fbbf24',fontSize:11,fontWeight:700,cursor:'pointer'}}>Hard</button>
+            <button onClick={()=>{stopAudio();recordReview('card-'+current,5);setSessionRatings(r=>({...r,easy:r.easy+1}));setDone(d=>[...new Set([...d,current])]);setCurrent(c=>Math.min(cards.length-1,c+1));setFlipped(false);}} style={{flex:1,maxWidth:120,padding:'10px 4px',borderRadius:10,border:'1px solid rgba(16,185,129,0.3)',background:'rgba(16,185,129,0.08)',color:'#34d399',fontSize:11,fontWeight:700,cursor:'pointer'}}>Easy</button>
+          </div>
+        ) : (
+          <div className="flex gap-3 mt-4 justify-center">
+            <button onClick={()=>{stopAudio();setCurrent(c=>Math.max(0,c-1));setFlipped(false)}} disabled={current===0} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">&#8592; Prev</button>
+            <button onClick={()=>{stopAudio();setCurrent(c=>Math.min(cards.length-1,c+1));setFlipped(false)}} disabled={current===cards.length-1} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl disabled:opacity-30 hover:bg-surface2">Skip &#8594;</button>
+          </div>
+        )}
+        {done.length===cards.length && cards.length>1 && (
+          <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
+            <div className="text-sm font-bold text-emerald-600 mb-1">Deck complete!</div>
+            <button onClick={()=>{setDone([]);setCurrent(0);setFlipped(false);setSessionRatings({again:0,hard:0,easy:0});}} className="text-xs text-emerald-600 hover:underline">Review again</button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Desktop 3-panel deck stack (≥900px) ────────────────── */}
+      <div className="fc-desktop">
+        {/* Left panel — stats */}
+        <div className="fc-left">
+          <div>
+            <div style={{fontSize:14,fontWeight:700,color:'var(--c-t1)',marginBottom:2}}>{topic||'Flashcards'}</div>
+            <div style={{fontSize:11,color:'var(--c-t3)'}}>{cards.length} cards in deck</div>
+          </div>
+          <div>
+            <div style={{height:3,background:'var(--c-line)',borderRadius:2,overflow:'hidden',marginBottom:5}}><div style={{height:'100%',width:progress+'%',background:'#3b82f6',borderRadius:2}}/></div>
+            <div style={{fontSize:10,color:'var(--c-t3)'}}>Card {current+1} of {cards.length}</div>
+          </div>
+          <div className="fc-stat-grid">
+            <div className="fc-stat"><div style={{fontSize:20,fontWeight:700,color:'#34d399',lineHeight:1}}>{done.length}</div><div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>Mastered</div></div>
+            <div className="fc-stat"><div style={{fontSize:20,fontWeight:700,color:'#f87171',lineHeight:1}}>{cards.length-done.length}</div><div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>To review</div></div>
+            <div className="fc-stat"><div style={{fontSize:20,fontWeight:700,color:'#fbbf24',lineHeight:1}}>{sessionRatings.again}</div><div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>Again</div></div>
+            <div className="fc-stat"><div style={{fontSize:20,fontWeight:700,color:'#34d399',lineHeight:1}}>{sessionRatings.easy}</div><div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>Easy</div></div>
+          </div>
+          {!savedId && <div style={{padding:'8px 10px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,fontSize:10,color:'#f59e0b',lineHeight:1.4}}>Deck not saved yet</div>}
+          <div style={{marginTop:'auto',display:'flex',flexDirection:'column',gap:6}}>
+            <button onClick={()=>{setShowEdit(true);setEditIdx(null)}} style={{width:'100%',padding:'6px 0',borderRadius:7,fontSize:11,fontWeight:600,border:'1px solid var(--c-line)',background:'var(--c-surface2)',color:'var(--c-t2)',cursor:'pointer'}}>Edit Deck</button>
+            <button onClick={()=>printDeck(cards,topic)} style={{width:'100%',padding:'6px 0',borderRadius:7,fontSize:11,fontWeight:600,border:'1px solid var(--c-line)',background:'var(--c-surface2)',color:'var(--c-t2)',cursor:'pointer'}}>Print</button>
+          </div>
+        </div>
+
+        {/* Center panel — card + navigation */}
+        <div className="fc-center">
+          <div style={{display:'flex',gap:5,marginBottom:20,flexWrap:'wrap',justifyContent:'center',maxWidth:380}}>
+            {cards.map((_,i)=>(
+              <div key={i} onClick={()=>{setCurrent(i);setFlipped(false)}} style={{width:8,height:8,borderRadius:'50%',cursor:'pointer',transition:'all 0.2s',background:i===current?'#3b82f6':done.includes(i)?'#34d399':'rgba(255,255,255,0.12)',transform:i===current?'scale(1.4)':'scale(1)'}}/>
+            ))}
+          </div>
+          <div className="fc-stack">
+            <div className="fc-bg2"/>
+            <div className="fc-bg1"/>
+            <div className="fc-card" onClick={()=>{stopAudio();setFlipped(f=>!f)}} style={{borderColor:flipped?'rgba(99,102,241,0.45)':'rgba(59,130,246,0.35)'}}>
+              <div style={{fontSize:9,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',padding:'3px 10px',borderRadius:20,background:flipped?'rgba(99,102,241,0.1)':'rgba(59,130,246,0.1)',color:flipped?'#818cf8':'#60a5fa',border:'1px solid '+(flipped?'rgba(99,102,241,0.2)':'rgba(59,130,246,0.18)'),marginBottom:14}}>{flipped?'Answer':'Question'}</div>
+              <div style={{fontSize:17,fontWeight:600,color:'var(--c-t1)',textAlign:'center',lineHeight:1.45}}>{flipped?(card.back||card.answer):(card.front||card.question)}</div>
+              {!flipped && <div style={{fontSize:11,color:'var(--c-t3)',marginTop:10}}>Click or press Space to flip</div>}
+              <div style={{position:'absolute',bottom:12,right:14}} onClick={e=>e.stopPropagation()}><SpeakerBtn text={flipped?(card.back||card.answer||''):(card.front||card.question||'')} audioRef={audioRef}/></div>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:10,alignItems:'center',marginBottom:10}}>
+            <button onClick={()=>{stopAudio();setCurrent(c=>Math.max(0,c-1));setFlipped(false)}} disabled={current===0} style={{padding:'8px 20px',borderRadius:9,fontSize:12,fontWeight:600,border:'1px solid var(--c-line)',background:'var(--c-surface2)',color:'var(--c-t2)',cursor:'pointer',opacity:current===0?0.3:1}}>&#8592; Prev</button>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>{stopAudio();recordReview('card-'+current,1);setSessionRatings(r=>({...r,again:r.again+1}));}} style={{padding:'8px 18px',borderRadius:9,fontSize:11,fontWeight:700,border:'1px solid rgba(239,68,68,0.25)',background:'rgba(239,68,68,0.06)',color:'#f87171',cursor:'pointer'}}>Again</button>
+              <button onClick={()=>{stopAudio();recordReview('card-'+current,3);setSessionRatings(r=>({...r,hard:r.hard+1}));setDone(d=>[...new Set([...d,current])]);setCurrent(c=>Math.min(cards.length-1,c+1));setFlipped(false);}} style={{padding:'8px 18px',borderRadius:9,fontSize:11,fontWeight:700,border:'1px solid rgba(245,158,11,0.25)',background:'rgba(245,158,11,0.06)',color:'#fbbf24',cursor:'pointer'}}>Hard</button>
+              <button onClick={()=>{stopAudio();recordReview('card-'+current,5);setSessionRatings(r=>({...r,easy:r.easy+1}));setDone(d=>[...new Set([...d,current])]);setCurrent(c=>Math.min(cards.length-1,c+1));setFlipped(false);}} style={{padding:'8px 18px',borderRadius:9,fontSize:11,fontWeight:700,border:'1px solid rgba(16,185,129,0.3)',background:'rgba(16,185,129,0.08)',color:'#34d399',cursor:'pointer'}}>Easy</button>
+            </div>
+            <button onClick={()=>{stopAudio();setCurrent(c=>Math.min(cards.length-1,c+1));setFlipped(false)}} disabled={current===cards.length-1} style={{padding:'8px 20px',borderRadius:9,fontSize:12,fontWeight:600,border:'1px solid var(--c-line)',background:'var(--c-surface2)',color:'var(--c-t2)',cursor:'pointer',opacity:current===cards.length-1?0.3:1}}>Next &#8594;</button>
+          </div>
+          {done.length===cards.length && cards.length>1 && (
+            <div style={{padding:'12px 24px',background:'rgba(16,185,129,0.08)',border:'1px solid rgba(16,185,129,0.2)',borderRadius:10,textAlign:'center',marginTop:8}}>
+              <div style={{fontSize:13,fontWeight:700,color:'#34d399',marginBottom:4}}>Deck complete!</div>
+              <button onClick={()=>{setDone([]);setCurrent(0);setFlipped(false);setSessionRatings({again:0,hard:0,easy:0});}} style={{fontSize:11,color:'#34d399',cursor:'pointer',background:'none',border:'none',textDecoration:'underline'}}>Review again</button>
+            </div>
+          )}
+        </div>
+
+        {/* Right panel — shortcuts + actions */}
+        <div className="fc-right">
+          <div style={{fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'.07em',marginBottom:14}}>Shortcuts</div>
+          <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:24}}>
+            <div><span className="fc-key">Space</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Flip card</span></div>
+            <div><span className="fc-key">&#8592; &#8594;</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Prev / Next</span></div>
+            <div><span className="fc-key">1</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Again</span></div>
+            <div><span className="fc-key">2</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Hard</span></div>
+            <div><span className="fc-key">3</span><span style={{fontSize:10,color:'var(--c-t3)',display:'block',marginTop:3}}>Easy</span></div>
+          </div>
+          <div style={{fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'.07em',marginBottom:12}}>Actions</div>
+          <div style={{display:'flex',flexDirection:'column',gap:7}}>
+            {user && <button onClick={()=>{setSaveTitle(topic);setShowSave(true)}} style={{padding:'7px 10px',borderRadius:7,fontSize:11,fontWeight:600,border:'1px solid rgba(52,211,153,0.25)',background:'rgba(16,185,129,0.07)',color:'#34d399',cursor:'pointer',textAlign:'left'}}>{savedId?'Update save':'Save to My Stuff'}</button>}
+            {saveFeedback && <span style={{fontSize:10,color:'#34d399',fontWeight:500}}>{saveFeedback}</span>}
+            <button onClick={()=>{shareLink(cards,topic);setCopied(true);setTimeout(()=>setCopied(false),2000)}} style={{padding:'7px 10px',borderRadius:7,fontSize:11,fontWeight:600,border:'1px solid var(--c-line)',background:'var(--c-surface2)',color:copied?'#34d399':'var(--c-t2)',cursor:'pointer',textAlign:'left'}}>{copied?'Link copied!':'Share deck'}</button>
+            <button onClick={()=>{setCards([]);setDone([]);setCurrent(0);setFlipped(false);setSessionRatings({again:0,hard:0,easy:0});}} style={{padding:'7px 10px',borderRadius:7,fontSize:11,fontWeight:600,border:'1px solid var(--c-line)',background:'var(--c-surface2)',color:'var(--c-t2)',cursor:'pointer',textAlign:'left'}}>New deck</button>
+          </div>
+        </div>
+      </div>
+    </>
   )
 }
 
