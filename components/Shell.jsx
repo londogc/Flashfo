@@ -129,13 +129,16 @@ export default function Shell({ children }) {
   const cmdInputRef = useRef(null)
 
   // dark: reads localStorage synchronously so no flash on first render
-  const [dark, setDark] = useState(() => {
-    if (typeof window === 'undefined') return false
+  const [dark, setDark] = useState(false)
+
+  // Apply theme from localStorage immediately after mount — fixes Windows hydration race
+  useEffect(() => {
     const saved = localStorage.getItem('ff-theme')
     const isDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)
-    if (isDark) document.documentElement.classList.add('dark')
-    return isDark
-  })
+    setDark(isDark)
+    document.documentElement.classList.toggle('dark', isDark)
+    document.documentElement.style.backgroundColor = isDark ? '#0d1117' : '#f1f5f9'
+  }, [])
 
   const [showNotifs, setShowNotifs] = useState(false)
   const [notifications, setNotifications] = useState([])
