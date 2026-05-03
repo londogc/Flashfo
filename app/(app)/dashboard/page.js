@@ -21,6 +21,15 @@ function TodayInHistory() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const id = 'dash-anim'
+    if (document.getElementById(id)) return
+    const s = document.createElement('style')
+    s.id = id
+    s.textContent = "@keyframes spin { to { transform: rotate(360deg) } } @keyframes fadeSlide { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } } @media(max-width:700px){ .dash-metrics{ grid-template-columns:1fr!important; gap:8px!important; } .dash-tools{ grid-template-columns:repeat(3,1fr)!important; gap:8px!important; } .dash-bottom{ grid-template-columns:1fr!important; } } @media(min-width:701px) and (max-width:900px){ .dash-tools{ grid-template-columns:repeat(3,1fr)!important; } .dash-bottom{ grid-template-columns:1fr 1fr!important; } } @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}} @keyframes card-in{from{opacity:0;transform:translateY(16px) scale(0.96)}60%{transform:translateY(-3px) scale(1.01)}to{opacity:1;transform:translateY(0) scale(1)}} @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}} .skel{background:linear-gradient(90deg,#21262d 25%,#2d333b 50%,#21262d 75%);background-size:1200px 100%;animation:shimmer 1.6s infinite linear;border-radius:8px} html:not(.dark) .skel{background:linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%);background-size:1200px 100%;animation:shimmer 1.6s infinite linear} @media(max-width:700px){ .dash-metrics{ grid-template-columns:1fr!important; gap:8px!important; } .dash-tools{ grid-template-columns:repeat(3,1fr)!important; gap:8px!important; } .dash-bottom{ grid-template-columns:1fr!important; } } @media(min-width:701px) and (max-width:900px){ .dash-tools{ grid-template-columns:repeat(3,1fr)!important; } .dash-bottom{ grid-template-columns:1fr 1fr!important; } } @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }"
+    document.head.appendChild(s)
+  }, [])
+
+  useEffect(() => {
     const now = new Date()
     const month = now.getMonth() + 1
     const day = now.getDate()
@@ -91,11 +100,7 @@ function TodayInHistory() {
         <p style={{ fontSize: 12, color: 'var(--c-t3)', margin: 0 }}>Could not load events for today.</p>
       )}
 
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg) } }
-        @keyframes fadeSlide { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
-      `}</style>
-    </div>
+          </div>
   )
 }
 
@@ -149,34 +154,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ padding: 'clamp(14px,3vw,24px) clamp(12px,3vw,24px) 0', maxWidth: 1100, margin: '0 auto' }}>
-      <style>{`
-        @media(max-width:700px){
-          .dash-metrics{ grid-template-columns:1fr!important; gap:8px!important; }
-          .dash-tools{ grid-template-columns:repeat(3,1fr)!important; gap:8px!important; }
-          .dash-bottom{ grid-template-columns:1fr!important; }
-        }
-        @media(min-width:701px) and (max-width:900px){
-          .dash-tools{ grid-template-columns:repeat(3,1fr)!important; }
-          .dash-bottom{ grid-template-columns:1fr 1fr!important; }
-        }
-        @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}
-        @keyframes card-in{from{opacity:0;transform:translateY(16px) scale(0.96)}60%{transform:translateY(-3px) scale(1.01)}to{opacity:1;transform:translateY(0) scale(1)}}
-        @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
-        .skel{background:linear-gradient(90deg,#21262d 25%,#2d333b 50%,#21262d 75%);background-size:1200px 100%;animation:shimmer 1.6s infinite linear;border-radius:8px}
-        html:not(.dark) .skel{background:linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%);background-size:1200px 100%;animation:shimmer 1.6s infinite linear}
-      `}</style>
-      <style>{`
-        @media(max-width:700px){
-          .dash-metrics{ grid-template-columns:1fr!important; gap:8px!important; }
-          .dash-tools{ grid-template-columns:repeat(3,1fr)!important; gap:8px!important; }
-          .dash-bottom{ grid-template-columns:1fr!important; }
-        }
-        @media(min-width:701px) and (max-width:900px){
-          .dash-tools{ grid-template-columns:repeat(3,1fr)!important; }
-          .dash-bottom{ grid-template-columns:1fr 1fr!important; }
-        }
-      `}</style>
-
+            
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
         <div>
@@ -369,9 +347,6 @@ export default function DashboardPage() {
         <TodayInHistory />
       </div>
 
-      <style>{`
-        @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
-      `}</style>
-    </div>
+          </div>
   )
 }
