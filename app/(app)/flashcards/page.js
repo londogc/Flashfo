@@ -87,12 +87,24 @@ function FlashcardsPageInner() {
   const [reviewQueue, setReviewQueue] = useState([])
   const [dueToday, setDueToday] = useState(0)
   const [sessionRatings, setSessionRatings] = useState({ again: 0, hard: 0, easy: 0 })
+  const [autoGen, setAutoGen] = useState(false)
 
   // ─── ALL EFFECTS (must be before any conditional returns) ─────────────────
   useEffect(() => {
     const q = searchParams.get('q')
-    if (q) setTopic(decodeURIComponent(q))
-  }, [searchParams.get('q')])
+    if (q) {
+      setTopic(decodeURIComponent(q))
+      if (searchParams.get('autoGenerate') === '1') setAutoGen(true)
+    }
+  }, [])
+
+  // Auto-generate once topic is ready (state has settled)
+  useEffect(() => {
+    if (autoGen && topic.trim() && !loading && !cards.length) {
+      setAutoGen(false)
+      generate()
+    }
+  }, [autoGen, topic])
 
   useEffect(() => {
     const id = 'fc-anims'
