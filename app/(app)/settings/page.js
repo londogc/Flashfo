@@ -227,7 +227,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Dashboard View — lifetime members only */}
-      {(profile.plan === 'lifetime' || profile.plan === 'teacher_pro') && (
+      {(profile.plan && profile.plan !== 'free' && profile.plan !== 'teacher_pro') && (
         <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
           <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-1">Dashboard View</h2>
           <p className="text-[12px] text-t3 mb-4">You have a lifetime membership — choose which dashboard experience you prefer. You can switch anytime.</p>
