@@ -181,13 +181,26 @@ export default function StudyGuidePage() {
     setTimeout(() => setShareMsg(''), 2500)
   }
 
-  // Prefill topic from Create page URL param
+  // Prefill topic from curriculum — also auto-generates when autoGenerate=1
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const q = new URLSearchParams(window.location.search).get('q')
-      if (q) setTopic(decodeURIComponent(q))
+      const params = new URLSearchParams(window.location.search)
+      const q = params.get('q')
+      if (q) {
+        const decoded = decodeURIComponent(q)
+        setTopic(decoded)
+        if (params.get('autoGenerate') === '1') setAutoGenTopic(decoded)
+      }
     }
   }, [])
+
+  // Auto-generate when coming from curriculum
+  useEffect(() => {
+    if (autoGenTopic.trim() && topic === autoGenTopic && !loading && !output) {
+      generate()
+      setAutoGenTopic('')
+    }
+  }, [autoGenTopic, topic])
 
   useEffect(() => {
     const id = 'nova-gen-anim'
