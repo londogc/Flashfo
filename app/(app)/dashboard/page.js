@@ -138,7 +138,7 @@ function ToolCard({ href, icon, label, sub, glow, border, bg }) {
       <div style={{position:'absolute',top:-28,right:-28,width:90,height:90,background:`radial-gradient(circle,${glow},transparent)`,pointerEvents:'none'}}/>
       <div style={{
         width:34,height:34,borderRadius:9,
-        background:glow.replace(/,[^,]+)$/,',0.18)'),
+        background:`rgba(${glow.slice(5,glow.lastIndexOf(','))},0.18)`,
         display:'flex',alignItems:'center',justifyContent:'center',
         marginBottom:11,position:'relative',zIndex:1,
         border:`1px solid ${border}`
@@ -442,7 +442,7 @@ function TeacherDashboard({ profile, user }) {
             <div style={{position:'absolute',top:-28,right:-28,width:90,height:90,background:`radial-gradient(circle,${t.glow},transparent)`,pointerEvents:'none'}}/>
             <div style={{position:'relative',zIndex:1}}>
               <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:11}}>
-                <div style={{width:34,height:34,borderRadius:9,background:t.glow.replace(/,[^,]+)$/,',0.18)'),border:`1px solid ${t.border}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div style={{width:34,height:34,borderRadius:9,background:`rgba(${t.glow.slice(5,t.glow.lastIndexOf(','))},0.18)`,border:`1px solid ${t.border}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
                   <Ic d={t.icon} size={15} color={t.border.replace('0.2','0.9').replace('0.18','0.9')}/>
                 </div>
                 {t.live && <span className="dash-live-dot" style={{width:7,height:7,borderRadius:'50%',background:'#ef4444',display:'inline-block',border:'1.5px solid var(--c-surface)'}}/>}
