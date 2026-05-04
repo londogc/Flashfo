@@ -105,7 +105,7 @@ export default function ImportPage() {
       </div>
       <button onClick={handleImport} disabled={loading}
         style={{ width: '100%', padding: '14px', background: loading ? 'var(--c-surface)' : 'linear-gradient(90deg,#2563eb,#7c3aed)', color: loading ? 'var(--c-t2)' : '#fff', border: '1px solid var(--c-line)', borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: loading ? 'default' : 'pointer', marginBottom: 28 }}>
-        {loading ? 'Nova is generating your deck...' : 'Generate Flashcards'}
+        {loading ? `Nova is generating your ${outputType === 'quiz' ? 'quiz' : 'deck'}...` : `Generate ${outputType === 'quiz' ? 'Quiz Questions' : 'Flashcards'}`}
       </button>
 
       {/* Preview */}
