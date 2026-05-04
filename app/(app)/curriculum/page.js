@@ -43,12 +43,13 @@ export default function StandardsPage() {
 
   const generate = () => {
     if (!standard) return
+    // Build the topic string with full context so the tool page can use it
     const prompt = standard + ' (' + subject + ', Grade ' + grade + ')'
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('ff-create-content', JSON.stringify({ inputMode:'topic', content:prompt, topic:prompt }))
-    }
     const routes = { Flashcards:'/flashcards', Quiz:'/quiz', 'Study Guide':'/study-guide' }
-    router.push(routes[tool] || '/flashcards')
+    const base = routes[tool] || '/flashcards'
+    // Pass topic via ?q= (all tool pages already read this) and signal auto-generation
+    const qs = new URLSearchParams({ q: prompt, autoGenerate: '1' }).toString()
+    router.push(base + '?' + qs)
   }
 
   return (
