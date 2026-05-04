@@ -13,7 +13,7 @@ const THEMES = [
 export default function SettingsPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [profile, setProfile] = useState({ full_name:'', grade_level:'', role:'student' })
+  const [profile, setProfile] = useState({ full_name:'', grade_level:'', role:'student', plan:'', dashboard_preference:'student' })
   const [theme, setTheme] = useState('system')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -35,7 +35,7 @@ export default function SettingsPage() {
 
   async function loadProfile() {
     const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-    if (data) setProfile({ full_name: data.full_name||'', grade_level: data.grade_level||'', role: data.role||'student' })
+    if (data) setProfile({ full_name: data.full_name||'', grade_level: data.grade_level||'', role: data.role||'student', plan: data.plan||'', dashboard_preference: data.dashboard_preference||'student' })
     if (data.avatar_url) setAvatarUrl(data.avatar_url)
     if (data.banner_url) setBannerUrl(data.banner_url)
     setLoading(false)
@@ -44,10 +44,17 @@ export default function SettingsPage() {
   async function saveProfile() {
     if (!user) return
     setSaving(true)
-    await supabase.from('profiles').upsert({ id: user.id, ...profile })
+    await supabase.from('profiles').upsert({
+      id: user.id,
+      full_name: profile.full_name,
+      grade_level: profile.grade_level,
+      role: profile.role,
+      dashboard_preference: profile.dashboard_preference,
+    })
     setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
     setSaving(false)
+    // Redirect to dashboard so the new view takes effect immediately
+    setTimeout(() => router.push('/dashboard'), 800)
   }
 
   function applyTheme(t) {
