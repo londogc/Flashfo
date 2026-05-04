@@ -65,6 +65,14 @@ export default function SettingsPage() {
     }
   }
 
+  async function saveDashboardPreference(pref) {
+    if (!user) return
+    await supabase.from('profiles').upsert({ id: user.id, dashboard_preference: pref })
+    setProfile(p => ({ ...p, dashboard_preference: pref }))
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
     router.push('/')
@@ -194,6 +202,26 @@ export default function SettingsPage() {
           ))}
         </div>
       </div>
+
+      {/* Dashboard View — lifetime members only */}
+      {profile.plan === 'lifetime' && (
+        <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
+          <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-1">Dashboard View</h2>
+          <p className="text-[12px] text-t3 mb-4">You have a lifetime membership — choose which dashboard experience you prefer. You can switch anytime.</p>
+          <div className="flex gap-2 mb-3">
+            {['student','teacher'].map(opt => (
+              <button
+                key={opt}
+                onClick={() => saveDashboardPreference(opt)}
+                className={`flex-1 py-3 rounded-xl border text-sm font-semibold capitalize transition-all ${profile.dashboard_preference === opt || (!profile.dashboard_preference && opt === 'student') ? 'bg-blue-700 text-white border-blue-700' : 'bg-surface2 text-t2 border-line hover:border-blue-300'}`}
+              >
+                {opt === 'student' ? '🎓 Student' : '📋 Teacher'}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-t3">Current view: <span className="text-t2 font-semibold capitalize">{profile.dashboard_preference || 'Student'}</span> · Takes effect immediately.</p>
+        </div>
+      )}
 
       {/* Subscription */}
       <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
