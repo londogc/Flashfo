@@ -26,11 +26,15 @@ export default function SettingsPage() {
   const bannerRef = useRef(null)
 
   useEffect(() => {
-        if (user) loadProfile()
+    if (user) loadProfile()
     // Read current theme from localStorage
-    const saved = localStorage.getItem('ff-theme')
-    if (saved) setTheme(saved)
+    const savedTheme = localStorage.getItem('ff-theme')
+    if (savedTheme) setTheme(savedTheme)
     else setTheme('system')
+    // Sync dashboard preference from localStorage into state
+    // so the toggle shows correct value before DB responds
+    const savedPref = localStorage.getItem('ff-dashboard-pref')
+    if (savedPref) setProfile(p => ({ ...p, dashboard_preference: savedPref }))
   }, [user, authLoading])
 
   async function loadProfile() {
@@ -44,17 +48,24 @@ export default function SettingsPage() {
   async function saveProfile() {
     if (!user) return
     setSaving(true)
-    await supabase.from('profiles').upsert({
-      id: user.id,
-      full_name: profile.full_name,
-      grade_level: profile.grade_level,
-      role: profile.role,
-      dashboard_preference: profile.dashboard_preference,
-    })
+    // Always write preference to localStorage so dashboard switches immediately
+    // even if the DB column doesn't exist yet
+    if (profile.dashboard_preference) {
+      localStorage.setItem('ff-dashboard-pref', profile.dashboard_preference)
+    }
+    try {
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        full_name: profile.full_name,
+        grade_level: profile.grade_level,
+        role: profile.role,
+        dashboard_preference: profile.dashboard_preference,
+      })
+    } catch {}
     setSaved(true)
     setSaving(false)
-    // Redirect to dashboard so the new view takes effect immediately
-    setTimeout(() => router.push('/dashboard'), 800)
+    // Redirect so dashboard immediately reflects the new preference
+    setTimeout(() => router.push('/dashboard'), 700)
   }
 
   function applyTheme(t) {
@@ -74,10 +85,15 @@ export default function SettingsPage() {
 
   async function saveDashboardPreference(pref) {
     if (!user) return
-    await supabase.from('profiles').upsert({ id: user.id, dashboard_preference: pref })
+    // Write localStorage immediately — works even before migration is run
+    localStorage.setItem('ff-dashboard-pref', pref)
+    // Update local state so toggle reflects selection instantly
     setProfile(p => ({ ...p, dashboard_preference: pref }))
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    // Attempt DB save — if column doesn't exist yet it fails silently,
+    // localStorage keeps it working until migration is run
+    try {
+      await supabase.from('profiles').upsert({ id: user.id, dashboard_preference: pref })
+    } catch {}
   }
 
   async function signOut() {
@@ -211,7 +227,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Dashboard View — lifetime members only */}
-      {profile.plan === 'lifetime' && (
+      {(profile.plan === 'lifetime' || profile.plan === 'teacher_pro') && (
         <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
           <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-1">Dashboard View</h2>
           <p className="text-[12px] text-t3 mb-4">You have a lifetime membership — choose which dashboard experience you prefer. You can switch anytime.</p>
