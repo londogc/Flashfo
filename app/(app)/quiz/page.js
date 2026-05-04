@@ -317,6 +317,7 @@ export default function QuizPage() {
   const [count, setCount] = useState(5)
   const [breakdown, setBreakdown] = useState({ mcq: 0, tf: 0, sa: 0, fitb: 0, match: 0 })
   const [topic, setTopic] = useState('')
+  const [autoGenTopic, setAutoGenTopic] = useState('')
   const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState({})
@@ -349,9 +350,22 @@ export default function QuizPage() {
   }, [])
 
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search).get('q')
-    if (q && !topic) setTopic(decodeURIComponent(q))
+    const params = new URLSearchParams(window.location.search)
+    const q = params.get('q')
+    if (q && !topic) {
+      const decoded = decodeURIComponent(q)
+      setTopic(decoded)
+      if (params.get('autoGenerate') === '1') setAutoGenTopic(decoded)
+    }
   }, [])
+
+  // Auto-generate when coming from curriculum
+  useEffect(() => {
+    if (autoGenTopic.trim() && topic === autoGenTopic && !loading && !questions.length) {
+      generate()
+      setAutoGenTopic('')
+    }
+  }, [autoGenTopic, topic])
 
   useEffect(() => {
     if (!questions.length || savedId) return
