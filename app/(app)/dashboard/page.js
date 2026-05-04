@@ -40,8 +40,16 @@ const ICONS = {
 function getDashboardType(profile) {
   if (!profile) return 'student'
   const plan = profile.plan || 'free'
+  // teacher_pro always gets teacher view — no choice needed
   if (plan === 'teacher_pro') return 'teacher'
-  if (plan === 'lifetime' && profile.dashboard_preference === 'teacher') return 'teacher'
+  // For lifetime: check localStorage first (works before migration runs),
+  // then fall back to DB value
+  const isLifetime = plan === 'lifetime'
+  if (isLifetime) {
+    const local = typeof window !== 'undefined' ? localStorage.getItem('ff-dashboard-pref') : null
+    const pref = local || profile.dashboard_preference || 'student'
+    if (pref === 'teacher') return 'teacher'
+  }
   return 'student'
 }
 
