@@ -22,11 +22,37 @@ export default function Home() {
     script.textContent = LP_JS
     document.body.appendChild(script)
 
-    // Wire nav buttons to router
-    const signupBtns = document.querySelectorAll('.btn-primary, .btn-nav-cta')
+    // Wire all nav links
+    const navLinks = document.querySelectorAll('.nav-links a')
+    navLinks.forEach(a => {
+      const text = a.textContent.trim().toLowerCase()
+      if (text.includes('teacher')) { a.href = '/for-teachers'; a.removeAttribute('onclick') }
+      else if (text.includes('parent')) { a.href = '/for-parents'; a.removeAttribute('onclick') }
+      else if (text.includes('feature')) { a.href = '/features'; a.removeAttribute('onclick') }
+      else if (text.includes('pricing')) {
+        a.href = '#'
+        a.addEventListener('click', (e) => {
+          e.preventDefault()
+          document.querySelector('.pricing-section')?.scrollIntoView({ behavior: 'smooth' })
+        })
+      }
+    })
+
+    // Wire sign up buttons
+    document.querySelectorAll('.btn-primary, .btn-nav-cta, .pc-btn').forEach(btn => {
+      btn.addEventListener('click', () => router.push('/signup'))
+    })
+
+    // Wire sign in button
     const loginBtn = document.querySelector('.btn-ghost')
-    signupBtns.forEach(btn => { btn.addEventListener('click', () => router.push('/signup')) })
     if (loginBtn) loginBtn.addEventListener('click', () => router.push('/login'))
+
+    // Wire "See Nova in action" / "See how it works" secondary buttons
+    document.querySelectorAll('.btn-sec').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelector('.nova-grid')?.scrollIntoView({ behavior: 'smooth' })
+      })
+    })
 
     return () => {
       const s = document.getElementById('lp-css')
