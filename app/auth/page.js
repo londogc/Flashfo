@@ -1,241 +1,35 @@
 'use client'
-import { useState, useEffect, useRef, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
-function AuthPageInner() {
-  const [mode, setMode] = useState('signin')
-  // Read ?mode=signup from URL on first load
-  useEffect(() => {
-    const m = searchParams.get('mode')
-    if (m === 'signup' || m === 'signin' || m === 'reset') setMode(m)
-  }, []) // 'signin' | 'signup' | 'reset'
-  const [form, setForm] = useState({ email: '', password: '', name: '' })
-  const [loading, setLoading] = useState(false)
-  const searchParams = useSearchParams()
+const AUTH_CSS = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml,body{height:100%;overflow-x:hidden}\nbody{font-family:'Inter',-apple-system,sans-serif;background:#050709;color:#e2e8f0;min-height:100vh}\n#bg{position:fixed;inset:0;z-index:0;pointer-events:none}\n#app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}\n\n/* NAV */\nnav{padding:18px 40px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}\n.logo{display:flex;align-items:center;gap:10px;text-decoration:none;cursor:pointer}\n.logo-ring{position:relative;width:34px;height:34px}\n.logo-spin{position:absolute;inset:-2px;border-radius:10px;background:conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6);animation:lp-spin 3s linear infinite}\n.logo-inner{position:absolute;inset:2px;border-radius:7px;background:#080b12;display:flex;align-items:center;justify-content:center}\n.logo-word{font-size:17px;font-weight:800;color:#e2e8f0;letter-spacing:-.02em}\n.nav-right{font-size:14px;color:rgba(255,255,255,0.4)}\n.nav-right a{color:#818cf8;font-weight:600;text-decoration:none;margin-left:6px}\n.nav-right a:hover{color:#a5b4fc}\n@keyframes lp-spin{100%{transform:rotate(360deg)}}\n@keyframes lp-rock{0%,100%{transform:rotate(-4deg) scale(1)}50%{transform:rotate(4deg) scale(1.08)}}\n\n/* MAIN LAYOUT */\n.main{flex:1;display:flex;align-items:center;justify-content:center;padding:20px 24px 60px;gap:40px;flex-wrap:wrap}\n\n/* \u2500\u2500 PLAN SELECTOR SIDE \u2500\u2500 */\n.plan-side{width:440px;flex-shrink:0}\n.plan-headline{font-size:clamp(22px,3vw,30px);font-weight:900;letter-spacing:-.04em;line-height:1.1;margin-bottom:8px;padding-bottom:.1em;overflow:visible;background:linear-gradient(135deg,#fff,#e2e8f0 40%,#a5b4fc 85%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}\n.plan-sub{font-size:14px;color:rgba(255,255,255,0.38);margin-bottom:24px;line-height:1.6}\n\n/* billing toggle */\n.bill-row{display:flex;align-items:center;gap:12px;margin-bottom:18px}\n.bill-lbl{font-size:13px;font-weight:600;color:rgba(255,255,255,0.35);transition:color .2s}\n.bill-lbl.on{color:#e2e8f0}\n.bill-track{width:44px;height:24px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#7c3aed);cursor:pointer;position:relative;box-shadow:0 0 10px rgba(99,102,241,0.35)}\n.bill-thumb{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:transform .25s cubic-bezier(.23,1,.32,1);box-shadow:0 2px 6px rgba(0,0,0,.3)}\n.bill-thumb.on{transform:translateX(20px)}\n.bill-save{font-size:11px;font-weight:700;color:#34d399;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);padding:2px 9px;border-radius:100px}\n\n/* plan cards */\n.plans{display:flex;flex-direction:column;gap:10px}\n.plan-card{border-radius:16px;padding:18px 20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}\n.plan-card::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;opacity:0;transition:opacity .2s}\n.plan-card.selected::before{opacity:1}\n.plan-card.selected{transform:none}\n\n/* free */\n.plan-free{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.09)}\n.plan-free.selected{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2)}\n.plan-free::before{background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)}\n/* student */\n.plan-student{background:rgba(37,99,235,0.08);border:1.5px solid rgba(99,102,241,0.2)}\n.plan-student.selected{background:rgba(37,99,235,0.15);border-color:rgba(129,140,248,0.5);box-shadow:0 0 40px rgba(99,102,241,0.15)}\n.plan-student::before{background:linear-gradient(90deg,transparent,#6366f1,#a78bfa,transparent)}\n/* teacher */\n.plan-teacher{background:rgba(180,83,9,0.08);border:1.5px solid rgba(245,158,11,0.18)}\n.plan-teacher.selected{background:rgba(180,83,9,0.15);border-color:rgba(251,191,36,0.45);box-shadow:0 0 40px rgba(245,158,11,0.1)}\n.plan-teacher::before{background:linear-gradient(90deg,transparent,#f59e0b,#fbbf24,transparent)}\n\n.plan-inner{display:flex;align-items:center;gap:14px}\n.plan-radio{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);flex-shrink:0;transition:all .2s;display:flex;align-items:center;justify-content:center}\n.plan-card.selected .plan-radio{border-color:#6366f1;background:#6366f1}\n.plan-student.selected .plan-radio{border-color:#6366f1;background:#6366f1}\n.plan-teacher.selected .plan-radio{border-color:#f59e0b;background:#f59e0b}\n.plan-free.selected .plan-radio{border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.15)}\n.plan-radio-dot{width:6px;height:6px;border-radius:50%;background:#fff;opacity:0;transition:opacity .2s}\n.plan-card.selected .plan-radio-dot{opacity:1}\n.plan-info{flex:1}\n.plan-name{font-size:14px;font-weight:700;color:#e2e8f0;display:flex;align-items:center;gap:8px}\n.plan-badge{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding:2px 8px;border-radius:100px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff}\n.plan-feats{font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;line-height:1.5}\n.plan-price{text-align:right;flex-shrink:0}\n.plan-amt{font-size:20px;font-weight:900;letter-spacing:-.03em;color:#e2e8f0;transition:all .3s}\n.plan-per{font-size:11px;color:rgba(255,255,255,0.3)}\n.plan-note{font-size:10px;color:rgba(255,255,255,0.22);margin-top:2px;transition:all .3s}\n.plan-student .plan-amt{color:#a5b4fc}\n.plan-teacher .plan-amt{color:#fbbf24}\n.plan-free .plan-amt{color:rgba(255,255,255,0.6)}\n\n.trial-note{margin-top:14px;display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,0.3)}\n.trial-dot{width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;flex-shrink:0}\n\n/* \u2500\u2500 AUTH FORM SIDE \u2500\u2500 */\n.auth-side{width:380px;flex-shrink:0}\n.auth-card{background:rgba(8,12,22,0.88);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:32px;backdrop-filter:blur(32px);box-shadow:0 40px 100px rgba(0,0,0,.6)}\n\n/* tabs */\n.auth-tabs{display:flex;background:rgba(255,255,255,0.05);border-radius:12px;padding:4px;margin-bottom:28px}\n.auth-tab{flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;color:rgba(255,255,255,0.38)}\n.auth-tab.active{background:rgba(255,255,255,0.1);color:#e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.3)}\n\n.auth-title{font-size:20px;font-weight:800;color:#e2e8f0;letter-spacing:-.03em;margin-bottom:6px}\n.auth-sub{font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:24px;line-height:1.5}\n.auth-plan-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-size:11px;font-weight:700;margin-bottom:20px;border:1px solid}\n.auth-plan-pill.student{background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.25);color:#a5b4fc}\n.auth-plan-pill.teacher{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.25);color:#fbbf24}\n.auth-plan-pill.free{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);color:rgba(255,255,255,0.5)}\n\n/* google button */\n.google-btn{width:100%;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);color:#e2e8f0;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;margin-bottom:20px}\n.google-btn:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.2)}\n.google-icon{width:18px;height:18px;flex-shrink:0}\n\n.divider-row{display:flex;align-items:center;gap:12px;margin-bottom:20px}\n.div-line{flex:1;height:1px;background:rgba(255,255,255,0.08)}\n.div-txt{font-size:11px;font-weight:600;color:rgba(255,255,255,0.2);white-space:nowrap}\n\n/* form fields */\n.field{margin-bottom:14px}\n.field label{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,0.45);margin-bottom:6px}\n.field input{width:100%;padding:12px 14px;border-radius:11px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#e2e8f0;font-size:14px;font-family:inherit;outline:none;transition:all .2s}\n.field input:focus{border-color:rgba(129,140,248,0.5);background:rgba(255,255,255,0.08);box-shadow:0 0 0 3px rgba(99,102,241,0.1)}\n.field input::placeholder{color:rgba(255,255,255,0.2)}\n\n/* submit button */\n.submit-btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;color:#fff;position:relative;overflow:hidden;transition:all .15s;margin-top:4px}\n.submit-btn.student-btn{background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 8px 24px rgba(99,102,241,0.4)}\n.submit-btn.teacher-btn{background:linear-gradient(135deg,#d97706,#b45309);box-shadow:0 8px 24px rgba(245,158,11,0.35)}\n.submit-btn.free-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.16)}\n.submit-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transform:translateX(-100%);animation:shine 2.8s ease infinite}\n@keyframes shine{0%{transform:translateX(-100%)}55%,100%{transform:translateX(200%)}}\n.submit-btn:hover{transform:translateY(-1px)}\n\n.auth-legal{font-size:11px;color:rgba(255,255,255,0.22);text-align:center;margin-top:16px;line-height:1.6}\n.auth-legal a{color:rgba(129,140,248,0.7);text-decoration:none}\n\n/* trial banner for paid plans */\n.trial-banner{margin-top:16px;padding:10px 14px;border-radius:10px;background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.18);display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(52,211,153,0.8)}\n.trial-banner svg{width:14px;height:14px;fill:none;stroke:#10b981;stroke-width:1.5;stroke-linecap:round;flex-shrink:0}\n\n/* SIGN IN specific */\n.forgot{text-align:right;margin-top:-8px;margin-bottom:14px}\n.forgot a{font-size:12px;color:rgba(129,140,248,0.6);text-decoration:none}\n.forgot a:hover{color:#818cf8}\n\n@media(max-width:900px){\n  .main{flex-direction:column;align-items:center;padding:16px 16px 60px}\n  .plan-side{width:100%;max-width:440px;order:2}\n  .auth-side{width:100%;max-width:440px;order:1}\n}\n"
+const AUTH_JS = "// \u2500\u2500 WebGL \u2500\u2500\n(function(){\n  const c=document.getElementById('bg');\n  c.style.cssText='position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none';\n  const gl=c.getContext('webgl')||c.getContext('experimental-webgl');\n  if(!gl)return;\n  function resize(){c.width=innerWidth;c.height=innerHeight;gl.viewport(0,0,c.width,c.height);}\n  resize();window.addEventListener('resize',resize);\n  const VS=`attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}`;\n  const FS=`precision highp float;uniform float uT;uniform vec2 uM,uR;varying vec2 vU;\n  vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}\n  float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}\n  float fbm(vec2 p){float f=0.,a=.5,t=0.;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<6;i++){f+=a*n(p);t+=a;p=r*p*2.01;a*=.52;}return f/t;}\n  void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.08;vec2 m=uM;m.x*=ar;float md=length(uv-m);uv+=(m-uv)/(md*md+.08)*.024;\n  vec2 q=vec2(fbm(uv*1.7+t*.9),fbm(uv*1.7+vec2(5.2,1.3)+t*.74));vec2 r2=vec2(fbm(uv*1.7+3.4*q+vec2(1.7,9.2)+t*.58),fbm(uv*1.7+3.4*q+vec2(8.3,2.8)+t*.42));float f=fbm(uv*1.7+3.4*r2+t*.32);f=clamp(f,0.,1.);\n  vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));col=mix(col,vec3(.96,.28,.55),smoothstep(.74,1.,f));\n  col+=vec3(.28,.06,.50)*exp(-md*2.0)*.8;vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.55,.0,1.);col+=.014;gl_FragColor=vec4(col,1.);}`;\n  function mkS(t,s){const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;}\n  const prog=gl.createProgram();gl.attachShader(prog,mkS(gl.VERTEX_SHADER,VS));gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);\n  const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);\n  const uT=gl.getUniformLocation(prog,'uT'),uM=gl.getUniformLocation(prog,'uM'),uR=gl.getUniformLocation(prog,'uR'),aP=gl.getAttribLocation(prog,'aP');\n  const mouse={x:.5,y:.5,tx:.5,ty:.5};\n  window.addEventListener('mousemove',e=>{mouse.tx=e.clientX/innerWidth;mouse.ty=1-e.clientY/innerHeight;});\n  let t=0;(function draw(){requestAnimationFrame(draw);t+=.012;mouse.x+=(mouse.tx-mouse.x)*.06;mouse.y+=(mouse.ty-mouse.y)*.06;gl.clearColor(.02,.03,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(prog);gl.uniform1f(uT,t);gl.uniform2f(uM,mouse.x,mouse.y);gl.uniform2f(uR,c.width,c.height);gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(aP);gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);})();\n})();\n\n// \u2500\u2500 State \u2500\u2500\nvar plan='student', annual=false, mode='signup';\n\n// \u2500\u2500 Plan select \u2500\u2500\nfunction selectPlan(p){\n  plan=p;\n  ['free','student','teacher'].forEach(function(x){\n    document.getElementById('plan-'+x).classList.remove('selected');\n  });\n  document.getElementById('plan-'+p).classList.add('selected');\n  renderAuth();\n}\n\n// \u2500\u2500 Billing toggle \u2500\u2500\nfunction toggleBill(){\n  annual=!annual;\n  document.getElementById('bill-thumb').classList.toggle('on',annual);\n  document.getElementById('lbl-mo').classList.toggle('on',!annual);\n  document.getElementById('lbl-yr').classList.toggle('on',annual);\n  document.getElementById('bill-save').style.opacity=annual?'1':'0';\n  document.getElementById('s-price').textContent=annual?'$4.58':'$7';\n  document.getElementById('s-note').textContent=annual?'billed $55/yr':'billed monthly';\n  document.getElementById('t-price').textContent=annual?'$8.25':'$13';\n  document.getElementById('t-note').textContent=annual?'billed $99/yr':'billed monthly';\n}\n\n// \u2500\u2500 Mode \u2500\u2500\nfunction setMode(m){\n  mode=m;\n  var tabs=document.getElementById('auth-tabs');\n  var planSide=document.getElementById('plan-side');\n  var navSwitch=document.getElementById('nav-switch');\n  tabs.querySelectorAll('.auth-tab').forEach(function(t,i){\n    t.classList.toggle('active', (i===0&&m==='signup')||(i===1&&m==='signin'));\n  });\n  planSide.style.display=m==='signup'?'':'none';\n  navSwitch.innerHTML=m==='signup'\n    ?'Already have an account? <a href=\"#\" onclick=\"setMode(\\'signin\\');return false\">Sign in</a>'\n    :'New here? <a href=\"#\" onclick=\"setMode(\\'signup\\');return false\">Sign up free</a>';\n  renderAuth();\n}\n\n// \u2500\u2500 Render auth body \u2500\u2500\nfunction renderAuth(){\n  var body=document.getElementById('auth-body');\n\n  if(mode==='signin'){\n    body.innerHTML=\n      '<div class=\"auth-title\">Welcome back</div>'+\n      '<div class=\"auth-sub\">Sign in to your Flashfo account.</div>'+\n      '<button class=\"google-btn\">'+\n        '<svg class=\"google-icon\" viewBox=\"0 0 24 24\"><path d=\"M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z\" fill=\"#4285F4\"/><path d=\"M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z\" fill=\"#34A853\"/><path d=\"M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z\" fill=\"#FBBC05\"/><path d=\"M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z\" fill=\"#EA4335\"/></svg>'+\n        'Continue with Google'+\n      '</button>'+\n      '<div class=\"divider-row\"><div class=\"div-line\"></div><div class=\"div-txt\">or sign in with email</div><div class=\"div-line\"></div></div>'+\n      '<div class=\"field\"><label>Email</label><input type=\"email\" placeholder=\"you@example.com\"></div>'+\n      '<div class=\"field\"><label>Password</label><input type=\"password\" placeholder=\"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\"></div>'+\n      '<div class=\"forgot\"><a href=\"#\">Forgot password?</a></div>'+\n      '<button class=\"submit-btn student-btn\">Sign in \u2192</button>'+\n      '<div class=\"auth-legal\">Don\\'t have an account? <a href=\"#\" onclick=\"setMode(\\'signup\\');return false\" style=\"color:rgba(129,140,248,0.8)\">Sign up free</a></div>';\n    return;\n  }\n\n  // Sign up\n  var planNames={free:'Free plan',student:'Student Pro',teacher:'Teacher Pro'};\n  var pillClass={free:'free',student:'student',teacher:'teacher'};\n  var btnClass={free:'free-btn',student:'student-btn',teacher:'teacher-btn'};\n  var btnLabel={free:'Continue for free',student:'Start 3-day free trial \u2192',teacher:'Start 3-day free trial \u2192'};\n  var subText={\n    free:'Create your account \u2014 no credit card needed.',\n    student:'You\\'re starting a 3-day free trial of Student Pro.',\n    teacher:'You\\'re starting a 3-day free trial of Teacher Pro.'\n  };\n\n  body.innerHTML=\n    '<div class=\"auth-title\">Create your account</div>'+\n    '<div class=\"auth-plan-pill '+pillClass[plan]+'\">'+\n      '<svg width=\"10\" height=\"10\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg>'+\n      planNames[plan]+\n    '</div>'+\n    '<div class=\"auth-sub\">'+subText[plan]+'</div>'+\n    '<button class=\"google-btn\">'+\n      '<svg class=\"google-icon\" viewBox=\"0 0 24 24\"><path d=\"M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z\" fill=\"#4285F4\"/><path d=\"M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z\" fill=\"#34A853\"/><path d=\"M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z\" fill=\"#FBBC05\"/><path d=\"M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z\" fill=\"#EA4335\"/></svg>'+\n      'Continue with Google'+\n    '</button>'+\n    '<div class=\"divider-row\"><div class=\"div-line\"></div><div class=\"div-txt\">or use email</div><div class=\"div-line\"></div></div>'+\n    '<div class=\"field\"><label>Email</label><input type=\"email\" placeholder=\"you@example.com\"></div>'+\n    '<div class=\"field\"><label>Password</label><input type=\"password\" placeholder=\"Create a password\"></div>'+\n    '<button class=\"submit-btn '+btnClass[plan]+'\">'+btnLabel[plan]+'</button>'+\n    (plan!=='free'?'<div class=\"trial-banner\"><svg viewBox=\"0 0 16 16\"><path d=\"M8 1l1.8 3.8 4.2.6-3 3 .7 4.1L8 11.3 4.3 13.4l.7-4.1-3-3 4.2-.6z\"/></svg>3-day free trial \u00b7 no charge until day 4 \u00b7 cancel any time</div>':'')+\n    '<div class=\"auth-legal\">By continuing you agree to our <a href=\"#\">Terms</a> and <a href=\"#\">Privacy Policy</a>.</div>';\n}\n\n// \u2500\u2500 Init \u2500\u2500\nrenderAuth();\n"
+const AUTH_HTML = "<canvas id=\"bg\"></canvas>\n<div id=\"app\">\n  <nav>\n    <a class=\"logo\" href=\"/\">\n      <div class=\"logo-ring\"><div class=\"logo-spin\"></div><div class=\"logo-inner\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#3b82f6\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg></div></div>\n      <span class=\"logo-word\">Flashfo</span>\n    </a>\n    <div class=\"nav-right\" id=\"nav-switch\">Already have an account? <a href=\"#\" onclick=\"setMode('signin');return false\">Sign in</a></div>\n  </nav>\n\n  <div class=\"main\">\n\n    <!-- PLAN SELECTOR -->\n    <div class=\"plan-side\" id=\"plan-side\">\n      <div class=\"plan-headline\">Start studying smarter today.</div>\n      <div class=\"plan-sub\">Pick a plan \u2014 you can always upgrade later. All paid plans start with a 3-day free trial.</div>\n\n      <div class=\"bill-row\">\n        <span class=\"bill-lbl on\" id=\"lbl-mo\">Monthly</span>\n        <div class=\"bill-track\" onclick=\"toggleBill()\"><div class=\"bill-thumb\" id=\"bill-thumb\"></div></div>\n        <span class=\"bill-lbl\" id=\"lbl-yr\">Annual</span>\n        <span class=\"bill-save\" id=\"bill-save\" style=\"opacity:0\">Save 35%</span>\n      </div>\n\n      <div class=\"plans\">\n        <!-- FREE -->\n        <div class=\"plan-card plan-free\" id=\"plan-free\" onclick=\"selectPlan('free')\">\n          <div class=\"plan-inner\">\n            <div class=\"plan-radio\"><div class=\"plan-radio-dot\"></div></div>\n            <div class=\"plan-info\">\n              <div class=\"plan-name\">Free</div>\n              <div class=\"plan-feats\">15 AI sessions/mo \u00b7 5 saved decks \u00b7 Join live quizzes</div>\n            </div>\n            <div class=\"plan-price\">\n              <div class=\"plan-amt\">$0</div>\n              <div class=\"plan-per\">forever</div>\n            </div>\n          </div>\n        </div>\n\n        <!-- STUDENT PRO -->\n        <div class=\"plan-card plan-student selected\" id=\"plan-student\" onclick=\"selectPlan('student')\">\n          <div class=\"plan-inner\">\n            <div class=\"plan-radio\"><div class=\"plan-radio-dot\"></div></div>\n            <div class=\"plan-info\">\n              <div class=\"plan-name\">Student Pro <span class=\"plan-badge\">Most popular</span></div>\n              <div class=\"plan-feats\">Unlimited flashcards, quizzes, Nova sessions, voice mode</div>\n            </div>\n            <div class=\"plan-price\">\n              <div class=\"plan-amt\" id=\"s-price\">$7</div>\n              <div class=\"plan-per\">/mo</div>\n              <div class=\"plan-note\" id=\"s-note\">billed monthly</div>\n            </div>\n          </div>\n        </div>\n\n        <!-- TEACHER PRO -->\n        <div class=\"plan-card plan-teacher\" id=\"plan-teacher\" onclick=\"selectPlan('teacher')\">\n          <div class=\"plan-inner\">\n            <div class=\"plan-radio\"><div class=\"plan-radio-dot\"></div></div>\n            <div class=\"plan-info\">\n              <div class=\"plan-name\">Teacher Pro</div>\n              <div class=\"plan-feats\">Everything in Student Pro + live quizzes, lesson builder, class analytics</div>\n            </div>\n            <div class=\"plan-price\">\n              <div class=\"plan-amt\" id=\"t-price\">$13</div>\n              <div class=\"plan-per\">/mo</div>\n              <div class=\"plan-note\" id=\"t-note\">billed monthly</div>\n            </div>\n          </div>\n        </div>\n      </div>\n\n      <div class=\"trial-note\">\n        <div class=\"trial-dot\"></div>\n        3-day free trial on all paid plans \u00b7 cancel any time\n      </div>\n    </div>\n\n    <!-- AUTH FORM -->\n    <div class=\"auth-side\">\n      <div class=\"auth-card\">\n\n        <!-- TABS \u2014 only show on sign up -->\n        <div class=\"auth-tabs\" id=\"auth-tabs\">\n          <div class=\"auth-tab active\" onclick=\"setMode('signup')\">Sign up</div>\n          <div class=\"auth-tab\" onclick=\"setMode('signin')\">Sign in</div>\n        </div>\n\n        <!-- DYNAMIC CONTENT -->\n        <div id=\"auth-body\"></div>\n\n      </div>\n    </div>\n\n  </div>\n</div>"
 
-  useEffect(() => {
-    // Handle email confirmation redirect — Supabase sends back tokens in the URL hash
-    const handleAuthRedirect = async () => {
-      // Check for error in URL params first
-      const errorCode = searchParams.get('error_code')
-      const errorDesc = searchParams.get('error_description')
-      if (errorCode) { setError(decodeURIComponent(errorDesc || 'Authentication error')); return }
-
-      // Handle hash-based tokens (email confirmation, magic link)
-      const hash = window.location.hash
-      if (hash && hash.includes('access_token')) {
-        setLoading(true)
-        try {
-          // Supabase automatically processes the hash and sets the session
-          const { data, error: sessionError } = await supabase.auth.getSession()
-          if (sessionError) throw sessionError
-          if (data.session) { router.push('/'); return }
-          // If no session yet, give it a moment (supabase processes the hash async)
-          await new Promise(r => setTimeout(r, 800))
-          const { data: data2 } = await supabase.auth.getSession()
-          if (data2.session) router.push('/')
-          else setError('Email confirmed! Please sign in.')
-        } catch(e) { setError('Confirmation failed. Please try signing in.') }
-        finally { setLoading(false) }
-        return
-      }
-
-      // Check for PKCE code flow (newer Supabase versions)
-      const code = searchParams.get('code')
-      if (code) {
-        setLoading(true)
-        try {
-          const { error: exchError } = await supabase.auth.exchangeCodeForSession(code)
-          if (exchError) throw exchError
-          router.push('/')
-        } catch(e) { setError('Sign in failed. Please try again.') }
-        finally { setLoading(false) }
-      }
-    }
-    handleAuthRedirect()
-  }, [])
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+export default function SignupPage() {
   const router = useRouter()
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setLoading(true); setError(''); setSuccess('')
-    try {
-      if (mode === 'signin') {
-        const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password })
-        if (error) throw error
-        router.push('/')
-      } else if (mode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({
-          email: form.email, password: form.password,
-          options: { data: { full_name: form.name } }
-        })
-        if (error) throw error
-        if (data.session) {
-          // Email confirmation disabled — user is signed in immediately
-          router.push('/dashboard')
-        } else if (data.user && !data.session) {
-          // Email confirmation enabled — guide them to sign in after confirming
-          setSuccess('Account created! Check your email to confirm, then sign in below.')
-          setMode('signin')
-        } else {
-          router.push('/')
-        }
-      } else if (mode === 'reset') {
-        const { error } = await supabase.auth.resetPasswordForEmail(form.email, {
-          redirectTo: window.location.origin + '/auth/update-password'
-        })
-        if (error) throw error
-        setSuccess('Password reset email sent. Check your inbox.')
-      }
-    } catch (err) {
-      setError(err.message || 'Something went wrong.')
-    } finally { setLoading(false) }
-  }
-
-  const inputStyle = {
-    width: '100%', height: 44, padding: '0 14px',
-    background: '#f8fafc', border: '1px solid #e2e8f0',
-    borderRadius: 12, fontSize: 14, color: '#0f172a',
-    outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.2s',
-    boxSizing: 'border-box',
-  }
-
-  // Inject animation keyframes client-side only to avoid hydration mismatch
   useEffect(() => {
-    const styleId = 'flashfo-auth-animations'
-    if (document.getElementById(styleId)) return
     const style = document.createElement('style')
-    style.id = styleId
-    style.textContent = [
-      '@keyframes auth-spin{to{transform:rotate(360deg)}}',
-      '@keyframes auth-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}',
-      '@keyframes auth-fadein{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}',
-      '.auth-input:focus{border-color:#3b82f6!important;outline:none}',
-      '@media(prefers-reduced-motion:reduce){*{animation:none!important}}'
-    ].join('')
+    style.id = 'auth-css'
+    style.textContent = AUTH_CSS
     document.head.appendChild(style)
-    return () => { const el = document.getElementById(styleId); if(el) el.remove() }
-  }, [])
+
+    const script = document.createElement('script')
+    script.id = 'auth-js'
+    script.textContent = AUTH_JS
+    document.body.appendChild(script)
+
+    return () => {
+      document.getElementById('auth-css')?.remove()
+      document.getElementById('auth-js')?.remove()
+    }
+  }, [router])
 
   return (
-    <div style={{ minHeight:'100vh', background:'#080c14', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px 16px', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
-
-      <div style={{ width:'100%', maxWidth:420, animation:'auth-fadein 0.4s ease both' }}>
-
-        {/* Logo */}
-        <div style={{ textAlign:'center', marginBottom:28 }}>
-          <div style={{ position:'relative', width:60, height:60, margin:'0 auto 14px' }}>
-            <div style={{ position:'absolute', inset:-4, borderRadius:19, background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)', animation:'auth-spin 3s linear infinite' }}/>
-            <div style={{ position:'absolute', inset:3, background:'#0d1117', borderRadius:15, display:'flex', alignItems:'center', justifyContent:'center', animation:'auth-float 3s ease-in-out infinite' }}>
-              <svg width="24" height="24" viewBox="0 0 14 14" fill="#3b82f6"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
-            </div>
-          </div>
-          <div style={{ fontSize:22, fontWeight:800, color:'#e6edf3', letterSpacing:'-0.02em', marginBottom:3 }}>Flashfo</div>
-          <div style={{ fontSize:13, color:'#8b949e' }}>
-            {mode === 'signin' ? 'Welcome back' : mode === 'signup' ? 'Create your account' : 'Reset your password'}
-          </div>
-        </div>
-
-        {/* Card */}
-        <div style={{ background:'#161b22', border:'1px solid #21262d', borderRadius:16, padding:'28px 26px' }}>
-
-          {/* Mode switcher */}
-          {mode !== 'reset' && (
-            <div style={{ display:'flex', background:'#0d1117', borderRadius:10, padding:3, marginBottom:22 }}>
-              {['signin','signup'].map(m => (
-                <button key={m} type="button" onClick={()=>{ setMode(m); setError(''); setSuccess(''); }}
-                  style={{ flex:1, height:34, borderRadius:8, border:'none', cursor:'pointer', fontSize:13, fontWeight:600, transition:'all 0.15s',
-                    background: mode===m ? '#21262d' : 'transparent',
-                    color: mode===m ? '#e6edf3' : '#8b949e' }}>
-                  {m === 'signin' ? 'Sign in' : 'Sign up'}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <form onSubmit={e=>{e.preventDefault();handleSubmit(e)}}>
-
-            {/* Name — signup only */}
-            {mode === 'signup' && (
-              <div style={{ marginBottom:14 }}>
-                <label style={{ fontSize:10, fontWeight:700, color:'#484f58', letterSpacing:'0.08em', display:'block', marginBottom:5 }}>FULL NAME</label>
-                <input className="auth-input" type="text" value={form.name} onChange={e=>set('name',e.target.value)}
-                  placeholder="Your name" autoComplete="name"
-                  style={{ width:'100%', height:42, background:'#0d1117', border:'1px solid #30363d', borderRadius:9, padding:'0 13px', color:'#e6edf3', fontSize:14, transition:'border-color 0.15s' }}/>
-              </div>
-            )}
-
-            {/* Email */}
-            <div style={{ marginBottom:14 }}>
-              <label style={{ fontSize:10, fontWeight:700, color:'#484f58', letterSpacing:'0.08em', display:'block', marginBottom:5 }}>EMAIL</label>
-              <input className="auth-input" type="email" value={form.email} onChange={e=>set('email',e.target.value)}
-                placeholder="you@example.com" required autoComplete="email"
-                style={{ width:'100%', height:42, background:'#0d1117', border:'1px solid #30363d', borderRadius:9, padding:'0 13px', color:'#e6edf3', fontSize:14, transition:'border-color 0.15s' }}/>
-            </div>
-
-            {/* Password */}
-            {mode !== 'reset' && (
-              <div style={{ marginBottom:20 }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:5 }}>
-                  <label style={{ fontSize:10, fontWeight:700, color:'#484f58', letterSpacing:'0.08em' }}>PASSWORD</label>
-                  {mode === 'signin' && (
-                    <button type="button" onClick={()=>{ setMode('reset'); setError(''); setSuccess(''); }}
-                      style={{ fontSize:11, color:'#8b949e', background:'none', border:'none', cursor:'pointer', padding:0 }}>
-                      Forgot password?
-                    </button>
-                  )}
-                </div>
-                <input className="auth-input" type="password" value={form.password} onChange={e=>set('password',e.target.value)}
-                  placeholder="••••••••" required={mode!=='reset'} minLength={6} autoComplete={mode==='signup'?'new-password':'current-password'}
-                  style={{ width:'100%', height:42, background:'#0d1117', border:'1px solid #30363d', borderRadius:9, padding:'0 13px', color:'#e6edf3', fontSize:14, transition:'border-color 0.15s' }}/>
-              </div>
-            )}
-
-            {/* Error */}
-            {error && (
-              <div style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:9, padding:'10px 13px', marginBottom:14, fontSize:13, color:'#f87171' }}>{error}</div>
-            )}
-            {/* Success */}
-            {success && (
-              <div style={{ background:'rgba(52,211,153,0.08)', border:'1px solid rgba(52,211,153,0.25)', borderRadius:9, padding:'10px 13px', marginBottom:14, fontSize:13, color:'#34d399' }}>{success}</div>
-            )}
-
-            {/* Submit */}
-            <button type="submit" disabled={loading}
-              style={{ width:'100%', height:44, borderRadius:10, border:'none', cursor:loading?'not-allowed':'pointer', fontSize:15, fontWeight:700, color:'#fff', letterSpacing:'-0.01em', opacity:loading?0.6:1, transition:'opacity 0.15s',
-                background:'linear-gradient(90deg,#2563eb,#7c3aed)' }}>
-              {loading ? 'Please wait...' : mode==='signin' ? 'Sign in →' : mode==='signup' ? 'Create account →' : 'Send reset link →'}
-            </button>
-
-          </form>
-
-          {/* Back link for reset mode */}
-          {mode === 'reset' && (
-            <button type="button" onClick={()=>{ setMode('signin'); setError(''); setSuccess(''); }}
-              style={{ width:'100%', marginTop:12, background:'none', border:'none', color:'#8b949e', fontSize:12, cursor:'pointer' }}>
-              ← Back to sign in
-            </button>
-          )}
-        </div>
-
-        {/* Footer */}
-        <p style={{ textAlign:'center', fontSize:12, color:'#484f58', marginTop:20 }}>
-          By signing up you agree to our{' '}
-          <a href="/terms" style={{ color:'#8b949e', textDecoration:'none' }}>Terms of Service</a>
-        </p>
-      </div>
-    </div>
-  )
-}
-
-export default function AuthPage() {
-  return (
-    <Suspense fallback={<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{width:24,height:24,border:'2px solid #3b82f6',borderTopColor:'transparent',borderRadius:'50%',display:'inline-block',animation:'spin 0.8s linear infinite'}}/></div>}>
-      <AuthPageInner />
-    </Suspense>
+    <div
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: AUTH_HTML }}
+    />
   )
 }
