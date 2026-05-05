@@ -40,12 +40,12 @@ export default function Home() {
 
     // Wire sign up buttons
     document.querySelectorAll('.btn-primary, .btn-nav-cta, .pc-btn').forEach(btn => {
-      btn.addEventListener('click', () => router.push('/signup'))
+      btn.addEventListener('click', () => router.push('/auth'))
     })
 
     // Wire sign in button
     const loginBtn = document.querySelector('.btn-ghost')
-    if (loginBtn) loginBtn.addEventListener('click', () => router.push('/login'))
+    if (loginBtn) loginBtn.addEventListener('click', () => router.push('/auth'))
 
     // Wire "See Nova in action" / "See how it works" secondary buttons
     document.querySelectorAll('.btn-sec').forEach(btn => {
