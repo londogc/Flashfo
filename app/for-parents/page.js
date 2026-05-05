@@ -1,346 +1,49 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+const PP_CSS = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml{scroll-behavior:smooth;overflow-x:hidden}\nbody{font-family:'Inter',-apple-system,sans-serif;background:#050709;color:#e2e8f0;overflow-x:hidden}\n#bg{position:fixed;inset:0;z-index:0;pointer-events:none}\n#app{position:relative;z-index:1}\n\n/* NAV */\nnav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 48px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,7,9,0.65);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.07);transition:background .3s}\n.logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}\n.logo-ring{position:relative;width:34px;height:34px;flex-shrink:0}\n.logo-spin{position:absolute;inset:-2px;border-radius:10px;background:conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6);animation:lp-spin 3s linear infinite}\n.logo-inner{position:absolute;inset:2px;border-radius:7px;background:#080b12;display:flex;align-items:center;justify-content:center}\n.logo-word{font-size:17px;font-weight:800;color:#e2e8f0;letter-spacing:-.02em}\n.nav-links{display:flex;gap:28px}\n.nav-links a{font-size:14px;font-weight:500;color:rgba(255,255,255,0.5);text-decoration:none;transition:color .2s}\n.nav-links a:hover,.nav-links a.active{color:#e2e8f0}\n.nav-btns{display:flex;gap:12px;align-items:center}\n.btn-ghost{font-size:14px;font-weight:600;color:rgba(255,255,255,0.5);background:none;border:none;cursor:pointer;font-family:inherit;transition:color .2s}\n.btn-ghost:hover{color:#e2e8f0}\n.btn-cta{padding:9px 22px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(135deg,#0d9488,#0f766e);box-shadow:0 4px 16px rgba(20,184,166,0.4);transition:all .15s}\n.btn-cta:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(20,184,166,0.55)}\n.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:6px}\n.hb-line{width:22px;height:2px;background:rgba(255,255,255,0.7);border-radius:1px;transition:all .3s;display:block}\n.hamburger.open .hb-line:nth-child(1){transform:rotate(45deg) translate(5px,5px)}\n.hamburger.open .hb-line:nth-child(2){opacity:0}\n.hamburger.open .hb-line:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}\n.mob-menu{display:none;position:fixed;top:64px;left:0;right:0;background:rgba(5,7,9,0.97);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.08);padding:20px 24px;flex-direction:column;gap:4px;z-index:99}\n.mob-menu.open{display:flex}\n.mob-menu a{font-size:16px;font-weight:600;color:rgba(255,255,255,0.7);text-decoration:none;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06)}\n.mob-menu a:last-of-type{border-bottom:none}\n.mob-cta-btn{margin-top:12px;padding:14px;border-radius:12px;border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,#0d9488,#0f766e);width:100%}\n@keyframes lp-spin{100%{transform:rotate(360deg)}}\n@keyframes lp-rock{0%,100%{transform:rotate(-4deg) scale(1)}50%{transform:rotate(4deg) scale(1.08)}}\n\n/* HERO */\n.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:130px 32px 80px;text-align:center;position:relative}\n.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:100px;background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.25);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(94,234,212,0.8);margin-bottom:32px;backdrop-filter:blur(12px);animation:fade-up .8s .1s both}\n@keyframes fade-up{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}\n.hero h1{font-size:clamp(40px,6.5vw,84px);font-weight:900;letter-spacing:-.045em;line-height:1.08;margin-bottom:24px;padding-bottom:.2em;overflow:visible;animation:line-up .9s .15s both}\n.hw{color:#e2e8f0}\n.hg{background:linear-gradient(135deg,#5eead4,#14b8a6 40%,#0d9488);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}\n@keyframes line-up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}\n.hero-sub{font-size:clamp(16px,2vw,20px);color:rgba(255,255,255,0.42);max-width:580px;line-height:1.7;margin-bottom:44px;animation:line-up 1s .35s both}\n.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:line-up 1s .5s both}\n.btn-primary{padding:16px 34px;border-radius:14px;border:none;cursor:pointer;font-family:inherit;font-size:16px;font-weight:700;color:#fff;background:linear-gradient(135deg,#0d9488,#0f766e);box-shadow:0 8px 32px rgba(20,184,166,0.4);position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s}\n.btn-primary::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent);transform:translateX(-100%);animation:shine 2.8s ease infinite}\n@keyframes shine{0%{transform:translateX(-100%)}55%,100%{transform:translateX(200%)}}\n.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 44px rgba(20,184,166,0.55)}\n.btn-outline{padding:16px 34px;border-radius:14px;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);font-size:16px;font-weight:600;backdrop-filter:blur(16px);transition:all .15s}\n.btn-outline:hover{background:rgba(255,255,255,0.13);color:#fff}\n\n/* STATS */\n.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:900px;margin:0 auto;padding:0 48px 80px;animation:line-up 1s .65s both}\n.stat-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:20px;padding:28px 20px;text-align:center;backdrop-filter:blur(16px);transition:all .3s;position:relative;overflow:hidden}\n.stat-card::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(20,184,166,0.5),transparent)}\n.stat-card:hover{background:rgba(255,255,255,0.07);transform:translateY(-3px)}\n.stat-num{font-size:clamp(30px,4.5vw,52px);font-weight:900;letter-spacing:-.04em;background:linear-gradient(135deg,#5eead4,#14b8a6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:10px}\n.stat-lbl{font-size:13px;color:rgba(255,255,255,0.38);line-height:1.5}\n\n/* SHARED */\n.section{padding:100px 48px;position:relative}\n.sec-inner{max-width:1100px;margin:0 auto}\n.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#2dd4bf;margin-bottom:14px}\n.eyebrow::before{content:'';width:24px;height:1.5px;background:linear-gradient(90deg,#14b8a6,transparent)}\n.sec-title{font-size:clamp(30px,4.2vw,52px);font-weight:800;letter-spacing:-.04em;line-height:1.06;margin-bottom:18px;color:#e2e8f0}\n.sec-body{font-size:17px;color:rgba(255,255,255,0.4);line-height:1.75;max-width:500px;margin-bottom:32px}\n.split{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}\n.split.flip{direction:rtl}\n.split.flip>*{direction:ltr}\n.rv{opacity:0;transform:translateY(32px);transition:opacity .85s cubic-bezier(.23,1,.32,1),transform .85s cubic-bezier(.23,1,.32,1)}\n.rv.d1{transition-delay:.1s}.rv.d2{transition-delay:.2s}.rv.d3{transition-delay:.3s}\n.rv.on{opacity:1;transform:none}\n.feat-list{display:flex;flex-direction:column;gap:11px;margin-bottom:28px}\n.feat-item{display:flex;align-items:flex-start;gap:12px;padding:12px 15px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);transition:all .2s}\n.feat-item:hover{background:rgba(255,255,255,0.07);transform:translateX(4px)}\n.feat-dot{width:20px;height:20px;border-radius:50%;background:rgba(20,184,166,0.12);border:1px solid rgba(20,184,166,0.28);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}\n.feat-dot svg{width:10px;height:10px}\n.feat-txt{font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5}\n\n/* NOVA CHAT */\n.nova-chat{background:rgba(8,12,22,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:20px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.6);backdrop-filter:blur(24px)}\n.chat-top{padding:12px 18px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);display:flex;align-items:center;gap:10px}\n.nova-dot{width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;animation:dp 2s ease-in-out infinite}\n@keyframes dp{0%,100%{box-shadow:0 0 8px #10b981}50%{box-shadow:0 0 16px #10b981,0 0 30px rgba(16,185,129,0.4)}}\n.chat-nm{font-size:13px;font-weight:700;color:#e2e8f0}\n.chat-status{font-size:11px;color:#10b981;margin-left:auto}\n.chat-msgs{padding:18px;display:flex;flex-direction:column;gap:12px}\n.msg{max-width:88%}\n.msg.u{align-self:flex-end}\n.bub{padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.6;font-weight:500}\n.msg.n .bub{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);color:rgba(255,255,255,0.8);border-bottom-left-radius:4px}\n.msg.u .bub{background:rgba(20,184,166,0.14);border:1px solid rgba(20,184,166,0.25);color:rgba(255,255,255,0.9);border-bottom-right-radius:4px}\n.hl{background:rgba(20,184,166,0.15);border-radius:4px;padding:1px 5px;color:#5eead4;font-weight:700;font-style:normal}\n\n/* FLASHCARD DECK */\n.deck-card{background:rgba(8,12,22,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:20px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.6);backdrop-filter:blur(24px)}\n.dk-top{padding:12px 18px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:space-between}\n.dk-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,0.28)}\n.dk-subject{font-size:11px;font-weight:600;color:#2dd4bf;background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.22);padding:3px 10px;border-radius:20px}\n.dk-heading{padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,0.06)}\n.dk-topic{font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:4px}\n.dk-count{font-size:11px;font-weight:700;color:#2dd4bf;background:rgba(20,184,166,0.08);border:1px solid rgba(20,184,166,0.18);display:inline-block;padding:2px 9px;border-radius:20px}\n.dk-cards{padding:14px 18px;display:flex;flex-direction:column;gap:10px}\n.fc-item{padding:13px 15px;border-radius:12px;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);position:relative;overflow:hidden}\n.fc-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}\n.fc-item:nth-child(1)::before{background:linear-gradient(to bottom,#14b8a6,#0d9488)}\n.fc-item:nth-child(2)::before{background:linear-gradient(to bottom,#818cf8,#6366f1)}\n.fc-item:nth-child(3)::before{background:linear-gradient(to bottom,#f472b6,#ec4899)}\n.fc-q-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,0.2);margin-bottom:6px}\n.fc-q-txt{font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:6px;line-height:1.4}\n.fc-a-txt{font-size:11px;color:rgba(255,255,255,0.45);line-height:1.5}\n.fc-more{padding:12px 18px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:rgba(255,255,255,0.25)}\n\n/* RETENTION */\n.ret-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:24px}\n.ret-row{display:flex;align-items:center;gap:14px;margin-bottom:14px}\n.ret-lbl{font-size:12px;color:rgba(255,255,255,0.4);width:190px;flex-shrink:0}\n.ret-track{flex:1;height:10px;background:rgba(255,255,255,0.06);border-radius:5px;overflow:hidden}\n.ret-fill{height:100%;border-radius:5px;transition:width 1.8s cubic-bezier(.23,1,.32,1);width:0}\n.ret-pct{font-size:13px;font-weight:800;min-width:38px;text-align:right}\n.rate-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}\n.rate-btn{padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;border:1px solid;cursor:default;font-family:inherit}\n\n/* TRUST CARDS */\n.trust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}\n.trust-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:26px;transition:all .3s;position:relative;overflow:hidden}\n.trust-card::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(20,184,166,0.4),transparent)}\n.trust-card:hover{background:rgba(255,255,255,0.07);transform:translateY(-3px)}\n.trust-ico{width:40px;height:40px;border-radius:11px;background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:14px}\n.trust-ico svg{width:18px;height:18px;fill:none;stroke:#2dd4bf;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}\n.trust-nm{font-size:15px;font-weight:800;color:#e2e8f0;margin-bottom:8px;letter-spacing:-.02em}\n.trust-d{font-size:13px;color:rgba(255,255,255,0.35);line-height:1.65}\n\n/* PRICING */\n.pricing-wrap{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:720px;margin:0 auto}\n.pc{border-radius:22px;padding:30px 26px;position:relative;overflow:hidden;backdrop-filter:blur(24px);transition:transform .2s}\n.pc:hover{transform:translateY(-4px)}\n.pc-free{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)}\n.pc-pro{background:linear-gradient(145deg,rgba(13,148,136,0.18),rgba(15,118,110,0.12));border:1px solid rgba(20,184,166,0.35);box-shadow:0 0 70px rgba(20,184,166,0.08)}\n.pc-pro::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#14b8a6,#5eead4,transparent)}\n.rec-badge{position:absolute;top:14px;right:14px;background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;font-size:9px;font-weight:800;padding:3px 10px;border-radius:100px;letter-spacing:.06em;text-transform:uppercase}\n.pc-tier{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:4px 12px;border-radius:100px;display:inline-block;margin-bottom:18px}\n.pc-free .pc-tier{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.12)}\n.pc-pro .pc-tier{background:rgba(20,184,166,0.15);color:#5eead4;border:1px solid rgba(20,184,166,0.28)}\n.pc-amt{font-size:48px;font-weight:900;letter-spacing:-2px;color:#e2e8f0;line-height:1}\n.pc-per{font-size:14px;color:rgba(255,255,255,0.3);margin-left:4px}\n.pc-note{font-size:11px;color:rgba(255,255,255,0.25);margin:8px 0 16px}\n.pc-div{height:1px;background:rgba(255,255,255,0.07);margin-bottom:16px}\n.pc-feats{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:24px}\n.pc-feats li{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:rgba(255,255,255,0.55);line-height:1.5}\n.pc-chk{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}\n.pc-free .pc-chk{background:rgba(255,255,255,0.1)}\n.pc-pro .pc-chk{background:rgba(20,184,166,0.2)}\n.pc-btn{width:100%;padding:13px;border-radius:12px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}\n.pc-free .pc-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7)}\n.pc-pro .pc-btn{background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;box-shadow:0 8px 24px rgba(20,184,166,0.35)}\n.pc-pro .pc-btn:hover{box-shadow:0 12px 32px rgba(20,184,166,0.5)}\n\n/* CTA */\n.cta{padding:120px 48px 140px;text-align:center;position:relative}\n.cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(20,184,166,0.08),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(13,148,136,0.06),transparent 60%);pointer-events:none}\n.cta-inner{max-width:640px;margin:0 auto;position:relative;z-index:1}\n.cta-title{font-size:clamp(36px,5.5vw,64px);font-weight:900;letter-spacing:-.04em;line-height:1.1;margin-bottom:18px;padding-bottom:.2em;overflow:visible;background:linear-gradient(135deg,#fff,#ccfbf1 40%,#5eead4 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}\n.cta-sub{font-size:18px;color:rgba(255,255,255,0.38);margin-bottom:40px;line-height:1.65}\n.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}\n\n/* FOOTER */\nfooter{padding:48px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(5,7,9,0.55);backdrop-filter:blur(12px)}\n.foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px}\n.foot-links{display:flex;gap:24px;flex-wrap:wrap}\n.foot-links a{font-size:13px;color:rgba(255,255,255,0.3);text-decoration:none;transition:color .2s}\n.foot-links a:hover{color:rgba(255,255,255,0.65)}\n.foot-copy{font-size:12px;color:rgba(255,255,255,0.18)}\n.glow-teal{position:absolute;width:600px;height:400px;background:radial-gradient(ellipse,rgba(20,184,166,0.07),transparent 65%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}\n\n@media(max-width:768px){\n  nav{padding:12px 20px}\n  .nav-links{display:none!important}\n  .btn-ghost{display:none!important}\n  .hamburger{display:flex}\n  .hero{padding:100px 20px 60px}\n  .hero h1{font-size:clamp(34px,10vw,54px)}\n  .stats-grid{grid-template-columns:1fr 1fr;padding:0 20px 60px}\n  .section{padding:60px 20px}\n  .split{grid-template-columns:1fr;gap:40px}\n  .split.flip{direction:ltr}\n  .trust-grid{grid-template-columns:1fr}\n  .pricing-wrap{grid-template-columns:1fr;max-width:380px;margin:0 auto}\n  .cta{padding:80px 20px 120px}\n  footer{padding:40px 20px}\n  .foot-inner{flex-direction:column;align-items:center;text-align:center}\n}\n"
+
+const PP_JS = "(function(){\n  const c=document.getElementById('bg'),gl=c.getContext('webgl')||c.getContext('experimental-webgl');\n  if(!gl)return;\n  function resize(){c.width=innerWidth;c.height=innerHeight;gl.viewport(0,0,c.width,c.height);}\n  resize();window.addEventListener('resize',resize);\n  const VS=`attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}`;\n  const FS=`precision highp float;uniform float uT;uniform vec2 uM,uR;uniform float uS;varying vec2 vU;\n  vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}\n  float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}\n  float fbm(vec2 p){float f=0.,a=.5,t=0.;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<6;i++){f+=a*n(p);t+=a;p=r*p*2.01;a*=.52;}return f/t;}\n  void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.08;vec2 m=uM;m.x*=ar;float md=length(uv-m);uv+=(m-uv)/(md*md+.08)*.024;\n  vec2 q=vec2(fbm(uv*1.7+t*.9),fbm(uv*1.7+vec2(5.2,1.3)+t*.74));vec2 r=vec2(fbm(uv*1.7+3.4*q+vec2(1.7,9.2)+t*.58),fbm(uv*1.7+3.4*q+vec2(8.3,2.8)+t*.42));float f=fbm(uv*1.7+3.4*r+t*.32);f+=uS*.1;f=clamp(f,0.,1.);\n  vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));col=mix(col,vec3(.96,.28,.55),smoothstep(.74,1.,f));\n  col+=vec3(.28,.06,.50)*exp(-md*2.0)*.8;vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.55,.0,1.);col+=.014;gl_FragColor=vec4(col,1.);}`;\n  function mkS(t,s){const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;}\n  const prog=gl.createProgram();gl.attachShader(prog,mkS(gl.VERTEX_SHADER,VS));gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);\n  const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);\n  const uT=gl.getUniformLocation(prog,'uT'),uM=gl.getUniformLocation(prog,'uM'),uR=gl.getUniformLocation(prog,'uR'),uS=gl.getUniformLocation(prog,'uS'),aP=gl.getAttribLocation(prog,'aP');\n  const mouse={x:.5,y:.5,tx:.5,ty:.5};\n  window.addEventListener('mousemove',e=>{mouse.tx=e.clientX/innerWidth;mouse.ty=1-e.clientY/innerHeight;});\n  let scroll=0;window.addEventListener('scroll',()=>{scroll=window.scrollY/(document.body.scrollHeight-innerHeight||1);},{passive:true});\n  let t=0;(function draw(){requestAnimationFrame(draw);t+=.012;mouse.x+=(mouse.tx-mouse.x)*.06;mouse.y+=(mouse.ty-mouse.y)*.06;gl.clearColor(.02,.03,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(prog);gl.uniform1f(uT,t);gl.uniform2f(uM,mouse.x,mouse.y);gl.uniform2f(uR,c.width,c.height);gl.uniform1f(uS,scroll);gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(aP);gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);})();\n})();\nconst obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('on');obs.unobserve(x.target);}}),{threshold:.1});\ndocument.querySelectorAll('.rv').forEach(el=>obs.observe(el));\nwindow.addEventListener('scroll',()=>{document.getElementById('nav').style.background=scrollY>60?'rgba(5,7,9,0.92)':'rgba(5,7,9,0.65)';},{passive:true});\nnew IntersectionObserver(entries=>{if(entries[0].isIntersecting){document.querySelectorAll('.ret-fill').forEach(f=>{f.style.width=f.dataset.w+'%';});}},{threshold:.4}).observe(document.querySelector('.ret-card'));\nvar hb=document.getElementById('hamburger'),mm=document.getElementById('mob-menu');\nif(hb&&mm){hb.addEventListener('click',function(){hb.classList.toggle('open');mm.classList.toggle('open');});}\nif(mm){mm.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){hb.classList.remove('open');mm.classList.remove('open');});});}\n"
+
+const PP_HTML = "<canvas id=\"bg\" style=\"position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none\"></canvas>\n<div id=\"app\">\n\n<nav id=\"nav\">\n  <a class=\"logo\" href=\"/\"><div class=\"logo-ring\"><div class=\"logo-spin\"></div><div class=\"logo-inner\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#3b82f6\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg></div></div><span class=\"logo-word\">Flashfo</span></a>\n  <div class=\"nav-links\">\n    <a href=\"/features\">Features</a><a href=\"/for-teachers\">For Teachers</a><a href=\"/for-parents\" class=\"active\">For Parents</a><a href=\"/pricing\">Pricing</a>\n  </div>\n  <div class=\"nav-btns\">\n    <button class=\"btn-ghost\">Sign in</button>\n    <button class=\"btn-cta\">Sign up free</button>\n    <button class=\"hamburger\" id=\"hamburger\"><span class=\"hb-line\"></span><span class=\"hb-line\"></span><span class=\"hb-line\"></span></button>\n  </div>\n</nav>\n<div class=\"mob-menu\" id=\"mob-menu\">\n  <a href=\"/features\">Features</a><a href=\"/for-teachers\">For Teachers</a><a href=\"/for-parents\" style=\"color:#2dd4bf\">For Parents</a><a href=\"/pricing\">Pricing</a>\n  <button class=\"mob-cta-btn\">Sign up free</button>\n</div>\n\n<!-- HERO -->\n<section class=\"hero\">\n  <div class=\"hero-badge\">Flashfo \u00b7 For Parents</div>\n  <h1><span class=\"hw\">Your child deserves help</span><br><span class=\"hg\">at 10pm on a Tuesday.</span></h1>\n  <p class=\"hero-sub\">Flashfo gives your child a personal AI study assistant that explains homework, builds revision materials, and helps them actually understand \u2014 not just copy. Available any time, for any subject.</p>\n  <div class=\"hero-btns\">\n    <button class=\"btn-primary\">Start 3-day free trial \u2192</button>\n    <button class=\"btn-outline\">See how it works</button>\n  </div>\n</section>\n\n<!-- STATS -->\n<div class=\"stats-grid rv\">\n  <div class=\"stat-card\"><div class=\"stat-num\">24/7</div><div class=\"stat-lbl\">homework help, any night of the week</div></div>\n  <div class=\"stat-card\"><div class=\"stat-num\">Any</div><div class=\"stat-lbl\">subject \u2014 math, science, history, English</div></div>\n  <div class=\"stat-card\"><div class=\"stat-num\">Free</div><div class=\"stat-lbl\">to start, with 15 AI sessions per month</div></div>\n  <div class=\"stat-card\"><div class=\"stat-num\">$7</div><div class=\"stat-lbl\">per month for unlimited everything</div></div>\n</div>\n\n<!-- HOMEWORK HELP -->\n<div class=\"section\">\n  <div class=\"glow-teal\"></div>\n  <div class=\"sec-inner\">\n    <div class=\"split\">\n      <div class=\"rv\">\n        <div class=\"eyebrow\">Homework Help</div>\n        <h2 class=\"sec-title\">Stuck on homework? Nova explains it step by step.</h2>\n        <p class=\"sec-body\">Your child types in the question or topic they're struggling with. Nova doesn't just give the answer \u2014 it walks through the reasoning so they actually understand and can do it again next time.</p>\n        <div class=\"feat-list\">\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Works for math, science, history, English, and more</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Explains at the right level \u2014 not too simple, not over their head</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Available at 10pm when you're exhausted and they're panicking</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">No judgment, infinite patience \u2014 asking again gets the same quality answer</div></div>\n        </div>\n      </div>\n      <div class=\"rv d2\">\n        <div class=\"nova-chat\">\n          <div class=\"chat-top\"><div class=\"nova-dot\"></div><span class=\"chat-nm\">Nova</span><span class=\"chat-status\">Online</span></div>\n          <div class=\"chat-msgs\">\n            <div class=\"msg u\"><div class=\"bub\">I don't get how to find the area of a triangle. My homework is due tomorrow</div></div>\n            <div class=\"msg n\"><div class=\"bub\">No worries! The formula is: <i class=\"hl\">Area = \u00bd \u00d7 base \u00d7 height</i><br><br>Think of it this way: a triangle is exactly half of a rectangle. That's why we multiply by \u00bd.<br><br>So if your triangle has a base of 8cm and height of 5cm:<br>\u00bd \u00d7 8 \u00d7 5 = <strong style=\"color:#5eead4\">20cm\u00b2</strong><br><br>Want me to work through one of your actual questions?</div></div>\n            <div class=\"msg u\"><div class=\"bub\">yes! it says the base is 12 and height is 7</div></div>\n            <div class=\"msg n\"><div class=\"bub\">\u00bd \u00d7 12 \u00d7 7 = <strong style=\"color:#5eead4\">42cm\u00b2 \u2713</strong><br><br>Try the next one yourself and I'll check it.</div></div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- REVISION MATERIALS -->\n<div class=\"section\" style=\"background:rgba(8,12,22,0.35)\">\n  <div class=\"glow-teal\"></div>\n  <div class=\"sec-inner\">\n    <div class=\"split flip\">\n      <div class=\"rv\">\n        <div class=\"eyebrow\">Revision Materials</div>\n        <h2 class=\"sec-title\">A full revision kit, built in seconds</h2>\n        <p class=\"sec-body\">Your child tells Nova what they're revising for \u2014 a test, an exam, a class topic \u2014 and Nova builds a complete set of flashcards, a quiz, and a study guide instantly. No prep needed from you.</p>\n        <div class=\"feat-list\">\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Flashcards to memorise key facts and definitions</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Practice quizzes to test themselves before the real thing</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Study guides that explain the topic clearly and completely</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Works across every subject at every school level</div></div>\n        </div>\n      </div>\n      <div class=\"rv d2\">\n        <div class=\"deck-card\">\n          <div class=\"dk-top\"><span class=\"dk-label\">Generated for Year 9 Biology</span><span class=\"dk-subject\">Cell Biology</span></div>\n          <div class=\"dk-heading\"><div class=\"dk-topic\">Cell division for my biology test next week</div><div class=\"dk-count\">15 flashcards ready</div></div>\n          <div class=\"dk-cards\">\n            <div class=\"fc-item\"><div class=\"fc-q-lbl\">Question</div><div class=\"fc-q-txt\">What is mitosis?</div><div class=\"fc-a-txt\">The division of a cell into two identical daughter cells, each with the same number of chromosomes as the parent.</div></div>\n            <div class=\"fc-item\"><div class=\"fc-q-lbl\">Question</div><div class=\"fc-q-txt\">What are the 4 stages of mitosis?</div><div class=\"fc-a-txt\">Prophase, Metaphase, Anaphase, Telophase \u2014 remember: PMAT.</div></div>\n            <div class=\"fc-item\"><div class=\"fc-q-lbl\">Question</div><div class=\"fc-q-txt\">What is the difference between mitosis and meiosis?</div><div class=\"fc-a-txt\">Mitosis produces 2 identical cells. Meiosis produces 4 genetically unique cells...</div></div>\n          </div>\n          <div class=\"fc-more\">+ 12 more cards</div>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- SMARTER REVISION -->\n<div class=\"section\">\n  <div class=\"glow-teal\" style=\"background:radial-gradient(ellipse,rgba(20,184,166,0.06),transparent 65%)\"></div>\n  <div class=\"sec-inner\">\n    <div class=\"split\">\n      <div class=\"rv\">\n        <div class=\"eyebrow\">Smarter Revision</div>\n        <h2 class=\"sec-title\">Studying more doesn't mean better grades. Studying right does.</h2>\n        <p class=\"sec-body\">Flashfo uses spaced repetition \u2014 the most evidence-backed revision technique. The cards your child struggles with come back more often. The ones they know fade out. Study time goes exactly where it matters.</p>\n        <div class=\"feat-list\">\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Proven to improve long-term recall vs re-reading notes</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Shorter, focused sessions \u2014 not hours of aimless revision</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Progress tracking shows exactly what they know and what needs work</div></div>\n        </div>\n      </div>\n      <div class=\"rv d2\">\n        <div class=\"ret-card\">\n          <div style=\"font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,0.22);margin-bottom:18px\">What revision looks like with Flashfo</div>\n          <div class=\"ret-row\">\n            <div class=\"ret-lbl\">Cramming the night before</div>\n            <div class=\"ret-track\"><div class=\"ret-fill\" data-w=\"32\" style=\"background:rgba(239,68,68,0.5)\"></div></div>\n            <div class=\"ret-pct\" style=\"color:#f87171\">32%</div>\n          </div>\n          <div style=\"font-size:10px;color:rgba(255,255,255,0.2);margin-bottom:16px;margin-left:204px\">retained after 1 week</div>\n          <div class=\"ret-row\">\n            <div class=\"ret-lbl\">Spaced revision with Flashfo</div>\n            <div class=\"ret-track\"><div class=\"ret-fill\" data-w=\"86\" style=\"background:linear-gradient(90deg,#14b8a6,#5eead4)\"></div></div>\n            <div class=\"ret-pct\" style=\"color:#2dd4bf\">86%</div>\n          </div>\n          <div style=\"font-size:10px;color:rgba(255,255,255,0.2);margin-bottom:20px;margin-left:204px\">retained after 1 week</div>\n          <div style=\"font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:10px\">After each card, they rate how well they knew it:</div>\n          <div class=\"rate-row\">\n            <button class=\"rate-btn\" style=\"color:#f87171;border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.06)\">Again</button>\n            <button class=\"rate-btn\" style=\"color:#fbbf24;border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.06)\">Hard</button>\n            <button class=\"rate-btn\" style=\"color:#60a5fa;border-color:rgba(59,130,246,0.3);background:rgba(59,130,246,0.06)\">Good</button>\n            <button class=\"rate-btn\" style=\"color:#2dd4bf;border-color:rgba(20,184,166,0.3);background:rgba(20,184,166,0.06)\">Easy</button>\n          </div>\n          <div style=\"font-size:11px;color:rgba(255,255,255,0.2);margin-top:12px\">Flashfo figures out when they need to see each card again</div>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- DESIGNED FOR STUDENTS -->\n<div class=\"section\" style=\"background:rgba(8,12,22,0.35)\">\n  <div class=\"sec-inner\">\n    <div style=\"text-align:center;margin-bottom:56px\" class=\"rv\">\n      <div class=\"eyebrow\" style=\"justify-content:center\">Designed for Students</div>\n      <h2 class=\"sec-title\">A study tool you can feel good about</h2>\n      <p style=\"font-size:16px;color:rgba(255,255,255,0.38);max-width:520px;margin:0 auto;line-height:1.7\">Flashfo is built for genuine learning \u2014 not shortcuts. Nova explains the why, not just the answer, so your child builds real understanding they can take into any exam.</p>\n    </div>\n    <div class=\"trust-grid rv d1\">\n      <div class=\"trust-card\">\n        <div class=\"trust-ico\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 20h9\"/><path d=\"M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z\"/></svg></div>\n        <div class=\"trust-nm\">Explains, doesn't just answer</div>\n        <div class=\"trust-d\">Nova walks through the reasoning, not just the result. Your child learns how to solve it \u2014 not just what the answer is.</div>\n      </div>\n      <div class=\"trust-card\">\n        <div class=\"trust-ico\"><svg viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 8v4l3 3\"/></svg></div>\n        <div class=\"trust-nm\">Any subject, any level</div>\n        <div class=\"trust-d\">Primary school times tables to AP exam chemistry \u2014 Nova adjusts to the right level automatically based on what they're studying.</div>\n      </div>\n      <div class=\"trust-card\">\n        <div class=\"trust-ico\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"/></svg></div>\n        <div class=\"trust-nm\">Focused on education</div>\n        <div class=\"trust-d\">Flashfo is built specifically for students. Nova stays focused on learning \u2014 helping your child study, nothing else.</div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- PRICING -->\n<div class=\"section\">\n  <div class=\"glow-teal\"></div>\n  <div class=\"sec-inner\">\n    <div style=\"text-align:center;margin-bottom:56px\" class=\"rv\">\n      <div class=\"eyebrow\" style=\"justify-content:center\">Simple, honest pricing</div>\n      <h2 class=\"sec-title\">Start free. Upgrade when you're ready.</h2>\n    </div>\n    <div class=\"pricing-wrap rv d1\">\n      <div class=\"pc pc-free\">\n        <div class=\"pc-tier\">Free Plan</div>\n        <div style=\"display:flex;align-items:flex-end;gap:4px;margin-bottom:4px\"><span class=\"pc-amt\">$0</span><span class=\"pc-per\">/mo</span></div>\n        <div class=\"pc-note\">No credit card needed</div>\n        <div class=\"pc-div\"></div>\n        <ul class=\"pc-feats\">\n          <li><div class=\"pc-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>15 AI study sessions per month</li>\n          <li><div class=\"pc-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>15 flashcard decks, quizzes, or guides</li>\n          <li><div class=\"pc-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Nova AI Tutor for homework questions</li>\n          <li><div class=\"pc-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Save up to 5 decks</li>\n        </ul>\n        <button class=\"pc-btn\">Get started free \u2192</button>\n      </div>\n      <div class=\"pc pc-pro\">\n        <div class=\"rec-badge\">Recommended for Families</div>\n        <div class=\"pc-tier\">Student Pro</div>\n        <div style=\"display:flex;align-items:flex-end;gap:4px;margin-bottom:4px\"><span class=\"pc-amt\">$7</span><span class=\"pc-per\">/mo</span></div>\n        <div class=\"pc-note\">Or $55/year \u00b7 includes a 3-day free trial</div>\n        <div class=\"pc-div\"></div>\n        <ul class=\"pc-feats\">\n          <li><div class=\"pc-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Unlimited AI flashcards, quizzes, guides and summaries</li>\n          <li><div class=\"pc-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Unlimited Nova AI Tutor conversations</li>\n          <li><div class=\"pc-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Spaced repetition, progress tracking, voice mode</li>\n        </ul>\n        <button class=\"pc-btn\">Start 3-day free trial \u2192</button>\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- CTA -->\n<div class=\"cta\">\n  <div class=\"cta-inner rv\">\n    <h2 class=\"cta-title\">Give them the help they deserve.</h2>\n    <p class=\"cta-sub\">Try Flashfo free for 3 days. Cancel any time.</p>\n    <div class=\"cta-btns\">\n      <button class=\"btn-primary\" style=\"font-size:17px;padding:18px 40px\">Start free trial \u2192</button>\n      <button class=\"btn-outline\" style=\"font-size:17px;padding:18px 36px\">View pricing</button>\n    </div>\n  </div>\n</div>\n\n<footer>\n  <div class=\"foot-inner\">\n    <a class=\"logo\" href=\"/\" style=\"text-decoration:none\">\n      <div style=\"width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#1e40af,#7c3aed);display:flex;align-items:center;justify-content:center\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"white\" style=\"animation:lp-rock 4s ease-in-out infinite\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg></div>\n      <span class=\"logo-word\">Flashfo</span>\n    </a>\n    <div class=\"foot-links\"><a href=\"#\">Privacy Policy</a><a href=\"#\">Terms of Service</a><a href=\"#\">Contact</a><a href=\"#\">Sign up free</a></div>\n    <div class=\"foot-copy\">\u00a9 2026 Flashfo. Built for students and teachers.</div>\n  </div>\n</footer>\n</div>"
+
 export default function ForParentsPage() {
-  const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    const id = 'flashfo-page-css'
-    if (document.getElementById(id)) return
-    const s = document.createElement('style')
-    s.id = id
-    s.textContent = '@keyframes nav-spin{to{transform:rotate(360deg)}} @keyframes card-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}} .c-anim{opacity:0;animation:card-in .42s cubic-bezier(.22,.68,0,1.2) forwards}'
-    document.head.appendChild(s)
-  }, [])
+    const style = document.createElement('style')
+    style.id = 'pp-css'
+    style.textContent = PP_CSS
+    document.head.appendChild(style)
 
-  const NAV_LINKS = [
-    {label:'Home',href:'/'},
-    {label:'Features',href:'/features'},
-    {label:'For Teachers',href:'/for-teachers'},
-    {label:'For Parents',href:'/for-parents'},
-    {label:'Pricing',href:'/pricing'},
-  ]
+    const script = document.createElement('script')
+    script.id = 'pp-js'
+    script.textContent = PP_JS
+    document.body.appendChild(script)
 
-  const S = {
-    page: {minHeight:'100vh',background:'#080c14',fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",color:'#e6edf3'},
-    section: {padding:'56px 24px',maxWidth:900,margin:'0 auto'},
-    badge: (col) => ({display:'inline-flex',alignItems:'center',gap:5,borderRadius:20,padding:'4px 12px',fontSize:11,fontWeight:700,letterSpacing:'.05em',background:'rgba('+col+',.08)',border:'1px solid rgba('+col+',.2)',color:'rgb('+col+')',marginBottom:14}),
-    tick: {display:'flex',alignItems:'flex-start',gap:10,fontSize:13,color:'#8b949e',marginBottom:10,lineHeight:1.5},
-    tickDot: (col) => ({width:20,height:20,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1,background:'rgba('+col+',.15)'}),
-  }
+    document.querySelectorAll('.btn-primary, .btn-cta, .mob-cta-btn, .pc-pro .pc-btn').forEach(btn => {
+      btn.addEventListener('click', () => router.push('/signup'))
+    })
+    document.querySelectorAll('.btn-ghost').forEach(btn => {
+      btn.addEventListener('click', () => router.push('/login'))
+    })
+    document.querySelectorAll('.btn-outline, .pc-free .pc-btn').forEach(btn => {
+      btn.addEventListener('click', () => router.push('/pricing'))
+    })
 
-  const CheckIcon = ({col}) => (
-    <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-      <path d="M2 7l3 3 7-7" stroke={'rgb('+col+')'} strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  )
+    return () => {
+      const s = document.getElementById('pp-css')
+      const sc = document.getElementById('pp-js')
+      if (s) s.remove()
+      if (sc) sc.remove()
+    }
+  }, [router])
 
   return (
-    <div style={S.page}>
-      <nav style={{background:'#0d1117',borderBottom:'1px solid #21262d',padding:'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:56,position:'sticky',top:0,zIndex:50}}>
-        <style>{`
-          @media(max-width:768px){.spnl{display:none!important}.spcta{display:none!important}.sphb{display:flex!important}}
-          .spnl{display:flex}.spcta{display:inline-flex}.sphb{display:none;flex-direction:column;gap:5px;cursor:pointer;background:transparent;border:none;padding:6px;outline:none}
-          .sphb-line{width:20px;height:2px;background:#8b949e;border-radius:1px;transition:transform .2s,opacity .2s;display:block}
-        
-          @media(max-width:768px){
-            .mg2{grid-template-columns:1fr!important}
-            .mg4{grid-template-columns:1fr 1fr!important;gap:10px!important}
-            .mg3{grid-template-columns:1fr!important}
-            .mob-section{padding:40px 16px!important}
-          }`}</style>
-          <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',flexShrink:0}}>
-            <div style={{position:'relative',width:28,height:28}}>
-              <div style={{position:'absolute',top:-2,left:-2,right:-2,bottom:-2,borderRadius:9,background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)',animation:'nav-spin 3s linear infinite'}}/>
-              <div style={{position:'absolute',top:2,left:2,right:2,bottom:2,background:'#0d1117',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="#3b82f6"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
-              </div>
-            </div>
-            <span style={{fontSize:15,fontWeight:700,color:'#e6edf3'}}>Flashfo</span>
-          </a>
-          <div className="spnl" style={{gap:20,alignItems:'center',flex:1,justifyContent:'center'}}>
-            {[{l:'Home',h:'/'},{l:'Features',h:'/features'},{l:'For Teachers',h:'/for-teachers'},{l:'For Parents',h:'/for-parents'},{l:'Pricing',h:'/pricing'}].map(({l,h})=>(
-              <a key={l} href={h} style={{fontSize:13,color:h==='/for-parents'?'#60a5fa':'#8b949e',fontWeight:h==='/for-parents'?600:400,textDecoration:'none',borderBottom:h==='/for-parents'?'2px solid #60a5fa':'none',paddingBottom:2}}>{l}</a>
-            ))}
-          </div>
-          <a href="/auth?mode=signup" className="spcta" style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:700,padding:'8px 16px',textDecoration:'none',flexShrink:0}}>Sign up free</a>
-          <button className="sphb" onClick={()=>setMenuOpen(o=>!o)} aria-label="Menu">
-            <span className="sphb-line" style={{transform:menuOpen?'rotate(45deg) translateY(7px)':'none'}}/>
-            <span className="sphb-line" style={{opacity:menuOpen?0:1}}/>
-            <span className="sphb-line" style={{transform:menuOpen?'rotate(-45deg) translateY(-7px)':'none'}}/>
-          </button>
-        </nav>
-        {menuOpen && (
-          <div style={{background:'#0d1117',borderBottom:'1px solid #21262d',position:'sticky',top:56,zIndex:49}}>
-            {[{l:'Home',h:'/'},{l:'Features',h:'/features'},{l:'For Teachers',h:'/for-teachers'},{l:'For Parents',h:'/for-parents'},{l:'Pricing',h:'/pricing'}].map(({l,h})=>(
-              <a key={l} href={h} onClick={()=>setMenuOpen(false)}
-                style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px',borderBottom:'1px solid #21262d',fontSize:15,color:'#e6edf3',textDecoration:'none',fontWeight:500}}>
-                {l} <span style={{color:'#484f58'}}>{'›'}</span>
-              </a>
-            ))}
-            <a href="/auth?mode=signup" style={{display:'block',margin:'12px 16px 16px',padding:'13px 0',textAlign:'center',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:15,fontWeight:700,borderRadius:9,textDecoration:'none'}}>Sign up free</a>
-          </div>
-        )}
-
-      {/* HERO */}
-      <div style={{padding:'64px 24px 40px',textAlign:'center',maxWidth:740,margin:'0 auto'}}>
-        <div style={{...S.badge('96,165,250'),marginBottom:18,justifyContent:'center'}}>
-          FLASHFO - FOR PARENTS
-        </div>
-        <h1 style={{fontSize:44,fontWeight:800,letterSpacing:'-.03em',lineHeight:1.1,marginBottom:16,color:'#e6edf3'}}>
-          Your child deserves help<br/>
-          <span style={{background:'linear-gradient(90deg,#60a5fa,#a78bfa)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>at 10pm on a Tuesday.</span>
-        </h1>
-        <p style={{fontSize:16,color:'#8b949e',lineHeight:1.7,maxWidth:540,margin:'0 auto 28px'}}>
-          Flashfo gives your child a personal AI study assistant that explains homework, builds revision materials, and helps them actually understand — not just copy. Available any time, for any subject.
-        </p>
-        <div style={{display:'flex',gap:12,justifyContent:'center'}}>
-          <button onClick={()=>router.push('/auth?mode=signup')} style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:10,fontSize:14,fontWeight:700,cursor:'pointer',padding:'12px 28px',letterSpacing:'-.01em'}}>
-            Start 3-day free trial →
-          </button>
-          <button onClick={()=>router.push('/features')} style={{background:'transparent',color:'#8b949e',border:'1px solid #30363d',borderRadius:10,fontSize:13,cursor:'pointer',padding:'12px 20px'}}>
-            See how it works
-          </button>
-        </div>
-      </div>
-
-      {/* STATS */}
-      <div style={{maxWidth:900,margin:'0 auto 56px',padding:'0 24px'}}>
-        <div className="mg4" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
-          {[
-            {num:'24/7',label:'homework help, any night of the week',col:'#60a5fa'},
-            {num:'Any',label:'subject — math, science, history, English',col:'#e6edf3'},
-            {num:'Free',label:'to start, with 15 AI sessions per month',col:'#e6edf3'},
-            {num:'$7',label:'per month for unlimited everything',col:'#e6edf3'},
-          ].map(({num,label,col})=>(
-            <div key={num} style={{textAlign:'center',background:'#161b22',border:'1px solid '+(col==='#60a5fa'?'rgba(96,165,250,.2)':'#21262d'),borderRadius:12,padding:'20px 12px'}}>
-              <div style={{fontSize:34,fontWeight:800,letterSpacing:'-.03em',color:col}}>{num}</div>
-              <div style={{fontSize:12,color:'#8b949e',marginTop:5,lineHeight:1.4}}>{label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* FEATURE 1: HOMEWORK HELP */}
-      <div className="mob-section" style={{...S.section,paddingTop:0}}>
-        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
-          <div>
-            <div style={S.badge('96,165,250')}>HOMEWORK HELP</div>
-            <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Stuck on homework? Nova explains it step by step.</h2>
-            <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Your child types in the question or topic they are struggling with. Nova does not just give the answer — it walks through the reasoning so they actually understand and can do it again next time.</p>
-            <div style={S.tick}><div style={S.tickDot('96,165,250')}><CheckIcon col="96,165,250"/></div>Works for math, science, history, English, and more</div>
-            <div style={S.tick}><div style={S.tickDot('96,165,250')}><CheckIcon col="96,165,250"/></div>Explains at the right level — not too simple, not over their head</div>
-            <div style={S.tick}><div style={S.tickDot('96,165,250')}><CheckIcon col="96,165,250"/></div>Available at 10pm when you are exhausted and they are panicking</div>
-            <div style={S.tick}><div style={S.tickDot('96,165,250')}><CheckIcon col="96,165,250"/></div>No judgment, infinite patience — asking again gets the same quality answer</div>
-          </div>
-          <div style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,overflow:'hidden'}}>
-            <div style={{padding:'12px 16px',borderBottom:'1px solid #21262d',display:'flex',alignItems:'center',gap:8}}>
-              <div style={{width:24,height:24,borderRadius:'50%',background:'#161b22',border:'1px solid #30363d',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="#a78bfa" strokeWidth="1.3"/>
-                  <circle cx="12" cy="12" r="6" stroke="#a78bfa" strokeWidth="1.3"/>
-                  <circle cx="12" cy="12" r="2" fill="#a78bfa"/>
-                </svg>
-              </div>
-              <span style={{fontSize:12,fontWeight:600,color:'#e6edf3'}}>Nova</span>
-              <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:5}}>
-                <div style={{width:6,height:6,borderRadius:'50%',background:'#34d399'}}/>
-                <span style={{fontSize:11,color:'#34d399'}}>Online</span>
-              </div>
-            </div>
-            <div style={{padding:14,display:'flex',flexDirection:'column',gap:10}}>
-              <div style={{alignSelf:'flex-end',background:'#21262d',borderRadius:'12px 12px 2px 12px',padding:'10px 14px',fontSize:12,color:'#e6edf3',maxWidth:'80%'}}>
-                I do not get how to find the area of a triangle. My homework is due tomorrow
-              </div>
-              <div style={{display:'flex',gap:8,alignItems:'flex-start'}}>
-                <div style={{width:22,height:22,borderRadius:'50%',background:'#161b22',border:'1px solid #30363d',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#a78bfa" strokeWidth="1.3"/><circle cx="12" cy="12" r="6" stroke="#a78bfa" strokeWidth="1.3"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
-                </div>
-                <div style={{background:'#161b22',border:'1px solid #21262d',borderRadius:'2px 12px 12px 12px',padding:'12px 14px',fontSize:12,color:'#8b949e',lineHeight:1.7,maxWidth:'85%'}}>
-                  No worries! The formula is: <span style={{color:'#60a5fa',fontWeight:600}}>Area = ½ × base × height</span><br/><br/>
-                  Think of it this way: a triangle is exactly half of a rectangle. That's why we multiply by ½.<br/><br/>
-                  So if your triangle has a base of 8cm and height of 5cm: ½ × 8 × 5 = <span style={{color:'#34d399',fontWeight:600}}>20cm²</span><br/><br/>
-                  Want me to work through one of your actual questions?
-                </div>
-              </div>
-              <div style={{alignSelf:'flex-end',background:'#21262d',borderRadius:'12px 12px 2px 12px',padding:'10px 14px',fontSize:12,color:'#e6edf3',maxWidth:'80%'}}>
-                yes! it says the base is 12 and height is 7
-              </div>
-              <div style={{display:'flex',gap:8,alignItems:'flex-start'}}>
-                <div style={{width:22,height:22,borderRadius:'50%',background:'#161b22',border:'1px solid #30363d',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#a78bfa" strokeWidth="1.3"/><circle cx="12" cy="12" r="6" stroke="#a78bfa" strokeWidth="1.3"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
-                </div>
-                <div style={{background:'#161b22',border:'1px solid #21262d',borderRadius:'2px 12px 12px 12px',padding:'12px 14px',fontSize:12,color:'#8b949e',lineHeight:1.7}}>
-                  ½ × 12 × 7 = <span style={{color:'#34d399',fontWeight:600}}>42cm²</span> ✓<br/>
-                  Try the next one yourself and I'll check it.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* FEATURE 2: REVISION MATERIALS */}
-      <div style={{background:'#161b22',borderTop:'1px solid #21262d',borderBottom:'1px solid #21262d',padding:'56px 24px'}}>
-        <div style={{maxWidth:900,margin:'0 auto',display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'center'}}>
-          <div style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,padding:16}}>
-            <div style={{fontSize:10,color:'#484f58',letterSpacing:'.07em',marginBottom:8}}>GENERATED FOR YEAR 9 BIOLOGY</div>
-            <div style={{background:'#161b22',border:'1px solid #30363d',borderRadius:8,padding:'9px 12px',fontSize:12,color:'#e6edf3',marginBottom:10}}>Cell division for my biology test next week</div>
-            <div style={{fontSize:10,color:'#484f58',letterSpacing:'.07em',marginBottom:8}}>15 FLASHCARDS READY</div>
-            {[
-              {q:'What is mitosis?',a:'The division of a cell into two identical daughter cells, each with the same number of chromosomes as the parent.',delay:0},
-              {q:'What are the 4 stages of mitosis?',a:'Prophase, Metaphase, Anaphase, Telophase — remember: PMAT.',delay:120},
-              {q:'What is the difference between mitosis and meiosis?',a:'Mitosis produces 2 identical cells. Meiosis produces 4 genetically unique cells...',delay:240,dim:true},
-            ].map(({q,a,delay,dim})=>(
-              <div key={q} className="c-anim" style={{background:'#161b22',border:'1px solid #21262d',borderRadius:8,padding:'10px 12px',marginBottom:6,animationDelay:delay+'ms',opacity:dim?0.6:1}}>
-                <div style={{fontSize:11,fontWeight:600,color:'#e6edf3',marginBottom:4}}>{q}</div>
-                <div style={{fontSize:10,color:'#8b949e',paddingTop:5,borderTop:'1px solid #21262d',lineHeight:1.5}}>{a}</div>
-              </div>
-            ))}
-          </div>
-          <div>
-            <div style={S.badge('167,139,250')}>REVISION MATERIALS</div>
-            <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>A full revision kit, built in seconds</h2>
-            <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Your child tells Nova what they are revising for — a test, an exam, a class topic — and Nova builds a complete set of flashcards, a quiz, and a study guide instantly. No prep needed from you.</p>
-            <div style={S.tick}><div style={S.tickDot('167,139,250')}><CheckIcon col="167,139,250"/></div>Flashcards to memorise key facts and definitions</div>
-            <div style={S.tick}><div style={S.tickDot('167,139,250')}><CheckIcon col="167,139,250"/></div>Practice quizzes to test themselves before the real thing</div>
-            <div style={S.tick}><div style={S.tickDot('167,139,250')}><CheckIcon col="167,139,250"/></div>Study guides that explain the topic clearly and completely</div>
-            <div style={S.tick}><div style={S.tickDot('167,139,250')}><CheckIcon col="167,139,250"/></div>Works across every subject at every school level</div>
-          </div>
-        </div>
-      </div>
-
-      {/* FEATURE 3: SMARTER REVISION */}
-      <div style={S.section}>
-        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'center'}}>
-          <div>
-            <div style={S.badge('52,211,153')}>SMARTER REVISION</div>
-            <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Studying more does not mean better grades. Studying right does.</h2>
-            <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Flashfo uses spaced repetition — the most evidence-backed revision technique. The cards your child struggles with come back more often. The ones they know fade out. Study time goes exactly where it matters.</p>
-            <div style={S.tick}><div style={S.tickDot('52,211,153')}><CheckIcon col="52,211,153"/></div>Proven to improve long-term recall vs re-reading notes</div>
-            <div style={S.tick}><div style={S.tickDot('52,211,153')}><CheckIcon col="52,211,153"/></div>Shorter, focused sessions — not hours of aimless revision</div>
-            <div style={S.tick}><div style={S.tickDot('52,211,153')}><CheckIcon col="52,211,153"/></div>Progress tracking shows exactly what they know and what needs work</div>
-          </div>
-          <div style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,padding:18}}>
-            <div style={{fontSize:13,fontWeight:700,color:'#e6edf3',marginBottom:16}}>What revision looks like with Flashfo</div>
-            {[
-              {label:'Cramming the night before',pct:32,col:'#f87171',pctLabel:'32% retained after 1 week'},
-              {label:'Spaced revision with Flashfo',pct:86,col:'#34d399',pctLabel:'86% retained after 1 week'},
-            ].map(({label,pct,col,pctLabel})=>(
-              <div key={label} style={{marginBottom:14}}>
-                <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:5}}>
-                  <span style={{color:'#8b949e'}}>{label}</span>
-                  <span style={{color:col,fontWeight:700}}>{pctLabel}</span>
-                </div>
-                <div style={{height:9,background:'#21262d',borderRadius:5,overflow:'hidden'}}>
-                  <div style={{width:pct+'%',height:'100%',background:col,borderRadius:5}}/>
-                </div>
-              </div>
-            ))}
-            <div style={{borderTop:'1px solid #21262d',paddingTop:14,marginTop:4}}>
-              <div style={{fontSize:12,color:'#8b949e',marginBottom:10}}>After each card, they rate how well they knew it:</div>
-              <div style={{display:'flex',gap:6}}>
-                {['Again','Hard','Good','Easy'].map((l,i)=>(
-                  <div key={l} style={{flex:1,textAlign:'center',padding:'7px 0',borderRadius:7,fontSize:11,fontWeight:700,background:['rgba(239,68,68,.1)','rgba(245,158,11,.1)','rgba(34,197,94,.1)','rgba(37,99,235,.1)'][i],color:['#f87171','#f59e0b','#4ade80','#3b82f6'][i]}}>
-                    {l}
-                  </div>
-                ))}
-              </div>
-              <div style={{marginTop:8,fontSize:11,color:'#484f58',textAlign:'center'}}>Flashfo figures out when they need to see each card again</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* DESIGNED FOR KIDS */}
-      <div style={{background:'#161b22',borderTop:'1px solid #21262d',borderBottom:'1px solid #21262d',padding:'56px 24px'}}>
-        <div style={{maxWidth:900,margin:'0 auto'}}>
-          <div style={{textAlign:'center',marginBottom:28}}>
-            <div style={{...S.badge('37,99,235'),justifyContent:'center'}}>DESIGNED FOR STUDENTS</div>
-            <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',color:'#e6edf3',marginBottom:10}}>A study tool you can feel good about</h2>
-            <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,maxWidth:520,margin:'0 auto'}}>Flashfo is built for genuine learning — not shortcuts. Nova explains the why, not just the answer, so your child builds real understanding they can take into any exam.</p>
-          </div>
-          <div className="mg3" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-            {[
-              {t:'Explains, does not just answer',d:'Nova walks through the reasoning, not just the result. Your child learns how to solve it — not just what the answer is.',c:'#3b82f6'},
-              {t:'Any subject, any level',d:'Primary school times tables to AP exam chemistry — Nova adjusts to the right level automatically based on what they are studying.',c:'#a78bfa'},
-              {t:'Focused on education',d:'Flashfo is built specifically for students. Nova stays focused on learning — helping your child study, nothing else.',c:'#34d399'},
-            ].map(({t,d,c})=>(
-              <div key={t} style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,padding:'18px'}}>
-                <div style={{width:8,height:8,borderRadius:'50%',background:c,marginBottom:10}}/>
-                <div style={{fontSize:13,fontWeight:700,color:'#e6edf3',marginBottom:6}}>{t}</div>
-                <div style={{fontSize:12,color:'#8b949e',lineHeight:1.6}}>{d}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* PRICING */}
-      <div style={{padding:'56px 24px',maxWidth:900,margin:'0 auto'}}>
-        <div style={{textAlign:'center',marginBottom:28}}>
-          <h2 style={{fontSize:28,fontWeight:800,letterSpacing:'-.02em',color:'#e6edf3',marginBottom:8}}>Simple, honest pricing</h2>
-          <p style={{fontSize:14,color:'#8b949e'}}>Start free. Upgrade when you are ready.</p>
-        </div>
-        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-          {/* Free plan */}
-          <div style={{background:'#161b22',border:'1px solid #21262d',borderRadius:14,padding:'22px 24px'}}>
-            <div style={{fontSize:12,fontWeight:700,color:'#484f58',letterSpacing:'.07em',marginBottom:10}}>FREE PLAN</div>
-            <div style={{display:'flex',alignItems:'baseline',gap:4,marginBottom:4}}>
-              <span style={{fontSize:38,fontWeight:800,color:'#e6edf3',letterSpacing:'-.03em'}}>$0</span>
-              <span style={{fontSize:14,color:'#8b949e'}}>/mo</span>
-            </div>
-            <div style={{fontSize:12,color:'#8b949e',marginBottom:16}}>15 AI study sessions per month — enough to try it properly</div>
-            {['15 flashcard decks, quizzes, or guides per month','Nova AI Tutor for homework questions','Save up to 5 decks'].map(t=>(
-              <div key={t} style={{display:'flex',alignItems:'flex-start',gap:10,fontSize:13,color:'#8b949e',marginBottom:8,lineHeight:1.5}}>
-                <div style={{width:20,height:20,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,background:'rgba(52,211,153,.15)'}}>
-                  <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                </div>
-                {t}
-              </div>
-            ))}
-            <button onClick={()=>router.push('/auth?mode=signup')} style={{width:'100%',marginTop:16,padding:'10px 0',borderRadius:9,border:'1px solid #30363d',background:'transparent',color:'#8b949e',fontSize:13,fontWeight:600,cursor:'pointer'}}>
-              Get started free →
-            </button>
-          </div>
-          {/* Student Pro */}
-          <div style={{background:'#161b22',border:'2px solid rgba(96,165,250,.3)',borderRadius:14,padding:'22px 24px',position:'relative'}}>
-            <div style={{position:'absolute',top:-12,left:20,background:'#60a5fa',color:'#fff',fontSize:10,fontWeight:700,padding:'3px 10px',borderRadius:20}}>
-              RECOMMENDED FOR FAMILIES
-            </div>
-            <div style={{fontSize:12,fontWeight:700,color:'#484f58',letterSpacing:'.07em',marginBottom:10}}>STUDENT PRO</div>
-            <div style={{display:'flex',alignItems:'baseline',gap:4,marginBottom:4}}>
-              <span style={{fontSize:38,fontWeight:800,color:'#e6edf3',letterSpacing:'-.03em'}}>$7</span>
-              <span style={{fontSize:14,color:'#8b949e'}}>/mo</span>
-            </div>
-            <div style={{fontSize:12,color:'#8b949e',marginBottom:16}}>Or $55/year · includes a 3-day free trial</div>
-            {['Unlimited AI flashcards, quizzes, guides and summaries','Unlimited Nova AI Tutor conversations','Spaced repetition, progress tracking, voice mode'].map(t=>(
-              <div key={t} style={{display:'flex',alignItems:'flex-start',gap:10,fontSize:13,color:'#8b949e',marginBottom:8,lineHeight:1.5}}>
-                <div style={{width:20,height:20,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,background:'rgba(96,165,250,.15)'}}>
-                  <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="#60a5fa" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                </div>
-                {t}
-              </div>
-            ))}
-            <button onClick={()=>router.push('/auth?mode=signup')} style={{width:'100%',marginTop:16,padding:'11px 0',borderRadius:9,border:'none',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer',letterSpacing:'-.01em'}}>
-              Start 3-day free trial →
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* BOTTOM CTA */}
-      <div style={{background:'linear-gradient(135deg,rgba(96,165,250,.08),rgba(167,139,250,.08))',borderTop:'1px solid #21262d',padding:'56px 24px',textAlign:'center'}}>
-        <div style={{maxWidth:500,margin:'0 auto'}}>
-          <h2 style={{fontSize:32,fontWeight:800,letterSpacing:'-.02em',color:'#e6edf3',marginBottom:10}}>Give them the help they deserve.</h2>
-          <p style={{fontSize:15,color:'#8b949e',marginBottom:24}}>Try Flashfo free for 3 days. Cancel any time.</p>
-          <button onClick={()=>router.push('/auth?mode=signup')} style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:10,fontSize:15,fontWeight:700,cursor:'pointer',padding:'14px 36px',letterSpacing:'-.01em'}}>
-            Start free trial →
-          </button>
-        </div>
-      </div>
-    </div>
+    <div
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: PP_HTML }}
+    />
   )
 }
