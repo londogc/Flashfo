@@ -17,11 +17,11 @@ export default function PricingPage() {
     script.id = 'pg-js'
     script.textContent = PG_JS
     document.body.appendChild(script)
-    document.querySelectorAll('.pc-student .pc-btn, .btn-cta, .mob-cta-btn').forEach(b => b.addEventListener('click', () => router.push('/signup')))
-    document.querySelectorAll('.pc-teacher .pc-btn').forEach(b => b.addEventListener('click', () => router.push('/signup')))
+    document.querySelectorAll('.pc-student .pc-btn, .btn-cta, .mob-cta-btn').forEach(b => b.addEventListener('click', () => router.push('/auth')))
+    document.querySelectorAll('.pc-teacher .pc-btn').forEach(b => b.addEventListener('click', () => router.push('/auth')))
     document.querySelectorAll('.pc-school .pc-btn').forEach(b => b.addEventListener('click', () => router.push('/contact')))
-    document.querySelectorAll('.free-btn').forEach(b => b.addEventListener('click', () => router.push('/signup')))
-    document.querySelectorAll('.btn-ghost').forEach(b => b.addEventListener('click', () => router.push('/login')))
+    document.querySelectorAll('.free-btn').forEach(b => b.addEventListener('click', () => router.push('/auth')))
+    document.querySelectorAll('.btn-ghost').forEach(b => b.addEventListener('click', () => router.push('/auth')))
     return () => {
       document.getElementById('pg-css')?.remove()
       document.getElementById('pg-js')?.remove()
