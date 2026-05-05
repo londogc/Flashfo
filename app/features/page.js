@@ -1,329 +1,49 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+const FP_CSS = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml{scroll-behavior:smooth;overflow-x:hidden}\nbody{overflow-x:hidden;font-family:'Inter',-apple-system,sans-serif;background:#050709;color:#e2e8f0;overflow-x:hidden}\n#bg{position:fixed;inset:0;z-index:0;pointer-events:none}\n#app{position:relative;z-index:1}\n\n/* NAV */\nnav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 48px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,7,9,0.65);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.07);transition:background .3s}\n.logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}\n.logo-ring{position:relative;width:34px;height:34px;flex-shrink:0}\n.logo-spin{position:absolute;inset:-2px;border-radius:10px;background:conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6);animation:lp-spin 3s linear infinite}\n.logo-inner{position:absolute;inset:2px;border-radius:7px;background:#080b12;display:flex;align-items:center;justify-content:center}\n.logo-inner svg{width:14px;height:14px}\n.logo-word{font-size:17px;font-weight:800;color:#e2e8f0;letter-spacing:-.02em}\n.nav-links{display:flex;gap:28px}\n.nav-links a{font-size:14px;font-weight:500;color:rgba(255,255,255,0.5);text-decoration:none;transition:color .2s}\n.nav-links a:hover,.nav-links a.active{color:#e2e8f0}\n.nav-btns{display:flex;gap:12px;align-items:center}\n.btn-ghost{font-size:14px;font-weight:600;color:rgba(255,255,255,0.5);background:none;border:none;cursor:pointer;font-family:inherit;transition:color .2s}\n.btn-ghost:hover{color:#e2e8f0}\n.btn-cta{padding:9px 22px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 4px 16px rgba(99,102,241,0.4);transition:all .15s}\n.btn-cta:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(99,102,241,0.55)}\n@keyframes lp-spin{100%{transform:rotate(360deg)}}\n@keyframes lp-rock{0%,100%{transform:rotate(-4deg) scale(1)}50%{transform:rotate(4deg) scale(1.08)}}\n\n/* HERO */\n.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:130px 32px 80px;text-align:center;position:relative}\n.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:100px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:32px;backdrop-filter:blur(12px);animation:fade-up .8s .1s both}\n@keyframes fade-up{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}\n.hero h1{font-size:clamp(44px,7vw,90px);font-weight:900;letter-spacing:-.045em;line-height:1.08;margin-bottom:24px;padding-bottom:.2em;overflow:visible;animation:line-up .9s .15s both}\n.hero h1 span.w{color:#e2e8f0}\n.hero h1 span.g{background:linear-gradient(135deg,#818cf8,#a78bfa 40%,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}\n@keyframes line-up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}\n.hero-sub{font-size:clamp(16px,2vw,20px);color:rgba(255,255,255,0.42);max-width:560px;line-height:1.7;margin-bottom:44px;animation:line-up 1s .35s both}\n.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:line-up 1s .5s both}\n.btn-primary{padding:16px 34px;border-radius:14px;border:none;cursor:pointer;font-family:inherit;font-size:16px;font-weight:700;color:#fff;background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 8px 32px rgba(99,102,241,0.5);position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s}\n.btn-primary::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent);transform:translateX(-100%);animation:btn-shine 2.8s ease infinite}\n@keyframes btn-shine{0%{transform:translateX(-100%)}55%,100%{transform:translateX(200%)}}\n.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 44px rgba(99,102,241,0.65)}\n.btn-outline{padding:16px 34px;border-radius:14px;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);font-size:16px;font-weight:600;backdrop-filter:blur(16px);transition:all .15s}\n.btn-outline:hover{background:rgba(255,255,255,0.13);color:#fff}\n\n/* STATS */\n.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:900px;margin:0 auto;padding:0 48px 80px;animation:line-up 1s .65s both}\n.stat-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:20px;padding:28px 20px;text-align:center;backdrop-filter:blur(16px);transition:all .3s;position:relative;overflow:hidden}\n.stat-card::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(129,140,248,0.5),transparent)}\n.stat-card:hover{background:rgba(255,255,255,0.07);transform:translateY(-3px)}\n.stat-num{font-size:clamp(36px,5vw,60px);font-weight:900;letter-spacing:-.04em;background:linear-gradient(135deg,#e2e8f0,#a5b4fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:10px}\n.stat-lbl{font-size:13px;color:rgba(255,255,255,0.38);line-height:1.5}\n\n/* SECTIONS */\n.section{padding:100px 48px;position:relative}\n.sec-inner{max-width:1100px;margin:0 auto}\n.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#818cf8;margin-bottom:14px}\n.eyebrow::before{content:'';width:24px;height:1.5px;background:linear-gradient(90deg,#6366f1,transparent)}\n.sec-title{font-size:clamp(32px,4.5vw,56px);font-weight:800;letter-spacing:-.04em;line-height:1.05;margin-bottom:18px;color:#e2e8f0}\n.sec-body{font-size:17px;color:rgba(255,255,255,0.4);line-height:1.75;max-width:500px;margin-bottom:36px}\n.split{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}\n.split.flip{direction:rtl}\n.split.flip>*{direction:ltr}\n\n/* REVEAL */\n.rv{opacity:0;transform:translateY(32px);transition:opacity .85s cubic-bezier(.23,1,.32,1),transform .85s cubic-bezier(.23,1,.32,1)}\n.rv.d1{transition-delay:.1s}.rv.d2{transition-delay:.2s}.rv.d3{transition-delay:.3s}\n.rv.on{opacity:1;transform:none}\n\n/* STEPS */\n.steps{display:flex;flex-direction:column;gap:16px;margin-bottom:32px}\n.step{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);transition:all .2s}\n.step:hover{background:rgba(255,255,255,0.07);transform:translateX(4px)}\n.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;background:linear-gradient(135deg,rgba(99,102,241,0.3),rgba(124,58,237,0.3));border:1px solid rgba(129,140,248,0.3);color:#a5b4fc}\n.step-n{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:3px}\n.step-d{font-size:12px;color:rgba(255,255,255,0.38)}\n\n/* FLASHCARD DEMO */\n.fc-demo{background:rgba(8,12,22,0.88);border:1px solid rgba(255,255,255,0.1);border-radius:20px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.6);backdrop-filter:blur(24px)}\n.fc-top{padding:12px 18px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03)}\n.fc-topic{font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.08em}\n.fc-count{font-size:11px;font-weight:700;color:#818cf8;background:rgba(99,102,241,0.12);padding:3px 10px;border-radius:20px;border:1px solid rgba(99,102,241,0.22)}\n.fc-card{margin:20px;border-radius:14px;overflow:hidden}\n.fc-front{background:linear-gradient(145deg,#16112e,#100c22);border:1px solid rgba(129,140,248,0.25);padding:22px;position:relative}\n.fc-front::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(99,102,241,0.2),transparent 65%);pointer-events:none}\n.fc-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#818cf8;background:rgba(129,140,248,0.1);border:1px solid rgba(129,140,248,0.2);padding:3px 10px;border-radius:100px;display:inline-block;margin-bottom:12px}\n.fc-q{font-size:15px;font-weight:700;color:#e2e8f0;line-height:1.4;margin-bottom:10px}\n.fc-a{font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6}\n.fc-divider{height:1px;background:rgba(255,255,255,0.06);margin:0 20px}\n.fc-more{padding:14px 20px;display:flex;gap:8px}\n.fc-chip{font-size:11px;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:5px 10px}\n\n/* RETENTION */\n.retention-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:18px;padding:24px;margin-bottom:20px}\n.ret-row{display:flex;align-items:center;gap:14px;margin-bottom:14px}\n.ret-label{font-size:12px;color:rgba(255,255,255,0.45);width:180px;flex-shrink:0}\n.ret-track{flex:1;height:10px;background:rgba(255,255,255,0.07);border-radius:5px;overflow:hidden}\n.ret-fill{height:100%;border-radius:5px;transition:width 1.8s cubic-bezier(.23,1,.32,1);width:0}\n.ret-pct{font-size:13px;font-weight:800;min-width:36px;text-align:right}\n.rate-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}\n.rate-btn{padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;border:1px solid;cursor:pointer;font-family:inherit;transition:all .2s}\n\n/* QUIZ DEMO */\n.quiz-card{background:rgba(8,12,22,0.88);border:1px solid rgba(255,255,255,0.1);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5);backdrop-filter:blur(24px)}\n.quiz-top{padding:12px 18px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:space-between}\n.quiz-prog{font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:.06em;text-transform:uppercase}\n.quiz-subj{font-size:11px;font-weight:600;color:#818cf8;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);padding:3px 10px;border-radius:20px}\n.quiz-body{padding:22px}\n.quiz-q{font-size:16px;font-weight:700;color:#e2e8f0;line-height:1.45;margin-bottom:18px}\n.choices{display:flex;flex-direction:column;gap:8px}\n.choice{padding:11px 14px;border-radius:11px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);font-size:13px;font-weight:500;color:rgba(255,255,255,0.65);display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .2s}\n.choice:hover{background:rgba(255,255,255,0.08)}\n.choice.correct{border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.08);color:#34d399}\n.ch-key{width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}\n.choice.correct .ch-key{background:rgba(16,185,129,0.2);color:#34d399}\n.quiz-types{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}\n.qt{padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;border:1px solid rgba(129,140,248,0.2);background:rgba(99,102,241,0.08);color:#818cf8}\n.explain{margin-top:14px;padding:12px;border-radius:10px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);font-size:12px;color:rgba(52,211,153,0.85);line-height:1.6}\n\n/* NOVA CHAT */\n.nova-chat{background:rgba(8,12,22,0.88);border:1px solid rgba(255,255,255,0.1);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5);backdrop-filter:blur(24px)}\n.chat-top{padding:12px 18px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);display:flex;align-items:center;gap:10px}\n.nova-dot{width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;animation:dot-p 2s ease-in-out infinite}\n@keyframes dot-p{0%,100%{box-shadow:0 0 8px #10b981}50%{box-shadow:0 0 16px #10b981,0 0 30px rgba(16,185,129,0.4)}}\n.chat-nm{font-size:13px;font-weight:700;color:#e2e8f0}\n.chat-status{font-size:11px;color:#10b981;margin-left:auto}\n.chat-msgs{padding:18px;display:flex;flex-direction:column;gap:12px}\n.msg{max-width:85%}\n.msg.u{align-self:flex-end}\n.msg-bub{padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.55;font-weight:500}\n.msg.n .msg-bub{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.09);color:rgba(255,255,255,0.8);border-bottom-left-radius:4px}\n.msg.u .msg-bub{background:rgba(99,102,241,0.18);border:1px solid rgba(99,102,241,0.28);color:rgba(255,255,255,0.9);border-bottom-right-radius:4px}\n.msg-highlight{display:inline;background:rgba(99,102,241,0.15);border-radius:4px;padding:1px 4px;color:#a5b4fc;font-weight:700}\n\n/* STUDY GUIDES / SUMMARIES */\n.tool-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:20px;padding:32px;position:relative;overflow:hidden;transition:all .3s}\n.tool-card::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px}\n.tool-card.sg::before{background:linear-gradient(90deg,transparent,#818cf8,transparent)}\n.tool-card.sm::before{background:linear-gradient(90deg,transparent,#34d399,transparent)}\n.tool-card:hover{background:rgba(255,255,255,0.07);transform:translateY(-4px)}\n.tool-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}\n.tool-icon svg{width:20px;height:20px;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}\n.tool-title{font-size:22px;font-weight:800;letter-spacing:-.03em;color:#e2e8f0;margin-bottom:10px}\n.tool-body{font-size:14px;color:rgba(255,255,255,0.38);line-height:1.7;margin-bottom:20px}\n.tool-link{font-size:14px;font-weight:700;color:#818cf8;display:inline-flex;align-items:center;gap:6px;text-decoration:none;transition:gap .2s}\n.tool-link:hover{gap:10px}\n\n/* CTA */\n.cta{padding:120px 48px 140px;text-align:center;position:relative}\n.cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(99,102,241,0.09),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(236,72,153,0.07),transparent 60%);pointer-events:none}\n.cta-inner{max-width:640px;margin:0 auto;position:relative;z-index:1}\n.cta-title{font-size:clamp(36px,5.5vw,64px);font-weight:900;letter-spacing:-.04em;line-height:1.1;margin-bottom:18px;padding-bottom:.2em;overflow:visible;background:linear-gradient(135deg,#fff,#e2e8f0 40%,#a5b4fc 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}\n.cta-sub{font-size:18px;color:rgba(255,255,255,0.38);margin-bottom:40px;line-height:1.65}\n.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}\n\n/* FOOTER */\nfooter{padding:48px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(5,7,9,0.55);backdrop-filter:blur(12px)}\n.foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px}\n.foot-links{display:flex;gap:24px;flex-wrap:wrap}\n.foot-links a{font-size:13px;color:rgba(255,255,255,0.3);text-decoration:none;transition:color .2s}\n.foot-links a:hover{color:rgba(255,255,255,0.65)}\n.foot-copy{font-size:12px;color:rgba(255,255,255,0.18)}\n\n/* GLOW */\n.sec-glow{position:absolute;pointer-events:none}\n.glow-purple{width:600px;height:400px;background:radial-gradient(ellipse,rgba(99,102,241,0.08),transparent 65%);top:50%;left:50%;transform:translate(-50%,-50%)}\n.glow-green{width:600px;height:400px;background:radial-gradient(ellipse,rgba(16,185,129,0.07),transparent 65%);top:50%;left:50%;transform:translate(-50%,-50%)}\n\n@media(max-width:768px){\n  nav{padding:12px 20px}.nav-links{display:none}.btn-ghost{display:none}\n  .hero{padding:100px 20px 60px}.hero h1{font-size:clamp(36px,11vw,56px)}\n  .stats-grid{grid-template-columns:1fr 1fr;padding:0 20px 60px}\n  .section{padding:60px 20px}\n  .split{grid-template-columns:1fr;gap:40px}\n  .split.flip{direction:ltr}\n  .cta{padding:80px 20px 120px}\n  footer{padding:40px 20px}\n  .foot-inner{flex-direction:column;align-items:center;text-align:center}\n}\n\n.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:6px}\n.hb-line{width:22px;height:2px;background:rgba(255,255,255,0.7);border-radius:1px;transition:all .3s;display:block}\n.hamburger.open .hb-line:nth-child(1){transform:rotate(45deg) translate(5px,5px)}\n.hamburger.open .hb-line:nth-child(2){opacity:0;transform:scaleX(0)}\n.hamburger.open .hb-line:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}\n.mob-menu{display:none;position:fixed;top:64px;left:0;right:0;background:rgba(5,7,9,0.97);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.08);padding:20px 24px;flex-direction:column;gap:4px;z-index:99}\n.mob-menu.open{display:flex}\n.mob-menu a{font-size:16px;font-weight:600;color:rgba(255,255,255,0.7);text-decoration:none;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06);transition:color .2s}\n.mob-menu a:last-child{border-bottom:none}\n.mob-menu a:hover{color:#e2e8f0}\n.mob-cta-btn{margin-top:12px;padding:14px;border-radius:12px;border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,#2563eb,#7c3aed);width:100%}\n@media(max-width:768px){.hamburger{display:flex}.btn-ghost{display:none!important}}\n"
+
+const FP_JS = "// WebGL fluid \u2014 same shader as landing page\n(function(){\n  const c=document.getElementById('bg'),gl=c.getContext('webgl')||c.getContext('experimental-webgl');\n  if(!gl)return;\n  function resize(){c.width=innerWidth;c.height=innerHeight;gl.viewport(0,0,c.width,c.height);}\n  resize();window.addEventListener('resize',resize);\n  const VS=`attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}`;\n  const FS=`precision highp float;uniform float uT;uniform vec2 uM,uR;uniform float uS;varying vec2 vU;\n  vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}\n  float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}\n  float fbm(vec2 p){float f=0.,a=.5,t=0.;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<6;i++){f+=a*n(p);t+=a;p=r*p*2.01;a*=.52;}return f/t;}\n  void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.08;vec2 m=uM;m.x*=ar;float md=length(uv-m);uv+=(m-uv)/(md*md+.08)*.024;\n  vec2 q=vec2(fbm(uv*1.7+t*.9),fbm(uv*1.7+vec2(5.2,1.3)+t*.74));vec2 r=vec2(fbm(uv*1.7+3.4*q+vec2(1.7,9.2)+t*.58),fbm(uv*1.7+3.4*q+vec2(8.3,2.8)+t*.42));float f=fbm(uv*1.7+3.4*r+t*.32);f+=uS*.1;f=clamp(f,0.,1.);\n  vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));col=mix(col,vec3(.96,.28,.55),smoothstep(.74,1.,f));\n  col+=vec3(.28,.06,.50)*exp(-md*2.0)*.8;vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.55,.0,1.);col+=.014;gl_FragColor=vec4(col,1.);}`;\n  function mkS(t,s){const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;}\n  const prog=gl.createProgram();gl.attachShader(prog,mkS(gl.VERTEX_SHADER,VS));gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);\n  const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);\n  const uT=gl.getUniformLocation(prog,'uT'),uM=gl.getUniformLocation(prog,'uM'),uR=gl.getUniformLocation(prog,'uR'),uS=gl.getUniformLocation(prog,'uS'),aP=gl.getAttribLocation(prog,'aP');\n  const mouse={x:.5,y:.5,tx:.5,ty:.5};\n  window.addEventListener('mousemove',e=>{mouse.tx=e.clientX/innerWidth;mouse.ty=1-e.clientY/innerHeight;});\n  let scroll=0;window.addEventListener('scroll',()=>{scroll=window.scrollY/(document.body.scrollHeight-innerHeight||1);},{passive:true});\n  let t=0;(function draw(){requestAnimationFrame(draw);t+=.012;mouse.x+=(mouse.tx-mouse.x)*.06;mouse.y+=(mouse.ty-mouse.y)*.06;gl.clearColor(.02,.03,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(prog);gl.uniform1f(uT,t);gl.uniform2f(uM,mouse.x,mouse.y);gl.uniform2f(uR,c.width,c.height);gl.uniform1f(uS,scroll);gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(aP);gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);})();\n})();\n\n// Scroll reveal\nconst obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('on');obs.unobserve(x.target);}}),{threshold:.1});\ndocument.querySelectorAll('.rv').forEach(el=>obs.observe(el));\n\n// Nav scroll\nwindow.addEventListener('scroll',()=>{document.getElementById('nav').style.background=scrollY>60?'rgba(5,7,9,0.92)':'rgba(5,7,9,0.65)';},{passive:true});\n\n// Retention bars\nnew IntersectionObserver(entries=>{\n  if(entries[0].isIntersecting){\n    document.querySelectorAll('.ret-fill').forEach(f=>{f.style.width=f.dataset.w+'%';});\n  }\n},{threshold:.4}).observe(document.querySelector('.retention-card'));\n\nvar hb=document.getElementById('hamburger'),mm=document.getElementById('mob-menu');\nif(hb&&mm){hb.addEventListener('click',function(){hb.classList.toggle('open');mm.classList.toggle('open');});}\nif(mm){mm.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){hb.classList.remove('open');mm.classList.remove('open');});});}\n"
+
+const FP_HTML = "<canvas id=\"bg\" style=\"position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none\"></canvas>\n<div id=\"app\">\n\n<!-- NAV -->\n<nav id=\"nav\">\n  <a class=\"logo\" href=\"/\">\n    <div class=\"logo-ring\">\n      <div class=\"logo-spin\"></div>\n      <div class=\"logo-inner\">\n        <svg viewBox=\"0 0 24 24\" fill=\"#3b82f6\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg>\n      </div>\n    </div>\n    <span class=\"logo-word\">Flashfo</span>\n  </a>\n  <div class=\"nav-links\">\n    <a href=\"/features\" class=\"active\">Features</a>\n    <a href=\"/for-teachers\">For Teachers</a>\n    <a href=\"/for-parents\">For Parents</a>\n    <a href=\"/pricing\">Pricing</a>\n  </div>\n  <div class=\"nav-btns\">\n    <button class=\"btn-ghost\">Sign in</button>\n    <button class=\"btn-cta\">Sign up free</button>\n    <button class=\"hamburger\" id=\"hamburger\"><span class=\"hb-line\"></span><span class=\"hb-line\"></span><span class=\"hb-line\"></span></button>\n  </div>\n</nav>\n<div class=\"mob-menu\" id=\"mob-menu\">\n  <a href=\"/features\" style=\"color:#818cf8\">Features</a>\n  <a href=\"/for-teachers\">For Teachers</a>\n  <a href=\"/for-parents\">For Parents</a>\n  <a href=\"/pricing\">Pricing</a>\n  <button class=\"mob-cta-btn\" onclick=\"location.href='/signup'\">Sign up free</button>\n</div>\n\n<!-- HERO -->\n<section class=\"hero\">\n  <div class=\"hero-badge\">Flashfo \u00b7 Student Features</div>\n  <h1>Every study tool you need.<br><span class=\"g\">Built by AI in seconds.</span></h1>\n  <p class=\"hero-sub\">Type any topic and Nova generates personalized flashcards, quizzes, study guides, and summaries \u2014 tailored to exactly what you're studying.</p>\n  <div class=\"hero-btns\">\n    <button class=\"btn-primary\">Start 3-day free trial \u2192</button>\n    <button class=\"btn-outline\">View pricing</button>\n  </div>\n</section>\n\n<!-- STATS -->\n<div class=\"stats-grid rv\">\n  <div class=\"stat-card\">\n    <div class=\"stat-num\">3\u00d7</div>\n    <div class=\"stat-lbl\">better retention vs passive reading</div>\n  </div>\n  <div class=\"stat-card\">\n    <div class=\"stat-num\">15s</div>\n    <div class=\"stat-lbl\">average time to generate a full deck</div>\n  </div>\n  <div class=\"stat-card\">\n    <div class=\"stat-num\">6</div>\n    <div class=\"stat-lbl\">AI study tools in one workspace</div>\n  </div>\n  <div class=\"stat-card\">\n    <div class=\"stat-num\">\u221e</div>\n    <div class=\"stat-lbl\">any topic, any subject, any level</div>\n  </div>\n</div>\n\n<!-- FLASHCARDS -->\n<div class=\"section\">\n  <div class=\"sec-glow glow-purple\"></div>\n  <div class=\"sec-inner\">\n    <div class=\"split\">\n      <div class=\"rv\">\n        <div class=\"eyebrow\">Flashcards</div>\n        <h2 class=\"sec-title\">A full deck from one sentence</h2>\n        <p class=\"sec-body\">Type your topic and Nova generates comprehensive flashcards covering every angle \u2014 definitions, dates, causes, comparisons, and more. No more spending hours making cards by hand.</p>\n        <div class=\"steps\">\n          <div class=\"step\"><div class=\"step-num\">1</div><div><div class=\"step-n\">Type any topic</div><div class=\"step-d\">Course notes, a subject, or paste text directly</div></div></div>\n          <div class=\"step\"><div class=\"step-num\">2</div><div><div class=\"step-n\">Nova builds your deck</div><div class=\"step-d\">Cards appear one by one as Nova writes them \u2014 live</div></div></div>\n          <div class=\"step\"><div class=\"step-num\">3</div><div><div class=\"step-n\">Study, edit, and save</div><div class=\"step-d\">Flip cards, rate difficulty, save to your library</div></div></div>\n        </div>\n      </div>\n      <div class=\"rv d2\">\n        <div class=\"fc-demo\">\n          <div class=\"fc-top\">\n            <span class=\"fc-topic\">The French Revolution</span>\n            <span class=\"fc-count\">Generated \u00b7 12 cards</span>\n          </div>\n          <div class=\"fc-card\">\n            <div class=\"fc-front\">\n              <span class=\"fc-tag\">Question</span>\n              <div class=\"fc-q\">What were the three Estates in pre-revolutionary France?</div>\n              <div class=\"fc-a\">Clergy (1st), Nobility (2nd), Commoners (3rd). The Third Estate was 98% of the population but paid the most taxes.</div>\n            </div>\n          </div>\n          <div class=\"fc-divider\"></div>\n          <div class=\"fc-card\" style=\"margin-top:12px\">\n            <div class=\"fc-front\" style=\"background:linear-gradient(145deg,#0a1a12,#081410);border-color:rgba(52,211,153,0.25)\">\n              <span class=\"fc-tag\" style=\"color:#34d399;background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.2)\">Question</span>\n              <div class=\"fc-q\">In what year did the French Revolution begin?</div>\n              <div class=\"fc-a\">1789 \u2014 triggered by financial crisis, food shortages, and the convening of the Estates-General.</div>\n            </div>\n          </div>\n          <div class=\"fc-more\">\n            <span class=\"fc-chip\">\u2190 prev</span>\n            <span class=\"fc-chip\" style=\"margin-left:auto\">next \u2192</span>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- SPACED REPETITION -->\n<div class=\"section\" style=\"background:rgba(8,12,22,0.4)\">\n  <div class=\"sec-glow glow-green\"></div>\n  <div class=\"sec-inner\">\n    <div class=\"split flip\">\n      <div class=\"rv\">\n        <div class=\"eyebrow\">Spaced Repetition</div>\n        <h2 class=\"sec-title\">Study less.<br>Remember more.</h2>\n        <p class=\"sec-body\">Flashfo uses a proven spaced repetition algorithm. Cards you struggle with appear more often. Cards you know fade into the background. Your study time goes exactly where it's needed.</p>\n        <div class=\"steps\">\n          <div class=\"step\"><div class=\"step-num\" style=\"background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(5,150,105,0.2));border-color:rgba(52,211,153,0.25);color:#34d399\">\u2713</div><div><div class=\"step-n\">Cards adapt to your personal learning pace</div></div></div>\n          <div class=\"step\"><div class=\"step-num\" style=\"background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(5,150,105,0.2));border-color:rgba(52,211,153,0.25);color:#34d399\">\u2713</div><div><div class=\"step-n\">Study streaks keep you consistent every day</div></div></div>\n          <div class=\"step\"><div class=\"step-num\" style=\"background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(5,150,105,0.2));border-color:rgba(52,211,153,0.25);color:#34d399\">\u2713</div><div><div class=\"step-n\">Progress tracking shows exactly what you know</div></div></div>\n          <div class=\"step\"><div class=\"step-num\" style=\"background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(5,150,105,0.2));border-color:rgba(52,211,153,0.25);color:#34d399\">\u2713</div><div><div class=\"step-n\">No more cramming \u2014 retention that actually lasts</div></div></div>\n        </div>\n      </div>\n      <div class=\"rv d2\">\n        <div class=\"retention-card\">\n          <div style=\"font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,0.22);margin-bottom:18px\">Retention after 2 weeks</div>\n          <div class=\"ret-row\">\n            <div class=\"ret-label\" style=\"font-size:12px;color:rgba(255,255,255,0.35)\">Without spaced repetition</div>\n            <div class=\"ret-track\"><div class=\"ret-fill\" data-w=\"28\" style=\"background:rgba(239,68,68,0.5)\"></div></div>\n            <div class=\"ret-pct\" style=\"color:#f87171\">28%</div>\n          </div>\n          <div class=\"ret-row\">\n            <div class=\"ret-label\" style=\"font-size:12px;color:rgba(255,255,255,0.35)\">With Flashfo spaced repetition</div>\n            <div class=\"ret-track\"><div class=\"ret-fill\" data-w=\"84\" style=\"background:linear-gradient(90deg,#10b981,#34d399)\"></div></div>\n            <div class=\"ret-pct\" style=\"color:#34d399\">84%</div>\n          </div>\n        </div>\n        <div style=\"background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:18px;margin-top:16px\">\n          <div style=\"font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,0.22);margin-bottom:12px\">Rate each card</div>\n          <div class=\"rate-row\">\n            <button class=\"rate-btn\" style=\"color:#f87171;border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.06)\">Again</button>\n            <button class=\"rate-btn\" style=\"color:#fbbf24;border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.06)\">Hard</button>\n            <button class=\"rate-btn\" style=\"color:#60a5fa;border-color:rgba(59,130,246,0.3);background:rgba(59,130,246,0.06)\">Good</button>\n            <button class=\"rate-btn\" style=\"color:#34d399;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.06)\">Easy</button>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- QUIZZES -->\n<div class=\"section\">\n  <div class=\"sec-glow glow-purple\"></div>\n  <div class=\"sec-inner\">\n    <div class=\"split\">\n      <div class=\"rv\">\n        <div class=\"eyebrow\">Quizzes</div>\n        <h2 class=\"sec-title\">Test yourself before the test does</h2>\n        <p class=\"sec-body\">Nova generates multiple choice, true/false, and short-answer questions \u2014 complete with detailed explanations for every answer so you actually learn, not just guess.</p>\n        <div class=\"quiz-types\">\n          <span class=\"qt\">Multiple choice</span>\n          <span class=\"qt\">True / false</span>\n          <span class=\"qt\">Short answer</span>\n          <span class=\"qt\">Matching pairs</span>\n        </div>\n      </div>\n      <div class=\"rv d2\">\n        <div class=\"quiz-card\">\n          <div class=\"quiz-top\">\n            <span class=\"quiz-prog\">Q2 of 10</span>\n            <span class=\"quiz-subj\">Photosynthesis</span>\n          </div>\n          <div class=\"quiz-body\">\n            <div class=\"quiz-q\">Which organelle is the primary site of photosynthesis in plant cells?</div>\n            <div class=\"choices\">\n              <div class=\"choice\"><div class=\"ch-key\">A</div>Mitochondria</div>\n              <div class=\"choice correct\"><div class=\"ch-key\">B</div>Chloroplast \u2713</div>\n              <div class=\"choice\"><div class=\"ch-key\">C</div>Nucleus</div>\n            </div>\n            <div class=\"explain\">Chloroplasts contain chlorophyll and the thylakoid membranes where light reactions occur \u2014 making them the site of photosynthesis.</div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- NOVA -->\n<div class=\"section\" style=\"background:rgba(8,12,22,0.4)\">\n  <div class=\"sec-glow\" style=\"width:700px;height:500px;background:radial-gradient(ellipse,rgba(124,58,237,0.09),transparent 65%);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none\"></div>\n  <div class=\"sec-inner\">\n    <div class=\"split flip\">\n      <div class=\"rv\">\n        <div class=\"eyebrow\">Meet Nova</div>\n        <h2 class=\"sec-title\">Ask Nova anything.<br>Get it explained your way.</h2>\n        <p class=\"sec-body\">Stuck on a concept? Nova explains it step by step, in plain English, with examples tailored to your level \u2014 available any time, for any subject.</p>\n        <div class=\"steps\">\n          <div class=\"step\"><div class=\"step-num\" style=\"background:rgba(124,58,237,0.2);border-color:rgba(167,139,250,0.3);color:#c4b5fd\">N</div><div><div class=\"step-n\">Understands your exact curriculum</div><div class=\"step-d\">Nova knows what you're studying and adapts</div></div></div>\n          <div class=\"step\"><div class=\"step-num\" style=\"background:rgba(124,58,237,0.2);border-color:rgba(167,139,250,0.3);color:#c4b5fd\">N</div><div><div class=\"step-n\">Explains in plain English</div><div class=\"step-d\">No jargon unless you ask for it</div></div></div>\n          <div class=\"step\"><div class=\"step-num\" style=\"background:rgba(124,58,237,0.2);border-color:rgba(167,139,250,0.3);color:#c4b5fd\">N</div><div><div class=\"step-n\">Available 24/7 for any subject</div><div class=\"step-d\">History, math, science, languages \u2014 everything</div></div></div>\n        </div>\n      </div>\n      <div class=\"rv d2\">\n        <div class=\"nova-chat\">\n          <div class=\"chat-top\">\n            <div class=\"nova-dot\"></div>\n            <span class=\"chat-nm\">Nova</span>\n            <span class=\"chat-status\">Online</span>\n          </div>\n          <div class=\"chat-msgs\">\n            <div class=\"msg u\"><div class=\"msg-bub\">Can you explain osmosis? I keep mixing it up with diffusion.</div></div>\n            <div class=\"msg n\"><div class=\"msg-bub\">Great question \u2014 this trips up a lot of people!<br><br><span class=\"msg-highlight\">Diffusion</span> = movement of any molecule from high to low concentration.<br><br><span class=\"msg-highlight\">Osmosis</span> = movement of water <em>specifically</em> across a semi-permeable membrane.<br><br>Think of it this way: osmosis is just a special type of diffusion, but only for water, and only when there's a membrane involved.</div></div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- STUDY GUIDES + SUMMARIES -->\n<div class=\"section\">\n  <div class=\"sec-inner\">\n    <div style=\"text-align:center;margin-bottom:60px\" class=\"rv\">\n      <div class=\"eyebrow\" style=\"justify-content:center\">More tools</div>\n      <h2 class=\"sec-title\">Everything else you need to ace it</h2>\n    </div>\n    <div style=\"display:grid;grid-template-columns:1fr 1fr;gap:20px\">\n      <div class=\"tool-card sg rv d1\">\n        <div class=\"tool-icon\" style=\"background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.2)\">\n          <svg viewBox=\"0 0 24 24\" stroke=\"#818cf8\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"/><polyline points=\"14 2 14 8 20 8\"/><line x1=\"16\" y1=\"13\" x2=\"8\" y2=\"13\"/><line x1=\"16\" y1=\"17\" x2=\"8\" y2=\"17\"/><polyline points=\"10 9 9 9 8 9\"/></svg>\n        </div>\n        <div class=\"eyebrow\">Study Guides</div>\n        <div class=\"tool-title\">Deep, structured guides on anything</div>\n        <div class=\"tool-body\">Nova writes in-depth, section-by-section study guides on any topic. Choose brief, standard, or deep \u2014 and get a guide that covers exactly what you need.</div>\n        <a class=\"tool-link\" href=\"/signup\">Try study guide \u2192</a>\n      </div>\n      <div class=\"tool-card sm rv d2\">\n        <div class=\"tool-icon\" style=\"background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2)\">\n          <svg viewBox=\"0 0 24 24\" stroke=\"#34d399\"><line x1=\"8\" y1=\"6\" x2=\"21\" y2=\"6\"/><line x1=\"8\" y1=\"12\" x2=\"21\" y2=\"12\"/><line x1=\"8\" y1=\"18\" x2=\"21\" y2=\"18\"/><line x1=\"3\" y1=\"6\" x2=\"3.01\" y2=\"6\"/><line x1=\"3\" y1=\"12\" x2=\"3.01\" y2=\"12\"/><line x1=\"3\" y1=\"18\" x2=\"3.01\" y2=\"18\"/></svg>\n        </div>\n        <div class=\"eyebrow\" style=\"color:#34d399\">Summaries</div>\n        <div class=\"tool-title\">Turn any text into bullet-point gold</div>\n        <div class=\"tool-body\">Paste your notes, an article, or a chapter. Nova condenses it into a clear overview and key takeaways \u2014 in seconds.</div>\n        <a class=\"tool-link\" style=\"color:#34d399\" href=\"/signup\">Try summariser \u2192</a>\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- CTA -->\n<div class=\"cta\">\n  <div class=\"cta-inner rv\">\n    <h2 class=\"cta-title\">Ready to study smarter?</h2>\n    <p class=\"cta-sub\">Start your 3-day free trial. </p>\n    <div class=\"cta-btns\">\n      <button class=\"btn-primary\" style=\"font-size:17px;padding:18px 40px\">Start 3-day free trial \u2192</button>\n      <button class=\"btn-outline\" style=\"font-size:17px;padding:18px 36px\">View pricing</button>\n    </div>\n  </div>\n</div>\n\n<!-- FOOTER -->\n<footer>\n  <div class=\"foot-inner\">\n    <a class=\"logo\" href=\"/\" style=\"text-decoration:none\">\n      <div style=\"width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#1e40af,#7c3aed);display:flex;align-items:center;justify-content:center\">\n        <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"white\" style=\"animation:lp-rock 4s ease-in-out infinite\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg>\n      </div>\n      <span class=\"logo-word\">Flashfo</span>\n    </a>\n    <div class=\"foot-links\">\n      <a href=\"#\">Privacy Policy</a><a href=\"#\">Terms of Service</a><a href=\"#\">Contact</a><a href=\"#\">Sign up free</a>\n    </div>\n    <div class=\"foot-copy\">\u00a9 2026 Flashfo. Built for students and teachers.</div>\n  </div>\n</footer>\n</div>"
+
 export default function FeaturesPage() {
-  const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    const id = 'flashfo-page-css'
-    if (document.getElementById(id)) return
-    const s = document.createElement('style')
-    s.id = id
-    s.textContent = '@keyframes nav-spin{to{transform:rotate(360deg)}} @keyframes card-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}} .page-card-anim{opacity:0;animation:card-in .42s cubic-bezier(.22,.68,0,1.2) forwards} @keyframes nova-pulse{0%,100%{opacity:1}50%{opacity:.4}} .nova-pulse{animation:nova-pulse .9s ease-in-out infinite}'
-    document.head.appendChild(s)
-  }, [])
+    const style = document.createElement('style')
+    style.id = 'fp-css'
+    style.textContent = FP_CSS
+    document.head.appendChild(style)
 
-  const NAV_LINKS = [
-    {label:'Home',href:'/'},
-    {label:'Features',href:'/features'},
-    {label:'For Teachers',href:'/for-teachers'},
-    {label:'Pricing',href:'/pricing'},
-  ]
+    const script = document.createElement('script')
+    script.id = 'fp-js'
+    script.textContent = FP_JS
+    document.body.appendChild(script)
 
-  const S = {
-    page: {minHeight:'100vh',background:'#080c14',fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",color:'#e6edf3'},
-    nav: {background:'#0d1117',borderBottom:'1px solid #21262d',padding:'12px 24px',display:'flex',alignItems:'center',gap:24,position:'sticky',top:0,zIndex:50},
-    section: {padding:'56px 24px',maxWidth:900,margin:'0 auto'},
-    card: {background:'#161b22',border:'1px solid #21262d',borderRadius:14,padding:'20px 22px'},
-    badge: (col) => ({display:'inline-flex',alignItems:'center',gap:5,borderRadius:20,padding:'4px 12px',fontSize:11,fontWeight:700,letterSpacing:'.05em',background:'rgba('+col+',.08)',border:'1px solid rgba('+col+',.2)',color:'rgb('+col+')',marginBottom:14}),
-    tick: {display:'flex',alignItems:'center',gap:10,fontSize:13,color:'#8b949e',marginBottom:8},
-    tickDot: (col) => ({width:20,height:20,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,background:'rgba('+col+',.15)'}),
-  }
+    document.querySelectorAll('.btn-primary, .btn-cta, .mob-cta-btn').forEach(btn => {
+      btn.addEventListener('click', () => router.push('/signup'))
+    })
+    document.querySelectorAll('.btn-ghost').forEach(btn => {
+      btn.addEventListener('click', () => router.push('/login'))
+    })
+    document.querySelectorAll('.tool-link').forEach(a => {
+      a.addEventListener('click', (e) => { e.preventDefault(); router.push('/signup') })
+    })
+
+    return () => {
+      const s = document.getElementById('fp-css')
+      const sc = document.getElementById('fp-js')
+      if (s) s.remove()
+      if (sc) sc.remove()
+    }
+  }, [router])
 
   return (
-    <div style={S.page}>
-      <nav style={{background:'#0d1117',borderBottom:'1px solid #21262d',padding:'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:56,position:'sticky',top:0,zIndex:50}}>
-        <style>{`
-          @media(max-width:768px){.spnl{display:none!important}.spcta{display:none!important}.sphb{display:flex!important}}
-          .spnl{display:flex}.spcta{display:inline-flex}.sphb{display:none;flex-direction:column;gap:5px;cursor:pointer;background:transparent;border:none;padding:6px;outline:none}
-          .sphb-line{width:20px;height:2px;background:#8b949e;border-radius:1px;transition:transform .2s,opacity .2s;display:block}
-        
-          @media(max-width:768px){
-            .mg2{grid-template-columns:1fr!important}
-            .mg4{grid-template-columns:1fr 1fr!important;gap:10px!important}
-            .mg3{grid-template-columns:1fr!important}
-            .mob-section{padding:40px 16px!important}
-          }`}</style>
-          <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',flexShrink:0}}>
-            <div style={{position:'relative',width:28,height:28}}>
-              <div style={{position:'absolute',top:-2,left:-2,right:-2,bottom:-2,borderRadius:9,background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)',animation:'nav-spin 3s linear infinite'}}/>
-              <div style={{position:'absolute',top:2,left:2,right:2,bottom:2,background:'#0d1117',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="#3b82f6"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
-              </div>
-            </div>
-            <span style={{fontSize:15,fontWeight:700,color:'#e6edf3'}}>Flashfo</span>
-          </a>
-          <div className="spnl" style={{gap:20,alignItems:'center',flex:1,justifyContent:'center'}}>
-            {[{l:'Home',h:'/'},{l:'Features',h:'/features'},{l:'For Teachers',h:'/for-teachers'},{l:'For Parents',h:'/for-parents'},{l:'Pricing',h:'/pricing'}].map(({l,h})=>(
-              <a key={l} href={h} style={{fontSize:13,color:h==='/features'?'#3b82f6':'#8b949e',fontWeight:h==='/features'?600:400,textDecoration:'none',borderBottom:h==='/features'?'2px solid #3b82f6':'none',paddingBottom:2}}>{l}</a>
-            ))}
-          </div>
-          <a href="/auth?mode=signup" className="spcta" style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:700,padding:'8px 16px',textDecoration:'none',flexShrink:0}}>Sign up free</a>
-          <button className="sphb" onClick={()=>setMenuOpen(o=>!o)} aria-label="Menu">
-            <span className="sphb-line" style={{transform:menuOpen?'rotate(45deg) translateY(7px)':'none'}}/>
-            <span className="sphb-line" style={{opacity:menuOpen?0:1}}/>
-            <span className="sphb-line" style={{transform:menuOpen?'rotate(-45deg) translateY(-7px)':'none'}}/>
-          </button>
-        </nav>
-        {menuOpen && (
-          <div style={{background:'#0d1117',borderBottom:'1px solid #21262d',position:'sticky',top:56,zIndex:49}}>
-            {[{l:'Home',h:'/'},{l:'Features',h:'/features'},{l:'For Teachers',h:'/for-teachers'},{l:'For Parents',h:'/for-parents'},{l:'Pricing',h:'/pricing'}].map(({l,h})=>(
-              <a key={l} href={h} onClick={()=>setMenuOpen(false)}
-                style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px',borderBottom:'1px solid #21262d',fontSize:15,color:'#e6edf3',textDecoration:'none',fontWeight:500}}>
-                {l} <span style={{color:'#484f58'}}>{'›'}</span>
-              </a>
-            ))}
-            <a href="/auth?mode=signup" style={{display:'block',margin:'12px 16px 16px',padding:'13px 0',textAlign:'center',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:15,fontWeight:700,borderRadius:9,textDecoration:'none'}}>Sign up free</a>
-          </div>
-        )}
-
-      {/* HERO */}
-      <div style={{padding:'64px 24px 40px',textAlign:'center',maxWidth:760,margin:'0 auto'}}>
-        <div style={{display:'inline-flex',alignItems:'center',gap:6,borderRadius:20,padding:'4px 12px',fontSize:11,fontWeight:700,letterSpacing:'.05em',background:'rgba(167,139,250,.08)',border:'1px solid rgba(167,139,250,.2)',color:'#a78bfa',marginBottom:18}}>
-          FLASHFO - STUDENT FEATURES
-        </div>
-        <h1 style={{fontSize:46,fontWeight:800,letterSpacing:'-.03em',lineHeight:1.1,marginBottom:16}}>
-          Every study tool you need.<br/>
-          <span style={{background:'linear-gradient(90deg,#2563eb,#a78bfa)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Built by AI in seconds.</span>
-        </h1>
-        <p style={{fontSize:16,color:'#8b949e',lineHeight:1.7,marginBottom:28,maxWidth:560,margin:'0 auto 28px'}}>
-          Type any topic and Nova generates personalized flashcards, quizzes, study guides, and summaries — tailored to exactly what you're studying.
-        </p>
-        <div style={{display:'flex',gap:12,justifyContent:'center'}}>
-          <button onClick={()=>router.push('/auth?mode=signup')} style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:10,fontSize:14,fontWeight:700,cursor:'pointer',padding:'12px 28px',letterSpacing:'-.01em'}}>
-            Start 3-day free trial →
-          </button>
-          <button onClick={()=>router.push('/pricing')} style={{background:'transparent',color:'#8b949e',border:'1px solid #30363d',borderRadius:10,fontSize:13,cursor:'pointer',padding:'12px 20px'}}>
-            View pricing
-          </button>
-        </div>
-      </div>
-
-      {/* STATS */}
-      <div style={{maxWidth:900,margin:'0 auto 56px',padding:'0 24px'}}>
-        <div className="mg4" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
-          {[
-            {num:'3×',label:'better retention vs passive reading'},
-            {num:'15s',label:'average time to generate a full deck'},
-            {num:'6',label:'AI study tools in one workspace'},
-            {num:'∞',label:'any topic, any subject, any level'},
-          ].map(({num,label})=>(
-            <div key={num} style={{textAlign:'center',background:'#161b22',border:'1px solid #21262d',borderRadius:12,padding:'20px 12px'}}>
-              <div style={{fontSize:34,fontWeight:800,letterSpacing:'-.03em',color:'#e6edf3'}}>{num}</div>
-              <div style={{fontSize:12,color:'#8b949e',marginTop:5,lineHeight:1.4}}>{label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* FEATURE 1: FLASHCARDS */}
-      <div className="mob-section" style={{...S.section,paddingTop:0}}>
-        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
-          <div>
-            <div style={S.badge('37,99,235')}>FLASHCARDS</div>
-            <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>A full deck from one sentence</h2>
-            <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Type your topic and Nova generates comprehensive flashcards covering every angle — definitions, dates, causes, comparisons, and more. No more spending hours making cards by hand.</p>
-            {[
-              {n:'1',c:'37,99,235',title:'Type any topic',desc:'Course notes, a subject, or paste text directly'},
-              {n:'2',c:'167,139,250',title:'Nova builds your deck',desc:'Cards appear one by one as Nova writes them — live'},
-              {n:'3',c:'52,211,153',title:'Study, edit, and save',desc:'Flip cards, rate difficulty, save to your library'},
-            ].map(({n,c,title,desc})=>(
-              <div key={n} style={{display:'flex',gap:12,alignItems:'flex-start',marginBottom:14}}>
-                <div style={{width:28,height:28,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,flexShrink:0,background:'rgba('+c+',.15)',color:'rgb('+c+')'}}>
-                  {n}
-                </div>
-                <div>
-                  <div style={{fontSize:13,fontWeight:700,color:'#e6edf3',marginBottom:2}}>{title}</div>
-                  <div style={{fontSize:12,color:'#8b949e'}}>{desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,padding:16}}>
-            <div style={{fontSize:10,color:'#484f58',letterSpacing:'.07em',marginBottom:8}}>TOPIC</div>
-            <div style={{background:'#161b22',border:'1px solid #30363d',borderRadius:8,padding:'10px 13px',fontSize:13,color:'#e6edf3',marginBottom:12}}>The French Revolution</div>
-            <div style={{fontSize:10,color:'#484f58',letterSpacing:'.07em',marginBottom:8}}>GENERATED · 12 CARDS</div>
-            {[
-              {q:'What were the three Estates in pre-revolutionary France?',a:'Clergy (1st), Nobility (2nd), Commoners (3rd). The Third Estate was 98% of the population but paid the most taxes.',c:'37,99,235'},
-              {q:'In what year did the French Revolution begin?',a:'1789 — triggered by financial crisis, food shortages, and the convening of the Estates-General.',c:'167,139,250'},
-              {q:'What was the Declaration of the Rights of Man?',a:'A 1789 document proclaiming liberty, equality, and popular sovereignty as fundamental rights.',c:'52,211,153'},
-            ].map((card,i)=>(
-              <div key={i} className="page-card-anim" style={{background:'#161b22',border:'1px solid #21262d',borderRadius:10,padding:12,marginBottom:8,animationDelay:i*150+'ms',display:'flex',gap:10}}>
-                <div style={{width:22,height:22,borderRadius:6,background:'rgba('+card.c+',.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:9,fontWeight:700,color:'rgb('+card.c+')'}}>
-                  {i+1}
-                </div>
-                <div>
-                  <div style={{fontSize:12,fontWeight:600,color:'#e6edf3',marginBottom:5}}>{card.q}</div>
-                  <div style={{fontSize:11,color:'#8b949e',paddingTop:5,borderTop:'1px solid #21262d',lineHeight:1.5}}>{card.a}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* FEATURE 2: SPACED REP */}
-      <div style={{background:'#161b22',borderTop:'1px solid #21262d',borderBottom:'1px solid #21262d',padding:'56px 24px'}}>
-        <div style={{maxWidth:900,margin:'0 auto',display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'center'}}>
-          <div style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,padding:20}}>
-            <div style={{fontSize:13,fontWeight:700,color:'#e6edf3',marginBottom:18}}>Retention after 2 weeks</div>
-            {[
-              {label:'Without spaced repetition',pct:28,col:'#f87171'},
-              {label:'With Flashfo spaced repetition',pct:84,col:'#34d399'},
-            ].map(({label,pct,col})=>(
-              <div key={label} style={{marginBottom:14}}>
-                <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:5}}>
-                  <span style={{color:'#8b949e'}}>{label}</span>
-                  <span style={{color:col,fontWeight:700}}>{pct}%</span>
-                </div>
-                <div style={{height:8,background:'#21262d',borderRadius:4,overflow:'hidden'}}>
-                  <div style={{width:pct+'%',height:'100%',background:col,borderRadius:4,transition:'width 1.5s ease'}}/>
-                </div>
-              </div>
-            ))}
-            <div style={{marginTop:18,paddingTop:14,borderTop:'1px solid #21262d'}}>
-              <div style={{fontSize:12,color:'#8b949e',marginBottom:10}}>Rate each card — Flashfo adapts:</div>
-              <div style={{display:'flex',gap:6}}>
-                {['Again','Hard','Good','Easy'].map((l,i)=>(
-                  <div key={l} style={{flex:1,textAlign:'center',padding:'7px 0',borderRadius:7,fontSize:11,fontWeight:700,cursor:'pointer',background:['rgba(239,68,68,.1)','rgba(245,158,11,.1)','rgba(34,197,94,.1)','rgba(37,99,235,.1)'][i],color:['#f87171','#f59e0b','#4ade80','#3b82f6'][i]}}>
-                    {l}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div>
-            <div style={S.badge('167,139,250')}>SPACED REPETITION</div>
-            <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Study less. Remember more.</h2>
-            <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Flashfo uses a proven spaced repetition algorithm. Cards you struggle with appear more often. Cards you know fade into the background. Your study time goes exactly where it's needed.</p>
-            {['Cards adapt to your personal learning pace','Study streaks keep you consistent every day','Progress tracking shows exactly what you know','No more cramming — retention that actually lasts'].map(t=>(
-              <div key={t} style={S.tick}>
-                <div style={S.tickDot('52,211,153')}>
-                  <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                </div>
-                {t}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* FEATURE 3: QUIZ */}
-      <div style={S.section}>
-        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
-          <div>
-            <div style={S.badge('52,211,153')}>QUIZZES</div>
-            <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Test yourself before the test does</h2>
-            <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Nova generates multiple choice, true/false, and short-answer questions — complete with detailed explanations for every answer so you actually learn, not just guess.</p>
-            <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-              {[
-                {t:'Multiple choice',c:'#3b82f6'},
-                {t:'True / false',c:'#a78bfa'},
-                {t:'Short answer',c:'#34d399'},
-                {t:'Matching pairs',c:'#f59e0b'},
-              ].map(({t,c})=>(
-                <div key={t} style={{background:'#161b22',border:'1px solid #21262d',borderRadius:8,padding:'10px 12px',display:'flex',alignItems:'center',gap:8}}>
-                  <div style={{width:8,height:8,borderRadius:'50%',background:c,flexShrink:0}}/>
-                  <span style={{fontSize:12,color:'#8b949e'}}>{t}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,padding:16}}>
-            <div style={{fontSize:12,fontWeight:600,color:'#e6edf3',marginBottom:12}}>Q2 of 10 · Photosynthesis</div>
-            <div style={{fontSize:13,color:'#e6edf3',marginBottom:12,lineHeight:1.6}}>Which organelle is the primary site of photosynthesis in plant cells?</div>
-            {[
-              {l:'A',t:'Mitochondria',correct:false},
-              {l:'B',t:'Chloroplast',correct:true},
-              {l:'C',t:'Nucleus',correct:false},
-            ].map(({l,t,correct})=>(
-              <div key={l} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 12px',borderRadius:8,border:'1px solid '+(correct?'rgba(52,211,153,.4)':'#21262d'),background:correct?'rgba(52,211,153,.08)':'#161b22',marginBottom:6,fontSize:12,color:correct?'#34d399':'#8b949e'}}>
-                <div style={{width:22,height:22,borderRadius:6,background:correct?'rgba(52,211,153,.2)':'#21262d',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:correct?'#34d399':'#6b7280'}}>{l}</div>
-                {t}{correct?' ✓':''}
-              </div>
-            ))}
-            <div style={{background:'rgba(52,211,153,.06)',border:'1px solid rgba(52,211,153,.2)',borderRadius:8,padding:'10px 12px',marginTop:10,fontSize:11,color:'#34d399',lineHeight:1.6}}>
-              Chloroplasts contain chlorophyll and the thylakoid membranes where light reactions occur — making them the site of photosynthesis.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* FEATURE 4: NOVA TUTOR */}
-      <div style={{background:'#161b22',borderTop:'1px solid #21262d',borderBottom:'1px solid #21262d',padding:'56px 24px'}}>
-        <div style={{maxWidth:900,margin:'0 auto',textAlign:'center'}}>
-          <div style={S.badge('167,139,250')}>MEET NOVA</div>
-          <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Ask Nova anything. Get it explained your way.</h2>
-          <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:32,maxWidth:540,margin:'0 auto 32px'}}>Stuck on a concept? Nova explains it step by step, in plain English, with examples tailored to your level — available any time, for any subject.</p>
-          <div style={{maxWidth:560,margin:'0 auto',background:'#0d1117',border:'1px solid #21262d',borderRadius:14,overflow:'hidden'}}>
-            <div style={{padding:'12px 16px',borderBottom:'1px solid #21262d',display:'flex',alignItems:'center',gap:8}}>
-              <div style={{width:26,height:26,borderRadius:8,background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <svg width="11" height="11" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
-              </div>
-              <span style={{fontSize:13,fontWeight:600,color:'#e6edf3'}}>Nova</span>
-              <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:5}}>
-                <div style={{width:6,height:6,borderRadius:'50%',background:'#34d399'}}/>
-                <span style={{fontSize:11,color:'#34d399'}}>Online</span>
-              </div>
-            </div>
-            <div style={{padding:16,display:'flex',flexDirection:'column',gap:12}}>
-              <div style={{alignSelf:'flex-end',background:'#21262d',borderRadius:'12px 12px 2px 12px',padding:'10px 14px',fontSize:13,color:'#e6edf3',maxWidth:'80%',textAlign:'left'}}>
-                Can you explain osmosis? I keep mixing it up with diffusion.
-              </div>
-              <div style={{display:'flex',gap:8,alignItems:'flex-start'}}>
-                <div style={{width:26,height:26,borderRadius:'50%',background:'#161b22',border:'1px solid #30363d',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="#a78bfa" strokeWidth="1.2"/>
-                    <circle cx="12" cy="12" r="6" stroke="#a78bfa" strokeWidth="1.2"/>
-                    <circle cx="12" cy="12" r="2" fill="#a78bfa"/>
-                  </svg>
-                </div>
-                <div style={{background:'#161b22',border:'1px solid #21262d',borderRadius:'2px 12px 12px 12px',padding:'12px 14px',fontSize:12,color:'#8b949e',lineHeight:1.7,maxWidth:'85%',textAlign:'left'}}>
-                  Great question — this trips up a lot of people!<br/><br/>
-                  <span style={{color:'#3b82f6',fontWeight:600}}>Diffusion</span> = movement of <em>any</em> molecule from high to low concentration.<br/>
-                  <span style={{color:'#a78bfa',fontWeight:600}}>Osmosis</span> = movement of <em>water specifically</em> across a semi-permeable membrane.<br/><br/>
-                  Think of it this way: osmosis is just a special type of diffusion, but only for water, and only when there's a membrane involved.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* FEATURE 5: STUDY GUIDE + SUMMARY */}
-      <div style={S.section}>
-        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
-          <div style={S.card}>
-            <div style={S.badge('34,197,94')}>STUDY GUIDES</div>
-            <h3 style={{fontSize:20,fontWeight:800,letterSpacing:'-.02em',marginBottom:8,color:'#e6edf3'}}>Deep, structured guides on anything</h3>
-            <p style={{fontSize:13,color:'#8b949e',lineHeight:1.7,marginBottom:16}}>Nova writes in-depth, section-by-section study guides on any topic. Choose brief, standard, or deep — and get a guide that covers exactly what you need.</p>
-            <button onClick={()=>router.push('/study-guide')} style={{background:'rgba(34,197,94,.1)',border:'1px solid rgba(34,197,94,.3)',color:'#4ade80',borderRadius:8,fontSize:12,fontWeight:600,padding:'7px 16px',cursor:'pointer'}}>
-              Try study guide →
-            </button>
-          </div>
-          <div style={S.card}>
-            <div style={S.badge('167,139,250')}>SUMMARIES</div>
-            <h3 style={{fontSize:20,fontWeight:800,letterSpacing:'-.02em',marginBottom:8,color:'#e6edf3'}}>Turn any text into bullet-point gold</h3>
-            <p style={{fontSize:13,color:'#8b949e',lineHeight:1.7,marginBottom:16}}>Paste your notes, an article, or a chapter. Nova condenses it into a clear overview and key takeaways — in seconds.</p>
-            <button onClick={()=>router.push('/summarize')} style={{background:'rgba(167,139,250,.1)',border:'1px solid rgba(167,139,250,.3)',color:'#a78bfa',borderRadius:8,fontSize:12,fontWeight:600,padding:'7px 16px',cursor:'pointer'}}>
-              Try summariser →
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* BOTTOM CTA */}
-      <div style={{background:'linear-gradient(135deg,rgba(37,99,235,.1),rgba(124,58,237,.1))',borderTop:'1px solid #21262d',padding:'56px 24px',textAlign:'center'}}>
-        <div style={{maxWidth:520,margin:'0 auto'}}>
-          <h2 style={{fontSize:34,fontWeight:800,letterSpacing:'-.02em',color:'#e6edf3',marginBottom:10}}>Ready to study smarter?</h2>
-          <p style={{fontSize:15,color:'#8b949e',marginBottom:24}}>Start your 3-day free trial. No credit card required to get going.</p>
-          <button onClick={()=>router.push('/auth?mode=signup')} style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:10,fontSize:15,fontWeight:700,cursor:'pointer',padding:'14px 36px',letterSpacing:'-.01em'}}>
-            Start 3-day free trial →
-          </button>
-        </div>
-      </div>
-    </div>
+    <div
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: FP_HTML }}
+    />
   )
 }
