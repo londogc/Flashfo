@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
-const LP_CSS = \`
+const LP_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 .lp-root *,.lp-root *::before,.lp-root *::after{box-sizing:border-box;margin:0;padding:0}
 .lp-root{font-family:'Inter',-apple-system,sans-serif;background:#050709;color:#e2e8f0;overflow-x:hidden;position:relative}
@@ -84,7 +84,7 @@ const LP_CSS = \`
 .lp-features{padding:60px 20px}
 .lp-footer{padding:40px 20px}
 }
-\`;
+`;
 
 const CLASSROOM_Qs = [
   { id: 1, text: 'What is photosynthesis?', topic: 'Biology', teacher: 'Ms. Chen', responses: 24 },
@@ -183,7 +183,7 @@ export default function LandingPage() {
     <div className="lp-root">
       <canvas ref={canvasRef} id="lp-canvas" />
       <div className="lp-content">
-        <nav className={\`lp-nav ${scrollY > 50 ? 'lp-scrolled' : ''}\`}>
+        <nav className={"lp-nav " + (scrollY > 50 ? 'lp-scrolled' : '')}>
           <a href="#" className="lp-logo-wrap">
             <div className="lp-logo-box">
               <div className="lp-logo-ring" />
@@ -253,7 +253,7 @@ export default function LandingPage() {
           <h2 className="lp-section-title">Simple, Transparent Pricing</h2>
           <div className="lp-pricing-toggle">
             <span className="lp-pricing-label">Monthly</span>
-            <div className={\`lp-toggle-switch ${isAnnual ? 'lp-active' : ''}\`} onClick={() => setIsAnnual(!isAnnual)}>
+            <div className={"lp-toggle-switch " + (isAnnual ? 'lp-active' : '')} onClick={() => setIsAnnual(!isAnnual)}>
               <div className="lp-toggle-knob" />
             </div>
             <span className="lp-pricing-label">Annual</span>
