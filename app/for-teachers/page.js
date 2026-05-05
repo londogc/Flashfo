@@ -23,10 +23,10 @@ export default function ForTeachersPage() {
     document.body.appendChild(script)
 
     document.querySelectorAll('.btn-primary, .btn-cta, .mob-cta-btn').forEach(btn => {
-      btn.addEventListener('click', () => router.push('/signup'))
+      btn.addEventListener('click', () => router.push('/auth'))
     })
     document.querySelectorAll('.btn-ghost').forEach(btn => {
-      btn.addEventListener('click', () => router.push('/login'))
+      btn.addEventListener('click', () => router.push('/auth'))
     })
     document.querySelectorAll('.btn-outline').forEach(btn => {
       btn.addEventListener('click', () => router.push('/pricing'))
