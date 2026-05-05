@@ -1,286 +1,31 @@
 'use client'
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/useAuth'
 
-const PRICES = {
-  student: { monthly: 'price_1TS69gLu7zMVJuloo7S44sow', annual: 'price_1TS6BtLu7zMVJuloFSLuTJou' },
-  teacher: { monthly: 'price_1TS6DHLu7zMVJuloSHQ9zT1c', annual: 'price_1TS6E6Lu7zMVJuloQJP7uNz2' },
-  school:  { monthly: 'price_1TS6FOLu7zMVJulorLTheTxO', annual: null },
-}
-
-const PLANS = [
-  {
-    id: 'student',
-    name: 'Student Pro',
-    color: '#a78bfa',
-    borderColor: 'rgba(167,139,250,0.3)',
-    bgColor: 'rgba(167,139,250,0.06)',
-    monthly: 7,
-    annual: 55,
-    annualMonthly: 4.58,
-    badge: null,
-    features: [
-      'Unlimited AI flashcard generation',
-      'Unlimited quizzes & study guides',
-      'Unlimited summaries',
-      'Spaced repetition',
-      'Progress tracking',
-      'Nova AI Tutor',
-      'Voice mode',
-      'Save unlimited decks',
-    ],
-  },
-  {
-    id: 'teacher',
-    name: 'Teacher Pro',
-    color: '#34d399',
-    borderColor: 'rgba(52,211,153,0.3)',
-    bgColor: 'rgba(52,211,153,0.06)',
-    monthly: 13,
-    annual: 99,
-    annualMonthly: 8.25,
-    badge: 'Most popular',
-    features: [
-      'Everything in Student Pro',
-      'Host live quizzes (unlimited students)',
-      'Class roster management',
-      'Assignment builder',
-      'Curriculum planner',
-      'Student performance analytics',
-      'Student Portal',
-      'Nova AI Lesson Builder',
-    ],
-  },
-  {
-    id: 'school',
-    name: 'School',
-    color: '#f59e0b',
-    borderColor: 'rgba(245,158,11,0.3)',
-    bgColor: 'rgba(245,158,11,0.06)',
-    monthly: 149,
-    annual: null,
-    annualMonthly: null,
-    badge: null,
-    features: [
-      'Up to 10 teacher accounts',
-      'Unlimited student accounts',
-      'Everything in Teacher Pro',
-      'School-wide admin dashboard',
-      'Priority support',
-      'Billing by invoice available',
-      'Contact us for annual pricing & volume discounts',
-    ],
-  },
-]
+const PG_CSS = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml{scroll-behavior:smooth;overflow-x:hidden}\nbody{font-family:'Inter',-apple-system,sans-serif;background:#050709;color:#e2e8f0;overflow-x:hidden}\n#bg{position:fixed;inset:0;z-index:0;pointer-events:none}\n#app{position:relative;z-index:1}\n\n/* NAV */\nnav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 48px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,7,9,0.65);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.07);transition:background .3s}\n.logo{display:flex;align-items:center;gap:10px;text-decoration:none}\n.logo-ring{position:relative;width:34px;height:34px;flex-shrink:0}\n.logo-spin{position:absolute;inset:-2px;border-radius:10px;background:conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6);animation:lp-spin 3s linear infinite}\n.logo-inner{position:absolute;inset:2px;border-radius:7px;background:#080b12;display:flex;align-items:center;justify-content:center}\n.logo-word{font-size:17px;font-weight:800;color:#e2e8f0;letter-spacing:-.02em}\n.nav-links{display:flex;gap:28px}\n.nav-links a{font-size:14px;font-weight:500;color:rgba(255,255,255,0.5);text-decoration:none;transition:color .2s}\n.nav-links a:hover,.nav-links a.active{color:#e2e8f0}\n.nav-btns{display:flex;gap:12px;align-items:center}\n.btn-ghost{font-size:14px;font-weight:600;color:rgba(255,255,255,0.5);background:none;border:none;cursor:pointer;font-family:inherit}\n.btn-ghost:hover{color:#e2e8f0}\n.btn-cta{padding:9px 22px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 4px 16px rgba(99,102,241,0.4);transition:all .15s}\n.btn-cta:hover{transform:translateY(-1px)}\n.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:6px}\n.hb-line{width:22px;height:2px;background:rgba(255,255,255,0.7);border-radius:1px;transition:all .3s;display:block}\n.hamburger.open .hb-line:nth-child(1){transform:rotate(45deg) translate(5px,5px)}\n.hamburger.open .hb-line:nth-child(2){opacity:0}\n.hamburger.open .hb-line:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}\n.mob-menu{display:none;position:fixed;top:64px;left:0;right:0;background:rgba(5,7,9,0.97);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.08);padding:20px 24px;flex-direction:column;gap:4px;z-index:99}\n.mob-menu.open{display:flex}\n.mob-menu a{font-size:16px;font-weight:600;color:rgba(255,255,255,0.7);text-decoration:none;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06)}\n.mob-menu a:last-of-type{border-bottom:none}\n.mob-cta-btn{margin-top:12px;padding:14px;border-radius:12px;border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,#2563eb,#7c3aed);width:100%}\n@keyframes lp-spin{100%{transform:rotate(360deg)}}\n@keyframes lp-rock{0%,100%{transform:rotate(-4deg) scale(1)}50%{transform:rotate(4deg) scale(1.08)}}\n@keyframes fade-up{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}\n@keyframes line-up{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:none}}\n\n/* HERO */\n.hero{padding:150px 32px 80px;text-align:center;position:relative}\n.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:100px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(165,180,252,0.9);margin-bottom:28px;animation:fade-up .8s .1s both}\n.hero h1{font-size:clamp(44px,7vw,88px);font-weight:900;letter-spacing:-.045em;line-height:1.06;margin-bottom:18px;padding-bottom:.1em;overflow:visible;background:linear-gradient(135deg,#fff 0%,#e2e8f0 45%,#a5b4fc 85%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:line-up .9s .15s both}\n.hero-sub{font-size:clamp(16px,2vw,20px);color:rgba(255,255,255,0.38);margin-bottom:44px;line-height:1.6;animation:line-up 1s .3s both}\n\n/* BILLING TOGGLE */\n.toggle-wrap{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:18px;animation:line-up 1s .4s both}\n.tog-lbl{font-size:15px;font-weight:600;color:rgba(255,255,255,0.45);transition:color .2s}\n.tog-lbl.active{color:#e2e8f0}\n.toggle-track{width:52px;height:28px;border-radius:14px;background:linear-gradient(135deg,#2563eb,#7c3aed);cursor:pointer;position:relative;transition:all .2s;box-shadow:0 0 12px rgba(99,102,241,0.4)}\n.toggle-thumb{width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:transform .25s cubic-bezier(.23,1,.32,1);box-shadow:0 2px 8px rgba(0,0,0,.3)}\n.toggle-thumb.on{transform:translateX(24px)}\n.save-tag{font-size:12px;font-weight:700;color:#34d399;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.22);padding:3px 10px;border-radius:20px}\n.trial-notice{font-size:14px;font-weight:600;color:rgba(52,211,153,0.8);margin-bottom:56px;display:flex;align-items:center;justify-content:center;gap:8px;animation:line-up 1s .5s both}\n.trial-dot{width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981}\n\n/* PRICING GRID */\n.pricing-section{padding:0 48px 100px;max-width:1200px;margin:0 auto}\n.pricing-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;align-items:start}\n\n/* PLAN CARDS */\n.pc{border-radius:24px;padding:32px 28px;position:relative;overflow:hidden;backdrop-filter:blur(24px);transition:transform .25s}\n.pc:hover{transform:translateY(-6px)}\n\n/* Student Pro */\n.pc-student{background:linear-gradient(150deg,rgba(37,99,235,0.2),rgba(124,58,237,0.15));border:1px solid rgba(99,102,241,0.4);box-shadow:0 0 80px rgba(99,102,241,0.1),0 40px 100px rgba(0,0,0,.5)}\n.pc-student::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#6366f1,#a78bfa,transparent)}\n\n/* Teacher Pro */\n.pc-teacher{background:linear-gradient(150deg,rgba(180,83,9,0.18),rgba(120,53,15,0.12));border:1px solid rgba(245,158,11,0.35);box-shadow:0 0 80px rgba(245,158,11,0.08),0 40px 100px rgba(0,0,0,.5)}\n.pc-teacher::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#f59e0b,#fbbf24,transparent)}\n\n/* School */\n.pc-school{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);box-shadow:0 40px 100px rgba(0,0,0,.4)}\n.pc-school::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)}\n\n.pop-badge{position:absolute;top:16px;right:16px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding:4px 10px;border-radius:100px}\n.pc-student .pop-badge{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff}\n\n.pc-tier-row{display:flex;align-items:center;gap:10px;margin-bottom:20px}\n.tier-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}\n.tier-icon svg{width:16px;height:16px;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}\n.pc-student .tier-icon{background:rgba(99,102,241,0.18);border:1px solid rgba(99,102,241,0.3);stroke:#818cf8}\n.pc-teacher .tier-icon{background:rgba(245,158,11,0.14);border:1px solid rgba(245,158,11,0.28);stroke:#fbbf24}\n.pc-school .tier-icon{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);stroke:rgba(255,255,255,0.6)}\n.tier-name{font-size:16px;font-weight:800;color:#e2e8f0;letter-spacing:-.02em}\n\n.price-row{display:flex;align-items:flex-end;gap:5px;margin-bottom:6px}\n.price-amt{font-size:52px;font-weight:900;letter-spacing:-3px;color:#e2e8f0;line-height:1;transition:all .35s}\n.price-per{font-size:15px;color:rgba(255,255,255,0.35);margin-bottom:10px}\n.price-note{font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:20px;min-height:18px;transition:all .3s}\n\n.pc-desc{font-size:13px;color:rgba(255,255,255,0.38);line-height:1.65;margin-bottom:22px;min-height:44px}\n\n.pc-btn{width:100%;padding:14px;border-radius:13px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;position:relative;overflow:hidden}\n.pc-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transform:translateX(-100%);transition:transform .6s}\n.pc-btn:hover::before{transform:translateX(100%)}\n.pc-student .pc-btn{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;box-shadow:0 8px 24px rgba(99,102,241,0.45)}\n.pc-student .pc-btn:hover{box-shadow:0 12px 32px rgba(99,102,241,0.6)}\n.pc-teacher .pc-btn{background:linear-gradient(135deg,#d97706,#b45309);color:#fff;box-shadow:0 8px 24px rgba(245,158,11,0.35)}\n.pc-teacher .pc-btn:hover{box-shadow:0 12px 32px rgba(245,158,11,0.5)}\n.pc-school .pc-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.16);color:rgba(255,255,255,0.85)}\n.pc-school .pc-btn:hover{background:rgba(255,255,255,0.16)}\n\n.pc-div{height:1px;background:rgba(255,255,255,0.07);margin:22px 0}\n.feat-section-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,0.22);margin-bottom:12px}\n.feat-list{list-style:none;display:flex;flex-direction:column;gap:9px}\n.feat-list li{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:rgba(255,255,255,0.58);line-height:1.5}\n.feat-chk{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}\n.pc-student .feat-chk{background:rgba(99,102,241,0.22)}\n.pc-teacher .feat-chk{background:rgba(245,158,11,0.18)}\n.pc-school .feat-chk{background:rgba(255,255,255,0.1)}\n\n/* FREE TIER BANNER */\n.free-banner{max-width:1100px;margin:0 auto 80px;padding:0 48px}\n.free-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:20px;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}\n.free-left h3{font-size:18px;font-weight:800;color:#e2e8f0;margin-bottom:6px;letter-spacing:-.02em}\n.free-left p{font-size:13px;color:rgba(255,255,255,0.38);line-height:1.6}\n.free-btn{padding:13px 28px;border-radius:12px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s}\n.free-btn:hover{background:rgba(255,255,255,0.13);color:#fff}\n\n/* TRUST BADGES */\n.trust-row{max-width:600px;margin:0 auto 100px;display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap}\n.trust-item{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.3)}\n.trust-item svg{width:14px;height:14px;fill:none;stroke:rgba(255,255,255,0.3);stroke-width:1.5;stroke-linecap:round}\n\n/* FAQ */\n.faq-section{max-width:720px;margin:0 auto;padding:0 48px 100px}\n.faq-title{font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-.04em;color:#e2e8f0;text-align:center;margin-bottom:48px}\n.faq-item{border-bottom:1px solid rgba(255,255,255,0.07);padding:20px 0}\n.faq-q{font-size:15px;font-weight:700;color:#e2e8f0;margin-bottom:10px}\n.faq-a{font-size:14px;color:rgba(255,255,255,0.38);line-height:1.7}\n\n/* FOOTER */\nfooter{padding:48px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(5,7,9,0.55);backdrop-filter:blur(12px)}\n.foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px}\n.foot-links{display:flex;gap:24px;flex-wrap:wrap}\n.foot-links a{font-size:13px;color:rgba(255,255,255,0.3);text-decoration:none;transition:color .2s}\n.foot-links a:hover{color:rgba(255,255,255,0.65)}\n.foot-copy{font-size:12px;color:rgba(255,255,255,0.18)}\n\n.rv{opacity:0;transform:translateY(28px);transition:opacity .85s cubic-bezier(.23,1,.32,1),transform .85s cubic-bezier(.23,1,.32,1)}\n.rv.d1{transition-delay:.1s}.rv.d2{transition-delay:.2s}.rv.d3{transition-delay:.3s}\n.rv.on{opacity:1;transform:none}\n\n@media(max-width:900px){\n  .pricing-grid{grid-template-columns:1fr;max-width:480px;margin:0 auto}\n}\n@media(max-width:768px){\n  nav{padding:12px 20px}\n  .nav-links{display:none!important}\n  .btn-ghost{display:none!important}\n  .hamburger{display:flex}\n  .hero{padding:110px 20px 60px}\n  .pricing-section{padding:0 20px 80px}\n  .free-banner{padding:0 20px;margin-bottom:60px}\n  .free-card{flex-direction:column;align-items:flex-start}\n  .trust-row{gap:16px;padding:0 20px}\n  .faq-section{padding:0 20px 80px}\n  footer{padding:40px 20px}\n  .foot-inner{flex-direction:column;align-items:center;text-align:center}\n}\n"
+const PG_JS = "// WebGL\n(function(){\n  const c=document.getElementById('bg'),gl=c.getContext('webgl')||c.getContext('experimental-webgl');\n  if(!gl)return;\n  function resize(){c.width=innerWidth;c.height=innerHeight;gl.viewport(0,0,c.width,c.height);}\n  resize();window.addEventListener('resize',resize);\n  const VS=`attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}`;\n  const FS=`precision highp float;uniform float uT;uniform vec2 uM,uR;uniform float uS;varying vec2 vU;\n  vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}\n  float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}\n  float fbm(vec2 p){float f=0.,a=.5,t=0.;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<6;i++){f+=a*n(p);t+=a;p=r*p*2.01;a*=.52;}return f/t;}\n  void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.08;vec2 m=uM;m.x*=ar;float md=length(uv-m);uv+=(m-uv)/(md*md+.08)*.024;\n  vec2 q=vec2(fbm(uv*1.7+t*.9),fbm(uv*1.7+vec2(5.2,1.3)+t*.74));vec2 r=vec2(fbm(uv*1.7+3.4*q+vec2(1.7,9.2)+t*.58),fbm(uv*1.7+3.4*q+vec2(8.3,2.8)+t*.42));float f=fbm(uv*1.7+3.4*r+t*.32);f+=uS*.1;f=clamp(f,0.,1.);\n  vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));col=mix(col,vec3(.96,.28,.55),smoothstep(.74,1.,f));\n  col+=vec3(.28,.06,.50)*exp(-md*2.0)*.8;vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.55,.0,1.);col+=.014;gl_FragColor=vec4(col,1.);}`;\n  function mkS(t,s){const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;}\n  const prog=gl.createProgram();gl.attachShader(prog,mkS(gl.VERTEX_SHADER,VS));gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);\n  const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);\n  const uT=gl.getUniformLocation(prog,'uT'),uM=gl.getUniformLocation(prog,'uM'),uR=gl.getUniformLocation(prog,'uR'),uS=gl.getUniformLocation(prog,'uS'),aP=gl.getAttribLocation(prog,'aP');\n  const mouse={x:.5,y:.5,tx:.5,ty:.5};\n  window.addEventListener('mousemove',e=>{mouse.tx=e.clientX/innerWidth;mouse.ty=1-e.clientY/innerHeight;});\n  let scroll=0;window.addEventListener('scroll',()=>{scroll=window.scrollY/(document.body.scrollHeight-innerHeight||1);},{passive:true});\n  let t=0;(function draw(){requestAnimationFrame(draw);t+=.012;mouse.x+=(mouse.tx-mouse.x)*.06;mouse.y+=(mouse.ty-mouse.y)*.06;gl.clearColor(.02,.03,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(prog);gl.uniform1f(uT,t);gl.uniform2f(uM,mouse.x,mouse.y);gl.uniform2f(uR,c.width,c.height);gl.uniform1f(uS,scroll);gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(aP);gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);})();\n})();\n\n// Scroll reveal\nconst obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('on');obs.unobserve(x.target);}}),{threshold:.08});\ndocument.querySelectorAll('.rv').forEach(el=>obs.observe(el));\nwindow.addEventListener('scroll',()=>{document.getElementById('nav').style.background=scrollY>60?'rgba(5,7,9,0.92)':'rgba(5,7,9,0.65)';},{passive:true});\n\n// Billing toggle\nvar annual=false;\nfunction toggleBilling(){\n  annual=!annual;\n  document.getElementById('thumb').classList.toggle('on',annual);\n  document.getElementById('lbl-mo').classList.toggle('active',!annual);\n  document.getElementById('lbl-yr').classList.toggle('active',annual);\n  document.getElementById('s-amt').textContent=annual?'$4.58':'$7';\n  document.getElementById('s-note').textContent=annual?'Billed $55/year':'Billed monthly';\n  document.getElementById('t-amt').textContent=annual?'$8.25':'$13';\n  document.getElementById('t-note').textContent=annual?'Billed $99/year':'Billed monthly';\n}\n\n// Hamburger\nvar hb=document.getElementById('hamburger'),mm=document.getElementById('mob-menu');\nif(hb&&mm){hb.addEventListener('click',function(){hb.classList.toggle('open');mm.classList.toggle('open');});}\nif(mm){mm.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){hb.classList.remove('open');mm.classList.remove('open');});});}\n"
+const PG_HTML = "<canvas id=\"bg\" style=\"position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none\"></canvas>\n<div id=\"app\">\n\n<nav id=\"nav\">\n  <a class=\"logo\" href=\"/\"><div class=\"logo-ring\"><div class=\"logo-spin\"></div><div class=\"logo-inner\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#3b82f6\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg></div></div><span class=\"logo-word\">Flashfo</span></a>\n  <div class=\"nav-links\">\n    <a href=\"/features\">Features</a><a href=\"/for-teachers\">For Teachers</a><a href=\"/for-parents\">For Parents</a><a href=\"/pricing\" class=\"active\">Pricing</a>\n  </div>\n  <div class=\"nav-btns\">\n    <button class=\"btn-ghost\">Sign in</button>\n    <button class=\"btn-cta\">Sign up free</button>\n    <button class=\"hamburger\" id=\"hamburger\"><span class=\"hb-line\"></span><span class=\"hb-line\"></span><span class=\"hb-line\"></span></button>\n  </div>\n</nav>\n<div class=\"mob-menu\" id=\"mob-menu\">\n  <a href=\"/features\">Features</a><a href=\"/for-teachers\">For Teachers</a><a href=\"/for-parents\">For Parents</a><a href=\"/pricing\" style=\"color:#a5b4fc\">Pricing</a>\n  <button class=\"mob-cta-btn\">Sign up free</button>\n</div>\n\n<!-- HERO -->\n<div class=\"hero\">\n  <div class=\"hero-badge\">Nova-Powered</div>\n  <h1>Simple, honest pricing</h1>\n  <p class=\"hero-sub\">Study smarter. Teach better. Cancel any time.</p>\n  <div class=\"toggle-wrap\">\n    <span class=\"tog-lbl active\" id=\"lbl-mo\">Monthly</span>\n    <div class=\"toggle-track\" id=\"toggle\" onclick=\"toggleBilling()\">\n      <div class=\"toggle-thumb\" id=\"thumb\"></div>\n    </div>\n    <span class=\"tog-lbl\" id=\"lbl-yr\">Annual <span class=\"save-tag\">Save up to 35%</span></span>\n  </div>\n  <div class=\"trial-notice\"><div class=\"trial-dot\"></div>3-day free trial on all plans \u00b7 no charge until day 4</div>\n</div>\n\n<!-- PRICING GRID -->\n<div class=\"pricing-section\">\n  <div class=\"pricing-grid\">\n\n    <!-- STUDENT PRO -->\n    <div class=\"pc pc-student rv\">\n      <div class=\"pop-badge\">Most popular</div>\n      <div class=\"pc-tier-row\">\n        <div class=\"tier-icon\" style=\"stroke:#818cf8\"><svg viewBox=\"0 0 24 24\" stroke=\"#818cf8\"><path d=\"M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5\"/></svg></div>\n        <span class=\"tier-name\">Student Pro</span>\n      </div>\n      <div class=\"price-row\">\n        <span class=\"price-amt\" id=\"s-amt\">$7</span>\n        <span class=\"price-per\">/mo</span>\n      </div>\n      <div class=\"price-note\" id=\"s-note\">Billed monthly</div>\n      <div class=\"pc-desc\">Unlimited everything for students who are serious about their grades.</div>\n      <button class=\"pc-btn\">Start 3-day free trial \u2192</button>\n      <div class=\"pc-div\"></div>\n      <div class=\"feat-section-lbl\">Everything included</div>\n      <ul class=\"feat-list\">\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#a5b4fc\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Unlimited AI flashcard generation</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#a5b4fc\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Unlimited quizzes &amp; study guides</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#a5b4fc\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Unlimited summaries</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#a5b4fc\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Spaced repetition</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#a5b4fc\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Progress tracking</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#a5b4fc\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Nova AI Tutor</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#a5b4fc\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Voice mode</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#a5b4fc\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Save unlimited decks</li>\n      </ul>\n    </div>\n\n    <!-- TEACHER PRO -->\n    <div class=\"pc pc-teacher rv d1\">\n      <div class=\"pc-tier-row\">\n        <div class=\"tier-icon\"><svg viewBox=\"0 0 24 24\" stroke=\"#fbbf24\"><path d=\"M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M23 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/></svg></div>\n        <span class=\"tier-name\">Teacher Pro</span>\n      </div>\n      <div class=\"price-row\">\n        <span class=\"price-amt\" id=\"t-amt\">$13</span>\n        <span class=\"price-per\">/mo</span>\n      </div>\n      <div class=\"price-note\" id=\"t-note\">Billed monthly</div>\n      <div class=\"pc-desc\">Everything in Student Pro, plus live classroom tools built for educators.</div>\n      <button class=\"pc-btn\">Start 3-day free trial \u2192</button>\n      <div class=\"pc-div\"></div>\n      <div class=\"feat-section-lbl\">Everything in Student Pro, plus</div>\n      <ul class=\"feat-list\">\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Host live quizzes (unlimited students)</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Class roster management</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Assignment builder</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Curriculum planner</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Student performance analytics</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Student Portal</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Nova AI Lesson Builder</li>\n      </ul>\n    </div>\n\n    <!-- SCHOOL -->\n    <div class=\"pc pc-school rv d2\">\n      <div class=\"pc-tier-row\">\n        <div class=\"tier-icon\"><svg viewBox=\"0 0 24 24\" stroke=\"rgba(255,255,255,0.55)\"><path d=\"M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/><polyline points=\"9 22 9 12 15 12 15 22\"/></svg></div>\n        <span class=\"tier-name\">School</span>\n      </div>\n      <div class=\"price-row\">\n        <span class=\"price-amt\" style=\"font-size:40px\">$149</span>\n        <span class=\"price-per\">/mo</span>\n      </div>\n      <div class=\"price-note\">Monthly \u00b7 Invoice available</div>\n      <div class=\"pc-desc\">For schools and districts. Manage multiple teachers and track usage school-wide.</div>\n      <button class=\"pc-btn\">Contact us \u2192</button>\n      <div class=\"pc-div\"></div>\n      <div class=\"feat-section-lbl\">Everything in Teacher Pro, plus</div>\n      <ul class=\"feat-list\">\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Up to 10 teacher accounts</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Unlimited student accounts</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>School-wide admin dashboard</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Priority support</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Billing by invoice available</li>\n        <li><div class=\"feat-chk\"><svg width=\"9\" height=\"9\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div>Annual pricing &amp; volume discounts</li>\n      </ul>\n    </div>\n  </div>\n</div>\n\n<!-- FREE TIER BANNER -->\n<div class=\"free-banner rv\">\n  <div class=\"free-card\">\n    <div class=\"free-left\">\n      <h3>Free tier always available</h3>\n      <p>15 AI generations per month, save up to 5 decks, join live quizzes as a student \u2014 no credit card required.</p>\n    </div>\n    <button class=\"free-btn\">Sign up free \u2192</button>\n  </div>\n</div>\n\n<!-- TRUST BADGES -->\n<div class=\"trust-row rv\">\n  <div class=\"trust-item\"><svg viewBox=\"0 0 24 24\"><path d=\"M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3\"/></svg>Cancel any time</div>\n  <div class=\"trust-item\"><svg viewBox=\"0 0 24 24\"><rect x=\"1\" y=\"4\" width=\"22\" height=\"16\" rx=\"2\"/><line x1=\"1\" y1=\"10\" x2=\"23\" y2=\"10\"/></svg>Secure payment via Stripe</div>\n  <div class=\"trust-item\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"/></svg>COPPA compliant</div>\n  <div class=\"trust-item\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"/></svg>FERPA friendly</div>\n</div>\n\n<!-- FAQ -->\n<div class=\"faq-section rv\">\n  <h2 class=\"faq-title\">Common questions</h2>\n  <div class=\"faq-item\"><div class=\"faq-q\">What happens after the 3-day free trial?</div><div class=\"faq-a\">Your card is charged on day 4. If you cancel before then, you're not charged anything. No hidden fees, no surprises.</div></div>\n  <div class=\"faq-item\"><div class=\"faq-q\">Can I switch between monthly and annual?</div><div class=\"faq-a\">Yes \u2014 you can switch at any time from your account settings. If you switch to annual mid-cycle, we prorate the difference.</div></div>\n  <div class=\"faq-item\"><div class=\"faq-q\">Is there a free plan?</div><div class=\"faq-a\">Yes. The free tier includes 15 AI generations per month, up to 5 saved decks, and the ability to join live quizzes as a student. No credit card needed.</div></div>\n  <div class=\"faq-item\"><div class=\"faq-q\">What's included in the School plan?</div><div class=\"faq-a\">The School plan covers up to 10 teacher accounts, unlimited student accounts, a school-wide admin dashboard, priority support, and billing by invoice. Contact us for annual pricing and volume discounts.</div></div>\n  <div class=\"faq-item\"><div class=\"faq-q\">Can students and teachers use the same account?</div><div class=\"faq-a\">They need separate accounts \u2014 Student Pro is built for individual learners, Teacher Pro adds classroom management tools on top. Lifetime members can switch between views in settings.</div></div>\n</div>\n\n<footer>\n  <div class=\"foot-inner\">\n    <a class=\"logo\" href=\"/\" style=\"text-decoration:none\">\n      <div style=\"width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#1e40af,#7c3aed);display:flex;align-items:center;justify-content:center\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"white\" style=\"animation:lp-rock 4s ease-in-out infinite\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg></div>\n      <span class=\"logo-word\">Flashfo</span>\n    </a>\n    <div class=\"foot-links\"><a href=\"#\">Privacy Policy</a><a href=\"#\">Terms of Service</a><a href=\"#\">Contact</a><a href=\"#\">Sign up free</a></div>\n    <div class=\"foot-copy\">\u00a9 2026 Flashfo. Built for students and teachers.</div>\n  </div>\n</footer>\n</div>"
 
 export default function PricingPage() {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [billing, setBilling] = useState('annual')
-  const [loading, setLoading] = useState(null)
-  const { user, profile } = useAuth()
   const router = useRouter()
-
-  const currentPlan = profile?.plan || 'free'
-
-  async function handleCheckout(planId) {
-    if (!user) { router.push('/auth?mode=signup'); return }
-    const priceId = PRICES[planId][billing === 'annual' && PRICES[planId].annual ? 'annual' : 'monthly']
-    setLoading(planId)
-    try {
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId, userId: user.id, userEmail: user.email }),
-      })
-      const data = await res.json()
-      if (data.url) window.location.href = data.url
-      else alert('Something went wrong. Please try again.')
-    } catch (e) {
-      alert('Something went wrong. Please try again.')
+  useEffect(() => {
+    const style = document.createElement('style')
+    style.id = 'pg-css'
+    style.textContent = PG_CSS
+    document.head.appendChild(style)
+    const script = document.createElement('script')
+    script.id = 'pg-js'
+    script.textContent = PG_JS
+    document.body.appendChild(script)
+    document.querySelectorAll('.pc-student .pc-btn, .btn-cta, .mob-cta-btn').forEach(b => b.addEventListener('click', () => router.push('/signup')))
+    document.querySelectorAll('.pc-teacher .pc-btn').forEach(b => b.addEventListener('click', () => router.push('/signup')))
+    document.querySelectorAll('.pc-school .pc-btn').forEach(b => b.addEventListener('click', () => router.push('/contact')))
+    document.querySelectorAll('.free-btn').forEach(b => b.addEventListener('click', () => router.push('/signup')))
+    document.querySelectorAll('.btn-ghost').forEach(b => b.addEventListener('click', () => router.push('/login')))
+    return () => {
+      document.getElementById('pg-css')?.remove()
+      document.getElementById('pg-js')?.remove()
     }
-    setLoading(null)
-  }
-
-  const isCurrentPlan = (planId) => {
-    if (planId === 'student' && currentPlan === 'student_pro') return true
-    if (planId === 'teacher' && currentPlan === 'teacher_pro') return true
-    if (planId === 'school'  && currentPlan === 'school') return true
-    return false
-  }
-
-  return (
-    <>
-      <style>{`
-        @media(max-width:768px){.spnl{display:none!important}.spcta{display:none!important}.sphb{display:flex!important}.pc-wrap{padding:32px 14px 40px!important}.pc-cards{grid-template-columns:1fr!important}}
-        .spnl{display:flex}.spcta{display:inline-flex}.sphb{display:none;flex-direction:column;gap:5px;cursor:pointer;background:transparent;border:none;padding:6px;outline:none}
-        .sphb-line{width:20px;height:2px;background:#8b949e;border-radius:1px;transition:transform .2s,opacity .2s;display:block}
-      
-        @keyframes nav-spin{to{transform:rotate(360deg)}}`}</style>
-      <nav style={{background:'#0d1117',borderBottom:'1px solid #21262d',padding:'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:56,position:'sticky',top:0,zIndex:50}}>
-        <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',flexShrink:0}}>
-          <div style={{position:'relative',width:28,height:28}}>
-            <div style={{position:'absolute',top:-2,left:-2,right:-2,bottom:-2,borderRadius:9,background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)',animation:'nav-spin 3s linear infinite'}}/>
-            <div style={{position:'absolute',top:2,left:2,right:2,bottom:2,background:'#0d1117',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <svg width="12" height="12" viewBox="0 0 14 14" fill="#3b82f6"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
-            </div>
-          </div>
-          <span style={{fontSize:15,fontWeight:700,color:'#e6edf3'}}>Flashfo</span>
-        </a>
-        <div className="spnl" style={{gap:20,alignItems:'center',flex:1,justifyContent:'center'}}>
-          {[{l:'Home',h:'/'},{l:'Features',h:'/features'},{l:'For Teachers',h:'/for-teachers'},{l:'For Parents',h:'/for-parents'},{l:'Pricing',h:'/pricing'}].map(({l,h})=>(
-            <a key={l} href={h} style={{fontSize:13,color:h==='/pricing'?'#a78bfa':'#8b949e',fontWeight:h==='/pricing'?600:400,textDecoration:'none',borderBottom:h==='/pricing'?'2px solid #a78bfa':'none',paddingBottom:2}}>{l}</a>
-          ))}
-        </div>
-        <a href="/auth?mode=signup" className="spcta" style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:700,padding:'8px 16px',textDecoration:'none',flexShrink:0}}>Sign up free</a>
-        <button className="sphb" onClick={()=>setMenuOpen(o=>!o)} aria-label="Menu">
-          <span className="sphb-line" style={{transform:menuOpen?'rotate(45deg) translateY(7px)':'none'}}/>
-          <span className="sphb-line" style={{opacity:menuOpen?0:1}}/>
-          <span className="sphb-line" style={{transform:menuOpen?'rotate(-45deg) translateY(-7px)':'none'}}/>
-        </button>
-      </nav>
-      {menuOpen && (
-        <div style={{background:'#0d1117',borderBottom:'1px solid #21262d',position:'sticky',top:56,zIndex:49}}>
-          {[{l:'Home',h:'/'},{l:'Features',h:'/features'},{l:'For Teachers',h:'/for-teachers'},{l:'For Parents',h:'/for-parents'},{l:'Pricing',h:'/pricing'}].map(({l,h})=>(
-            <a key={l} href={h} onClick={()=>setMenuOpen(false)} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px',borderBottom:'1px solid #21262d',fontSize:15,color:'#e6edf3',textDecoration:'none',fontWeight:500}}>
-              {l} <span style={{color:'#484f58'}}>{'›'}</span>
-            </a>
-          ))}
-          <a href="/auth?mode=signup" style={{display:'block',margin:'12px 16px 16px',padding:'13px 0',textAlign:'center',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:15,fontWeight:700,borderRadius:9,textDecoration:'none'}}>Sign up free</a>
-        </div>
-      )}
-    <div style={{ minHeight:'100vh', background:'#0d1117', padding:'60px 20px', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
-      <style>{`
-        @media(max-width:768px){
-          .pc-wrap{padding:32px 14px 40px!important}
-          .pc-cards{grid-template-columns:1fr!important;max-width:100%!important}
-          .pc-toggle{margin-bottom:24px!important}
-        }
-      `}</style>
-      <div style={{ maxWidth:960, margin:'0 auto' }}>
-
-        {/* Header */}
-        <div style={{ textAlign:'center', marginBottom:48 }}>
-          <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(167,139,250,0.08)', border:'1px solid rgba(167,139,250,0.2)', borderRadius:20, padding:'4px 14px', fontSize:11, fontWeight:700, color:'#a78bfa', marginBottom:16, letterSpacing:'0.05em' }}>
-            <svg width="10" height="10" viewBox="0 0 14 14" fill="#a78bfa"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
-            NOVA-POWERED
-          </div>
-          <h1 style={{ fontSize:40, fontWeight:800, color:'#e6edf3', letterSpacing:'-0.03em', margin:'0 0 12px' }}>Simple, honest pricing</h1>
-          <p style={{ fontSize:16, color:'#8b949e', margin:0 }}>Study smarter. Teach better. Cancel any time.</p>
-        </div>
-
-        {/* Billing toggle */}
-        <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:12, marginBottom:48 }}>
-          <span style={{ fontSize:14, color: billing==='monthly' ? '#e6edf3' : '#8b949e', fontWeight: billing==='monthly' ? 600 : 400 }}>Monthly</span>
-          <div onClick={()=>setBilling(b=>b==='monthly'?'annual':'monthly')}
-            style={{ width:48, height:26, borderRadius:13, background: billing==='annual' ? '#2563eb' : '#21262d', cursor:'pointer', position:'relative', transition:'background 0.2s' }}>
-            <div style={{ position:'absolute', top:3, left: billing==='annual' ? 25 : 3, width:20, height:20, borderRadius:'50%', background:'#fff', transition:'left 0.2s' }}/>
-          </div>
-          <span style={{ fontSize:14, color: billing==='annual' ? '#e6edf3' : '#8b949e', fontWeight: billing==='annual' ? 600 : 400 }}>
-            Annual <span style={{ fontSize:11, color:'#34d399', fontWeight:700 }}>Save up to 35%</span>
-          </span>
-        </div>
-
-        <div style={{ textAlign:'center', fontSize:13, color:'#34d399', marginBottom:32, fontWeight:600, fontSize:14, textAlign:'center' }}>
-          ✦ 3-day free trial on all plans · no charge until day 4
-        </div>
-
-        {/* Cards */}
-        <div className="pc-cards" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:20, alignItems:'start' }}>
-          {PLANS.map(plan => {
-            const isCurrent = isCurrentPlan(plan.id)
-            const showAnnual = billing === 'annual' && plan.annual
-            const price = showAnnual ? plan.annualMonthly : plan.monthly
-            const billed = showAnnual ? plan.annual : null
-
-            return (
-              <div key={plan.id} style={{ background:'#161b22', border:'1px solid '+(isCurrent ? plan.borderColor : '#21262d'), borderRadius:16, padding:'28px 24px', position:'relative', transition:'border-color 0.2s' }}>
-
-                {/* Badge */}
-                {plan.badge && (
-                  <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', background:plan.color, color:'#000', fontSize:11, fontWeight:700, padding:'3px 12px', borderRadius:20 }}>
-                    {plan.badge}
-                  </div>
-                )}
-
-                {isCurrent && (
-                  <div style={{ position:'absolute', top:-12, right:20, background:'#21262d', color:'#8b949e', fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:20 }}>
-                    Current plan
-                  </div>
-                )}
-
-                {/* Plan name + color bar */}
-                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-                  <div style={{ width:4, height:28, background:plan.color, borderRadius:2 }}/>
-                  <div>
-                    <div style={{ fontSize:18, fontWeight:700, color:'#e6edf3' }}>{plan.name}</div>
-                    {currentPlan === 'lifetime' && <div style={{ fontSize:11, color:'#a78bfa' }}>You have lifetime access ✦</div>}
-                  </div>
-                </div>
-
-                {/* Price */}
-                <div style={{ marginBottom:24 }}>
-                  <div style={{ display:'flex', alignItems:'baseline', gap:4 }}>
-                    <span style={{ fontSize:42, fontWeight:800, color:'#e6edf3', letterSpacing:'-0.03em' }}>${price.toFixed(2)}</span>
-                    <span style={{ fontSize:14, color:'#8b949e' }}>/mo</span>
-                  </div>
-                  {billed && <div style={{ fontSize:12, color:'#484f58', marginTop:2 }}>Billed ${billed}/year</div>}
-                  {!billed && plan.id !== 'school' && <div style={{ fontSize:12, color:'#484f58', marginTop:2 }}>Billed monthly</div>}
-                  {plan.id === 'school' && <div style={{ fontSize:12, color:'#484f58', marginTop:2 }}>Monthly · Invoice available</div>}
-                </div>
-
-                {/* CTA Button */}
-                <button
-                  onClick={() => !isCurrent && !loading && handleCheckout(plan.id)}
-                  disabled={isCurrent || loading === plan.id || currentPlan === 'lifetime'}
-                  style={{
-                    width:'100%', padding:'12px 0', borderRadius:10, border:'none', fontSize:14, fontWeight:700, cursor: (isCurrent || currentPlan==='lifetime') ? 'default' : 'pointer',
-                    background: isCurrent || currentPlan==='lifetime' ? '#21262d' : 'linear-gradient(90deg,#2563eb,#7c3aed)',
-                    color: isCurrent || currentPlan==='lifetime' ? '#8b949e' : '#fff',
-                    opacity: loading === plan.id ? 0.7 : 1,
-                    marginBottom:24,
-                  }}>
-                  {loading === plan.id ? 'Redirecting to Stripe...' :
-                   currentPlan === 'lifetime' ? 'Lifetime access ✦' :
-                   isCurrent ? 'Current plan' :
-                   'Start 3-day free trial →'}
-                </button>
-
-                {/* Features */}
-                <div>
-                  {plan.features.map((f,i) => (
-                    <div key={i} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <circle cx="7" cy="7" r="6.5" stroke={plan.color} strokeWidth="1"/>
-                        <path d="M4 7l2 2 4-4" stroke={plan.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      <span style={{ fontSize:13, color:'#8b949e' }}>{f}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Free tier note */}
-        <div style={{ textAlign:'center', marginTop:48, padding:'24px', background:'#161b22', borderRadius:12, border:'1px solid #21262d' }}>
-          <div style={{ fontSize:15, fontWeight:600, color:'#e6edf3', marginBottom:6 }}>Free tier always available</div>
-          <div style={{ fontSize:13, color:'#8b949e' }}>15 AI generations per month, save up to 5 decks, join live quizzes as a student — no credit card required.</div>
-          {!user && <button onClick={()=>router.push('/auth?mode=signup')} style={{ marginTop:14, padding:'8px 20px', borderRadius:8, border:'1px solid #30363d', background:'transparent', color:'#8b949e', fontSize:13, cursor:'pointer' }}>Sign up free →</button>}
-        </div>
-
-        {/* Trust badges */}
-        <div style={{ display:'flex', justifyContent:'center', gap:32, marginTop:40, flexWrap:'wrap' }}>
-          {['Cancel any time','Secure payment via Stripe','COPPA compliant','FERPA friendly'].map(t=>(
-            <div key={t} style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'#484f58' }}>
-              <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              {t}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-    </>
-  )
+  }, [router])
+  return <div suppressHydrationWarning dangerouslySetInnerHTML={{ __html: PG_HTML }} />
 }
