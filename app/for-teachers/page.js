@@ -1,326 +1,49 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+const TP_CSS = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml{scroll-behavior:smooth;overflow-x:hidden}\nbody{font-family:'Inter',-apple-system,sans-serif;background:#050709;color:#e2e8f0;overflow-x:hidden}\n#bg{position:fixed;inset:0;z-index:0;pointer-events:none}\n#app{position:relative;z-index:1}\n\n/* NAV */\nnav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 48px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,7,9,0.65);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.07);transition:background .3s}\n.logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}\n.logo-ring{position:relative;width:34px;height:34px;flex-shrink:0}\n.logo-spin{position:absolute;inset:-2px;border-radius:10px;background:conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6);animation:lp-spin 3s linear infinite}\n.logo-inner{position:absolute;inset:2px;border-radius:7px;background:#080b12;display:flex;align-items:center;justify-content:center}\n.logo-word{font-size:17px;font-weight:800;color:#e2e8f0;letter-spacing:-.02em}\n.nav-links{display:flex;gap:28px}\n.nav-links a{font-size:14px;font-weight:500;color:rgba(255,255,255,0.5);text-decoration:none;transition:color .2s}\n.nav-links a:hover,.nav-links a.active{color:#e2e8f0}\n.nav-btns{display:flex;gap:12px;align-items:center}\n.btn-ghost{font-size:14px;font-weight:600;color:rgba(255,255,255,0.5);background:none;border:none;cursor:pointer;font-family:inherit;transition:color .2s}\n.btn-ghost:hover{color:#e2e8f0}\n.btn-cta{padding:9px 22px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(135deg,#d97706,#b45309);box-shadow:0 4px 16px rgba(245,158,11,0.4);transition:all .15s}\n.btn-cta:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(245,158,11,0.55)}\n.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:6px}\n.hb-line{width:22px;height:2px;background:rgba(255,255,255,0.7);border-radius:1px;transition:all .3s;display:block}\n.hamburger.open .hb-line:nth-child(1){transform:rotate(45deg) translate(5px,5px)}\n.hamburger.open .hb-line:nth-child(2){opacity:0}\n.hamburger.open .hb-line:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}\n.mob-menu{display:none;position:fixed;top:64px;left:0;right:0;background:rgba(5,7,9,0.97);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.08);padding:20px 24px;flex-direction:column;gap:4px;z-index:99}\n.mob-menu.open{display:flex}\n.mob-menu a{font-size:16px;font-weight:600;color:rgba(255,255,255,0.7);text-decoration:none;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06)}\n.mob-menu a:last-of-type{border-bottom:none}\n.mob-cta-btn{margin-top:12px;padding:14px;border-radius:12px;border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,#d97706,#b45309);width:100%}\n@keyframes lp-spin{100%{transform:rotate(360deg)}}\n@keyframes lp-rock{0%,100%{transform:rotate(-4deg) scale(1)}50%{transform:rotate(4deg) scale(1.08)}}\n\n/* HERO */\n.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:130px 32px 80px;text-align:center;position:relative}\n.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:100px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(251,191,36,0.8);margin-bottom:32px;backdrop-filter:blur(12px);animation:fade-up .8s .1s both}\n@keyframes fade-up{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}\n.hero h1{font-size:clamp(44px,7vw,90px);font-weight:900;letter-spacing:-.045em;line-height:1.08;margin-bottom:24px;padding-bottom:.2em;overflow:visible;animation:line-up .9s .15s both}\n.hw{color:#e2e8f0}\n.hg{background:linear-gradient(135deg,#fbbf24,#f59e0b 40%,#d97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}\n@keyframes line-up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}\n.hero-sub{font-size:clamp(16px,2vw,20px);color:rgba(255,255,255,0.42);max-width:580px;line-height:1.7;margin-bottom:44px;animation:line-up 1s .35s both}\n.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:line-up 1s .5s both}\n.btn-primary{padding:16px 34px;border-radius:14px;border:none;cursor:pointer;font-family:inherit;font-size:16px;font-weight:700;color:#fff;background:linear-gradient(135deg,#d97706,#b45309);box-shadow:0 8px 32px rgba(245,158,11,0.4);position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s}\n.btn-primary::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent);transform:translateX(-100%);animation:btn-shine 2.8s ease infinite}\n@keyframes btn-shine{0%{transform:translateX(-100%)}55%,100%{transform:translateX(200%)}}\n.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 44px rgba(245,158,11,0.55)}\n.btn-outline{padding:16px 34px;border-radius:14px;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);font-size:16px;font-weight:600;backdrop-filter:blur(16px);transition:all .15s}\n.btn-outline:hover{background:rgba(255,255,255,0.13);color:#fff}\n\n/* STATS */\n.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:900px;margin:0 auto;padding:0 48px 80px;animation:line-up 1s .65s both}\n.stat-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:20px;padding:28px 20px;text-align:center;backdrop-filter:blur(16px);transition:all .3s;position:relative;overflow:hidden}\n.stat-card::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(245,158,11,0.5),transparent)}\n.stat-card:hover{background:rgba(255,255,255,0.07);transform:translateY(-3px)}\n.stat-num{font-size:clamp(36px,5vw,60px);font-weight:900;letter-spacing:-.04em;background:linear-gradient(135deg,#fbbf24,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:10px}\n.stat-lbl{font-size:13px;color:rgba(255,255,255,0.38);line-height:1.5}\n\n/* SECTIONS */\n.section{padding:100px 48px;position:relative}\n.sec-inner{max-width:1100px;margin:0 auto}\n.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fbbf24;margin-bottom:14px}\n.eyebrow::before{content:'';width:24px;height:1.5px;background:linear-gradient(90deg,#f59e0b,transparent)}\n.sec-title{font-size:clamp(32px,4.5vw,56px);font-weight:800;letter-spacing:-.04em;line-height:1.05;margin-bottom:18px;color:#e2e8f0}\n.sec-body{font-size:17px;color:rgba(255,255,255,0.4);line-height:1.75;max-width:500px;margin-bottom:36px}\n.split{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}\n.split.flip{direction:rtl}\n.split.flip>*{direction:ltr}\n.rv{opacity:0;transform:translateY(32px);transition:opacity .85s cubic-bezier(.23,1,.32,1),transform .85s cubic-bezier(.23,1,.32,1)}\n.rv.d1{transition-delay:.1s}.rv.d2{transition-delay:.2s}.rv.d3{transition-delay:.3s}\n.rv.on{opacity:1;transform:none}\n\n/* FEATURE LIST */\n.feat-list{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}\n.feat-item{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);transition:all .2s}\n.feat-item:hover{background:rgba(255,255,255,0.07);transform:translateX(4px)}\n.feat-dot{width:20px;height:20px;border-radius:50%;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}\n.feat-dot svg{width:10px;height:10px}\n.feat-txt{font-size:13px;color:rgba(255,255,255,0.7);line-height:1.5}\n\n/* LIVE QUIZ DEMO */\n.quiz-demo{background:rgba(8,12,22,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:20px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.6);backdrop-filter:blur(24px)}\n.qd-top{padding:12px 18px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:space-between}\n.live-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#f87171}\n.live-dot{width:7px;height:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444;animation:lb 1.2s ease-in-out infinite}\n@keyframes lb{0%,100%{opacity:1}50%{opacity:.3}}\n.qd-meta{font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1)}\n.qd-timer{font-size:13px;font-weight:800;color:#fbbf24}\n.qd-body{display:grid;grid-template-columns:1fr 1fr;min-height:280px}\n.qd-left{padding:22px;border-right:1px solid rgba(255,255,255,0.07)}\n.qd-q{font-size:15px;font-weight:700;color:#e2e8f0;line-height:1.4;margin-bottom:18px}\n.qd-choices{display:flex;flex-direction:column;gap:8px}\n.qd-ch{padding:10px 13px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);font-size:12px;font-weight:500;color:rgba(255,255,255,0.6);display:flex;align-items:center;gap:10px;position:relative;overflow:hidden;transition:all .4s}\n.qd-ch.correct{border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.08);color:#34d399}\n.qd-ch.correct::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#10b981}\n.qd-key{width:20px;height:20px;border-radius:5px;background:rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}\n.qd-ch.correct .qd-key{background:rgba(16,185,129,0.2);color:#34d399}\n.qd-pct{margin-left:auto;font-size:11px;font-weight:800}\n.qd-bar{position:absolute;left:0;top:0;bottom:0;pointer-events:none;transition:width 1.2s cubic-bezier(.23,1,.32,1) .3s}\n.qd-right{padding:18px}\n.qd-r-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,0.22);margin-bottom:12px}\n.lb-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);margin-bottom:7px;animation:si .4s cubic-bezier(.23,1,.32,1) both}\n@keyframes si{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}\n.lb-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}\n.lb-nm{font-size:12px;font-weight:600;color:rgba(255,255,255,0.7);flex:1}\n.lb-sc{font-size:12px;font-weight:800;color:#fbbf24}\n.lb-more{font-size:11px;color:rgba(255,255,255,0.25);text-align:center;padding:8px}\n\n/* LESSON PLAN DEMO */\n.lesson-card{background:rgba(8,12,22,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:20px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.6);backdrop-filter:blur(24px)}\n.lc-top{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:space-between}\n.lc-title{font-size:14px;font-weight:700;color:#e2e8f0}\n.lc-meta{font-size:11px;color:rgba(255,255,255,0.35)}\n.lc-nova{font-size:10px;font-weight:700;color:#fbbf24;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.22);padding:3px 9px;border-radius:20px}\n.lc-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,0.07)}\n.lc-tab{padding:10px 16px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);cursor:default;border-bottom:2px solid transparent;transition:all .2s}\n.lc-tab.active{color:#fbbf24;border-bottom-color:#f59e0b}\n.lc-body{padding:18px}\n.lc-section-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,0.22);margin-bottom:10px}\n.lc-obj{font-size:13px;color:rgba(255,255,255,0.65);line-height:1.6;padding:12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);margin-bottom:14px}\n.lc-warmup{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.65;padding:12px;border-radius:10px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.12)}\n.lc-actions{display:flex;gap:8px;padding:14px 18px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.15)}\n.lc-btn{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}\n.lc-btn-pdf{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6)}\n.lc-btn-quiz{background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.28);color:#fbbf24}\n\n/* ANALYTICS DEMO */\n.analytics-card{background:rgba(8,12,22,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:20px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.6);backdrop-filter:blur(24px)}\n.ac-top{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:space-between}\n.ac-title{font-size:13px;font-weight:700;color:#e2e8f0}\n.ac-done{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#34d399;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.22);padding:4px 10px;border-radius:20px}\n.ac-body{display:grid;grid-template-columns:1fr 1fr}\n.ac-left{padding:18px;border-right:1px solid rgba(255,255,255,0.07)}\n.ac-right{padding:18px}\n.ac-sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,0.22);margin-bottom:14px}\n.q-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}\n.q-lbl{font-size:11px;color:rgba(255,255,255,0.55);flex:1}\n.q-track{width:80px;height:7px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;flex-shrink:0}\n.q-fill{height:100%;border-radius:4px;transition:width 1.8s cubic-bezier(.23,1,.32,1);width:0}\n.q-pct{font-size:10px;font-weight:700;min-width:28px;text-align:right}\n.ac-alert{margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);font-size:11px;color:rgba(251,191,36,0.8);line-height:1.5}\n.st-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);margin-bottom:6px}\n.st-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}\n.st-info{flex:1}\n.st-nm{font-size:11px;font-weight:700;color:rgba(255,255,255,0.8)}\n.st-sub{font-size:10px;color:rgba(255,255,255,0.3)}\n.st-sc{font-size:12px;font-weight:800}\n\n/* TOOLS GRID */\n.tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}\n.tool-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:18px;padding:24px;position:relative;overflow:hidden;transition:all .3s}\n.tool-card::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(245,158,11,0.45),transparent)}\n.tool-card:hover{background:rgba(255,255,255,0.07);transform:translateY(-3px)}\n.tool-ico{width:38px;height:38px;border-radius:10px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:12px}\n.tool-ico svg{width:16px;height:16px;fill:none;stroke:#fbbf24;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}\n.tool-nm{font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:6px}\n.tool-d{font-size:12px;color:rgba(255,255,255,0.35);line-height:1.6}\n\n/* CTA */\n.cta{padding:120px 48px 140px;text-align:center;position:relative}\n.cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(245,158,11,0.08),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(217,119,6,0.06),transparent 60%);pointer-events:none}\n.cta-inner{max-width:640px;margin:0 auto;position:relative;z-index:1}\n.cta-title{font-size:clamp(36px,5.5vw,64px);font-weight:900;letter-spacing:-.04em;line-height:1.1;margin-bottom:18px;padding-bottom:.2em;overflow:visible;background:linear-gradient(135deg,#fff,#fde68a 40%,#fbbf24 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}\n.cta-sub{font-size:18px;color:rgba(255,255,255,0.38);margin-bottom:40px;line-height:1.65}\n.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}\n.cta-note{font-size:13px;color:rgba(255,255,255,0.25);margin-top:16px}\n\n/* FOOTER */\nfooter{padding:48px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(5,7,9,0.55);backdrop-filter:blur(12px)}\n.foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px}\n.foot-links{display:flex;gap:24px;flex-wrap:wrap}\n.foot-links a{font-size:13px;color:rgba(255,255,255,0.3);text-decoration:none;transition:color .2s}\n.foot-links a:hover{color:rgba(255,255,255,0.65)}\n.foot-copy{font-size:12px;color:rgba(255,255,255,0.18)}\n\n/* GLOW */\n.glow-amber{position:absolute;width:600px;height:400px;background:radial-gradient(ellipse,rgba(245,158,11,0.07),transparent 65%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}\n.glow-green{position:absolute;width:600px;height:400px;background:radial-gradient(ellipse,rgba(16,185,129,0.06),transparent 65%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}\n\n/* MOBILE */\n@media(max-width:768px){\n  nav{padding:12px 20px}\n  .nav-links{display:none!important}\n  .btn-ghost{display:none!important}\n  .hamburger{display:flex}\n  .hero{padding:100px 20px 60px}\n  .hero h1{font-size:clamp(36px,11vw,56px)}\n  .stats-grid{grid-template-columns:1fr 1fr;padding:0 20px 60px}\n  .section{padding:60px 20px}\n  .split{grid-template-columns:1fr;gap:40px}\n  .split.flip{direction:ltr}\n  .qd-body{grid-template-columns:1fr}\n  .qd-right{display:none}\n  .ac-body{grid-template-columns:1fr}\n  .ac-right{border-top:1px solid rgba(255,255,255,0.07);padding-top:14px}\n  .tools-grid{grid-template-columns:1fr;max-width:420px;margin:0 auto}\n  .cta{padding:80px 20px 120px}\n  footer{padding:40px 20px}\n  .foot-inner{flex-direction:column;align-items:center;text-align:center}\n}\n"
+
+const TP_JS = "(function(){\n  const c=document.getElementById('bg'),gl=c.getContext('webgl')||c.getContext('experimental-webgl');\n  if(!gl)return;\n  function resize(){c.width=innerWidth;c.height=innerHeight;gl.viewport(0,0,c.width,c.height);}\n  resize();window.addEventListener('resize',resize);\n  const VS=`attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}`;\n  const FS=`precision highp float;uniform float uT;uniform vec2 uM,uR;uniform float uS;varying vec2 vU;\n  vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}\n  float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}\n  float fbm(vec2 p){float f=0.,a=.5,t=0.;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<6;i++){f+=a*n(p);t+=a;p=r*p*2.01;a*=.52;}return f/t;}\n  void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.08;vec2 m=uM;m.x*=ar;float md=length(uv-m);uv+=(m-uv)/(md*md+.08)*.024;\n  vec2 q=vec2(fbm(uv*1.7+t*.9),fbm(uv*1.7+vec2(5.2,1.3)+t*.74));vec2 r=vec2(fbm(uv*1.7+3.4*q+vec2(1.7,9.2)+t*.58),fbm(uv*1.7+3.4*q+vec2(8.3,2.8)+t*.42));float f=fbm(uv*1.7+3.4*r+t*.32);f+=uS*.1;f=clamp(f,0.,1.);\n  vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));col=mix(col,vec3(.96,.28,.55),smoothstep(.74,1.,f));\n  col+=vec3(.28,.06,.50)*exp(-md*2.0)*.8;vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.55,.0,1.);col+=.014;gl_FragColor=vec4(col,1.);}`;\n  function mkS(t,s){const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;}\n  const prog=gl.createProgram();gl.attachShader(prog,mkS(gl.VERTEX_SHADER,VS));gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);\n  const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);\n  const uT=gl.getUniformLocation(prog,'uT'),uM=gl.getUniformLocation(prog,'uM'),uR=gl.getUniformLocation(prog,'uR'),uS=gl.getUniformLocation(prog,'uS'),aP=gl.getAttribLocation(prog,'aP');\n  const mouse={x:.5,y:.5,tx:.5,ty:.5};\n  window.addEventListener('mousemove',e=>{mouse.tx=e.clientX/innerWidth;mouse.ty=1-e.clientY/innerHeight;});\n  let scroll=0;window.addEventListener('scroll',()=>{scroll=window.scrollY/(document.body.scrollHeight-innerHeight||1);},{passive:true});\n  let t=0;(function draw(){requestAnimationFrame(draw);t+=.012;mouse.x+=(mouse.tx-mouse.x)*.06;mouse.y+=(mouse.ty-mouse.y)*.06;gl.clearColor(.02,.03,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(prog);gl.uniform1f(uT,t);gl.uniform2f(uM,mouse.x,mouse.y);gl.uniform2f(uR,c.width,c.height);gl.uniform1f(uS,scroll);gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(aP);gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);})();\n})();\n\nconst obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('on');obs.unobserve(x.target);}}),{threshold:.1});\ndocument.querySelectorAll('.rv').forEach(el=>obs.observe(el));\nwindow.addEventListener('scroll',()=>{document.getElementById('nav').style.background=scrollY>60?'rgba(5,7,9,0.92)':'rgba(5,7,9,0.65)';},{passive:true});\n\n// Animate quiz bars\nnew IntersectionObserver(entries=>{\n  if(entries[0].isIntersecting){document.querySelectorAll('.qd-bar').forEach(b=>{b.style.width=b.dataset.w+'%';});}\n},{threshold:.4}).observe(document.querySelector('.quiz-demo'));\n\n// Animate analytics bars\nnew IntersectionObserver(entries=>{\n  if(entries[0].isIntersecting){document.querySelectorAll('.q-fill').forEach(f=>{f.style.width=f.dataset.w+'%';});}\n},{threshold:.4}).observe(document.querySelector('.analytics-card'));\n\n// Hamburger\nvar hb=document.getElementById('hamburger'),mm=document.getElementById('mob-menu');\nif(hb&&mm){hb.addEventListener('click',function(){hb.classList.toggle('open');mm.classList.toggle('open');});}\n"
+
+const TP_HTML = "<canvas id=\"bg\" style=\"position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none\"></canvas>\n<div id=\"app\">\n\n<nav id=\"nav\">\n  <a class=\"logo\" href=\"/\">\n    <div class=\"logo-ring\"><div class=\"logo-spin\"></div><div class=\"logo-inner\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#3b82f6\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg></div></div>\n    <span class=\"logo-word\">Flashfo</span>\n  </a>\n  <div class=\"nav-links\">\n    <a href=\"/features\">Features</a>\n    <a href=\"/for-teachers\" class=\"active\">For Teachers</a>\n    <a href=\"/for-parents\">For Parents</a>\n    <a href=\"/pricing\">Pricing</a>\n  </div>\n  <div class=\"nav-btns\">\n    <button class=\"btn-ghost\">Sign in</button>\n    <button class=\"btn-cta\">Sign up free</button>\n    <button class=\"hamburger\" id=\"hamburger\"><span class=\"hb-line\"></span><span class=\"hb-line\"></span><span class=\"hb-line\"></span></button>\n  </div>\n</nav>\n\n<div class=\"mob-menu\" id=\"mob-menu\">\n  <a href=\"/features\">Features</a>\n  <a href=\"/for-teachers\" style=\"color:#fbbf24\">For Teachers</a>\n  <a href=\"/for-parents\">For Parents</a>\n  <a href=\"/pricing\">Pricing</a>\n  <button class=\"mob-cta-btn\">Sign up free</button>\n</div>\n\n<!-- HERO -->\n<section class=\"hero\">\n  <div class=\"hero-badge\">Flashfo \u00b7 For Teachers</div>\n  <h1><span class=\"hw\">Teach smarter.</span><br><span class=\"hg\">Save hours every week.</span></h1>\n  <p class=\"hero-sub\">Flashfo generates lesson plans, quizzes, and study materials in seconds. Run live classroom quizzes, track student performance, and manage your whole class \u2014 all in one workspace.</p>\n  <div class=\"hero-btns\">\n    <button class=\"btn-primary\">Start 3-day free trial \u2192</button>\n    <button class=\"btn-outline\">View Teacher Pro</button>\n  </div>\n</section>\n\n<!-- STATS -->\n<div class=\"stats-grid rv\">\n  <div class=\"stat-card\"><div class=\"stat-num\">4h</div><div class=\"stat-lbl\">saved per week on average</div></div>\n  <div class=\"stat-card\"><div class=\"stat-num\">30s</div><div class=\"stat-lbl\">to generate a full lesson plan</div></div>\n  <div class=\"stat-card\"><div class=\"stat-num\">\u221e</div><div class=\"stat-lbl\">students can join a live quiz</div></div>\n  <div class=\"stat-card\"><div class=\"stat-num\">1</div><div class=\"stat-lbl\">workspace for all teaching tools</div></div>\n</div>\n\n<!-- LIVE QUIZ -->\n<div class=\"section\">\n  <div class=\"glow-amber\"></div>\n  <div class=\"sec-inner\">\n    <div class=\"split\">\n      <div class=\"rv\">\n        <div class=\"eyebrow\">Live Quiz</div>\n        <h2 class=\"sec-title\">Your whole class, answering in real time</h2>\n        <p class=\"sec-body\">Generate a quiz from any topic, share a 6-digit code, and watch every student respond live. See who's struggling instantly \u2014 before you move on to the next topic.</p>\n        <div class=\"feat-list\">\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Nova generates questions from your topic in seconds</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Students join on any device \u2014 no app needed</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Live leaderboard keeps every student engaged</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Results breakdown shows exactly who struggled and why</div></div>\n        </div>\n      </div>\n      <div class=\"rv d2\">\n        <div class=\"quiz-demo\">\n          <div class=\"qd-top\">\n            <div class=\"live-pill\"><div class=\"live-dot\"></div>Live \u00b7 Q3 of 8</div>\n            <div class=\"qd-meta\">28 students \u00b7 0:42 left</div>\n            <div class=\"qd-timer\">0:42</div>\n          </div>\n          <div class=\"qd-body\">\n            <div class=\"qd-left\">\n              <div class=\"qd-q\">Which process do plants use to convert sunlight into glucose?</div>\n              <div class=\"qd-choices\">\n                <div class=\"qd-ch correct\">\n                  <div class=\"qd-bar\" data-w=\"75\" style=\"background:rgba(16,185,129,0.08)\"></div>\n                  <div class=\"qd-key\">A</div>Photosynthesis<span class=\"qd-pct\" style=\"color:#34d399\">75%</span>\n                </div>\n                <div class=\"qd-ch\">\n                  <div class=\"qd-bar\" data-w=\"18\" style=\"background:rgba(239,68,68,0.06)\"></div>\n                  <div class=\"qd-key\">B</div>Cellular respiration<span class=\"qd-pct\" style=\"color:#f87171\">18%</span>\n                </div>\n                <div class=\"qd-ch\">\n                  <div class=\"qd-bar\" data-w=\"7\" style=\"background:rgba(239,68,68,0.06)\"></div>\n                  <div class=\"qd-key\">C</div>Osmosis<span class=\"qd-pct\" style=\"color:#f87171\">7%</span>\n                </div>\n              </div>\n            </div>\n            <div class=\"qd-right\">\n              <div class=\"qd-r-lbl\">Leaderboard</div>\n              <div class=\"lb-row\" style=\"animation-delay:0s\"><div class=\"lb-av\" style=\"background:rgba(245,158,11,0.15);color:#fbbf24\">TR</div><div class=\"lb-nm\">Tyler R.</div><div class=\"lb-sc\">360</div></div>\n              <div class=\"lb-row\" style=\"animation-delay:.1s\"><div class=\"lb-av\" style=\"background:rgba(99,102,241,0.15);color:#818cf8\">AS</div><div class=\"lb-nm\">Ava S.</div><div class=\"lb-sc\">310</div></div>\n              <div class=\"lb-row\" style=\"animation-delay:.2s\"><div class=\"lb-av\" style=\"background:rgba(16,185,129,0.15);color:#34d399\">BW</div><div class=\"lb-nm\">Ben W.</div><div class=\"lb-sc\">290</div></div>\n              <div class=\"lb-more\">+25 more students</div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- LESSON BUILDER -->\n<div class=\"section\" style=\"background:rgba(8,12,22,0.35)\">\n  <div class=\"glow-amber\" style=\"background:radial-gradient(ellipse,rgba(245,158,11,0.06),transparent 65%)\"></div>\n  <div class=\"sec-inner\">\n    <div class=\"split flip\">\n      <div class=\"rv\">\n        <div class=\"eyebrow\">Lesson Builder</div>\n        <h2 class=\"sec-title\">A complete lesson plan in 30 seconds</h2>\n        <p class=\"sec-body\">Tell Nova the topic, grade, and duration. Get a fully structured lesson plan with objectives, warm-up, main activity, and assessment \u2014 ready to use in class, with zero extra work from you.</p>\n        <div class=\"feat-list\">\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Customizable sections for any teaching style</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">One click to auto-generate a quiz from the lesson topic</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Export as PDF or save to your personal lesson library</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Works for any subject and any grade level</div></div>\n        </div>\n      </div>\n      <div class=\"rv d2\">\n        <div class=\"lesson-card\">\n          <div class=\"lc-top\">\n            <div><div class=\"lc-title\">The Water Cycle</div><div class=\"lc-meta\">Grade 6 \u00b7 45 min</div></div>\n            <div class=\"lc-nova\">Nova Lesson Builder</div>\n          </div>\n          <div class=\"lc-tabs\">\n            <div class=\"lc-tab active\">Objectives</div>\n            <div class=\"lc-tab\">Warm-up</div>\n            <div class=\"lc-tab\">Main activity</div>\n            <div class=\"lc-tab\">Assessment</div>\n          </div>\n          <div class=\"lc-body\">\n            <div class=\"lc-section-lbl\">Learning Objectives</div>\n            <div class=\"lc-obj\">Students will identify and describe the four stages of the water cycle \u2014 evaporation, condensation, precipitation, and collection.</div>\n            <div class=\"lc-section-lbl\">Warm-up (5 min)</div>\n            <div class=\"lc-warmup\">Ask students: \"Where does rain come from?\" Record ideas on the board without correcting \u2014 revisit at the end of the lesson.</div>\n          </div>\n          <div class=\"lc-actions\">\n            <button class=\"lc-btn lc-btn-pdf\">Export PDF</button>\n            <button class=\"lc-btn lc-btn-quiz\">Auto-generate quiz \u2192</button>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- CLASS ANALYTICS -->\n<div class=\"section\">\n  <div class=\"glow-green\"></div>\n  <div class=\"sec-inner\">\n    <div class=\"split\">\n      <div class=\"rv\">\n        <div class=\"eyebrow\" style=\"color:#34d399;--eyebrow-color:#10b981\">Class Analytics</div>\n        <h2 class=\"sec-title\">Know exactly who needs help</h2>\n        <p class=\"sec-body\">After every quiz, Flashfo shows you which questions tripped up the class and which students need support \u2014 without you having to grade a single thing.</p>\n        <div class=\"feat-list\">\n          <div class=\"feat-item\"><div class=\"feat-dot\" style=\"background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.25)\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#34d399\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Per-question breakdown \u2014 see exactly where the class struggled</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\" style=\"background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.25)\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#34d399\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Student-level scores with flags for who needs support</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\" style=\"background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.25)\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#34d399\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Nova recommends which topics to revisit next class</div></div>\n          <div class=\"feat-item\"><div class=\"feat-dot\" style=\"background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.25)\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#34d399\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg></div><div class=\"feat-txt\">Zero grading \u2014 Flashfo scores and organizes everything automatically</div></div>\n        </div>\n      </div>\n      <div class=\"rv d2\">\n        <div class=\"analytics-card\">\n          <div class=\"ac-top\">\n            <div class=\"ac-title\">Question breakdown \u00b7 Water Cycle Quiz</div>\n            <div class=\"ac-done\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#34d399\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg>Quiz complete</div>\n          </div>\n          <div class=\"ac-body\">\n            <div class=\"ac-left\">\n              <div class=\"ac-sec\">Question breakdown</div>\n              <div class=\"q-row\"><div class=\"q-lbl\">Q1: Define evaporation</div><div class=\"q-track\"><div class=\"q-fill\" data-w=\"94\" style=\"background:#10b981\"></div></div><div class=\"q-pct\" style=\"color:#34d399\">94%</div></div>\n              <div class=\"q-row\"><div class=\"q-lbl\">Q2: Water cycle stages</div><div class=\"q-track\"><div class=\"q-fill\" data-w=\"88\" style=\"background:#10b981\"></div></div><div class=\"q-pct\" style=\"color:#34d399\">88%</div></div>\n              <div class=\"q-row\"><div class=\"q-lbl\">Q3: Condensation vs precipitation</div><div class=\"q-track\"><div class=\"q-fill\" data-w=\"61\" style=\"background:#fbbf24\"></div></div><div class=\"q-pct\" style=\"color:#fbbf24\">61%</div></div>\n              <div class=\"q-row\"><div class=\"q-lbl\">Q4: Groundwater movement</div><div class=\"q-track\"><div class=\"q-fill\" data-w=\"42\" style=\"background:#f87171\"></div></div><div class=\"q-pct\" style=\"color:#f87171\">42%</div></div>\n              <div class=\"ac-alert\">\u2197 Recommend revisiting: Groundwater movement \u2014 58% of the class missed this</div>\n            </div>\n            <div class=\"ac-right\">\n              <div class=\"ac-sec\">Student performance \u00b7 Class 7B</div>\n              <div class=\"st-row\"><div class=\"st-av\" style=\"background:rgba(245,158,11,0.15);color:#fbbf24\">TR</div><div class=\"st-info\"><div class=\"st-nm\">Tyler R.</div></div><div class=\"st-sc\" style=\"color:#34d399\">96%</div></div>\n              <div class=\"st-row\"><div class=\"st-av\" style=\"background:rgba(99,102,241,0.15);color:#818cf8\">AS</div><div class=\"st-info\"><div class=\"st-nm\">Ava S.</div></div><div class=\"st-sc\" style=\"color:#34d399\">82%</div></div>\n              <div class=\"st-row\"><div class=\"st-av\" style=\"background:rgba(59,130,246,0.15);color:#60a5fa\">BW</div><div class=\"st-info\"><div class=\"st-nm\">Ben W.</div></div><div class=\"st-sc\" style=\"color:#fbbf24\">68%</div></div>\n              <div class=\"st-row\" style=\"border-color:rgba(239,68,68,0.18);background:rgba(239,68,68,0.04)\"><div class=\"st-av\" style=\"background:rgba(239,68,68,0.15);color:#f87171\">CL</div><div class=\"st-info\"><div class=\"st-nm\">Casey L.</div><div class=\"st-sub\">Needs support</div></div><div class=\"st-sc\" style=\"color:#f87171\">44%</div></div>\n              <div style=\"font-size:11px;color:rgba(255,255,255,0.2);text-align:center;padding:10px 0\">Showing 4 of 28 students</div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- MORE TOOLS -->\n<div class=\"section\" style=\"background:rgba(8,12,22,0.35)\">\n  <div class=\"sec-inner\">\n    <div style=\"text-align:center;margin-bottom:56px\" class=\"rv\">\n      <div class=\"eyebrow\" style=\"justify-content:center\">More Teacher Tools</div>\n      <h2 class=\"sec-title\">Everything in one place</h2>\n    </div>\n    <div class=\"tools-grid rv d1\">\n      <div class=\"tool-card\"><div class=\"tool-ico\"><svg viewBox=\"0 0 24 24\"><path d=\"M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2\"/><rect x=\"9\" y=\"3\" width=\"6\" height=\"4\" rx=\"2\"/><line x1=\"9\" y1=\"12\" x2=\"15\" y2=\"12\"/><line x1=\"9\" y1=\"16\" x2=\"13\" y2=\"16\"/></svg></div><div class=\"tool-nm\">Assignment builder</div><div class=\"tool-d\">Create and assign tasks to your class. Students complete them at their own pace.</div></div>\n      <div class=\"tool-card\"><div class=\"tool-ico\"><svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"/><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"/><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"/></svg></div><div class=\"tool-nm\">Curriculum planner</div><div class=\"tool-d\">Map your whole year by subject and term. Stay organized across every class.</div></div>\n      <div class=\"tool-card\"><div class=\"tool-ico\"><svg viewBox=\"0 0 24 24\"><path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"/><circle cx=\"12\" cy=\"7\" r=\"4\"/></svg></div><div class=\"tool-nm\">Student Portal</div><div class=\"tool-d\">Students see their assignments, scores, and study materials in one personal view.</div></div>\n      <div class=\"tool-card\"><div class=\"tool-ico\"><svg viewBox=\"0 0 24 24\"><path d=\"M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M23 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/></svg></div><div class=\"tool-nm\">Class roster management</div><div class=\"tool-d\">Add students, create class codes, and manage your classroom from one screen.</div></div>\n      <div class=\"tool-card\"><div class=\"tool-ico\"><svg viewBox=\"0 0 24 24\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg></div><div class=\"tool-nm\">AI study material generation</div><div class=\"tool-d\">Generate flashcards, quizzes, and guides for your students from any topic.</div></div>\n      <div class=\"tool-card\" style=\"border-color:rgba(245,158,11,0.2);background:rgba(245,158,11,0.04)\"><div class=\"tool-ico\" style=\"background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.3)\"><svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M9 9h6M9 12h6M9 15h4\"/></svg></div><div class=\"tool-nm\">School Admin Dashboard</div><div class=\"tool-d\">On the School plan: manage up to 10 teacher accounts and track school-wide usage.</div></div>\n    </div>\n  </div>\n</div>\n\n<!-- CTA -->\n<div class=\"cta\">\n  <div class=\"cta-inner rv\">\n    <h2 class=\"cta-title\">Save 4+ hours every week</h2>\n    <p class=\"cta-sub\">Try Teacher Pro free for 3 days. No commitment, cancel any time.</p>\n    <div class=\"cta-btns\">\n      <button class=\"btn-primary\" style=\"font-size:17px;padding:18px 40px\">Start 3-day free trial \u2192</button>\n      <button class=\"btn-outline\" style=\"font-size:17px;padding:18px 36px\">View pricing</button>\n    </div>\n    <div class=\"cta-note\">Teacher Pro \u00b7 $13/month after trial \u00b7 Cancel any time</div>\n  </div>\n</div>\n\n<!-- FOOTER -->\n<footer>\n  <div class=\"foot-inner\">\n    <a class=\"logo\" href=\"/\" style=\"text-decoration:none\">\n      <div style=\"width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#1e40af,#7c3aed);display:flex;align-items:center;justify-content:center\">\n        <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"white\" style=\"animation:lp-rock 4s ease-in-out infinite\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg>\n      </div>\n      <span class=\"logo-word\">Flashfo</span>\n    </a>\n    <div class=\"foot-links\">\n      <a href=\"#\">Privacy Policy</a><a href=\"#\">Terms of Service</a><a href=\"#\">Contact</a><a href=\"#\">Sign up free</a>\n    </div>\n    <div class=\"foot-copy\">\u00a9 2026 Flashfo. Built for students and teachers.</div>\n  </div>\n</footer>\n</div>"
+
 export default function ForTeachersPage() {
-  const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    const id = 'flashfo-page-css'
-    if (document.getElementById(id)) return
-    const s = document.createElement('style')
-    s.id = id
-    s.textContent = '@keyframes nav-spin{to{transform:rotate(360deg)}} @keyframes card-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}} .page-card-anim{opacity:0;animation:card-in .42s cubic-bezier(.22,.68,0,1.2) forwards} @keyframes nova-pulse{0%,100%{opacity:1}50%{opacity:.4}} .nova-pulse{animation:nova-pulse .9s ease-in-out infinite}'
-    document.head.appendChild(s)
-  }, [])
+    const style = document.createElement('style')
+    style.id = 'tp-css'
+    style.textContent = TP_CSS
+    document.head.appendChild(style)
 
-  const NAV_LINKS = [
-    {label:'Home',href:'/'},
-    {label:'Features',href:'/features'},
-    {label:'For Teachers',href:'/for-teachers'},
-    {label:'Pricing',href:'/pricing'},
-    {label:"What's new",href:'/whats-new'},
-  ]
+    const script = document.createElement('script')
+    script.id = 'tp-js'
+    script.textContent = TP_JS
+    document.body.appendChild(script)
 
-  const S = {
-    page: {minHeight:'100vh',background:'#080c14',fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",color:'#e6edf3'},
-    section: {padding:'56px 24px',maxWidth:900,margin:'0 auto'},
-    card: {background:'#161b22',border:'1px solid #21262d',borderRadius:14,padding:'20px 22px'},
-    badge: (col) => ({display:'inline-flex',alignItems:'center',gap:5,borderRadius:20,padding:'4px 12px',fontSize:11,fontWeight:700,letterSpacing:'.05em',background:'rgba('+col+',.08)',border:'1px solid rgba('+col+',.2)',color:'rgb('+col+')',marginBottom:14}),
-    tick: {display:'flex',alignItems:'center',gap:10,fontSize:13,color:'#8b949e',marginBottom:8},
-    tickDot: (col) => ({width:20,height:20,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,background:'rgba('+col+',.15)'}),
-  }
+    document.querySelectorAll('.btn-primary, .btn-cta, .mob-cta-btn').forEach(btn => {
+      btn.addEventListener('click', () => router.push('/signup'))
+    })
+    document.querySelectorAll('.btn-ghost').forEach(btn => {
+      btn.addEventListener('click', () => router.push('/login'))
+    })
+    document.querySelectorAll('.btn-outline').forEach(btn => {
+      btn.addEventListener('click', () => router.push('/pricing'))
+    })
+
+    return () => {
+      const s = document.getElementById('tp-css')
+      const sc = document.getElementById('tp-js')
+      if (s) s.remove()
+      if (sc) sc.remove()
+    }
+  }, [router])
 
   return (
-    <div style={S.page}>
-      <nav style={{background:'#0d1117',borderBottom:'1px solid #21262d',padding:'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:56,position:'sticky',top:0,zIndex:50}}>
-        <style>{`
-          @media(max-width:768px){.spnl{display:none!important}.spcta{display:none!important}.sphb{display:flex!important}}
-          .spnl{display:flex}.spcta{display:inline-flex}.sphb{display:none;flex-direction:column;gap:5px;cursor:pointer;background:transparent;border:none;padding:6px;outline:none}
-          .sphb-line{width:20px;height:2px;background:#8b949e;border-radius:1px;transition:transform .2s,opacity .2s;display:block}
-        
-          @media(max-width:768px){
-            .mg2{grid-template-columns:1fr!important}
-            .mg4{grid-template-columns:1fr 1fr!important;gap:10px!important}
-            .mg3{grid-template-columns:1fr!important}
-            .mob-section{padding:40px 16px!important}
-          }`}</style>
-          <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',flexShrink:0}}>
-            <div style={{position:'relative',width:28,height:28}}>
-              <div style={{position:'absolute',top:-2,left:-2,right:-2,bottom:-2,borderRadius:9,background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6)',animation:'nav-spin 3s linear infinite'}}/>
-              <div style={{position:'absolute',top:2,left:2,right:2,bottom:2,background:'#0d1117',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="#3b82f6"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
-              </div>
-            </div>
-            <span style={{fontSize:15,fontWeight:700,color:'#e6edf3'}}>Flashfo</span>
-          </a>
-          <div className="spnl" style={{gap:20,alignItems:'center',flex:1,justifyContent:'center'}}>
-            {[{l:'Home',h:'/'},{l:'Features',h:'/features'},{l:'For Teachers',h:'/for-teachers'},{l:'For Parents',h:'/for-parents'},{l:'Pricing',h:'/pricing'}].map(({l,h})=>(
-              <a key={l} href={h} style={{fontSize:13,color:h==='/for-teachers'?'#34d399':'#8b949e',fontWeight:h==='/for-teachers'?600:400,textDecoration:'none',borderBottom:h==='/for-teachers'?'2px solid #34d399':'none',paddingBottom:2}}>{l}</a>
-            ))}
-          </div>
-          <a href="/auth?mode=signup" className="spcta" style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:700,padding:'8px 16px',textDecoration:'none',flexShrink:0}}>Sign up free</a>
-          <button className="sphb" onClick={()=>setMenuOpen(o=>!o)} aria-label="Menu">
-            <span className="sphb-line" style={{transform:menuOpen?'rotate(45deg) translateY(7px)':'none'}}/>
-            <span className="sphb-line" style={{opacity:menuOpen?0:1}}/>
-            <span className="sphb-line" style={{transform:menuOpen?'rotate(-45deg) translateY(-7px)':'none'}}/>
-          </button>
-        </nav>
-        {menuOpen && (
-          <div style={{background:'#0d1117',borderBottom:'1px solid #21262d',position:'sticky',top:56,zIndex:49}}>
-            {[{l:'Home',h:'/'},{l:'Features',h:'/features'},{l:'For Teachers',h:'/for-teachers'},{l:'For Parents',h:'/for-parents'},{l:'Pricing',h:'/pricing'}].map(({l,h})=>(
-              <a key={l} href={h} onClick={()=>setMenuOpen(false)}
-                style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px',borderBottom:'1px solid #21262d',fontSize:15,color:'#e6edf3',textDecoration:'none',fontWeight:500}}>
-                {l} <span style={{color:'#484f58'}}>{'›'}</span>
-              </a>
-            ))}
-            <a href="/auth?mode=signup" style={{display:'block',margin:'12px 16px 16px',padding:'13px 0',textAlign:'center',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:15,fontWeight:700,borderRadius:9,textDecoration:'none'}}>Sign up free</a>
-          </div>
-        )}
-
-      {/* HERO */}
-      <div style={{padding:'64px 24px 40px',textAlign:'center',maxWidth:760,margin:'0 auto'}}>
-        <div style={{display:'inline-flex',alignItems:'center',gap:6,borderRadius:20,padding:'4px 12px',fontSize:11,fontWeight:700,letterSpacing:'.05em',background:'rgba(52,211,153,.08)',border:'1px solid rgba(52,211,153,.2)',color:'#34d399',marginBottom:18}}>
-          <div className="nova-pulse" style={{width:7,height:7,borderRadius:'50%',background:'#34d399'}}/>
-          FLASHFO · FOR TEACHERS
-        </div>
-        <h1 style={{fontSize:46,fontWeight:800,letterSpacing:'-.03em',lineHeight:1.1,marginBottom:16}}>
-          Teach smarter.<br/>
-          <span style={{background:'linear-gradient(90deg,#34d399,#2563eb)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Save hours every week.</span>
-        </h1>
-        <p style={{fontSize:16,color:'#8b949e',lineHeight:1.7,marginBottom:28,maxWidth:560,margin:'0 auto 28px'}}>
-          Flashfo generates lesson plans, quizzes, and study materials in seconds. Run live classroom quizzes, track student performance, and manage your whole class — all in one workspace.
-        </p>
-        <div style={{display:'flex',gap:12,justifyContent:'center'}}>
-          <button onClick={()=>router.push('/auth?mode=signup')} style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:10,fontSize:14,fontWeight:700,cursor:'pointer',padding:'12px 28px',letterSpacing:'-.01em'}}>
-            Start 3-day free trial →
-          </button>
-          <button onClick={()=>router.push('/pricing')} style={{background:'transparent',color:'#8b949e',border:'1px solid #30363d',borderRadius:10,fontSize:13,cursor:'pointer',padding:'12px 20px'}}>
-            View Teacher Pro
-          </button>
-        </div>
-      </div>
-
-      {/* STATS */}
-      <div style={{maxWidth:900,margin:'0 auto 56px',padding:'0 24px'}}>
-        <div className="mg4" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
-          {[
-            {num:'4h',label:'saved per week on average',col:'#34d399'},
-            {num:'30s',label:'to generate a full lesson plan',col:'#e6edf3'},
-            {num:'∞',label:'students can join a live quiz',col:'#e6edf3'},
-            {num:'1',label:'workspace for all teaching tools',col:'#e6edf3'},
-          ].map(({num,label,col})=>(
-            <div key={num} style={{textAlign:'center',background:'#161b22',border:'1px solid '+(col==='#34d399'?'rgba(52,211,153,.2)':'#21262d'),borderRadius:12,padding:'20px 12px'}}>
-              <div style={{fontSize:34,fontWeight:800,letterSpacing:'-.03em',color:col}}>{num}</div>
-              <div style={{fontSize:12,color:'#8b949e',marginTop:5,lineHeight:1.4}}>{label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* FEATURE 1: LIVE QUIZ */}
-      <div className="mob-section" style={{...S.section,paddingTop:0}}>
-        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
-          <div>
-            <div style={S.badge('52,211,153')}>LIVE QUIZ</div>
-            <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Your whole class, answering in real time</h2>
-            <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Generate a quiz from any topic, share a 6-digit code, and watch every student respond live. See who's struggling instantly — before you move on to the next topic.</p>
-            {['Nova generates questions from your topic in seconds','Students join on any device — no app needed','Live leaderboard keeps every student engaged','Results breakdown shows exactly who struggled and why'].map(t=>(
-              <div key={t} style={S.tick}>
-                <div style={S.tickDot('52,211,153')}>
-                  <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                </div>
-                {t}
-              </div>
-            ))}
-          </div>
-          <div style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,overflow:'hidden'}}>
-            <div style={{background:'#161b22',padding:'10px 14px',borderBottom:'1px solid #21262d',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <div style={{display:'flex',alignItems:'center',gap:6}}>
-                <div style={{width:7,height:7,borderRadius:'50%',background:'#34d399'}}/>
-                <span style={{fontSize:12,fontWeight:600,color:'#e6edf3'}}>Live · Q3 of 8</span>
-              </div>
-              <span style={{fontSize:11,color:'#8b949e'}}>28 students · 0:42 left</span>
-            </div>
-            <div style={{padding:14}}>
-              <div style={{fontSize:13,color:'#e6edf3',fontWeight:500,marginBottom:12,lineHeight:1.5}}>Which process do plants use to convert sunlight into glucose?</div>
-              {[
-                {l:'A',t:'Photosynthesis',pct:75,correct:true},
-                {l:'B',t:'Cellular respiration',pct:18,correct:false},
-                {l:'C',t:'Osmosis',pct:7,correct:false},
-              ].map(({l,t,pct,correct})=>(
-                <div key={l} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 12px',borderRadius:8,border:'1px solid '+(correct?'rgba(52,211,153,.3)':'#21262d'),background:correct?'rgba(52,211,153,.08)':'#161b22',marginBottom:6}}>
-                  <div style={{width:22,height:22,borderRadius:6,background:correct?'rgba(52,211,153,.2)':'#21262d',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:correct?'#34d399':'#6b7280'}}>{l}</div>
-                  <span style={{flex:1,fontSize:12,color:correct?'#34d399':'#8b949e'}}>{t}</span>
-                  <span style={{fontSize:12,fontWeight:700,color:correct?'#34d399':'#8b949e'}}>{pct}%</span>
-                </div>
-              ))}
-              <div style={{marginTop:12,fontSize:10,color:'#484f58',letterSpacing:'.07em',marginBottom:8}}>LEADERBOARD</div>
-              {[
-                {init:'TR',name:'Tyler R.',score:360,col:'rgba(245,158,11,.2)',tcol:'#f59e0b'},
-                {init:'AS',name:'Ava S.',score:310,col:'rgba(167,139,250,.2)',tcol:'#a78bfa'},
-                {init:'BW',name:'Ben W.',score:290,col:'rgba(37,99,235,.2)',tcol:'#3b82f6'},
-              ].map(({init,name,score,col,tcol},i)=>(
-                <div key={name} className="page-card-anim" style={{display:'flex',alignItems:'center',gap:10,padding:'7px 0',borderBottom:'1px solid #21262d',animationDelay:i*100+'ms'}}>
-                  <div style={{width:28,height:28,borderRadius:'50%',background:col,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:tcol,flexShrink:0}}>{init}</div>
-                  <div style={{flex:1,fontSize:12,color:'#e6edf3'}}>{name}</div>
-                  <div style={{fontSize:13,fontWeight:700,color:tcol}}>{score}</div>
-                  <div style={{width:20,height:20,borderRadius:6,background:'rgba(52,211,153,.2)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                    <svg width="9" height="9" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                  </div>
-                </div>
-              ))}
-              <div style={{textAlign:'center',fontSize:11,color:'#484f58',marginTop:8}}>+25 more students</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* FEATURE 2: LESSON BUILDER */}
-      <div style={{background:'#161b22',borderTop:'1px solid #21262d',borderBottom:'1px solid #21262d',padding:'56px 24px'}}>
-        <div style={{maxWidth:900,margin:'0 auto',display:'grid',gridTemplateColumns:'1fr 1fr',gap:36,alignItems:'start'}}>
-          <div style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,padding:16}}>
-            <div style={{fontSize:10,color:'#484f58',letterSpacing:'.07em',marginBottom:8}}>NOVA LESSON BUILDER</div>
-            <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
-              <div style={{background:'#161b22',border:'1px solid #30363d',borderRadius:7,padding:'8px 10px',fontSize:11,color:'#e6edf3'}}>The Water Cycle</div>
-              <div style={{background:'#161b22',border:'1px solid #30363d',borderRadius:7,padding:'8px 10px',fontSize:11,color:'#e6edf3'}}>Grade 6 · 45 min</div>
-            </div>
-            <div style={{display:'flex',gap:5,flexWrap:'wrap',marginBottom:12}}>
-              {['Objectives','Warm-up','Main activity','Assessment'].map(s=>(
-                <div key={s} style={{padding:'4px 9px',borderRadius:5,fontSize:10,fontWeight:600,background:'rgba(37,99,235,.1)',border:'1px solid rgba(37,99,235,.25)',color:'#3b82f6'}}>{s}</div>
-              ))}
-            </div>
-            <div style={{borderTop:'1px solid #21262d',paddingTop:12}}>
-              {[
-                {heading:'Learning Objectives',col:'#3b82f6',body:'Students will identify and describe the four stages of the water cycle — evaporation, condensation, precipitation, and collection.'},
-                {heading:'Warm-up (5 min)',col:'#a78bfa',body:'Ask students: "Where does rain come from?" Record ideas on the board without correcting — revisit at the end of the lesson.'},
-                {heading:'Main activity (30 min)',col:'#34d399',body:'Students label a water cycle diagram in pairs, then create their own mini-cycle using a sealed bag, water, and sunlight...'},
-              ].map(({heading,col,body})=>(
-                <div key={heading} style={{marginBottom:12}}>
-                  <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:5}}>
-                    <div style={{width:3,height:14,background:col,borderRadius:2}}/>
-                    <span style={{fontSize:11,fontWeight:700,color:'#e6edf3'}}>{heading}</span>
-                  </div>
-                  <p style={{fontSize:11,color:'#8b949e',lineHeight:1.6}}>{body}</p>
-                </div>
-              ))}
-            </div>
-            <div style={{display:'flex',gap:8,marginTop:12,paddingTop:10,borderTop:'1px solid #21262d'}}>
-              <button style={{flex:1,padding:'6px 0',borderRadius:7,border:'1px solid #30363d',background:'transparent',color:'#8b949e',fontSize:11,cursor:'pointer'}}>Export PDF</button>
-              <button style={{flex:1,padding:'6px 0',borderRadius:7,border:'1px solid rgba(37,99,235,.3)',background:'rgba(37,99,235,.08)',color:'#3b82f6',fontSize:11,fontWeight:600,cursor:'pointer'}}>Auto-generate quiz →</button>
-            </div>
-          </div>
-          <div>
-            <div style={S.badge('37,99,235')}>LESSON BUILDER</div>
-            <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>A complete lesson plan in 30 seconds</h2>
-            <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,marginBottom:20}}>Tell Nova the topic, grade, and duration. Get a fully structured lesson plan with objectives, warm-up, main activity, and assessment — ready to use in class, with zero extra work from you.</p>
-            {['Customizable sections for any teaching style','One click to auto-generate a quiz from the lesson topic','Export as PDF or save to your personal lesson library','Works for any subject and any grade level'].map(t=>(
-              <div key={t} style={S.tick}>
-                <div style={S.tickDot('37,99,235')}>
-                  <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                </div>
-                {t}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* FEATURE 3: CLASS ANALYTICS */}
-      <div style={S.section}>
-        <div style={{textAlign:'center',marginBottom:32}}>
-          <div style={S.badge('245,158,11')}>CLASS ANALYTICS</div>
-          <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',marginBottom:10,color:'#e6edf3'}}>Know exactly who needs help</h2>
-          <p style={{fontSize:14,color:'#8b949e',lineHeight:1.7,maxWidth:540,margin:'0 auto'}}>After every quiz, Flashfo shows you which questions tripped up the class and which students need support — without you having to grade a single thing.</p>
-        </div>
-        <div className="mg2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-          <div style={S.card}>
-            <div style={{fontSize:12,fontWeight:700,color:'#e6edf3',marginBottom:14}}>Question breakdown · Water Cycle Quiz</div>
-            {[
-              {q:'Q1: Define evaporation',pct:94,col:'#34d399'},
-              {q:'Q2: Water cycle stages',pct:88,col:'#34d399'},
-              {q:'Q3: Condensation vs precipitation',pct:61,col:'#f59e0b'},
-              {q:'Q4: Groundwater movement',pct:42,col:'#f87171'},
-            ].map(({q,pct,col})=>(
-              <div key={q} style={{marginBottom:10}}>
-                <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:4}}>
-                  <span style={{color:'#8b949e'}}>{q}</span>
-                  <span style={{color:col,fontWeight:700}}>{pct}%</span>
-                </div>
-                <div style={{height:7,background:'#21262d',borderRadius:4,overflow:'hidden'}}>
-                  <div style={{width:pct+'%',height:'100%',background:col,borderRadius:4}}/>
-                </div>
-              </div>
-            ))}
-            <div style={{marginTop:10,padding:'10px 12px',background:'rgba(239,68,68,.06)',border:'1px solid rgba(239,68,68,.15)',borderRadius:8,fontSize:11,color:'#f87171'}}>
-              ↗ Recommend revisiting: Groundwater movement — 58% of the class missed this
-            </div>
-          </div>
-          <div style={S.card}>
-            <div style={{fontSize:12,fontWeight:700,color:'#e6edf3',marginBottom:14}}>Student performance · Class 7B</div>
-            {[
-              {init:'TR',name:'Tyler R.',pct:96,col:'#34d399',note:''},
-              {init:'AS',name:'Ava S.',pct:82,col:'#3b82f6',note:''},
-              {init:'BW',name:'Ben W.',pct:68,col:'#f59e0b',note:''},
-              {init:'CL',name:'Casey L.',pct:44,col:'#f87171',note:'Needs support'},
-            ].map(({init,name,pct,col,note})=>(
-              <div key={name} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid #21262d'}}>
-                <div style={{width:30,height:30,borderRadius:'50%',background:'rgba('+col.replace('#','').match(/../g).map(h=>parseInt(h,16)).join(',')+',.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:col,flexShrink:0}}>{init}</div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:12,color:'#e6edf3'}}>{name}</div>
-                  {note&&<div style={{fontSize:10,color:col}}>{note}</div>}
-                </div>
-                <div style={{display:'flex',alignItems:'center',gap:6}}>
-                  <div style={{width:56,height:5,background:'#21262d',borderRadius:3,overflow:'hidden'}}>
-                    <div style={{width:pct+'%',height:'100%',background:col,borderRadius:3}}/>
-                  </div>
-                  <span style={{fontSize:11,color:col,fontWeight:700,minWidth:28}}>{pct}%</span>
-                </div>
-              </div>
-            ))}
-            <div style={{fontSize:10,color:'#484f58',marginTop:8,textAlign:'center'}}>Showing 4 of 28 students</div>
-          </div>
-        </div>
-      </div>
-
-      {/* MORE TOOLS GRID */}
-      <div style={{background:'#161b22',borderTop:'1px solid #21262d',borderBottom:'1px solid #21262d',padding:'56px 24px'}}>
-        <div style={{maxWidth:900,margin:'0 auto'}}>
-          <div style={{textAlign:'center',marginBottom:28}}>
-            <div style={S.badge('167,139,250')}>MORE TEACHER TOOLS</div>
-            <h2 style={{fontSize:30,fontWeight:800,letterSpacing:'-.02em',color:'#e6edf3'}}>Everything in one place</h2>
-          </div>
-          <div className="mg3" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-            {[
-              {t:'Assignment builder',d:'Create and assign tasks to your class. Students complete them at their own pace.',c:'#3b82f6'},
-              {t:'Curriculum planner',d:'Map your whole year by subject and term. Stay organized across every class.',c:'#a78bfa'},
-              {t:'Student Portal',d:'Students see their assignments, scores, and study materials in one personal view.',c:'#34d399'},
-              {t:'Class roster management',d:'Add students, create class codes, and manage your classroom from one screen.',c:'#f59e0b'},
-              {t:'AI study material generation',d:'Generate flashcards, quizzes, and guides for your students from any topic.',c:'#3b82f6'},
-              {t:'School Admin Dashboard',d:'On the School plan: manage up to 10 teacher accounts and track school-wide usage.',c:'#f59e0b'},
-            ].map(({t,d,c})=>(
-              <div key={t} style={{background:'#0d1117',border:'1px solid #21262d',borderRadius:12,padding:'16px 18px'}}>
-                <div style={{width:8,height:8,borderRadius:'50%',background:c,marginBottom:10}}/>
-                <div style={{fontSize:13,fontWeight:700,color:'#e6edf3',marginBottom:6}}>{t}</div>
-                <div style={{fontSize:12,color:'#8b949e',lineHeight:1.6}}>{d}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* BOTTOM CTA */}
-      <div style={{background:'linear-gradient(135deg,rgba(52,211,153,.08),rgba(37,99,235,.08))',borderTop:'1px solid #21262d',padding:'56px 24px',textAlign:'center'}}>
-        <div style={{maxWidth:520,margin:'0 auto'}}>
-          <h2 style={{fontSize:34,fontWeight:800,letterSpacing:'-.02em',color:'#e6edf3',marginBottom:10}}>Save 4+ hours every week</h2>
-          <p style={{fontSize:15,color:'#8b949e',marginBottom:24}}>Try Teacher Pro free for 3 days. No commitment, cancel any time.</p>
-          <button onClick={()=>router.push('/auth?mode=signup')} style={{background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',border:'none',borderRadius:10,fontSize:15,fontWeight:700,cursor:'pointer',padding:'14px 36px',letterSpacing:'-.01em'}}>
-            Start 3-day free trial →
-          </button>
-          <div style={{fontSize:12,color:'#484f58',marginTop:12}}>Teacher Pro · $13/month after trial · Cancel any time</div>
-        </div>
-      </div>
-    </div>
+    <div
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: TP_HTML }}
+    />
   )
 }
