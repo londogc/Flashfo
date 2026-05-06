@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
+import StreakCard from '@/components/StreakCard'
 
 const TOOLS = [
   { href:'/ai-tutor',    label:'Nova',        sub:'AI tutor',     icon:'M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z', color:'#a78bfa', bg:'rgba(124,58,237,0.12)', border:'rgba(124,58,237,0.25)' },
@@ -52,7 +53,6 @@ function TodayInHistory() {
       .catch(() => setLoading(false))
   }, [])
 
-  // Auto-cycle through events every 5 seconds
   useEffect(() => {
     if (events.length < 2) return
     const t = setInterval(() => setIdx(i => (i + 1) % events.length), 9000)
@@ -63,7 +63,6 @@ function TodayInHistory() {
 
   return (
     <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: 16, overflow: 'hidden' }}>
-      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <div style={{ width: 24, height: 24, borderRadius: 8, background: 'rgba(251,146,60,0.15)', border: '1px solid rgba(251,146,60,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -74,7 +73,6 @@ function TodayInHistory() {
         <span style={{ fontSize: 10, color: '#fb923c', fontWeight: 600 }}>{new Date().toLocaleDateString('en-US',{month:'long',day:'numeric'})}</span>
       </div>
 
-      {/* Content */}
       {loading ? (
         <div style={{ height: 60, display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid #fb923c', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }}/>
@@ -88,7 +86,6 @@ function TodayInHistory() {
           <p style={{ fontSize: 13, color: 'var(--c-t1)', lineHeight: 1.55, margin: '0 0 12px' }}>
             {event.text.length > 140 ? event.text.slice(0, 140) + '…' : event.text}
           </p>
-          {/* Dot nav */}
           <div style={{ display: 'flex', gap: 4 }}>
             {events.map((_, i) => (
               <button key={i} onClick={() => setIdx(i)}
@@ -99,8 +96,7 @@ function TodayInHistory() {
       ) : (
         <p style={{ fontSize: 12, color: 'var(--c-t3)', margin: 0 }}>Could not load events for today.</p>
       )}
-
-          </div>
+    </div>
   )
 }
 
@@ -119,12 +115,6 @@ export default function DashboardPage() {
 
   async function loadData() {
     setDataLoading(true)
-    // Spaced repetition — count cards due today
-    try {
-      // Nova noticed — check for repeated topics
-      const topicLog = JSON.parse(localStorage.getItem('ff-topic-log') || '{}')
-      const topEntry = Object.entries(topicLog).find(([,v]) => v >= 3)
-    } catch(e) {}
     try {
       const sm2 = JSON.parse(localStorage.getItem('ff-sm2') || '{}')
       const now = Date.now()
@@ -154,7 +144,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ padding: 'clamp(14px,3vw,24px) clamp(12px,3vw,24px) 0', maxWidth: 1100, margin: '0 auto' }}>
-            
+
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
         <div>
@@ -182,7 +172,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Metric cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
+      <div className="dash-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
         <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: 16 }}>
           <div style={{ fontSize: 9, color: 'var(--c-t3)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700, marginBottom: 8 }}>Subjects active</div>
           {subjectColors.length > 0 ? (
@@ -245,22 +235,27 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Nova Noticed callout — shown after 3+ sessions */}
-        {!dataLoading && classes.length > 0 && (
-          <div style={{ background:'rgba(124,58,237,0.06)', border:'1px solid rgba(167,139,250,0.2)', borderRadius:14, padding:'12px 16px', marginBottom:14, display:'flex', alignItems:'center', gap:12 }}>
-            <div style={{ width:32, height:32, borderRadius:10, background:'rgba(167,139,250,0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z"/></svg>
-            </div>
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:12, fontWeight:700, color:'#a78bfa', marginBottom:2 }}>Nova noticed</div>
-              <div style={{ fontSize:12, color:'var(--c-t2)', lineHeight:1.5 }}>You've been studying {classes[0]?.name || 'your class'} — want Nova to build you a comprehensive study guide to round it out?</div>
-            </div>
-            <a href="/ai-tutor" style={{ flexShrink:0, background:'rgba(167,139,250,0.15)', border:'1px solid rgba(167,139,250,0.3)', borderRadius:8, padding:'6px 12px', fontSize:11, fontWeight:700, color:'#a78bfa', textDecoration:'none', whiteSpace:'nowrap' }}>Ask Nova →</a>
-          </div>
-        )}
+      {/* ── Study Streaks ── */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 10, color: 'var(--c-t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Study progress</div>
+        <StreakCard />
+      </div>
 
-      
-      {/* ── What's due today ── */}
+      {/* Nova Noticed callout */}
+      {!dataLoading && classes.length > 0 && (
+        <div style={{ background:'rgba(124,58,237,0.06)', border:'1px solid rgba(167,139,250,0.2)', borderRadius:14, padding:'12px 16px', marginBottom:14, display:'flex', alignItems:'center', gap:12 }}>
+          <div style={{ width:32, height:32, borderRadius:10, background:'rgba(167,139,250,0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z"/></svg>
+          </div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:'#a78bfa', marginBottom:2 }}>Nova noticed</div>
+            <div style={{ fontSize:12, color:'var(--c-t2)', lineHeight:1.5 }}>You've been studying {classes[0]?.name || 'your class'} — want Nova to build you a comprehensive study guide to round it out?</div>
+          </div>
+          <a href="/ai-tutor" style={{ flexShrink:0, background:'rgba(167,139,250,0.15)', border:'1px solid rgba(167,139,250,0.3)', borderRadius:8, padding:'6px 12px', fontSize:11, fontWeight:700, color:'#a78bfa', textDecoration:'none', whiteSpace:'nowrap' }}>Ask Nova →</a>
+        </div>
+      )}
+
+      {/* What's due today */}
       {assignments.length > 0 && (
         <div style={{ background:'rgba(245,158,11,0.06)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:12, padding:'14px 16px', marginBottom:12 }}>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
@@ -269,16 +264,13 @@ export default function DashboardPage() {
           </div>
           {assignments.filter(a => {
             if (!a.due_date) return false
-            const d = new Date(a.due_date)
-            const now = new Date()
-            return d.toDateString() === now.toDateString()
+            return new Date(a.due_date).toDateString() === new Date().toDateString()
           }).length === 0 ? (
             <p style={{ fontSize:13, color:'var(--c-t3)' }}>Nothing due today — you're all caught up!</p>
           ) : (
             assignments.filter(a => {
               if (!a.due_date) return false
-              const d = new Date(a.due_date)
-              return d.toDateString() === new Date().toDateString()
+              return new Date(a.due_date).toDateString() === new Date().toDateString()
             }).map((a,i) => (
               <div key={a.id||i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 0', borderTop: i>0 ? '1px solid rgba(245,158,11,0.1)' : 'none' }}>
                 <span style={{ fontSize:13, color:'var(--c-t1)', fontWeight:500 }}>{a.title}</span>
@@ -289,7 +281,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-{/* Bottom row — 3 columns: Active class | Recent activity | This Day in History */}
+      {/* Bottom row */}
       <div className="dash-bottom" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 1fr', gap: 12, paddingBottom: 24 }}>
 
         {/* Active class */}
@@ -347,6 +339,6 @@ export default function DashboardPage() {
         <TodayInHistory />
       </div>
 
-          </div>
+    </div>
   )
 }
