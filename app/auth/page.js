@@ -1,35 +1,205 @@
 'use client'
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-
-const AUTH_CSS = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml,body{height:100%;overflow-x:hidden}\nbody{font-family:'Inter',-apple-system,sans-serif;background:#050709;color:#e2e8f0;min-height:100vh}\n#bg{position:fixed;inset:0;z-index:0;pointer-events:none}\n#app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}\n\n/* NAV */\nnav{padding:18px 40px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}\n.logo{display:flex;align-items:center;gap:10px;text-decoration:none;cursor:pointer}\n.logo-ring{position:relative;width:34px;height:34px}\n.logo-spin{position:absolute;inset:-2px;border-radius:10px;background:conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6);animation:lp-spin 3s linear infinite}\n.logo-inner{position:absolute;inset:2px;border-radius:7px;background:#080b12;display:flex;align-items:center;justify-content:center}\n.logo-word{font-size:17px;font-weight:800;color:#e2e8f0;letter-spacing:-.02em}\n.nav-right{font-size:14px;color:rgba(255,255,255,0.4)}\n.nav-right a{color:#818cf8;font-weight:600;text-decoration:none;margin-left:6px}\n.nav-right a:hover{color:#a5b4fc}\n@keyframes lp-spin{100%{transform:rotate(360deg)}}\n@keyframes lp-rock{0%,100%{transform:rotate(-4deg) scale(1)}50%{transform:rotate(4deg) scale(1.08)}}\n\n/* MAIN LAYOUT */\n.main{flex:1;display:flex;align-items:center;justify-content:center;padding:20px 24px 60px;gap:40px;flex-wrap:wrap}\n\n/* \u2500\u2500 PLAN SELECTOR SIDE \u2500\u2500 */\n.plan-side{width:440px;flex-shrink:0}\n.plan-headline{font-size:clamp(22px,3vw,30px);font-weight:900;letter-spacing:-.04em;line-height:1.1;margin-bottom:8px;padding-bottom:.1em;overflow:visible;background:linear-gradient(135deg,#fff,#e2e8f0 40%,#a5b4fc 85%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}\n.plan-sub{font-size:14px;color:rgba(255,255,255,0.38);margin-bottom:24px;line-height:1.6}\n\n/* billing toggle */\n.bill-row{display:flex;align-items:center;gap:12px;margin-bottom:18px}\n.bill-lbl{font-size:13px;font-weight:600;color:rgba(255,255,255,0.35);transition:color .2s}\n.bill-lbl.on{color:#e2e8f0}\n.bill-track{width:44px;height:24px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#7c3aed);cursor:pointer;position:relative;box-shadow:0 0 10px rgba(99,102,241,0.35)}\n.bill-thumb{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:transform .25s cubic-bezier(.23,1,.32,1);box-shadow:0 2px 6px rgba(0,0,0,.3)}\n.bill-thumb.on{transform:translateX(20px)}\n.bill-save{font-size:11px;font-weight:700;color:#34d399;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);padding:2px 9px;border-radius:100px}\n\n/* plan cards */\n.plans{display:flex;flex-direction:column;gap:10px}\n.plan-card{border-radius:16px;padding:18px 20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}\n.plan-card::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;opacity:0;transition:opacity .2s}\n.plan-card.selected::before{opacity:1}\n.plan-card.selected{transform:none}\n\n/* free */\n.plan-free{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.09)}\n.plan-free.selected{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2)}\n.plan-free::before{background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)}\n/* student */\n.plan-student{background:rgba(37,99,235,0.08);border:1.5px solid rgba(99,102,241,0.2)}\n.plan-student.selected{background:rgba(37,99,235,0.15);border-color:rgba(129,140,248,0.5);box-shadow:0 0 40px rgba(99,102,241,0.15)}\n.plan-student::before{background:linear-gradient(90deg,transparent,#6366f1,#a78bfa,transparent)}\n/* teacher */\n.plan-teacher{background:rgba(180,83,9,0.08);border:1.5px solid rgba(245,158,11,0.18)}\n.plan-teacher.selected{background:rgba(180,83,9,0.15);border-color:rgba(251,191,36,0.45);box-shadow:0 0 40px rgba(245,158,11,0.1)}\n.plan-teacher::before{background:linear-gradient(90deg,transparent,#f59e0b,#fbbf24,transparent)}\n\n.plan-inner{display:flex;align-items:center;gap:14px}\n.plan-radio{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);flex-shrink:0;transition:all .2s;display:flex;align-items:center;justify-content:center}\n.plan-card.selected .plan-radio{border-color:#6366f1;background:#6366f1}\n.plan-student.selected .plan-radio{border-color:#6366f1;background:#6366f1}\n.plan-teacher.selected .plan-radio{border-color:#f59e0b;background:#f59e0b}\n.plan-free.selected .plan-radio{border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.15)}\n.plan-radio-dot{width:6px;height:6px;border-radius:50%;background:#fff;opacity:0;transition:opacity .2s}\n.plan-card.selected .plan-radio-dot{opacity:1}\n.plan-info{flex:1}\n.plan-name{font-size:14px;font-weight:700;color:#e2e8f0;display:flex;align-items:center;gap:8px}\n.plan-badge{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding:2px 8px;border-radius:100px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff}\n.plan-feats{font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;line-height:1.5}\n.plan-price{text-align:right;flex-shrink:0}\n.plan-amt{font-size:20px;font-weight:900;letter-spacing:-.03em;color:#e2e8f0;transition:all .3s}\n.plan-per{font-size:11px;color:rgba(255,255,255,0.3)}\n.plan-note{font-size:10px;color:rgba(255,255,255,0.22);margin-top:2px;transition:all .3s}\n.plan-student .plan-amt{color:#a5b4fc}\n.plan-teacher .plan-amt{color:#fbbf24}\n.plan-free .plan-amt{color:rgba(255,255,255,0.6)}\n\n.trial-note{margin-top:14px;display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,0.3)}\n.trial-dot{width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;flex-shrink:0}\n\n/* \u2500\u2500 AUTH FORM SIDE \u2500\u2500 */\n.auth-side{width:380px;flex-shrink:0}\n.auth-card{background:rgba(8,12,22,0.88);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:32px;backdrop-filter:blur(32px);box-shadow:0 40px 100px rgba(0,0,0,.6)}\n\n/* tabs */\n.auth-tabs{display:flex;background:rgba(255,255,255,0.05);border-radius:12px;padding:4px;margin-bottom:28px}\n.auth-tab{flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;color:rgba(255,255,255,0.38)}\n.auth-tab.active{background:rgba(255,255,255,0.1);color:#e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.3)}\n\n.auth-title{font-size:20px;font-weight:800;color:#e2e8f0;letter-spacing:-.03em;margin-bottom:6px}\n.auth-sub{font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:24px;line-height:1.5}\n.auth-plan-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-size:11px;font-weight:700;margin-bottom:20px;border:1px solid}\n.auth-plan-pill.student{background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.25);color:#a5b4fc}\n.auth-plan-pill.teacher{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.25);color:#fbbf24}\n.auth-plan-pill.free{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);color:rgba(255,255,255,0.5)}\n\n/* google button */\n.google-btn{width:100%;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);color:#e2e8f0;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;margin-bottom:20px}\n.google-btn:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.2)}\n.google-icon{width:18px;height:18px;flex-shrink:0}\n\n.divider-row{display:flex;align-items:center;gap:12px;margin-bottom:20px}\n.div-line{flex:1;height:1px;background:rgba(255,255,255,0.08)}\n.div-txt{font-size:11px;font-weight:600;color:rgba(255,255,255,0.2);white-space:nowrap}\n\n/* form fields */\n.field{margin-bottom:14px}\n.field label{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,0.45);margin-bottom:6px}\n.field input{width:100%;padding:12px 14px;border-radius:11px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#e2e8f0;font-size:14px;font-family:inherit;outline:none;transition:all .2s}\n.field input:focus{border-color:rgba(129,140,248,0.5);background:rgba(255,255,255,0.08);box-shadow:0 0 0 3px rgba(99,102,241,0.1)}\n.field input::placeholder{color:rgba(255,255,255,0.2)}\n\n/* submit button */\n.submit-btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;color:#fff;position:relative;overflow:hidden;transition:all .15s;margin-top:4px}\n.submit-btn.student-btn{background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 8px 24px rgba(99,102,241,0.4)}\n.submit-btn.teacher-btn{background:linear-gradient(135deg,#d97706,#b45309);box-shadow:0 8px 24px rgba(245,158,11,0.35)}\n.submit-btn.free-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.16)}\n.submit-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transform:translateX(-100%);animation:shine 2.8s ease infinite}\n@keyframes shine{0%{transform:translateX(-100%)}55%,100%{transform:translateX(200%)}}\n.submit-btn:hover{transform:translateY(-1px)}\n\n.auth-legal{font-size:11px;color:rgba(255,255,255,0.22);text-align:center;margin-top:16px;line-height:1.6}\n.auth-legal a{color:rgba(129,140,248,0.7);text-decoration:none}\n\n/* trial banner for paid plans */\n.trial-banner{margin-top:16px;padding:10px 14px;border-radius:10px;background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.18);display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(52,211,153,0.8)}\n.trial-banner svg{width:14px;height:14px;fill:none;stroke:#10b981;stroke-width:1.5;stroke-linecap:round;flex-shrink:0}\n\n/* SIGN IN specific */\n.forgot{text-align:right;margin-top:-8px;margin-bottom:14px}\n.forgot a{font-size:12px;color:rgba(129,140,248,0.6);text-decoration:none}\n.forgot a:hover{color:#818cf8}\n\n@media(max-width:900px){\n  .main{flex-direction:column;align-items:center;padding:16px 16px 60px}\n  .plan-side{width:100%;max-width:440px;order:2}\n  .auth-side{width:100%;max-width:440px;order:1}\n}\n"
-const AUTH_JS = "// \u2500\u2500 WebGL \u2500\u2500\n(function(){\n  const c=document.getElementById('bg');\n  c.style.cssText='position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none';\n  const gl=c.getContext('webgl')||c.getContext('experimental-webgl');\n  if(!gl)return;\n  function resize(){c.width=innerWidth;c.height=innerHeight;gl.viewport(0,0,c.width,c.height);}\n  resize();window.addEventListener('resize',resize);\n  const VS=`attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}`;\n  const FS=`precision highp float;uniform float uT;uniform vec2 uM,uR;varying vec2 vU;\n  vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}\n  float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}\n  float fbm(vec2 p){float f=0.,a=.5,t=0.;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<6;i++){f+=a*n(p);t+=a;p=r*p*2.01;a*=.52;}return f/t;}\n  void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.08;vec2 m=uM;m.x*=ar;float md=length(uv-m);uv+=(m-uv)/(md*md+.08)*.024;\n  vec2 q=vec2(fbm(uv*1.7+t*.9),fbm(uv*1.7+vec2(5.2,1.3)+t*.74));vec2 r2=vec2(fbm(uv*1.7+3.4*q+vec2(1.7,9.2)+t*.58),fbm(uv*1.7+3.4*q+vec2(8.3,2.8)+t*.42));float f=fbm(uv*1.7+3.4*r2+t*.32);f=clamp(f,0.,1.);\n  vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));col=mix(col,vec3(.96,.28,.55),smoothstep(.74,1.,f));\n  col+=vec3(.28,.06,.50)*exp(-md*2.0)*.8;vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.55,.0,1.);col+=.014;gl_FragColor=vec4(col,1.);}`;\n  function mkS(t,s){const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;}\n  const prog=gl.createProgram();gl.attachShader(prog,mkS(gl.VERTEX_SHADER,VS));gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);\n  const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);\n  const uT=gl.getUniformLocation(prog,'uT'),uM=gl.getUniformLocation(prog,'uM'),uR=gl.getUniformLocation(prog,'uR'),aP=gl.getAttribLocation(prog,'aP');\n  const mouse={x:.5,y:.5,tx:.5,ty:.5};\n  window.addEventListener('mousemove',e=>{mouse.tx=e.clientX/innerWidth;mouse.ty=1-e.clientY/innerHeight;});\n  let t=0;(function draw(){requestAnimationFrame(draw);t+=.012;mouse.x+=(mouse.tx-mouse.x)*.06;mouse.y+=(mouse.ty-mouse.y)*.06;gl.clearColor(.02,.03,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(prog);gl.uniform1f(uT,t);gl.uniform2f(uM,mouse.x,mouse.y);gl.uniform2f(uR,c.width,c.height);gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(aP);gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);})();\n})();\n\n// \u2500\u2500 State \u2500\u2500\nvar plan='student', annual=false, mode='signup';\n\n// \u2500\u2500 Plan select \u2500\u2500\nfunction selectPlan(p){\n  plan=p;\n  ['free','student','teacher'].forEach(function(x){\n    document.getElementById('plan-'+x).classList.remove('selected');\n  });\n  document.getElementById('plan-'+p).classList.add('selected');\n  renderAuth();\n}\n\n// \u2500\u2500 Billing toggle \u2500\u2500\nfunction toggleBill(){\n  annual=!annual;\n  document.getElementById('bill-thumb').classList.toggle('on',annual);\n  document.getElementById('lbl-mo').classList.toggle('on',!annual);\n  document.getElementById('lbl-yr').classList.toggle('on',annual);\n  document.getElementById('bill-save').style.opacity=annual?'1':'0';\n  document.getElementById('s-price').textContent=annual?'$4.58':'$7';\n  document.getElementById('s-note').textContent=annual?'billed $55/yr':'billed monthly';\n  document.getElementById('t-price').textContent=annual?'$8.25':'$13';\n  document.getElementById('t-note').textContent=annual?'billed $99/yr':'billed monthly';\n}\n\n// \u2500\u2500 Mode \u2500\u2500\nfunction setMode(m){\n  mode=m;\n  var tabs=document.getElementById('auth-tabs');\n  var planSide=document.getElementById('plan-side');\n  var navSwitch=document.getElementById('nav-switch');\n  tabs.querySelectorAll('.auth-tab').forEach(function(t,i){\n    t.classList.toggle('active', (i===0&&m==='signup')||(i===1&&m==='signin'));\n  });\n  planSide.style.display=m==='signup'?'':'none';\n  navSwitch.innerHTML=m==='signup'\n    ?'Already have an account? <a href=\"#\" onclick=\"setMode(\\'signin\\');return false\">Sign in</a>'\n    :'New here? <a href=\"#\" onclick=\"setMode(\\'signup\\');return false\">Sign up free</a>';\n  renderAuth();\n}\n\n// \u2500\u2500 Render auth body \u2500\u2500\nfunction renderAuth(){\n  var body=document.getElementById('auth-body');\n\n  if(mode==='signin'){\n    body.innerHTML=\n      '<div class=\"auth-title\">Welcome back</div>'+\n      '<div class=\"auth-sub\">Sign in to your Flashfo account.</div>'+\n      '<button class=\"google-btn\">'+\n        '<svg class=\"google-icon\" viewBox=\"0 0 24 24\"><path d=\"M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z\" fill=\"#4285F4\"/><path d=\"M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z\" fill=\"#34A853\"/><path d=\"M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z\" fill=\"#FBBC05\"/><path d=\"M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z\" fill=\"#EA4335\"/></svg>'+\n        'Continue with Google'+\n      '</button>'+\n      '<div class=\"divider-row\"><div class=\"div-line\"></div><div class=\"div-txt\">or sign in with email</div><div class=\"div-line\"></div></div>'+\n      '<div class=\"field\"><label>Email</label><input type=\"email\" placeholder=\"you@example.com\"></div>'+\n      '<div class=\"field\"><label>Password</label><input type=\"password\" placeholder=\"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\"></div>'+\n      '<div class=\"forgot\"><a href=\"#\">Forgot password?</a></div>'+\n      '<button class=\"submit-btn student-btn\">Sign in \u2192</button>'+\n      '<div class=\"auth-legal\">Don\\'t have an account? <a href=\"#\" onclick=\"setMode(\\'signup\\');return false\" style=\"color:rgba(129,140,248,0.8)\">Sign up free</a></div>';\n    return;\n  }\n\n  // Sign up\n  var planNames={free:'Free plan',student:'Student Pro',teacher:'Teacher Pro'};\n  var pillClass={free:'free',student:'student',teacher:'teacher'};\n  var btnClass={free:'free-btn',student:'student-btn',teacher:'teacher-btn'};\n  var btnLabel={free:'Continue for free',student:'Start 3-day free trial \u2192',teacher:'Start 3-day free trial \u2192'};\n  var subText={\n    free:'Create your account \u2014 no credit card needed.',\n    student:'You\\'re starting a 3-day free trial of Student Pro.',\n    teacher:'You\\'re starting a 3-day free trial of Teacher Pro.'\n  };\n\n  body.innerHTML=\n    '<div class=\"auth-title\">Create your account</div>'+\n    '<div class=\"auth-plan-pill '+pillClass[plan]+'\">'+\n      '<svg width=\"10\" height=\"10\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M2 8l4 4 8-8\"/></svg>'+\n      planNames[plan]+\n    '</div>'+\n    '<div class=\"auth-sub\">'+subText[plan]+'</div>'+\n    '<button class=\"google-btn\">'+\n      '<svg class=\"google-icon\" viewBox=\"0 0 24 24\"><path d=\"M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z\" fill=\"#4285F4\"/><path d=\"M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z\" fill=\"#34A853\"/><path d=\"M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z\" fill=\"#FBBC05\"/><path d=\"M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z\" fill=\"#EA4335\"/></svg>'+\n      'Continue with Google'+\n    '</button>'+\n    '<div class=\"divider-row\"><div class=\"div-line\"></div><div class=\"div-txt\">or use email</div><div class=\"div-line\"></div></div>'+\n    '<div class=\"field\"><label>Email</label><input type=\"email\" placeholder=\"you@example.com\"></div>'+\n    '<div class=\"field\"><label>Password</label><input type=\"password\" placeholder=\"Create a password\"></div>'+\n    '<button class=\"submit-btn '+btnClass[plan]+'\">'+btnLabel[plan]+'</button>'+\n    (plan!=='free'?'<div class=\"trial-banner\"><svg viewBox=\"0 0 16 16\"><path d=\"M8 1l1.8 3.8 4.2.6-3 3 .7 4.1L8 11.3 4.3 13.4l.7-4.1-3-3 4.2-.6z\"/></svg>3-day free trial \u00b7 no charge until day 4 \u00b7 cancel any time</div>':'')+\n    '<div class=\"auth-legal\">By continuing you agree to our <a href=\"#\">Terms</a> and <a href=\"#\">Privacy Policy</a>.</div>';\n}\n\n// \u2500\u2500 Init \u2500\u2500\nrenderAuth();\n\n// \u2500\u2500 Particle system \u2500\u2500\nvar pCanvas=document.getElementById('particles');\nvar pCtx=pCanvas.getContext('2d');\nvar particles=[];var pActive=false;\nfunction resizeP(){pCanvas.width=innerWidth;pCanvas.height=innerHeight;}\nresizeP();window.addEventListener('resize',resizeP);\nfunction spawnParticles(){\n  particles=[];var cx=innerWidth/2,cy=innerHeight/2;\n  var colors=['#818cf8','#a78bfa','#c4b5fd','#5eead4','#34d399','#f9a8d4','#fbbf24','#60a5fa','#fff'];\n  for(var i=0;i<120;i++){\n    var angle=Math.random()*Math.PI*2,speed=2+Math.random()*8,size=2+Math.random()*5;\n    particles.push({x:cx,y:cy,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,size:size,color:colors[Math.floor(Math.random()*colors.length)],life:1,decay:0.012+Math.random()*0.018,gravity:0.08+Math.random()*0.06});\n  }\n}\nfunction animParticles(){\n  if(!pActive)return;requestAnimationFrame(animParticles);\n  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);var alive=false;\n  particles.forEach(function(p){\n    if(p.life<=0)return;alive=true;p.x+=p.vx;p.y+=p.vy;p.vy+=p.gravity;p.vx*=0.99;p.life-=p.decay;\n    pCtx.save();pCtx.globalAlpha=Math.max(0,p.life);pCtx.fillStyle=p.color;pCtx.shadowColor=p.color;pCtx.shadowBlur=8;\n    pCtx.beginPath();pCtx.arc(p.x,p.y,p.size,0,Math.PI*2);pCtx.fill();pCtx.restore();\n  });\n  if(!alive){pActive=false;pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);}\n}\n\n// \u2500\u2500 Transition \u2500\u2500\nvar running=false;\nasync function runTransition(){\n  if(running)return;running=true;\n  var authScreen=document.getElementById('auth-screen');\n  var flash=document.getElementById('flash');\n  var logoBurst=document.getElementById('logo-burst');\n  var welcome=document.getElementById('welcome-msg');\n\n  // 1. Card fades out\n  authScreen.style.transition='opacity 0.4s ease, transform 0.4s ease';\n  authScreen.style.opacity='0';authScreen.style.transform='scale(0.94)';\n\n  await new Promise(r=>setTimeout(r,300));\n\n  // 2. Flash burst\n  flash.style.transition='opacity 0.18s ease-out, transform 0.18s ease-out';\n  flash.style.opacity='0.8';flash.style.transform='scale(1.6)';\n  pCanvas.style.opacity='1';spawnParticles();pActive=true;animParticles();\n  setTimeout(function(){\n    flash.style.transition='opacity 0.5s ease-out, transform 0.5s ease-out';\n    flash.style.opacity='0';flash.style.transform='scale(3)';\n  },100);\n\n  await new Promise(r=>setTimeout(r,200));\n\n  // 3. Logo appears\n  logoBurst.style.transition='opacity 0.4s cubic-bezier(.23,1,.32,1), transform 0.5s cubic-bezier(.23,1,.32,1)';\n  logoBurst.style.opacity='1';logoBurst.style.transform='translate(-50%,-50%) scale(1)';\n\n  await new Promise(r=>setTimeout(r,750));\n\n  // 4. Logo \u2192 welcome\n  logoBurst.style.transition='opacity 0.25s ease';logoBurst.style.opacity='0';\n  await new Promise(r=>setTimeout(r,200));\n  welcome.style.transition='opacity 0.5s ease, transform 0.5s ease';\n  welcome.style.opacity='1';welcome.style.transform='translate(-50%,-50%)';\n\n  await new Promise(r=>setTimeout(r,1000));\n\n  // 5. Navigate\n  window.location.href='/dashboard';\n}\n\n// Wire submit buttons to transition\ndocument.addEventListener('DOMContentLoaded',function(){});\n// Also wire after DOM is ready\n(function wireButtons(){\n  var btn=document.getElementById('auth-submit-btn');\n  if(btn){btn.addEventListener('click',runTransition);}\n  else{setTimeout(wireButtons,100);}\n})();\n\n"
-const AUTH_HTML = "<canvas id=\"bg\"></canvas>\n<div id=\"app\">\n  <nav>\n    <a class=\"logo\" href=\"/\">\n      <div class=\"logo-ring\"><div class=\"logo-spin\"></div><div class=\"logo-inner\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#3b82f6\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg></div></div>\n      <span class=\"logo-word\">Flashfo</span>\n    </a>\n    <div class=\"nav-right\" id=\"nav-switch\">Already have an account? <a href=\"#\" onclick=\"setMode('signin');return false\">Sign in</a></div>\n  </nav>\n\n  <div class=\"main\">\n\n    <!-- PLAN SELECTOR -->\n    <div class=\"plan-side\" id=\"plan-side\">\n      <div class=\"plan-headline\">Start studying smarter today.</div>\n      <div class=\"plan-sub\">Pick a plan \u2014 you can always upgrade later. All paid plans start with a 3-day free trial.</div>\n\n      <div class=\"bill-row\">\n        <span class=\"bill-lbl on\" id=\"lbl-mo\">Monthly</span>\n        <div class=\"bill-track\" onclick=\"toggleBill()\"><div class=\"bill-thumb\" id=\"bill-thumb\"></div></div>\n        <span class=\"bill-lbl\" id=\"lbl-yr\">Annual</span>\n        <span class=\"bill-save\" id=\"bill-save\" style=\"opacity:0\">Save 35%</span>\n      </div>\n\n      <div class=\"plans\">\n        <!-- FREE -->\n        <div class=\"plan-card plan-free\" id=\"plan-free\" onclick=\"selectPlan('free')\">\n          <div class=\"plan-inner\">\n            <div class=\"plan-radio\"><div class=\"plan-radio-dot\"></div></div>\n            <div class=\"plan-info\">\n              <div class=\"plan-name\">Free</div>\n              <div class=\"plan-feats\">15 AI sessions/mo \u00b7 5 saved decks \u00b7 Join live quizzes</div>\n            </div>\n            <div class=\"plan-price\">\n              <div class=\"plan-amt\">$0</div>\n              <div class=\"plan-per\">forever</div>\n            </div>\n          </div>\n        </div>\n\n        <!-- STUDENT PRO -->\n        <div class=\"plan-card plan-student selected\" id=\"plan-student\" onclick=\"selectPlan('student')\">\n          <div class=\"plan-inner\">\n            <div class=\"plan-radio\"><div class=\"plan-radio-dot\"></div></div>\n            <div class=\"plan-info\">\n              <div class=\"plan-name\">Student Pro <span class=\"plan-badge\">Most popular</span></div>\n              <div class=\"plan-feats\">Unlimited flashcards, quizzes, Nova sessions, voice mode</div>\n            </div>\n            <div class=\"plan-price\">\n              <div class=\"plan-amt\" id=\"s-price\">$7</div>\n              <div class=\"plan-per\">/mo</div>\n              <div class=\"plan-note\" id=\"s-note\">billed monthly</div>\n            </div>\n          </div>\n        </div>\n\n        <!-- TEACHER PRO -->\n        <div class=\"plan-card plan-teacher\" id=\"plan-teacher\" onclick=\"selectPlan('teacher')\">\n          <div class=\"plan-inner\">\n            <div class=\"plan-radio\"><div class=\"plan-radio-dot\"></div></div>\n            <div class=\"plan-info\">\n              <div class=\"plan-name\">Teacher Pro</div>\n              <div class=\"plan-feats\">Everything in Student Pro + live quizzes, lesson builder, class analytics</div>\n            </div>\n            <div class=\"plan-price\">\n              <div class=\"plan-amt\" id=\"t-price\">$13</div>\n              <div class=\"plan-per\">/mo</div>\n              <div class=\"plan-note\" id=\"t-note\">billed monthly</div>\n            </div>\n          </div>\n        </div>\n      </div>\n\n      <div class=\"trial-note\">\n        <div class=\"trial-dot\"></div>\n        3-day free trial on all paid plans \u00b7 cancel any time\n      </div>\n    </div>\n\n    <!-- AUTH FORM -->\n    <div class=\"auth-side\">\n      <div class=\"auth-card\">\n\n        <!-- TABS \u2014 only show on sign up -->\n        <div class=\"auth-tabs\" id=\"auth-tabs\">\n          <div class=\"auth-tab active\" onclick=\"setMode('signup')\">Sign up</div>\n          <div class=\"auth-tab\" onclick=\"setMode('signin')\">Sign in</div>\n        </div>\n\n        <!-- DYNAMIC CONTENT -->\n        <div id=\"auth-body\"></div>\n\n      </div>\n    </div>\n\n  </div>\n\n<!-- TRANSITION ELEMENTS -->\n<canvas id=\"particles\" style=\"position:fixed;inset:0;width:100%;height:100%;z-index:51;pointer-events:none;opacity:0\"></canvas>\n<div id=\"flash\" style=\"position:fixed;inset:0;background:radial-gradient(circle at 50% 50%,rgba(129,140,248,0.9),rgba(99,102,241,0.6) 30%,transparent 70%);opacity:0;z-index:51;transform:scale(0)\"></div>\n<div id=\"logo-burst\" style=\"position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.4);z-index:52;display:flex;flex-direction:column;align-items:center;gap:16px;opacity:0;pointer-events:none\">\n  <div style=\"position:relative;width:64px;height:64px\">\n    <div style=\"position:absolute;inset:-3px;border-radius:16px;background:conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6);animation:lp-spin 1.5s linear infinite\"></div>\n    <div style=\"position:absolute;inset:3px;border-radius:12px;background:#050709;display:flex;align-items:center;justify-content:center\"><svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"#3b82f6\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg></div>\n  </div>\n  <div style=\"font-size:24px;font-weight:900;letter-spacing:-.04em;background:linear-gradient(135deg,#fff,#c4b5fd 40%,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text\">Flashfo</div>\n  <div style=\"font-size:13px;color:rgba(255,255,255,0.4)\">Study smarter. Teach better.</div>\n</div>\n<div id=\"welcome-msg\" style=\"position:fixed;top:50%;left:50%;transform:translate(-50%,-55%);z-index:53;text-align:center;opacity:0;pointer-events:none\">\n  <div style=\"width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(16,185,129,0.5)\">\n    <svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"white\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6L9 17l-5-5\"/></svg>\n  </div>\n  <div style=\"font-size:clamp(28px,4vw,44px);font-weight:900;letter-spacing:-.04em;background:linear-gradient(135deg,#fff,#e2e8f0 40%,#a5b4fc 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;padding-bottom:.1em;overflow:visible\">You're in.</div>\n  <div style=\"font-size:15px;color:rgba(255,255,255,0.38);margin-top:8px\">Taking you to your dashboard...</div>\n</div>\n\n</div>"
+import { supabase } from '@/lib/supabase'
 
 export default function AuthPage() {
   const router = useRouter()
+  const [tab, setTab] = useState('signup')   // 'signup' | 'signin'
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
+  // If already logged in, go to dashboard
   useEffect(() => {
-    const style = document.createElement('style')
-    style.id = 'auth-css'
-    style.textContent = AUTH_CSS
-    document.head.appendChild(style)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace('/dashboard')
+    })
+    // Read ?tab=signin from URL
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('tab') === 'signin') setTab('signin')
+  }, [])
 
-    const script = document.createElement('script')
-    script.id = 'auth-js'
-    script.textContent = AUTH_JS
-    document.body.appendChild(script)
+  async function handleSignUp(e) {
+    e.preventDefault()
+    setError(''); setSuccess(''); setLoading(true)
+    const { error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { emailRedirectTo: `${location.origin}/dashboard` }
+    })
+    setLoading(false)
+    if (error) return setError(error.message)
+    setSuccess('Check your email to confirm your account, then sign in.')
+    setTab('signin')
+  }
 
-    return () => {
-      document.getElementById('auth-css')?.remove()
-      document.getElementById('auth-js')?.remove()
-    }
-  }, [router])
+  async function handleSignIn(e) {
+    e.preventDefault()
+    setError(''); setSuccess(''); setLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    })
+    setLoading(false)
+    if (error) return setError(error.message)
+    router.replace('/dashboard')
+  }
+
+  const isSignIn = tab === 'signin'
 
   return (
-    <div
-      suppressHydrationWarning
-      dangerouslySetInnerHTML={{ __html: AUTH_HTML }}
-    />
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;background:#050709;color:#e2e8f0}
+        #auth-bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+        .auth-wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+        /* NAV */
+        .auth-nav{padding:18px 32px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+        .auth-logo{display:flex;align-items:center;gap:10px;text-decoration:none;cursor:pointer}
+        .auth-logo-ring{position:relative;width:34px;height:34px}
+        .auth-logo-spin{position:absolute;inset:-2px;border-radius:10px;background:conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#3b82f6);animation:spin 3s linear infinite}
+        .auth-logo-inner{position:absolute;inset:2px;border-radius:7px;background:#080b12;display:flex;align-items:center;justify-content:center}
+        .auth-logo-word{font-size:17px;font-weight:800;color:#e2e8f0;letter-spacing:-.02em}
+        @keyframes spin{100%{transform:rotate(360deg)}}
+        .auth-nav-right{font-size:14px;color:rgba(255,255,255,0.45)}
+        .auth-nav-right a{color:#818cf8;font-weight:600;text-decoration:none;margin-left:6px}
+        .auth-nav-right a:hover{color:#a5b4fc}
+        /* MAIN */
+        .auth-main{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+        .auth-card{background:rgba(10,14,24,0.92);border:1px solid rgba(255,255,255,0.09);border-radius:20px;padding:32px;width:100%;max-width:420px;backdrop-filter:blur(24px)}
+        /* TABS */
+        .auth-tabs{display:flex;background:rgba(255,255,255,0.05);border-radius:12px;padding:4px;margin-bottom:28px}
+        .auth-tab{flex:1;padding:10px;border-radius:9px;font-size:14px;font-weight:700;text-align:center;cursor:pointer;transition:all .2s;color:rgba(255,255,255,0.35);border:none;background:none;font-family:inherit}
+        .auth-tab.active{background:rgba(255,255,255,0.1);color:#e2e8f0}
+        /* FORM */
+        .auth-title{font-size:22px;font-weight:900;letter-spacing:-.04em;color:#e2e8f0;margin-bottom:4px}
+        .auth-sub{font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:24px}
+        .form-group{margin-bottom:16px}
+        .form-label{display:block;font-size:12px;font-weight:700;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+        .form-input{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#e2e8f0;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+        .form-input:focus{border-color:rgba(129,140,248,0.5);background:rgba(255,255,255,0.09)}
+        .form-input::placeholder{color:rgba(255,255,255,0.2)}
+        .form-input:disabled{opacity:.5}
+        .forgot{text-align:right;margin-top:-8px;margin-bottom:16px}
+        .forgot a{font-size:13px;color:rgba(129,140,248,0.7);text-decoration:none;font-weight:600}
+        .forgot a:hover{color:#a5b4fc}
+        .submit-btn{width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;box-shadow:0 4px 20px rgba(99,102,241,0.4);margin-top:4px}
+        .submit-btn:hover{box-shadow:0 6px 28px rgba(99,102,241,0.6);transform:translateY(-1px)}
+        .submit-btn:active{transform:scale(.98)}
+        .submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+        .auth-error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#fca5a5;margin-bottom:16px}
+        .auth-success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#6ee7b7;margin-bottom:16px}
+        .auth-bottom{text-align:center;margin-top:20px;font-size:13px;color:rgba(255,255,255,0.35)}
+        .auth-bottom a{color:#818cf8;font-weight:600;text-decoration:none;margin-left:4px}
+        .auth-bottom a:hover{color:#a5b4fc}
+        .trial-badge{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:16px;font-size:12px;color:rgba(255,255,255,0.25)}
+        .trial-badge svg{width:12px;height:12px;fill:none;stroke:rgba(255,255,255,0.25);stroke-width:1.5;stroke-linecap:round}
+      `}</style>
+
+      {/* Background WebGL fluid */}
+      <canvas id="auth-bg" ref={el => el && initBg(el)} />
+
+      <div className="auth-wrap">
+        <nav className="auth-nav">
+          <a className="auth-logo" href="/">
+            <div className="auth-logo-ring">
+              <div className="auth-logo-spin" />
+              <div className="auth-logo-inner">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#3b82f6">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                </svg>
+              </div>
+            </div>
+            <span className="auth-logo-word">Flashfo</span>
+          </a>
+          <div className="auth-nav-right">
+            {isSignIn ? <>New here?<a href="/auth">Sign up free</a></> : <>Already have an account?<a href="/auth?tab=signin">Sign in</a></>}
+          </div>
+        </nav>
+
+        <div className="auth-main">
+          <div className="auth-card">
+            <div className="auth-tabs">
+              <button className={`auth-tab${!isSignIn?' active':''}`} onClick={() => { setTab('signup'); setError(''); setSuccess('') }}>Sign up</button>
+              <button className={`auth-tab${isSignIn?' active':''}`} onClick={() => { setTab('signin'); setError(''); setSuccess('') }}>Sign in</button>
+            </div>
+
+            <div className="auth-title">{isSignIn ? 'Welcome back' : 'Create your account'}</div>
+            <div className="auth-sub">{isSignIn ? 'Sign in to your Flashfo account.' : "You're starting a 3-day free trial of Student Pro."}</div>
+
+            {error && <div className="auth-error">{error}</div>}
+            {success && <div className="auth-success">{success}</div>}
+
+            <form onSubmit={isSignIn ? handleSignIn : handleSignUp}>
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input
+                  className="form-input"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Password</label>
+                <input
+                  className="form-input"
+                  type="password"
+                  placeholder={isSignIn ? '••••••••' : 'Create a password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  minLength={6}
+                />
+              </div>
+              {isSignIn && (
+                <div className="forgot"><a href="/auth/reset">Forgot password?</a></div>
+              )}
+              <button className="submit-btn" type="submit" disabled={loading}>
+                {loading ? 'Please wait...' : isSignIn ? 'Sign in →' : 'Start 3-day free trial →'}
+              </button>
+            </form>
+
+            <div className="auth-bottom">
+              {isSignIn
+                ? <>Don't have an account?<a href="/auth">Sign up free</a></>
+                : <>Already have an account?<a href="/auth?tab=signin">Sign in</a></>
+              }
+            </div>
+            {!isSignIn && (
+              <div className="trial-badge">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                3-day free trial · no charge until day 4 · cancel any time
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <script dangerouslySetInnerHTML={{ __html: `
+        function initBg(c) {
+          if (!c || c._init) return; c._init = true;
+          var gl = c.getContext('webgl'); if (!gl) return;
+          function resize() { c.width = innerWidth; c.height = innerHeight; gl.viewport(0,0,c.width,c.height); }
+          resize(); window.addEventListener('resize', resize);
+          var VS = 'attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}';
+          var FS = 'precision highp float;uniform float uT;uniform vec2 uR;varying vec2 vU;vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}float fbm(vec2 p){float v=0.,a=.5;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<5;i++){v+=a*n(p);p=r*p*2.01;a*=.5;}return v;}void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.05;vec2 q=vec2(fbm(uv*1.6+t),fbm(uv*1.6+vec2(5.2,1.3)+t*.8));vec2 r=vec2(fbm(uv*1.6+3.4*q+t*.6),fbm(uv*1.6+3.4*q+vec2(8.3,2.8)+t*.45));float f=fbm(uv*1.6+3.4*r+t*.3);f=clamp(f,0.,1.);vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.8,.0,1.);col+=.01;gl_FragColor=vec4(col,1.);}';
+          function mkS(t,s){var sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;}
+          var prog=gl.createProgram();gl.attachShader(prog,mkS(gl.VERTEX_SHADER,VS));gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);
+          var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+          var uT=gl.getUniformLocation(prog,'uT'),uR=gl.getUniformLocation(prog,'uR'),aP=gl.getAttribLocation(prog,'aP');
+          var t=0;(function draw(){requestAnimationFrame(draw);t+=.01;gl.clearColor(.02,.03,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(prog);gl.uniform1f(uT,t);gl.uniform2f(uR,c.width,c.height);gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(aP);gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);})();
+        }
+      ` }} />
+    </>
   )
 }
