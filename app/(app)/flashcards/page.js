@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
+import { logStudySession } from '@/lib/logStudySession'
 
 function printDeck(cards, topic) {
   const win = window.open('', '_blank')
@@ -127,7 +128,6 @@ function SessionComplete({ cards, topic, hardCards, againCards, sessionRatings, 
             You marked <strong style={{color:'#f87171'}}>{needsWork.length} card{needsWork.length>1?'s':''}</strong> as hard or again.
             Want me to generate a focused deck targeting exactly those weak spots?
           </p>
-          {/* Show the struggling cards */}
           <div style={{marginBottom:14,display:'flex',flexDirection:'column',gap:5}}>
             {needsWork.slice(0,4).map((c,i) => (
               <div key={i} style={{
@@ -180,6 +180,9 @@ function FlashcardsPageInner() {
   const searchParams = useSearchParams()
   const audioRef = useRef(null)
 
+  // ── NEW: track when the session started so we can log minutes ──────────────
+  const sessionStartRef = useRef(null)
+
   // ── state ──────────────────────────────────────────────────────────────────
   const [topic, setTopic] = useState('')
   const [count, setCount] = useState(10)
@@ -199,22 +202,16 @@ function FlashcardsPageInner() {
   const [autoGen, setAutoGen] = useState(false)
 
   // ── SM-2 + session queue ───────────────────────────────────────────────────
-  // studyQueue: ordered array of card indices still to study this session.
-  // studyQueue[0] is always the current card.
-  // - Easy  → shift() off front  (done, long SM-2 interval)
-  // - Hard  → shift(), re-insert halfway through remaining  (revisit this session)
-  // - Again → shift(), push to end  (last to be seen)
   const [studyQueue, setStudyQueue] = useState([])
   const [sessionComplete, setSessionComplete] = useState(false)
-  const [sessionHardCards, setSessionHardCards] = useState([])   // card objects rated Hard
-  const [sessionAgainCards, setSessionAgainCards] = useState([]) // card objects rated Again
+  const [sessionHardCards, setSessionHardCards] = useState([])
+  const [sessionAgainCards, setSessionAgainCards] = useState([])
   const [sessionRatings, setSessionRatings] = useState({ again:0, hard:0, easy:0 })
   const [dueToday, setDueToday] = useState(0)
 
-  // derived: current card index & object
   const currentIdx = studyQueue.length > 0 ? studyQueue[0] : 0
   const card = cards.length > 0 ? cards[currentIdx] : null
-  const done = cards.length - studyQueue.length  // how many removed from queue
+  const done = cards.length - studyQueue.length
 
   // ── effects ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -251,10 +248,22 @@ function FlashcardsPageInner() {
     setDueToday(due.length)
   }, [])
 
-  // Detect session complete when queue empties after study has started
+  // ── NEW: detect session complete, log to Supabase ─────────────────────────
   useEffect(() => {
     if (studyQueue.length === 0 && cards.length > 0 && !sessionComplete) {
       setSessionComplete(true)
+
+      // Calculate how many cards were actually studied this pass
+      const totalRated = sessionRatings.again + sessionRatings.hard + sessionRatings.easy
+      const minutesSpent = sessionStartRef.current
+        ? Math.round((Date.now() - sessionStartRef.current) / 60000)
+        : 0
+
+      logStudySession({
+        cardsStudied: totalRated,
+        minutesSpent,
+        source: 'flashcards',
+      })
     }
   }, [studyQueue.length, cards.length])
 
@@ -296,28 +305,22 @@ function FlashcardsPageInner() {
   }
 
   // ── SESSION RATING HANDLERS ────────────────────────────────────────────────
-
-  // Again: move current card to very end of queue. Update SM-2 with reset.
   function handleAgain() {
     if (!card || studyQueue.length === 0) return
     stopAudio(); setFlipped(false)
     recordSM2('card-' + currentIdx, 1)
     setSessionRatings(r => ({ ...r, again: r.again + 1 }))
-    // Track for session end (deduplicate by question text)
     setSessionAgainCards(prev => {
       const key = card.front || card.question
       if (prev.find(c => (c.front||c.question) === key)) return prev
       return [...prev, card]
     })
     setStudyQueue(q => {
-      if (q.length <= 1) return [] // only card left, session ends
-      // Move q[0] to end
+      if (q.length <= 1) return []
       return [...q.slice(1), q[0]]
     })
   }
 
-  // Hard: remove from front, reinsert halfway through remaining cards.
-  // The card will come back up again this session but not immediately.
   function handleHard() {
     if (!card || studyQueue.length === 0) return
     stopAudio(); setFlipped(false)
@@ -341,14 +344,12 @@ function FlashcardsPageInner() {
     })
   }
 
-  // Easy: remove from queue entirely. Card is mastered for this session.
   function handleEasy() {
     if (!card || studyQueue.length === 0) return
     stopAudio(); setFlipped(false)
     recordSM2('card-' + currentIdx, 5)
     setSessionRatings(r => ({ ...r, easy: r.easy + 1 }))
     setStudyQueue(q => q.slice(1))
-    // Remove from hard/again tracking if they marked it easy after retries
     setSessionHardCards(prev => {
       const key = card.front || card.question
       return prev.filter(c => (c.front||c.question) !== key)
@@ -390,8 +391,9 @@ function FlashcardsPageInner() {
       if (!parsed.length) setError('Could not generate cards. Try adding more detail.')
       else {
         setCards(parsed)
-        // Initialize queue as 0..n-1 (show in order by default)
         setStudyQueue(parsed.map((_,i) => i))
+        // ── NEW: record when studying actually begins ─────────────────────────
+        sessionStartRef.current = Date.now()
       }
     } catch { setError('Something went wrong. Please try again.') }
     finally { setLoading(false) }
@@ -421,10 +423,11 @@ function FlashcardsPageInner() {
     setSessionHardCards([]); setSessionAgainCards([])
     setSessionRatings({ again:0, hard:0, easy:0 })
     setFlipped(false)
+    // ── NEW: reset timer for the new session ──────────────────────────────────
+    sessionStartRef.current = Date.now()
   }
 
   function generateFocusedDeck() {
-    // Build a topic string from hard/again card questions
     const weakCards = [...new Map(
       [...sessionHardCards, ...sessionAgainCards].map(c => [c.front||c.question, c])
     ).values()]
@@ -436,7 +439,6 @@ function FlashcardsPageInner() {
 
   // ── RENDERS ────────────────────────────────────────────────────────────────
 
-  // Input form
   if (!cards.length) return (
     <div className="p-6 max-w-2xl mx-auto w-full">
       {dueToday > 0 && (
@@ -483,7 +485,6 @@ function FlashcardsPageInner() {
     </div>
   )
 
-  // Session complete
   if (sessionComplete) return (
     <SessionComplete
       cards={cards}
@@ -496,7 +497,6 @@ function FlashcardsPageInner() {
     />
   )
 
-  // Edit view
   if (showEdit) return (
     <div className="p-6 max-w-2xl mx-auto w-full">
       <div className="flex items-center justify-between mb-5">
@@ -550,7 +550,6 @@ function FlashcardsPageInner() {
   const badgeBorder = flipped ? 'rgba(99,102,241,0.2)' : 'rgba(59,130,246,0.18)'
   const remaining = studyQueue.length
 
-  // Queue position indicator: show how many remain
   const queueIndicator = (
     <div style={{display:'flex',gap:4,marginBottom:16,flexWrap:'wrap',justifyContent:'center',maxWidth:320}}>
       {studyQueue.map((qi,pos) => {
@@ -621,12 +620,10 @@ function FlashcardsPageInner() {
           </div>
         </div>
 
-        {/* Progress bar */}
         <div className="w-full bg-line rounded-full h-1.5 mb-4">
           <div className="bg-blue-600 h-1.5 rounded-full transition-all" style={{width:progress+'%'}}/>
         </div>
 
-        {/* Queue dots */}
         <div style={{display:'flex',gap:4,marginBottom:14,flexWrap:'wrap'}}>
           {studyQueue.map((qi,pos) => {
             const isHard = sessionHardCards.some(c=>(c.front||c.question)===(cards[qi]?.front||cards[qi]?.question))
@@ -636,7 +633,6 @@ function FlashcardsPageInner() {
           })}
         </div>
 
-        {/* Card */}
         <div onClick={()=>{stopAudio();setFlipped(f=>!f)}}
           className="bg-surface border border-line rounded-2xl p-10 text-center cursor-pointer hover:border-blue-300 transition-all min-h-[220px] flex flex-col items-center justify-center gap-4 relative"
           style={{borderColor:cardBorderColor}}>
@@ -655,7 +651,6 @@ function FlashcardsPageInner() {
 
       {/* ── DESKTOP 3-PANEL ── */}
       <div className="fc-desktop-wrap" style={{display:'none'}}>
-        {/* Left panel */}
         <div style={{padding:'24px 20px',borderRight:'1px solid var(--c-line)',display:'flex',flexDirection:'column',gap:14}}>
           <div>
             <div style={{fontSize:14,fontWeight:700,color:'var(--c-t1)',marginBottom:2}}>{topic||'Flashcards'}</div>
@@ -688,7 +683,6 @@ function FlashcardsPageInner() {
           </div>
         </div>
 
-        {/* Center panel */}
         <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'28px 36px'}}>
           {queueIndicator}
           <div style={{position:'relative',width:'100%',maxWidth:440,height:230,marginBottom:22}}>
@@ -712,7 +706,6 @@ function FlashcardsPageInner() {
           }
         </div>
 
-        {/* Right panel */}
         <div style={{padding:'24px 20px',borderLeft:'1px solid var(--c-line)'}}>
           <div style={{fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'.07em',marginBottom:14}}>Shortcuts</div>
           <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:24}}>
