@@ -20,11 +20,8 @@ const ORB_CSS = `
 .nv-r3{border-width:1px;border-color:rgba(99,102,241,.08);animation-duration:21s}
 .nv-r3::before{width:4px;height:4px;background:#c4b5fd;box-shadow:0 0 6px #c4b5fd}
 @keyframes nv-bounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
-#nova-wrap{display:flex;flex-direction:column;height:100%;position:relative;overflow:hidden}
-#nova-msgs{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
-#nova-msgs::-webkit-scrollbar{display:none}
-#nova-input-bar{flex-shrink:0;z-index:1;position:relative}
-textarea.nv-ta::placeholder{color:rgba(255,255,255,.22)}
+.nv-msgs::-webkit-scrollbar{display:none}
+.nv-ta::placeholder{color:rgba(255,255,255,.22)!important}
 `
 
 function initBg(canvas) {
@@ -54,8 +51,11 @@ function initBg(canvas) {
   vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.8,.0,1.);col+=.01;gl_FragColor=vec4(col,1.);}`
   function mkS(t,s){const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh}
   const prog=gl.createProgram()
-  gl.attachShader(prog,mkS(gl.VERTEX_SHADER,VS));gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog)
-  const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf)
+  gl.attachShader(prog,mkS(gl.VERTEX_SHADER,VS))
+  gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,FS))
+  gl.linkProgram(prog)
+  const buf=gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf)
   gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW)
   const uT=gl.getUniformLocation(prog,'uT'),uR=gl.getUniformLocation(prog,'uR'),aP=gl.getAttribLocation(prog,'aP')
   let t=0,running=true
@@ -70,264 +70,252 @@ function initBg(canvas) {
   })()
 }
 
-function Orb({ size = 34, state = 'idle', rings = false }) {
-  const cls = `nv-orb nv-orb-${state}`
-  const r1 = Math.round(size * 1.6)
-  const r2 = Math.round(size * 2.1)
-  const r3 = Math.round(size * 2.55)
-  const wrap = rings ? r3 : size
+function Orb({ size=34, state='idle', rings=false }) {
+  const r1=Math.round(size*1.6), r2=Math.round(size*2.1), r3=Math.round(size*2.55)
+  const wrap=rings?r3:size
   return (
-    <div style={{ position:'relative', width:wrap, height:wrap, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-      <div className={cls} style={{ width:size, height:size, zIndex:2 }}>
-        <div className="nv-gloss" />
+    <div style={{position:'relative',width:wrap,height:wrap,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+      <div className={`nv-orb nv-orb-${state}`} style={{width:size,height:size,zIndex:2}}>
+        <div className="nv-gloss"/>
       </div>
-      {rings && <>
-        <div className="nv-ring nv-r1" style={{ width:r1, height:r1 }} />
-        <div className="nv-ring nv-r2" style={{ width:r2, height:r2 }} />
-        <div className="nv-ring nv-r3" style={{ width:r3, height:r3 }} />
+      {rings&&<>
+        <div className="nv-ring nv-r1" style={{width:r1,height:r1}}/>
+        <div className="nv-ring nv-r2" style={{width:r2,height:r2}}/>
+        <div className="nv-ring nv-r3" style={{width:r3,height:r3}}/>
       </>}
     </div>
   )
 }
 
 export default function NovaPage() {
-  const [novaState, setNovaState] = useState('idle')
-  const [messages, setMessages] = useState([])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [greeting, setGreeting] = useState(true)
-  const [wrapH, setWrapH] = useState(null)  // for keyboard resize
+  const [novaState,setNovaState] = useState('idle')
+  const [messages,setMessages] = useState([])
+  const [input,setInput] = useState('')
+  const [loading,setLoading] = useState(false)
+  const [greeting,setGreeting] = useState(true)
+  // ── keyboard inset in px — updated by visualViewport ──
+  const [kbInset,setKbInset] = useState(0)
   const msgsRef = useRef(null)
   const inputRef = useRef(null)
   const bgRef = useRef(null)
-  const wrapRef = useRef(null)
 
-  useEffect(() => {
-    const style = document.createElement('style')
-    style.id = 'nova-orb-css'
-    style.textContent = ORB_CSS
+  useEffect(()=>{
+    const style=document.createElement('style')
+    style.id='nova-orb-css'
+    style.textContent=ORB_CSS
     document.head.appendChild(style)
-    return () => document.getElementById('nova-orb-css')?.remove()
-  }, [])
+    return()=>document.getElementById('nova-orb-css')?.remove()
+  },[])
 
-  useEffect(() => {
-    if (bgRef.current) initBg(bgRef.current)
-    return () => bgRef.current?._stop?.()
-  }, [])
+  useEffect(()=>{
+    if(bgRef.current) initBg(bgRef.current)
+    return()=>bgRef.current?._stop?.()
+  },[])
 
-  // ── iOS keyboard handling via visualViewport ──────────────────────────────
-  // When the keyboard opens, visualViewport.height shrinks.
-  // We pin the wrap height to visualViewport so the input bar stays visible.
-  useEffect(() => {
-    const vv = window.visualViewport
-    if (!vv) return
-    const update = () => {
-      if (!wrapRef.current) return
-      // Get the component's top offset relative to the visual viewport top
-      const rect = wrapRef.current.getBoundingClientRect()
-      const availH = vv.height - Math.max(0, rect.top)
-      setWrapH(Math.floor(availH))
+  // ── Option 1+2 combined: track visualViewport to compute keyboard height ──
+  useEffect(()=>{
+    const vv=window.visualViewport
+    if(!vv) return
+    const update=()=>{
+      // keyboard height = layout viewport height minus visual viewport height minus its offset
+      const layoutH = document.documentElement.clientHeight
+      const inset = Math.max(0, layoutH - vv.height - vv.offsetTop)
+      setKbInset(Math.round(inset))
     }
-    vv.addEventListener('resize', update)
-    vv.addEventListener('scroll', update)
-    return () => {
-      vv.removeEventListener('resize', update)
-      vv.removeEventListener('scroll', update)
+    vv.addEventListener('resize',update)
+    vv.addEventListener('scroll',update)
+    return()=>{
+      vv.removeEventListener('resize',update)
+      vv.removeEventListener('scroll',update)
     }
-  }, [])
+  },[])
 
-  useEffect(() => {
-    if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight
-  }, [messages, loading])
+  useEffect(()=>{
+    if(msgsRef.current) msgsRef.current.scrollTop=msgsRef.current.scrollHeight
+  },[messages,loading])
 
-  const send = useCallback(async (text) => {
-    if (!text?.trim() || loading) return
-    const userMsg = text.trim()
+  const send=useCallback(async(text)=>{
+    if(!text?.trim()||loading) return
+    const userMsg=text.trim()
     setInput('')
-    // reset textarea height
-    if (inputRef.current) { inputRef.current.style.height = 'auto' }
+    if(inputRef.current){inputRef.current.style.height='auto'}
     setGreeting(false)
-    setMessages(prev => [...prev, { role:'user', content:userMsg }])
+    setMessages(prev=>[...prev,{role:'user',content:userMsg}])
     setLoading(true)
     setNovaState('thinking')
-    try {
-      const history = messages.map(m => ({ role:m.role, text:m.content }))
-      const res = await fetch('/api/nova-stream', {
+    try{
+      const history=messages.map(m=>({role:m.role,text:m.content}))
+      const res=await fetch('/api/nova-stream',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ messages:[...history,{role:'user',text:userMsg}] }),
+        body:JSON.stringify({messages:[...history,{role:'user',text:userMsg}]}),
       })
-      if (!res.ok) throw new Error('Stream failed')
+      if(!res.ok) throw new Error('fail')
       setNovaState('generating')
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let full = ''
-      setMessages(prev => [...prev, { role:'assistant', content:'' }])
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        full += decoder.decode(value, { stream:true })
-        setMessages(prev => {
-          const u = [...prev]
-          u[u.length-1] = { role:'assistant', content:full }
-          return u
-        })
+      const reader=res.body.getReader()
+      const decoder=new TextDecoder()
+      let full=''
+      setMessages(prev=>[...prev,{role:'assistant',content:''}])
+      while(true){
+        const{done,value}=await reader.read()
+        if(done) break
+        full+=decoder.decode(value,{stream:true})
+        setMessages(prev=>{const u=[...prev];u[u.length-1]={role:'assistant',content:full};return u})
       }
-    } catch {
-      setMessages(prev => [...prev, { role:'assistant', content:'Sorry, something went wrong. Please try again.' }])
-    } finally {
+    }catch{
+      setMessages(prev=>[...prev,{role:'assistant',content:'Sorry, something went wrong. Please try again.'}])
+    }finally{
       setLoading(false)
       setNovaState('idle')
     }
-  }, [loading, messages])
+  },[loading,messages])
 
-  const handleKey = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) }
+  const handleKey=e=>{
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(input)}
   }
 
-  const dotColor = novaState==='idle'?'#10b981':novaState==='thinking'?'#fbbf24':'#818cf8'
-  const dotGlow  = novaState==='idle'?'rgba(16,185,129,.8)':novaState==='thinking'?'rgba(251,191,36,.8)':'rgba(129,140,248,.8)'
-  const stateText = novaState==='idle'?'Online · ready to help':novaState==='thinking'?'Thinking...':'Generating...'
-  const stateColor = novaState==='idle'?'#10b981':novaState==='thinking'?'#fbbf24':'#818cf8'
+  const dotColor=novaState==='idle'?'#10b981':novaState==='thinking'?'#fbbf24':'#818cf8'
+  const dotGlow=novaState==='idle'?'rgba(16,185,129,.8)':novaState==='thinking'?'rgba(251,191,36,.8)':'rgba(129,140,248,.8)'
+  const stateText=novaState==='idle'?'Online · ready to help':novaState==='thinking'?'Thinking...':'Generating...'
+  const stateColor=novaState==='idle'?'#10b981':novaState==='thinking'?'#fbbf24':'#818cf8'
 
   return (
-    <div
-      ref={wrapRef}
-      id="nova-wrap"
-      style={{ height: wrapH ? `${wrapH}px` : '100%' }}
-    >
+    <div style={{display:'flex',flexDirection:'column',height:'100%',position:'relative',overflow:'hidden'}}>
+
       {/* FLUID BG */}
-      <canvas ref={bgRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', zIndex:0, pointerEvents:'none' }} />
+      <canvas ref={bgRef} style={{position:'absolute',inset:0,width:'100%',height:'100%',zIndex:0,pointerEvents:'none'}}/>
 
       {/* TOPBAR */}
       <div style={{
-        flexShrink:0, zIndex:1, position:'relative',
+        flexShrink:0,zIndex:1,position:'relative',
         padding:'12px 18px',
         borderBottom:'1px solid rgba(255,255,255,0.08)',
         background:'rgba(5,7,9,0.65)',
         backdropFilter:'blur(20px)',
-        display:'flex', alignItems:'center', gap:12,
+        display:'flex',alignItems:'center',gap:12,
       }}>
-        <div style={{ position:'relative', flexShrink:0 }}>
-          <Orb size={34} state={novaState} rings />
-          {/* Status dot — positioned to sit on the orb sphere itself */}
+        <div style={{position:'relative',flexShrink:0}}>
+          <Orb size={34} state={novaState} rings/>
           <div style={{
             position:'absolute',
-            bottom: Math.round(34*2.55/2 - 34/2) - 1,
-            right:  Math.round(34*2.55/2 - 34/2) - 1,
-            width:9, height:9, borderRadius:'50%',
-            background: dotColor,
-            border:'2px solid #07090f',
-            boxShadow:`0 0 8px ${dotGlow}`,
-            zIndex:10,
-          }} />
+            // center of ring container minus half orb, minus a couple px to land on orb edge
+            bottom:Math.round((34*2.55-34)/2)-2,
+            right:Math.round((34*2.55-34)/2)-2,
+            width:9,height:9,borderRadius:'50%',
+            background:dotColor,border:'2px solid #07090f',
+            boxShadow:`0 0 8px ${dotGlow}`,zIndex:10,
+          }}/>
         </div>
         <div>
-          <div style={{ fontSize:16, fontWeight:800, color:'#e2e8f0', letterSpacing:'-.02em' }}>Nova</div>
-          <div style={{ fontSize:11, fontWeight:500, color:stateColor }}>{stateText}</div>
+          <div style={{fontSize:16,fontWeight:800,color:'#e2e8f0',letterSpacing:'-.02em'}}>Nova</div>
+          <div style={{fontSize:11,fontWeight:500,color:stateColor}}>{stateText}</div>
         </div>
       </div>
 
-      {/* MESSAGES */}
-      <div id="nova-msgs" ref={msgsRef} style={{
-        padding:'16px 16px 8px',
-        display:'flex', flexDirection:'column', gap:12,
-        position:'relative', zIndex:1,
-      }}>
-        {greeting && (
-          <div style={{ textAlign:'center', padding:'20px 16px 12px', flexShrink:0 }}>
+      {/* MESSAGES — flex:1, scrollable, padded bottom so last msg clears the fixed input bar */}
+      <div
+        ref={msgsRef}
+        className="nv-msgs"
+        style={{
+          flex:1,overflowY:'auto',overflowX:'hidden',
+          WebkitOverflowScrolling:'touch',
+          padding:'16px 16px 80px',   /* 80px clears the fixed input bar */
+          display:'flex',flexDirection:'column',gap:12,
+          position:'relative',zIndex:1,
+        }}
+      >
+        {greeting&&(
+          <div style={{textAlign:'center',padding:'20px 16px 12px',flexShrink:0}}>
             <div style={{
-              fontSize:22, fontWeight:900, letterSpacing:'-.04em', marginBottom:8,
+              fontSize:22,fontWeight:900,letterSpacing:'-.04em',marginBottom:8,
               background:'linear-gradient(135deg,#fff,#a5b4fc)',
-              WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
+              WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',
             }}>What are we working on?</div>
-            <div style={{ fontSize:13, color:'rgba(255,255,255,.35)', lineHeight:1.6 }}>
+            <div style={{fontSize:13,color:'rgba(255,255,255,.35)',lineHeight:1.6}}>
               Ask me anything — I'll explain, build flashcards, or quiz you on it.
             </div>
           </div>
         )}
 
-        {messages.map((m, i) => (
-          <div key={i} style={{
-            display:'flex',
-            flexDirection: m.role==='user'?'row-reverse':'row',
-            alignItems:'flex-start',
-          }}>
+        {messages.map((m,i)=>(
+          <div key={i} style={{display:'flex',flexDirection:m.role==='user'?'row-reverse':'row',alignItems:'flex-start'}}>
             <div style={{
-              maxWidth:'84%',
-              padding:'11px 14px',
-              borderRadius: m.role==='user'?'18px 18px 5px 18px':'18px 18px 18px 5px',
-              background: m.role==='user'
-                ? 'linear-gradient(135deg,rgba(79,70,229,.28),rgba(109,40,217,.22))'
-                : 'rgba(8,12,22,.88)',
+              maxWidth:'84%',padding:'11px 14px',
+              borderRadius:m.role==='user'?'18px 18px 5px 18px':'18px 18px 18px 5px',
+              background:m.role==='user'?'linear-gradient(135deg,rgba(79,70,229,.28),rgba(109,40,217,.22))':'rgba(8,12,22,.88)',
               border:`1px solid ${m.role==='user'?'rgba(99,102,241,.3)':'rgba(255,255,255,.09)'}`,
-              color:'rgba(255,255,255,.88)', fontSize:14, lineHeight:1.65,
-              backdropFilter:'blur(12px)', whiteSpace:'pre-wrap', wordBreak:'break-word',
+              color:'rgba(255,255,255,.88)',fontSize:14,lineHeight:1.65,
+              backdropFilter:'blur(12px)',whiteSpace:'pre-wrap',wordBreak:'break-word',
             }}>
               {m.content}
             </div>
           </div>
         ))}
 
-        {loading && novaState==='thinking' && (
-          <div style={{ display:'flex' }}>
+        {loading&&novaState==='thinking'&&(
+          <div style={{display:'flex'}}>
             <div style={{
-              padding:'12px 16px', borderRadius:'18px 18px 18px 5px',
-              background:'rgba(8,12,22,.88)', border:'1px solid rgba(255,255,255,.09)',
-              display:'flex', gap:5, alignItems:'center', backdropFilter:'blur(12px)',
+              padding:'12px 16px',borderRadius:'18px 18px 18px 5px',
+              background:'rgba(8,12,22,.88)',border:'1px solid rgba(255,255,255,.09)',
+              display:'flex',gap:5,alignItems:'center',backdropFilter:'blur(12px)',
             }}>
-              {[0,150,300].map((d,j) => (
+              {[0,150,300].map((d,j)=>(
                 <div key={j} style={{
-                  width:7, height:7, borderRadius:'50%',
+                  width:7,height:7,borderRadius:'50%',
                   background:'rgba(129,140,248,.7)',
                   animation:`nv-bounce .9s ease-in-out ${d}ms infinite`,
-                }} />
+                }}/>
               ))}
             </div>
           </div>
         )}
       </div>
 
-      {/* INPUT BAR */}
-      <div id="nova-input-bar" style={{
-        padding:'10px 14px 14px',
+      {/* ── FIXED INPUT BAR — Option 2 ──
+          position:fixed keeps it pinned to bottom of viewport always.
+          paddingBottom uses env(safe-area-inset-bottom) for notch phones,
+          then adds kbInset so it rides up with the keyboard. */}
+      <div style={{
+        position:'fixed',
+        left:0,right:0,bottom:0,
+        zIndex:100,
+        padding:`10px 14px calc(env(safe-area-inset-bottom, 0px) + ${kbInset}px + 10px)`,
         borderTop:'1px solid rgba(255,255,255,.07)',
-        background:'rgba(5,7,9,.82)',
+        background:'rgba(5,7,9,.9)',
         backdropFilter:'blur(24px)',
+        transition:'padding-bottom .15s ease',
       }}>
-        <div style={{ display:'flex', gap:9, alignItems:'flex-end' }}>
+        <div style={{display:'flex',gap:9,alignItems:'flex-end'}}>
           <textarea
             ref={inputRef}
             className="nv-ta"
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={e=>setInput(e.target.value)}
             onKeyDown={handleKey}
-            onInput={e => {
-              e.target.style.height='auto'
-              e.target.style.height=Math.min(e.target.scrollHeight,110)+'px'
-            }}
+            onInput={e=>{e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,110)+'px'}}
             placeholder="Ask Nova anything..."
             rows={1}
             disabled={loading}
             style={{
-              flex:1, minHeight:42, maxHeight:110,
+              flex:1,minHeight:42,maxHeight:110,
               borderRadius:21,
               background:'rgba(255,255,255,.06)',
               border:'1.5px solid rgba(255,255,255,.11)',
-              padding:'11px 16px', fontSize:16,  /* 16px prevents iOS auto-zoom */
-              color:'#e2e8f0', fontFamily:'inherit',
-              outline:'none', resize:'none', lineHeight:1.4,
+              padding:'11px 16px',
+              fontSize:16,  /* must be ≥16px — prevents iOS auto-zoom on focus */
+              color:'#e2e8f0',fontFamily:'inherit',
+              outline:'none',resize:'none',lineHeight:1.4,
             }}
           />
           <button
-            onClick={() => send(input)}
-            disabled={loading || !input.trim()}
+            onClick={()=>send(input)}
+            disabled={loading||!input.trim()}
             style={{
-              width:42, height:42, borderRadius:'50%', border:'none', flexShrink:0,
+              width:42,height:42,borderRadius:'50%',border:'none',flexShrink:0,
               background:'linear-gradient(135deg,#4f46e5,#7c3aed)',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              cursor: loading||!input.trim()?'not-allowed':'pointer',
-              opacity: loading||!input.trim()?.45:1,
+              display:'flex',alignItems:'center',justifyContent:'center',
+              cursor:loading||!input.trim()?'not-allowed':'pointer',
+              opacity:loading||!input.trim()?0.45:1,
               boxShadow:'0 4px 16px rgba(99,102,241,.4)',
               transition:'opacity .15s',
             }}
@@ -338,6 +326,7 @@ export default function NovaPage() {
           </button>
         </div>
       </div>
+
     </div>
   )
 }
