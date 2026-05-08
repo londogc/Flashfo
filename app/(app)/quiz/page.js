@@ -269,6 +269,23 @@ export default function QuizPage() {
   }, [])
 
   useEffect(() => {
+    // Load from My Stuff
+    const saved = sessionStorage.getItem('flashfo_load_quiz') || sessionStorage.getItem('flashfo_quiz_load')
+    if (saved) {
+      try {
+        const { questions: savedQs, topic: savedTopic, type: savedType, id: savedItemId } = JSON.parse(saved)
+        sessionStorage.removeItem('flashfo_load_quiz')
+        sessionStorage.removeItem('flashfo_quiz_load')
+        if (savedQs?.length) {
+          setQuestions(savedQs)
+          setTopic(savedTopic || '')
+          if (savedType) setTypeId(savedType)
+          setSavedId(savedItemId || null)
+          initMatching(savedQs)
+          return
+        }
+      } catch(e) {}
+    }
     const params = new URLSearchParams(window.location.search)
     const q = params.get('q')
     if (q && !topic) {
