@@ -1,4 +1,5 @@
-'use client' // Flashfo v6 — Shell & Navigation
+'use client'
+// Flashfo v6 — Shell & Navigation
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -37,6 +38,7 @@ const ICONS = {
 }
 
 const PLAN_RANK = { free:0, student:1, teacher:2, school:3, lifetime:99 }
+
 function canAccess(userPlan, minPlan) {
   const plan = userPlan || 'free'
   const isLifetime = plan === 'lifetime'
@@ -44,40 +46,34 @@ function canAccess(userPlan, minPlan) {
 }
 
 const NAV = [
-  { href:'/dashboard',     label:'Dashboard',     icon:'dashboard', minPlan:'free' },
-  { href:'/create',        label:'Create',        icon:'create',    minPlan:'student' },
-  { href:'/study',         label:'Study',         icon:'study',     minPlan:'student' },
-  { href:'/ai-tutor',      label:'Nova',          icon:'nova',      minPlan:'student', nova:true },
-  { href:'/teach',         label:'Teach',         icon:'teach',     minPlan:'teacher' },
-  { href:'/student-portal',label:'Student Portal',icon:'studentp',  minPlan:'student' },
-  { href:'/my-stuff',      label:'My Stuff',      icon:'mystuff',   minPlan:'student' },
-  { href:'/curriculum',    label:'Curriculum',    icon:'curriculum',minPlan:'teacher' },
-  { href:'/collab-decks',  label:'Collab Decks',  icon:'collab',    minPlan:'school' },
-  { href:'/my-progress',   label:'My Progress',   icon:'progress',  minPlan:'student' },
-  { href:'/study-together',label:'Study Together',icon:'together',  minPlan:'student' },
-  { href:'/import',        label:'Import',        icon:'import',    minPlan:'student' },
+  { href:'/dashboard', label:'Dashboard', icon:'dashboard', minPlan:'free' },
+  { href:'/create', label:'Create', icon:'create', minPlan:'student' },
+  { href:'/study', label:'Study', icon:'study', minPlan:'student' },
+  { href:'/ai-tutor', label:'Nova', icon:'nova', minPlan:'student', nova:true },
+  { href:'/teach', label:'Teach', icon:'teach', minPlan:'teacher' },
+  { href:'/student-portal',label:'Student Portal',icon:'studentp', minPlan:'student' },
+  { href:'/my-stuff', label:'My Stuff', icon:'mystuff', minPlan:'student' },
+  { href:'/curriculum', label:'Curriculum', icon:'curriculum',minPlan:'teacher' },
+  { href:'/collab-decks', label:'Collab Decks', icon:'collab', minPlan:'school' },
+  { href:'/my-progress', label:'My Progress', icon:'progress', minPlan:'student' },
+  { href:'/study-together',label:'Study Together',icon:'together', minPlan:'student' },
+  { href:'/import', label:'Import', icon:'import', minPlan:'student' },
 ]
 
 function NavItem({ item, collapsed, active, userPlan }) {
   const nova = item.nova
   const locked = typeof window !== 'undefined' && !canAccess(userPlan, item.minPlan)
   if (locked) return (
-    <div title={collapsed ? item.label : undefined}
-      style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 8px', borderRadius:10, color:'#484f58', cursor:'pointer', position:'relative', opacity:0.5 }}
-      onClick={() => { const needed = item.minPlan === 'teacher' ? 'Teacher' : item.minPlan === 'school' ? 'School' : 'Student'; alert(`Upgrade to ${needed} plan to access ${item.label}.`) }}>
+    <div title={collapsed ? item.label : undefined} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 8px', borderRadius:10, color:'#484f58', cursor:'pointer', position:'relative', opacity:0.5 }} onClick={() => { const needed = item.minPlan === 'teacher' ? 'Teacher' : item.minPlan === 'school' ? 'School' : 'Student'; alert(`Upgrade to ${needed} plan to access ${item.label}.`) }}>
       <I d={ICONS[item.icon] || ICONS.dashboard} s={18}/>
       {!collapsed && <span style={{ fontSize:13, fontWeight:500, flex:1 }}>{item.label}</span>}
       {!collapsed && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#484f58" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
     </div>
   )
   return (
-    <Link href={item.href} title={collapsed ? item.label : undefined}
-      style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 8px', borderRadius:10, fontSize:13, fontWeight:500, textDecoration:'none', transition:'all 0.1s', background: active ? (nova ? 'rgba(124,58,237,0.12)' : 'rgba(29,78,216,0.1)') : 'transparent', border: active && nova ? '1px solid rgba(124,58,237,0.2)' : '1px solid transparent', color: active ? (nova ? '#a78bfa' : '#3b82f6') : 'var(--c-t2)' }}>
+    <Link href={item.href} title={collapsed ? item.label : undefined} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 8px', borderRadius:10, fontSize:13, fontWeight:500, textDecoration:'none', transition:'all 0.1s', background: active ? (nova ? 'rgba(124,58,237,0.12)' : 'rgba(29,78,216,0.1)') : 'transparent', border: active && nova ? '1px solid rgba(124,58,237,0.2)' : '1px solid transparent', color: active ? (nova ? '#a78bfa' : '#3b82f6') : 'var(--c-t2)' }}>
       <span style={{ flexShrink:0, position:'relative' }}>
-        {nova
-          ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/></svg>
-          : <I d={ICONS[item.icon] || ICONS.dashboard}/>
-        }
+        {nova ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/></svg> : <I d={ICONS[item.icon] || ICONS.dashboard}/> }
         {nova && <span style={{ position:'absolute', top:-3, right:-3, width:7, height:7, background:'#a78bfa', borderRadius:'50%', border:'1.5px solid var(--c-surface)', animation:'nova-breathe 2.4s ease-in-out infinite' }}/>}
       </span>
       {!collapsed && <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.label}</span>}
@@ -96,7 +92,11 @@ function Avatar({ user, profile, size = 28 }) {
 function NovaAmbient({ pathname }) {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
+  const [messages, setMessages] = useState([])
+  const [streaming, setStreaming] = useState(false)
   const panelRef = useRef(null)
+  const msgsEndRef = useRef(null)
+  const inputRef = useRef(null)
 
   useEffect(() => {
     if (!open) return
@@ -107,30 +107,84 @@ function NovaAmbient({ pathname }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
 
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 120)
+  }, [open])
+
+  useEffect(() => {
+    msgsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
   const routeContext = {
-    '/dashboard':      'Dashboard — overview of activity and progress',
-    '/flashcards':     'Flashcards — studying a deck',
-    '/quiz':           'Quiz — taking a quiz',
-    '/ai-tutor':       'Nova AI tutor page',
+    '/dashboard':      'Dashboard — overview of their activity and progress',
+    '/flashcards':     'Flashcards — studying a deck of flashcards',
+    '/quiz':           'Quiz — taking or generating a quiz',
     '/study':          'Study hub',
-    '/my-progress':    'Progress page — streaks and stats',
-    '/my-stuff':       'Saved decks and content',
+    '/my-progress':    'My Progress — streaks and stats',
+    '/my-stuff':       'My Stuff — saved decks and content',
     '/teach':          'Teacher portal',
-    '/create':         'Create page — generating new content',
+    '/create':         'Create page — generating new study content',
     '/curriculum':     'Curriculum planner',
     '/student-portal': 'Student portal — classes and assignments',
+    '/summarize':      'Summarize — summarizing text or notes',
+    '/study-guide':    'Study Guide — building a study guide',
+    '/lesson-builder': 'Lesson Builder — building a lesson plan',
   }
-  const context = routeContext[pathname] || `Page: ${pathname}`
+  const context = routeContext[pathname] || `page: ${pathname}`
 
-  function sendToNova() {
-    if (!input.trim()) return
-    window.open(`/ai-tutor?q=${encodeURIComponent(input.trim())}`, '_blank')
+  async function sendMessage() {
+    const text = input.trim()
+    if (!text || streaming) return
     setInput('')
-    setOpen(false)
+    const userMsg = { role: 'user', text }
+    setMessages(prev => [...prev, userMsg, { role: 'nova', text: '' }])
+    setStreaming(true)
+
+    try {
+      // Build conversation history for the API
+      const history = messages.map(m => ({
+        role: m.role === 'nova' ? 'assistant' : 'user',
+        content: m.text
+      }))
+      // Add context to first user message if this is the start
+      const userContent = messages.length === 0
+        ? `[The user is currently on the ${context} in Flashfo. Answer helpfully and concisely.]\n\n${text}`
+        : text
+
+      const res = await fetch('/api/nova-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...history, { role: 'user', content: userContent }]
+        })
+      })
+
+      if (!res.ok) throw new Error('Stream failed')
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let full = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        full += decoder.decode(value, { stream: true })
+        setMessages(prev => [...prev.slice(0, -1), { role: 'nova', text: full }])
+      }
+
+      if (!full) setMessages(prev => [...prev.slice(0, -1), { role: 'nova', text: 'Something went wrong. Try again.' }])
+    } catch {
+      setMessages(prev => [...prev.slice(0, -1), { role: 'nova', text: 'Something went wrong. Try again.' }])
+    } finally {
+      setStreaming(false)
+    }
   }
+
+  const hasMessages = messages.length > 0
 
   return (
     <>
+      {/* Aura overlay */}
       <div style={{
         position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 89,
         opacity: open ? 1 : 0, transition: 'opacity 0.7s ease',
@@ -138,104 +192,156 @@ function NovaAmbient({ pathname }) {
         <div style={{
           position: 'absolute', inset: 0,
           background: open
-            ? 'linear-gradient(to right, rgba(99,102,241,0.06) 0%, transparent 30%), linear-gradient(to left, rgba(124,58,237,0.06) 0%, transparent 30%), linear-gradient(to bottom, rgba(99,102,241,0.04) 0%, transparent 20%), linear-gradient(to top, rgba(124,58,237,0.06) 0%, transparent 20%)'
+            ? 'linear-gradient(to right,rgba(99,102,241,0.06) 0%,transparent 30%),linear-gradient(to left,rgba(124,58,237,0.06) 0%,transparent 30%),linear-gradient(to bottom,rgba(99,102,241,0.04) 0%,transparent 20%),linear-gradient(to top,rgba(124,58,237,0.06) 0%,transparent 20%)'
             : 'none',
         }}/>
         <div style={{
           position: 'absolute', inset: 0,
-          boxShadow: open ? 'inset 0 0 0 2px rgba(99,102,241,0.25), inset 0 0 40px rgba(124,58,237,0.08)' : 'none',
+          boxShadow: open ? 'inset 0 0 0 2px rgba(99,102,241,0.25),inset 0 0 40px rgba(124,58,237,0.08)' : 'none',
           transition: 'box-shadow 0.7s ease',
         }}/>
       </div>
 
+      {/* Panel + pill */}
       <div ref={panelRef} style={{
         position: 'fixed',
-        bottom: 'calc(64px + env(safe-area-inset-bottom, 0px) + 10px)',
+        bottom: 'calc(64px + env(safe-area-inset-bottom,0px) + 10px)',
         right: 16, zIndex: 90,
         display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8,
       }}>
+        {/* Panel */}
         <div style={{
-          width: 220,
-          background: 'rgba(10,0,26,0.96)',
+          width: 240,
+          background: 'rgba(10,0,26,0.97)',
           border: '0.5px solid rgba(124,58,237,0.32)',
           borderRadius: 16, padding: 14,
           backdropFilter: 'blur(18px)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.55), 0 0 24px rgba(124,58,237,0.1)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.55),0 0 24px rgba(124,58,237,0.1)',
           opacity: open ? 1 : 0,
           transform: open ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.95)',
           pointerEvents: open ? 'all' : 'none',
           transition: 'all 0.22s ease',
+          display: 'flex', flexDirection: 'column', gap: 10,
         }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 10 }}>
+
+          {/* Header */}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
             <div style={{ display:'flex', alignItems:'center', gap: 8 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" stroke="#a78bfa" strokeWidth="1.4"/>
                 <circle cx="12" cy="12" r="6" stroke="#a78bfa" strokeWidth="1.4"/>
                 <circle cx="12" cy="12" r="2" fill="#a78bfa"/>
               </svg>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#a5b4fc' }}>Nova</span>
+              <span style={{ fontSize:13, fontWeight:700, color:'#a5b4fc' }}>Nova</span>
             </div>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#818cf8', animation: 'nova-breathe 2.4s ease-in-out infinite' }}/>
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              {hasMessages && (
+                <button onClick={() => setMessages([])} style={{ fontSize:10, color:'rgba(241,240,255,0.3)', background:'none', border:'none', cursor:'pointer', padding:0 }}>
+                  Clear
+                </button>
+              )}
+              <div style={{ width:6, height:6, borderRadius:'50%', background: streaming ? '#f59e0b' : '#818cf8', animation:'nova-breathe 2.4s ease-in-out infinite' }}/>
+            </div>
           </div>
 
-          <div style={{ display:'flex', alignItems:'center', gap: 5, background:'rgba(99,102,241,0.08)', border:'0.5px solid rgba(99,102,241,0.18)', borderRadius: 7, padding:'5px 8px', marginBottom: 10 }}>
-            <div style={{ width:5, height:5, borderRadius:'50%', background:'#6366f1', flexShrink:0, animation:'nova-pulse 1.5s infinite' }}/>
-            <span style={{ fontSize: 10, color:'rgba(241,240,255,0.42)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{context}</span>
-          </div>
+          {/* Context chip — only when no messages */}
+          {!hasMessages && (
+            <div style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(99,102,241,0.08)', border:'0.5px solid rgba(99,102,241,0.18)', borderRadius:7, padding:'5px 8px' }}>
+              <div style={{ width:5, height:5, borderRadius:'50%', background:'#6366f1', flexShrink:0, animation:'nova-pulse 1.5s infinite' }}/>
+              <span style={{ fontSize:10, color:'rgba(241,240,255,0.42)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{context}</span>
+            </div>
+          )}
 
-          <p style={{ fontSize: 12, color:'rgba(241,240,255,0.78)', lineHeight: 1.55, marginBottom: 11 }}>
-            I can see what you're working on. Ask me anything and I'll open in a new tab so you don't lose your place.
-          </p>
+          {/* Intro text — only when no messages */}
+          {!hasMessages && (
+            <p style={{ fontSize:12, color:'rgba(241,240,255,0.65)', lineHeight:1.5, margin:0 }}>
+              Ask me anything — I'll answer right here without taking you away from what you're doing.
+            </p>
+          )}
 
-          <div style={{ display:'flex', gap: 6, alignItems:'center', background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.08)', borderRadius: 9, padding:'6px 9px' }}>
+          {/* Messages */}
+          {hasMessages && (
+            <div style={{ maxHeight:220, overflowY:'auto', display:'flex', flexDirection:'column', gap:8 }}>
+              {messages.map((m, i) => (
+                <div key={i} style={{
+                  alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+                  maxWidth: '90%',
+                  background: m.role === 'user' ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.05)',
+                  border: `0.5px solid ${m.role === 'user' ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                  borderRadius: m.role === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
+                  padding: '8px 10px',
+                  fontSize: 12, color: 'rgba(241,240,255,0.82)', lineHeight: 1.55,
+                }}>
+                  {m.text || (m.role === 'nova' && streaming ? (
+                    <span style={{ display:'flex', gap:3, alignItems:'center' }}>
+                      <span style={{ width:4, height:4, borderRadius:'50%', background:'#a78bfa', animation:'nova-pulse 0.9s ease-in-out infinite' }}/>
+                      <span style={{ width:4, height:4, borderRadius:'50%', background:'#a78bfa', animation:'nova-pulse 0.9s ease-in-out infinite 0.2s' }}/>
+                      <span style={{ width:4, height:4, borderRadius:'50%', background:'#a78bfa', animation:'nova-pulse 0.9s ease-in-out infinite 0.4s' }}/>
+                    </span>
+                  ) : '')}
+                </div>
+              ))}
+              <div ref={msgsEndRef}/>
+            </div>
+          )}
+
+          {/* Input */}
+          <div style={{ display:'flex', gap:6, alignItems:'center', background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.08)', borderRadius:9, padding:'6px 9px' }}>
             <input
+              ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') sendToNova() }}
-              placeholder="Ask Nova anything…"
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+              placeholder={streaming ? 'Nova is thinking…' : 'Ask Nova anything…'}
+              disabled={streaming}
               style={{ flex:1, background:'transparent', border:'none', outline:'none', fontSize:11, color:'rgba(241,240,255,0.7)', fontFamily:'inherit' }}
             />
-            <button onClick={sendToNova} style={{ width:20, height:20, borderRadius:6, background:'rgba(99,102,241,0.18)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <button
+              onClick={sendMessage}
+              disabled={streaming || !input.trim()}
+              style={{ width:20, height:20, borderRadius:6, background: streaming ? 'rgba(255,255,255,0.05)' : 'rgba(99,102,241,0.18)', border:'none', cursor: streaming ? 'default' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, opacity: (!input.trim() || streaming) ? 0.4 : 1 }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2.5" strokeLinecap="round"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
             </button>
           </div>
 
-          <a href="/ai-tutor" target="_blank" style={{ display:'block', textAlign:'center', marginTop: 8, fontSize: 10, color:'rgba(129,140,248,0.5)', textDecoration:'none' }}>
+          <a href="/ai-tutor" target="_blank" style={{ display:'block', textAlign:'center', fontSize:10, color:'rgba(129,140,248,0.4)', textDecoration:'none' }}>
             Open full Nova ↗
           </a>
         </div>
 
+        {/* Pill */}
         <div onClick={() => setOpen(o => !o)} style={{
-          display: 'flex', alignItems: 'center', gap: 7,
+          display:'flex', alignItems:'center', gap:7,
           background: open ? 'rgba(99,102,241,0.14)' : 'rgba(13,0,34,0.9)',
           border: `0.5px solid ${open ? 'rgba(129,140,248,0.5)' : 'rgba(124,58,237,0.38)'}`,
-          borderRadius: 40, padding: '8px 14px 8px 10px',
-          cursor: 'pointer', backdropFilter: 'blur(12px)',
+          borderRadius:40, padding:'8px 14px 8px 10px',
+          cursor:'pointer', backdropFilter:'blur(12px)',
           boxShadow: open
-            ? '0 4px 20px rgba(0,0,0,0.5), 0 0 20px rgba(124,58,237,0.28)'
-            : '0 4px 18px rgba(0,0,0,0.45), 0 0 14px rgba(124,58,237,0.18)',
-          transition: 'all 0.2s', userSelect: 'none',
+            ? '0 4px 20px rgba(0,0,0,0.5),0 0 20px rgba(124,58,237,0.28)'
+            : '0 4px 18px rgba(0,0,0,0.45),0 0 14px rgba(124,58,237,0.18)',
+          transition:'all 0.2s', userSelect:'none',
         }}>
           <div style={{
-            width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-            background: 'radial-gradient(circle at 35% 35%, #c4b5fd, #7c3aed 60%, #4c1d95)',
-            boxShadow: '0 0 6px rgba(124,58,237,0.6)',
-            animation: 'pill-pulse 2.5s ease-in-out infinite',
+            width:8, height:8, borderRadius:'50%', flexShrink:0,
+            background:'radial-gradient(circle at 35% 35%,#c4b5fd,#7c3aed 60%,#4c1d95)',
+            boxShadow:'0 0 6px rgba(124,58,237,0.6)',
+            animation:'pill-pulse 2.5s ease-in-out infinite',
           }}/>
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(241,240,255,0.75)', letterSpacing:'0.01em' }}>Nova</span>
-          <span style={{ fontSize: 11, color: '#818cf8' }}>✦</span>
+          <span style={{ fontSize:12, fontWeight:600, color:'rgba(241,240,255,0.75)', letterSpacing:'0.01em' }}>Nova</span>
+          {hasMessages && <span style={{ width:5, height:5, borderRadius:'50%', background:'#a78bfa', flexShrink:0 }}/>}
+          <span style={{ fontSize:11, color:'#818cf8' }}>✦</span>
         </div>
       </div>
     </>
   )
 }
+
 export default function Shell({ children }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
   const pathname = usePathname()
   const router = useRouter()
   const { user, profile, loading: authLoading, signOut } = useAuth()
-
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false
     const w = window.innerWidth
@@ -245,7 +351,6 @@ export default function Shell({ children }) {
   const [cmdQuery, setCmdQuery] = useState('')
   const cmdRef = useRef(null)
   const cmdInputRef = useRef(null)
-
   const [dark, setDark] = useState(() => {
     if (typeof window === 'undefined') return true
     const saved = localStorage.getItem('ff-theme')
@@ -254,7 +359,6 @@ export default function Shell({ children }) {
     else document.documentElement.classList.remove('dark')
     return isDark
   })
-
   const [showNotifs, setShowNotifs] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [notifFilter, setNotifFilter] = useState('all')
@@ -277,9 +381,7 @@ export default function Shell({ children }) {
       '@keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.75)}}',
       '@keyframes nova-breathe{0%,100%{box-shadow:0 0 0 0 rgba(167,139,250,0.5)}50%{box-shadow:0 0 0 6px rgba(167,139,250,0)}}',
       '@keyframes nova-thinking{0%,100%{box-shadow:0 0 0 2px rgba(167,139,250,0.7)}50%{box-shadow:0 0 0 5px rgba(167,139,250,0.1)}}',
-      // Nova pill pulse
       '@keyframes pill-pulse{0%,100%{box-shadow:0 0 6px rgba(124,58,237,0.6)}50%{box-shadow:0 0 12px rgba(129,140,248,0.8)}}',
-      // Hide Nova pill on the ai-tutor page (she's already home)
       'body[data-path="/ai-tutor"] .nova-ambient-pill{display:none!important}',
     ].join('')
     document.head.appendChild(s)
@@ -295,10 +397,7 @@ export default function Shell({ children }) {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  // Tag body with current path so CSS can hide pill on /ai-tutor
-  useEffect(() => {
-    document.body.setAttribute('data-path', pathname)
-  }, [pathname])
+  useEffect(() => { document.body.setAttribute('data-path', pathname) }, [pathname])
 
   function toggleDark() {
     const next = !dark
@@ -333,8 +432,9 @@ export default function Shell({ children }) {
     }
     fetchNotifs()
     const sub = supabase.channel('notifs_'+user.id)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.'+user.id },
-        payload => { setNotifications(prev => [payload.new, ...prev]); setUnreadCount(c => c + 1) })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.'+user.id }, payload => {
+        setNotifications(prev => [payload.new, ...prev]); setUnreadCount(c => c + 1)
+      })
       .subscribe()
     return () => supabase.removeChannel(sub)
   }, [user])
@@ -373,28 +473,25 @@ export default function Shell({ children }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  useEffect(() => {
-    if (cmdOpen && cmdInputRef.current) cmdInputRef.current.focus()
-  }, [cmdOpen])
+  useEffect(() => { if (cmdOpen && cmdInputRef.current) cmdInputRef.current.focus() }, [cmdOpen])
 
   const CMD_ITEMS = [
-    { label:'Dashboard',          href:'/dashboard',     icon:'dashboard' },
-    { label:'Create',             href:'/create',        icon:'create' },
-    { label:'Flashcards',         href:'/flashcards',    icon:'mystuff' },
-    { label:'Quiz',               href:'/quiz',          icon:'study' },
-    { label:'Study Guide',        href:'/study-guide',   icon:'guide' },
-    { label:'Ask Nova',           href:'/ai-tutor',      icon:'nova' },
-    { label:'Teach',              href:'/teach',         icon:'teach' },
-    { label:'Curriculum Standards',href:'/curriculum',   icon:'curriculum' },
-    { label:'Collab Decks',       href:'/collab-decks',  icon:'collab' },
-    { label:'My Stuff',           href:'/my-stuff',      icon:'mystuff' },
-    { label:'Student Portal',     href:'/student-portal',icon:'studentp' },
+    { label:'Dashboard', href:'/dashboard', icon:'dashboard' },
+    { label:'Create', href:'/create', icon:'create' },
+    { label:'Flashcards', href:'/flashcards', icon:'mystuff' },
+    { label:'Quiz', href:'/quiz', icon:'study' },
+    { label:'Study Guide', href:'/study-guide', icon:'guide' },
+    { label:'Ask Nova', href:'/ai-tutor', icon:'nova' },
+    { label:'Teach', href:'/teach', icon:'teach' },
+    { label:'Curriculum Standards',href:'/curriculum', icon:'curriculum' },
+    { label:'Collab Decks', href:'/collab-decks', icon:'collab' },
+    { label:'My Stuff', href:'/my-stuff', icon:'mystuff' },
+    { label:'Student Portal', href:'/student-portal',icon:'studentp' },
   ]
   const filteredCmds = cmdQuery ? CMD_ITEMS.filter(c => c.label.toLowerCase().includes(cmdQuery.toLowerCase())) : CMD_ITEMS
 
   return (
     <div style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'var(--c-bg)' }}>
-
       {/* Nova Ambient — floats above everything, hidden on /ai-tutor */}
       {pathname !== '/ai-tutor' && <NovaAmbient pathname={pathname} />}
 
@@ -409,10 +506,7 @@ export default function Shell({ children }) {
           <div style={{ maxHeight:320, overflowY:'auto', padding:6 }}>
             {filteredCmds.length === 0 && <div style={{ padding:24, textAlign:'center', color:'var(--c-t3)', fontSize:13 }}>No results</div>}
             {filteredCmds.map((item, idx) => (
-              <Link key={idx} href={item.href} onClick={() => { setCmdOpen(false); setCmdQuery('') }}
-                style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 12px', borderRadius:8, color:'var(--c-t1)', textDecoration:'none', fontSize:13, background: pathname === item.href ? 'var(--c-surface2)' : 'none' }}
-                onMouseEnter={e => e.currentTarget.style.background='var(--c-surface2)'}
-                onMouseLeave={e => e.currentTarget.style.background = pathname === item.href ? 'var(--c-surface2)' : 'none'}>
+              <Link key={idx} href={item.href} onClick={() => { setCmdOpen(false); setCmdQuery('') }} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 12px', borderRadius:8, color:'var(--c-t1)', textDecoration:'none', fontSize:13, background: pathname === item.href ? 'var(--c-surface2)' : 'none' }} onMouseEnter={e => e.currentTarget.style.background='var(--c-surface2)'} onMouseLeave={e => e.currentTarget.style.background = pathname === item.href ? 'var(--c-surface2)' : 'none'}>
                 <div style={{ width:28, height:28, borderRadius:7, background:'var(--c-surface2)', border:'1px solid var(--c-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                   <I d={ICONS[item.icon] || ICONS.dashboard} s={12}/>
                 </div>
@@ -479,16 +573,13 @@ export default function Shell({ children }) {
             </span>
           )}
           <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-            <button onClick={() => { setCmdOpen(true); setCmdQuery('') }} title="Command palette"
-              style={{ height:30, padding:'0 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', display:'flex', alignItems:'center', gap:6, color:'var(--c-t3)', fontSize:11 }}>
+            <button onClick={() => { setCmdOpen(true); setCmdQuery('') }} title="Command palette" style={{ height:30, padding:'0 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', display:'flex', alignItems:'center', gap:6, color:'var(--c-t3)', fontSize:11 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
               <span className="ff-desktop-only">⌘K / Ctrl+K</span>
             </button>
-
             {/* Bell */}
             <div style={{ position:'relative' }}>
-              <button ref={bellRef} onClick={() => setShowNotifs(v => !v)}
-                style={{ position:'relative', background:showNotifs?'var(--c-surface2)':'none', border:'none', cursor:'pointer', padding:5, color: unreadCount>0?'#a78bfa':'var(--c-t2)', display:'flex', alignItems:'center', borderRadius:8, flexShrink:0, transition:'color 0.2s,background 0.2s' }}>
+              <button ref={bellRef} onClick={() => setShowNotifs(v => !v)} style={{ position:'relative', background:showNotifs?'var(--c-surface2)':'none', border:'none', cursor:'pointer', padding:5, color: unreadCount>0?'#a78bfa':'var(--c-t2)', display:'flex', alignItems:'center', borderRadius:8, flexShrink:0, transition:'color 0.2s,background 0.2s' }}>
                 <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M8 1a5 5 0 00-5 5v2.5L1.5 11h13L13 8.5V6a5 5 0 00-5-5zM6.5 13.5a1.5 1.5 0 003 0"/>
                 </svg>
@@ -512,8 +603,7 @@ export default function Shell({ children }) {
                   {notifCategories.length > 1 && (
                     <div style={{ padding:'8px 12px', display:'flex', gap:6, overflowX:'auto', borderBottom:'1px solid var(--c-line)' }}>
                       {notifCategories.map(cat => (
-                        <button key={cat} onClick={() => setNotifFilter(cat)}
-                          style={{ padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:500, border:'1px solid', whiteSpace:'nowrap', cursor:'pointer', transition:'all 0.15s', background: notifFilter===cat?'#a78bfa':'var(--c-surface2)', borderColor: notifFilter===cat?'#a78bfa':'var(--c-line)', color: notifFilter===cat?'#fff':'var(--c-t2)' }}>
+                        <button key={cat} onClick={() => setNotifFilter(cat)} style={{ padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:500, border:'1px solid', whiteSpace:'nowrap', cursor:'pointer', transition:'all 0.15s', background: notifFilter===cat?'#a78bfa':'var(--c-surface2)', borderColor: notifFilter===cat?'#a78bfa':'var(--c-line)', color: notifFilter===cat?'#fff':'var(--c-t2)' }}>
                           {cat.charAt(0).toUpperCase()+cat.slice(1)}
                         </button>
                       ))}
@@ -526,10 +616,7 @@ export default function Shell({ children }) {
                         <p style={{ margin:0 }}>No notifications yet</p>
                       </div>
                     ) : filteredNotifs.map(n => (
-                      <div key={n.id} onClick={() => markRead(n.id)}
-                        style={{ padding:'12px 16px', borderBottom:'1px solid var(--c-line)', cursor:'pointer', background: n.read?'transparent':'rgba(167,139,250,0.05)', display:'flex', gap:12, alignItems:'flex-start', transition:'background 0.15s' }}
-                        onMouseEnter={e => e.currentTarget.style.background='var(--c-surface2)'}
-                        onMouseLeave={e => e.currentTarget.style.background = n.read?'transparent':'rgba(167,139,250,0.05)'}>
+                      <div key={n.id} onClick={() => markRead(n.id)} style={{ padding:'12px 16px', borderBottom:'1px solid var(--c-line)', cursor:'pointer', background: n.read?'transparent':'rgba(167,139,250,0.05)', display:'flex', gap:12, alignItems:'flex-start', transition:'background 0.15s' }} onMouseEnter={e => e.currentTarget.style.background='var(--c-surface2)'} onMouseLeave={e => e.currentTarget.style.background = n.read?'transparent':'rgba(167,139,250,0.05)'}>
                         <div style={{ width:32, height:32, borderRadius:8, background: n.read?'var(--c-surface2)':'rgba(167,139,250,0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                         </div>
@@ -548,15 +635,12 @@ export default function Shell({ children }) {
                 </div>
               )}
             </div>
-
-            <button onClick={toggleDark} className="ff-mid-mobile-only"
-              style={{ height:30, padding:'0 10px', borderRadius:20, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', alignItems:'center', gap:5, color:'var(--c-t2)', flexShrink:0, fontSize:11, fontWeight:600, whiteSpace:'nowrap' }}>
+            <button onClick={toggleDark} className="ff-mid-mobile-only" style={{ height:30, padding:'0 10px', borderRadius:20, border:'1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer', alignItems:'center', gap:5, color:'var(--c-t2)', flexShrink:0, fontSize:11, fontWeight:600, whiteSpace:'nowrap' }}>
               <svg width="14" height="14" viewBox="-1 -1 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ flexShrink:0 }}>
                 {dark ? <path d="M8 1v1M8 14v1M1 8h1M14 8h1M3 3l.7.7M12.3 12.3l.7.7M3 13l.7-.7M12.3 3.7l.7-.7M11 8a3 3 0 11-6 0 3 3 0 016 0z"/> : <path d="M13 8.5A5.5 5.5 0 016 2a6 6 0 100 12 5.5 5.5 0 007-5.5z"/>}
               </svg>
               <span>{dark ? 'Light' : 'Dark'}</span>
             </button>
-
             {!authLoading && !user && (
               <a href="/auth" style={{ height:32, padding:'0 14px', fontSize:12, fontWeight:600, background:'#1d4ed8', color:'white', borderRadius:8, display:'inline-flex', alignItems:'center', textDecoration:'none' }}>Sign in</a>
             )}
@@ -574,14 +658,8 @@ export default function Shell({ children }) {
                       <div style={{ fontSize:12, fontWeight:700, color:'var(--c-t1)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{profile?.full_name || 'Account'}</div>
                       <div style={{ fontSize:11, color:'var(--c-t3)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.email}</div>
                     </div>
-                    <a href="/settings" onClick={() => setShowUserMenu(false)}
-                      style={{ display:'block', padding:'8px 12px', fontSize:13, color:'var(--c-t1)', textDecoration:'none', borderRadius:8, fontWeight:500 }}
-                      onMouseEnter={e => e.currentTarget.style.background='var(--c-surface2)'}
-                      onMouseLeave={e => e.currentTarget.style.background='transparent'}>Settings</a>
-                    <button onClick={handleSignOut}
-                      style={{ width:'100%', textAlign:'left', padding:'8px 12px', fontSize:13, color:'#ef4444', background:'none', border:'none', cursor:'pointer', borderRadius:8, fontWeight:500 }}
-                      onMouseEnter={e => e.currentTarget.style.background='#fef2f2'}
-                      onMouseLeave={e => e.currentTarget.style.background='transparent'}>Sign out</button>
+                    <a href="/settings" onClick={() => setShowUserMenu(false)} style={{ display:'block', padding:'8px 12px', fontSize:13, color:'var(--c-t1)', textDecoration:'none', borderRadius:8, fontWeight:500 }} onMouseEnter={e => e.currentTarget.style.background='var(--c-surface2)'} onMouseLeave={e => e.currentTarget.style.background='transparent'}>Settings</a>
+                    <button onClick={handleSignOut} style={{ width:'100%', textAlign:'left', padding:'8px 12px', fontSize:13, color:'#ef4444', background:'none', border:'none', cursor:'pointer', borderRadius:8, fontWeight:500 }} onMouseEnter={e => e.currentTarget.style.background='#fef2f2'} onMouseLeave={e => e.currentTarget.style.background='transparent'}>Sign out</button>
                   </div>
                 )}
               </div>
@@ -589,7 +667,6 @@ export default function Shell({ children }) {
             {authLoading && <div style={{ width:28, height:28, borderRadius:'50%', background:'var(--c-line)' }}/>}
           </div>
         </header>
-
         <main className="ff-content" style={{ flex:1, overflowY:'auto' }} key={pathname}>
           {children}
         </main>
@@ -597,19 +674,17 @@ export default function Shell({ children }) {
 
       {/* Mobile wheel overlay */}
       {plusOpen && (
-        <div onClick={() => setPlusOpen(false)}
-          style={{ position:'fixed', top:0, left:0, right:0, bottom:64, zIndex:98, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(6px)', WebkitBackdropFilter:'blur(6px)', display:'flex', flexDirection:'column', justifyContent:'flex-end', padding:'0 16px 16px' }}>
+        <div onClick={() => setPlusOpen(false)} style={{ position:'fixed', top:0, left:0, right:0, bottom:64, zIndex:98, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(6px)', WebkitBackdropFilter:'blur(6px)', display:'flex', flexDirection:'column', justifyContent:'flex-end', padding:'0 16px 16px' }}>
           <div onClick={e => e.stopPropagation()} style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
             {[
-              { href:'/quiz',           label:'Quiz',          icon:'M6 5.5a2.5 2.5 0 014.5 1.5c0 1.5-1.5 2-2 3V11m0 2.5v.5' },
-              { href:'/flashcards',     label:'Flashcards',    icon:'M4 3h9a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zM2 5H1v7a1 1 0 001 1h9' },
-              { href:'/summarize',      label:'Summarize',     icon:'M2 3h12v2.5H2zm0 4h8v2.5H2zm0 4h10v2H2' },
-              { href:'/study-guide',    label:'Study Guide',   icon:'M1 3h6.5L9 4.5h6V13H9l-1.5-1.5H1zm0 0v10' },
-              { href:'/teach',          label:'Teacher Portal',icon:'M8 1a4 4 0 100 8 4 4 0 000-8zm-6 14c0-3.3 2.7-6 6-6s6 2.7 6 6' },
+              { href:'/quiz', label:'Quiz', icon:'M6 5.5a2.5 2.5 0 014.5 1.5c0 1.5-1.5 2-2 3V11m0 2.5v.5' },
+              { href:'/flashcards', label:'Flashcards', icon:'M4 3h9a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zM2 5H1v7a1 1 0 001 1h9' },
+              { href:'/summarize', label:'Summarize', icon:'M2 3h12v2.5H2zm0 4h8v2.5H2zm0 4h10v2H2' },
+              { href:'/study-guide', label:'Study Guide', icon:'M1 3h6.5L9 4.5h6V13H9l-1.5-1.5H1zm0 0v10' },
+              { href:'/teach', label:'Teacher Portal',icon:'M8 1a4 4 0 100 8 4 4 0 000-8zm-6 14c0-3.3 2.7-6 6-6s6 2.7 6 6' },
               { href:'/student-portal', label:'Student Portal',icon:'M8 1l7 3.5-7 3.5-7-3.5zm-5 5.5v4c0 2 2.2 3 5 3s5-1 5-3V10' },
             ].map(item => (
-              <Link key={item.label} href={item.href} onClick={() => setPlusOpen(false)}
-                style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'14px 8px', borderRadius:16, background:'var(--c-surface)', border:'1px solid var(--c-line)', textDecoration:'none' }}>
+              <Link key={item.label} href={item.href} onClick={() => setPlusOpen(false)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'14px 8px', borderRadius:16, background:'var(--c-surface)', border:'1px solid var(--c-line)', textDecoration:'none' }}>
                 <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"><path d={item.icon}/></svg>
                 <span style={{ fontSize:10, fontWeight:600, color:'var(--c-t1)', textAlign:'center', lineHeight:1.2 }}>{item.label}</span>
               </Link>
@@ -625,17 +700,16 @@ export default function Shell({ children }) {
             <div style={{ fontSize:10, color:'#484f58', fontWeight:700, letterSpacing:'.07em', marginBottom:10 }}>MORE TOOLS</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
               {[
-                { href:'/collab-decks',    label:'Collab Decks',    sub:'Shared decks',       color:'#a78bfa', border:'rgba(167,139,250,0.2)' },
-                { href:'/curriculum',      label:'Curriculum',      sub:'Plan your year',     color:'#34d399', border:'rgba(52,211,153,0.2)' },
-                { href:'/student-portal',  label:'Student Portal',  sub:'Your classes',       color:'#f59e0b', border:'rgba(245,158,11,0.2)' },
-                { href:'/lesson-builder',  label:'Lesson Builder',  sub:'Plan lessons',       color:'#3b82f6', border:'rgba(37,99,235,0.2)' },
-                { href:'/my-progress',     label:'Weakness Heatmap',sub:'See your weakest',   color:'#60a5fa', border:'rgba(37,99,235,0.15)' },
-                { href:'/study-together',  label:'Study With a Friend',sub:'Live 2-player',   color:'#60a5fa', border:'rgba(37,99,235,0.15)' },
-                { href:'/import',          label:'Import',          sub:'URL or text → deck', color:'#60a5fa', border:'rgba(37,99,235,0.15)' },
-                { href:'/parent',          label:'Parent Dashboard', sub:'Monitor your child', color:'#60a5fa', border:'rgba(37,99,235,0.15)' },
+                { href:'/collab-decks', label:'Collab Decks', sub:'Shared decks', border:'rgba(167,139,250,0.2)' },
+                { href:'/curriculum', label:'Curriculum', sub:'Plan your year', border:'rgba(52,211,153,0.2)' },
+                { href:'/student-portal', label:'Student Portal', sub:'Your classes', border:'rgba(245,158,11,0.2)' },
+                { href:'/lesson-builder', label:'Lesson Builder', sub:'Plan lessons', border:'rgba(37,99,235,0.2)' },
+                { href:'/my-progress', label:'Weakness Heatmap', sub:'See your weakest', border:'rgba(37,99,235,0.15)' },
+                { href:'/study-together', label:'Study With a Friend', sub:'Live 2-player', border:'rgba(37,99,235,0.15)' },
+                { href:'/import', label:'Import', sub:'URL or text → deck', border:'rgba(37,99,235,0.15)' },
+                { href:'/parent', label:'Parent Dashboard', sub:'Monitor your child', border:'rgba(37,99,235,0.15)' },
               ].map(item => (
-                <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                  style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, background:'#0d1117', border:`1px solid ${item.border}`, textDecoration:'none' }}>
+                <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, background:'#0d1117', border:`1px solid ${item.border}`, textDecoration:'none' }}>
                   <div>
                     <div style={{ fontSize:12, fontWeight:600, color:'#e6edf3' }}>{item.label}</div>
                     <div style={{ fontSize:10, color:'#8b949e' }}>{item.sub}</div>
@@ -645,7 +719,6 @@ export default function Shell({ children }) {
             </div>
           </div>
         )}
-
         <nav style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:100, background:'#0d1117', borderTop:'1px solid #21262d', height:64, paddingBottom:'env(safe-area-inset-bottom,0px)', display:'flex', alignItems:'flex-end', justifyContent:'space-around', paddingTop:6, paddingLeft:4, paddingRight:4 }}>
           <Link href="/dashboard" onClick={() => setMoreOpen(false)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'4px 6px', textDecoration:'none', minWidth:52 }}>
             <div style={{ width:44, height:36, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:12, background:pathname==='/dashboard'?'rgba(59,130,246,.14)':'transparent', transition:'background .2s' }}>
@@ -653,14 +726,12 @@ export default function Shell({ children }) {
             </div>
             <span style={{ fontSize:9, fontWeight:600, color:pathname==='/dashboard'?'#e6edf3':'#484f58' }}>Home</span>
           </Link>
-
           <Link href="/create" onClick={() => setMoreOpen(false)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'4px 6px', textDecoration:'none', minWidth:52 }}>
             <div style={{ width:44, height:36, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:12, background:pathname==='/create'?'rgba(167,139,250,.14)':'transparent', transition:'background .2s' }}>
               <div style={{ color:pathname==='/create'?'#a78bfa':'#6b7280' }}><I d={ICONS.create} s={22}/></div>
             </div>
             <span style={{ fontSize:9, fontWeight:600, color:pathname==='/create'?'#e6edf3':'#484f58' }}>Create</span>
           </Link>
-
           <Link href="/ai-tutor" onClick={() => setMoreOpen(false)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, textDecoration:'none', minWidth:52, marginTop:-14 }}>
             <div style={{ position:'relative', width:52, height:52 }}>
               <div style={{ position:'absolute', top:-3, left:-3, right:-3, bottom:-3, borderRadius:21, background:'conic-gradient(#3b82f6,#8b5cf6,#a78bfa,#34d399,#3b82f6)', animation:'sh-spin 3s linear infinite' }}/>
@@ -674,14 +745,12 @@ export default function Shell({ children }) {
             </div>
             <span style={{ fontSize:9, fontWeight:600, color:'#a78bfa' }}>Nova</span>
           </Link>
-
           <Link href="/study" onClick={() => setMoreOpen(false)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'4px 6px', textDecoration:'none', minWidth:52 }}>
             <div style={{ width:44, height:36, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:12, background:pathname==='/study'?'rgba(52,211,153,.14)':'transparent', transition:'background .2s' }}>
               <div style={{ color:pathname==='/study'?'#34d399':'#6b7280' }}><I d={ICONS.study} s={22}/></div>
             </div>
             <span style={{ fontSize:9, fontWeight:600, color:pathname==='/study'?'#e6edf3':'#484f58' }}>Study</span>
           </Link>
-
           <button onClick={() => setMoreOpen(o => !o)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'4px 6px', background:'transparent', border:'none', cursor:'pointer', minWidth:52 }}>
             <div style={{ width:44, height:36, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:12, background:moreOpen?'rgba(245,158,11,.14)':'transparent', transition:'background .2s' }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
