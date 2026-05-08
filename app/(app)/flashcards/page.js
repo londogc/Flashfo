@@ -325,7 +325,7 @@ function FlashcardsPageInner() {
           <div style={{position:'relative',height:14,marginTop:6}}><span style={{position:'absolute',left:0,fontSize:10,color:'var(--c-t3)'}}>10</span><span style={{position:'absolute',left:'50%',transform:'translateX(-50%)',fontSize:10,color:'var(--c-t3)'}}>20</span><span style={{position:'absolute',right:0,fontSize:10,color:'var(--c-t3)'}}>30</span></div>
         </div>
         {error&&<div className="mb-3 text-sm text-red-500">{error}</div>}
-        <button onClick={generate} disabled={loading||!topic.trim()} style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',opacity:(loading||!topic.trim())?0.6:1,letterSpacing:'-0.01em'}}>
+        <button onClick={()=>generate()} disabled={loading||!topic.trim()} style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',opacity:(loading||!topic.trim())?0.6:1,letterSpacing:'-0.01em'}}>
           {loading?<span style={{display:'flex',alignItems:'center',justifyContent:'center',gap:9}}><span style={{width:15,height:15,border:'2px solid rgba(255,255,255,0.25)',borderTopColor:'#fff',borderRadius:'50%',flexShrink:0,display:'inline-block',animation:'_fcspin 0.7s linear infinite'}}/>Generating...</span>:'Generate '+count+' Flashcards'}
         </button>
       </div>
