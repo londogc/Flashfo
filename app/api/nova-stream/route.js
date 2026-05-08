@@ -1,10 +1,38 @@
 import { NextResponse } from 'next/server'
-
 export const runtime = 'edge'
 
 const getKey = () => process.env.OPENAI_API_KEY || ''
 const MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-mini'
 const RESPONSES_URL = 'https://api.openai.com/v1/responses'
+const MAX_MESSAGES = 20
+const MAX_MSG_LENGTH = 8000
+
+const rateLimitMap = new Map()
+function checkRateLimit(ip, limit = 20, windowMs = 60_000) {
+  const now = Date.now()
+  const entry = rateLimitMap.get(ip) || { count: 0, resetAt: now + windowMs }
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs }
+  entry.count++
+  rateLimitMap.set(ip, entry)
+  return entry.count <= limit
+}
+
+async function verifyAuth(request) {
+  const auth = request.headers.get('authorization') || ''
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null
+  if (!token) return null
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+      },
+    })
+    if (!res.ok) return null
+    const user = await res.json()
+    return user?.id ? user : null
+  } catch { return null }
+}
 
 const BLOCKED_PATTERNS = [
   /kill\s*(my|your|him|her|them)?self/i,
@@ -20,11 +48,7 @@ const BLOCKED_PATTERNS = [
   /how\s*to\s*make\s*(drugs|meth|cocaine|heroin)/i,
 ]
 
-const CRISIS_RESPONSE = `I'm not able to help with that, but support is available right now.
-
-If you're going through something difficult, please reach out:
-• 988 Suicide & Crisis Lifeline: Call or text 988 (free, 24/7)
-• Crisis Text Line: Text HOME to 741741`
+const CRISIS_RESPONSE = `I'm not able to help with that, but support is available right now. If you're going through something difficult, please reach out:\n• 988 Suicide & Crisis Lifeline: Call or text 988 (free, 24/7)\n• Crisis Text Line: Text HOME to 741741`
 
 const NOVA_SYSTEM_PROMPT = `You are Nova, an AI study assistant built into Flashfo — an educational platform for students and teachers.
 
@@ -48,28 +72,35 @@ STRICT SAFETY RULES:
 
 export async function POST(request) {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+    if (!checkRateLimit(ip, 20, 60_000)) {
+      return NextResponse.json({ error: 'Too many requests. Please slow down.' }, { status: 429 })
+    }
+
+    const user = await verifyAuth(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 })
+    }
+
     const { messages } = await request.json()
 
-    // Server-side safety filter
-    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')
-    const userText = lastUserMsg?.text || lastUserMsg?.content || ''
+    const safeMessages = (Array.isArray(messages) ? messages : [])
+      .slice(0, MAX_MESSAGES)
+      .map(m => ({ ...m, text: String(m.text || m.content || '').slice(0, MAX_MSG_LENGTH), content: String(m.text || m.content || '').slice(0, MAX_MSG_LENGTH) }))
 
+    const lastUserMsg = [...safeMessages].reverse().find(m => m.role === 'user')
+    const userText = lastUserMsg?.text || lastUserMsg?.content || ''
     for (const pattern of BLOCKED_PATTERNS) {
       if (pattern.test(userText)) {
         const encoder = new TextEncoder()
         const stream = new ReadableStream({
-          start(controller) {
-            controller.enqueue(encoder.encode(CRISIS_RESPONSE))
-            controller.close()
-          }
+          start(controller) { controller.enqueue(encoder.encode(CRISIS_RESPONSE)); controller.close() }
         })
-        return new NextResponse(stream, {
-          headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-        })
+        return new NextResponse(stream, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
       }
     }
 
-    const input = messages.map(m => ({
+    const input = safeMessages.map(m => ({
       role: m.role === 'assistant' ? 'assistant' : 'user',
       content: [{ type: m.role === 'assistant' ? 'output_text' : 'input_text', text: m.text || m.content || '' }]
     }))
@@ -84,10 +115,7 @@ export async function POST(request) {
 
     const res = await fetch(RESPONSES_URL, {
       method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + getKey(),
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': 'Bearer ' + getKey(), 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
 
@@ -131,7 +159,6 @@ export async function POST(request) {
     return new NextResponse(stream, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' }
     })
-
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
