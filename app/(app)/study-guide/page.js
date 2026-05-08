@@ -64,6 +64,15 @@ export default function StudyGuidePage() {
   const [autoGenTopic, setAutoGenTopic] = useState('')
 
   useEffect(() => {
+    // Load from My Stuff
+    const saved = sessionStorage.getItem('flashfo_load_study_guide')
+    if (saved) {
+      try {
+        const { topic: savedTopic, output: savedOutput, depth: savedDepth } = JSON.parse(saved)
+        sessionStorage.removeItem('flashfo_load_study_guide')
+        if (savedOutput) { setTopic(savedTopic || ''); setDepth(savedDepth || 'standard'); setOutput(savedOutput); return }
+      } catch(e) {}
+    }
     const params = new URLSearchParams(window.location.search)
     const q = params.get('q')
     if (q) {
