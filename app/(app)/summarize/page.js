@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem } from '@/lib/savedItems'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
+import { rpc, novaStream } from '@/lib/api'
 
 export default function SummarizePage() {
   const { user } = useAuth()
@@ -50,8 +51,7 @@ export default function SummarizePage() {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setSpeaking(false); return }
     setSpeaking(true)
     try {
-      const res = await fetch('/api/rpc', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fn:'generateOpenAITtsAudio', args:[output,'nova',1] }) })
-      const d = await res.json()
+      const d = await rpc('generateOpenAITtsAudio', [output, 'nova', 1])
       const audio = new Audio('data:'+d.result.mimeType+';base64,'+d.result.base64)
       audioRef.current = audio
       audio.onended = () => { setSpeaking(false); audioRef.current = null }
@@ -63,12 +63,7 @@ export default function SummarizePage() {
     if (!input.trim()) return
     setLoading(true); setOutput(''); setError(''); setDraftBanner(false)
     try {
-      const res = await fetch('/api/rpc', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fn: 'summarizeText', args: [input.trim()] })
-      })
-      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Error '+res.status) }
-      const d = await res.json()
+      const d = await rpc('summarizeText', [input.trim()])
       const result = typeof d.result === 'string' ? d.result : JSON.stringify(d.result)
       setOutput(result)
       // Save draft
