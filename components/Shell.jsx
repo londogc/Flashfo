@@ -146,9 +146,13 @@ function NovaAmbient({ pathname }) {
         role: m.role === 'nova' ? 'assistant' : 'user',
         content: m.text
       }))
-      // Add context to first user message if this is the start
+      // Build rich context — include current card if on flashcards page
+      const card = window._flashfoCurrentCard
+      const cardCtx = card
+        ? ` The user is currently viewing a flashcard. Question: "${card.front}"${card.back ? `; Answer: "${card.back}"` : ' (answer not yet revealed)'}. Deck topic: "${card.topic}". If the user asks about "this card", "this one", "explain", or similar, they mean this flashcard.`
+        : ''
       const userContent = messages.length === 0
-        ? `[The user is currently on the ${context} in Flashfo. Answer helpfully and concisely.]\n\n${text}`
+        ? `[The user is on the ${context} in Flashfo.${cardCtx} You are Nova, Flashfo's AI study assistant. Answer helpfully and concisely — you can see what's on their screen.]\n\n${text}`
         : text
 
       const res = await fetch('/api/nova-stream', {
