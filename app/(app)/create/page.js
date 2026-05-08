@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { useRouter } from 'next/navigation'
+import { rpc } from '@/lib/api'
 
 const TOOL_ICONS = {
   flashcards: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>,
@@ -24,41 +25,81 @@ export default function CreatePage() {
   const [topic, setTopic] = useState('')
   const [pastedText, setPastedText] = useState('')
   const [pdfText, setPdfText] = useState('')
+  const [pdfFile, setPdfFile] = useState(null) // { base64, mimeType, name }
   const [pdfName, setPdfName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef(null)
 
   const readPDF = async (file) => {
-    // Use FileReader to get base64, send to rpc for text extraction
     setPdfName(file.name)
+    setPdfText('')
+    setPdfFile(null)
+    setError('')
     const reader = new FileReader()
     reader.onload = async (e) => {
       const base64 = e.target.result.split(',')[1]
+      const filePayload = { base64, mimeType: file.type || 'application/pdf', name: file.name }
+      setPdfFile(filePayload)
+      setInputMode('pdf')
+
+      // Try to extract/summarize text from the file so destination pages can use it
       setLoading(true)
       try {
-        const res = await fetch('/api/rpc', { method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ fn:'summarizeImportedFile', args:[{ base64, mimeType: file.type, filename: file.name }, 'Extract all text content verbatim, preserving structure.'] }) })
-        const data = await res.json()
-        setPdfText(data.result || data.text || '')
-        setInputMode('pdf')
-      } catch { setError('Could not read PDF') }
+        const data = await rpc('summarizeImportedFile', [filePayload, 'paragraph', 'English'])
+        // Store the extracted text so generate() can use it as a fallback
+        setPdfText(data?.result || '')
+      } catch {
+        // Non-fatal — we still have the raw file payload to pass along
+      }
       setLoading(false)
     }
     reader.readAsDataURL(file)
   }
 
   const generate = async () => {
-    const content = inputMode === 'topic' ? topic : inputMode === 'paste' ? pastedText : pdfText
-    if (!content.trim()) { setError('Add some content first'); return }
     setError('')
-    // Route to the right page with content pre-filled via sessionStorage
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('ff-create-content', JSON.stringify({ inputMode, content, topic: inputMode==='topic'?content:pdfName||'Imported content' }))
+
+    // Determine what content we actually have
+    let content = ''
+    if (inputMode === 'topic') content = topic.trim()
+    else if (inputMode === 'paste') content = pastedText.trim()
+    else if (inputMode === 'pdf') content = pdfText.trim()
+
+    // For PDF mode, we can proceed if we have either extracted text OR the raw file
+    const hasPdfFile = inputMode === 'pdf' && pdfFile
+    if (!content && !hasPdfFile) {
+      setError('Add some content first')
+      return
     }
+
+    // Store everything in sessionStorage for the destination page
+    if (typeof window !== 'undefined') {
+      const topicLabel = inputMode === 'topic' ? content : pdfName || 'Imported content'
+
+      // If we have the raw file, store it so the destination page can use *FromImportedFile
+      if (hasPdfFile) {
+        sessionStorage.setItem('ff-import-file', JSON.stringify({
+          file: pdfFile,
+          tool,
+          topic: topicLabel,
+        }))
+      }
+
+      sessionStorage.setItem('ff-create-content', JSON.stringify({
+        inputMode,
+        content: content || topicLabel,
+        topic: topicLabel,
+      }))
+    }
+
     const routes = { flashcards:'/flashcards', quiz:'/quiz', study_guide:'/study-guide', summary:'/summarize' }
     const dest = routes[tool] || '/flashcards'
-    router.push(dest + '?q=' + encodeURIComponent(content.trim()))
+
+    // If we have extracted text, pass it via query param as usual
+    // If we only have the raw file (extraction failed), the destination page reads ff-import-file
+    const queryContent = content || pdfName || ''
+    router.push(dest + (queryContent ? '?q=' + encodeURIComponent(queryContent) : ''))
   }
 
   return (
@@ -107,16 +148,22 @@ export default function CreatePage() {
         )}
         {inputMode === 'pdf' && (
           <div>
-            <div onClick={()=>fileRef.current?.click()} style={{ border:'2px dashed var(--c-line)', borderRadius:10, padding:'32px 16px', textAlign:'center', cursor:'pointer', background:'var(--c-surface)', transition:'border-color 0.2s' }}
+            <div onClick={()=>fileRef.current?.click()}
+              style={{ border:`2px dashed ${pdfFile ? '#34d399' : 'var(--c-line)'}`, borderRadius:10, padding:'32px 16px', textAlign:'center', cursor:'pointer', background:'var(--c-surface)', transition:'border-color 0.2s' }}
               onDragOver={e=>{e.preventDefault();e.currentTarget.style.borderColor='#2563eb'}}
-              onDragLeave={e=>e.currentTarget.style.borderColor='var(--c-line)'}
+              onDragLeave={e=>e.currentTarget.style.borderColor=pdfFile?'#34d399':'var(--c-line)'}
               onDrop={e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)readPDF(f);}}>
               <div style={{ fontSize:32, marginBottom:8 }}>📄</div>
-              <p style={{ color:'var(--c-t2)', fontSize:13, margin:'0 0 4px' }}>{pdfName ? pdfName : 'Drop your PDF here or click to browse'}</p>
-              {pdfText && <p style={{ color:'#34d399', fontSize:12, margin:0 }}>✓ Text extracted — ready to generate</p>}
+              <p style={{ color:'var(--c-t2)', fontSize:13, margin:'0 0 4px' }}>
+                {pdfName ? pdfName : 'Drop your PDF here or click to browse'}
+              </p>
               {loading && <p style={{ color:'var(--c-t3)', fontSize:12, margin:0 }}>Reading file...</p>}
+              {!loading && pdfFile && (
+                <p style={{ color:'#34d399', fontSize:12, margin:0 }}>✓ Ready to generate</p>
+              )}
             </div>
-            <input ref={fileRef} type="file" accept=".pdf,.txt,.doc,.docx" style={{ display:'none' }} onChange={e=>{const f=e.target.files?.[0];if(f)readPDF(f);}}/>
+            <input ref={fileRef} type="file" accept=".pdf,.txt,.doc,.docx" style={{ display:'none' }}
+              onChange={e=>{const f=e.target.files?.[0];if(f)readPDF(f);}}/>
           </div>
         )}
       </div>
@@ -125,7 +172,7 @@ export default function CreatePage() {
 
       <button onClick={generate} disabled={loading}
         style={{ width:'100%', padding:'13px 0', borderRadius:10, background:'linear-gradient(90deg,#2563eb,#7c3aed)', color:'#fff', border:'none', fontWeight:700, fontSize:14, cursor:loading?'not-allowed':'pointer', opacity:loading?0.6:1, letterSpacing:'-0.01em' }}>
-        {loading ? 'Working...' : '✦ Generate with Nova'}
+        {loading ? 'Reading file...' : '✦ Generate with Nova'}
       </button>
 
       <div style={{ marginTop:32, padding:'16px 20px', background:'rgba(167,139,250,0.06)', border:'1px solid rgba(167,139,250,0.2)', borderRadius:10 }}>
