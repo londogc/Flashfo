@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem } from '@/lib/savedItems'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
+import { rpc, novaStream } from '@/lib/api'
 
 function renderStudyGuide(text) {
   const lines = text.split('\n')
@@ -112,11 +113,7 @@ export default function StudyGuidePage() {
     setLoading(true); setOutput(''); setError(''); setSaved(false); setDraftBanner(false)
     try {
       const depthNote = depth === 'quick' ? ' Keep it concise, key points only.' : depth === 'deep' ? ' Be comprehensive and thorough with examples.' : ''
-      const res = await fetch('/api/rpc', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fn: 'generateStudyGuideFromText', args: [topic.trim() + depthNote + ' Write in an engaging, student-friendly tone. Use clear section headings without ### symbols. Write bullet points as plain text without ** markers. Make it feel like a knowledgeable teacher wrote this, not a textbook. Be direct, real, and interesting. Do NOT include a Memory Tricks or Mnemonics section.', 'English'] })
-      })
-      const data = await res.json()
+      const data = await rpc('generateStudyGuideFromText', [topic.trim() + depthNote + ' Write in an engaging, student-friendly tone. Use clear section headings without ### symbols. Write bullet points as plain text without ** markers. Make it feel like a knowledgeable teacher wrote this, not a textbook. Be direct, real, and interesting. Do NOT include a Memory Tricks or Mnemonics section.', 'English'])
       if (data.error) { setError(data.error); return }
       const result = typeof data.result === 'string' ? data.result : JSON.stringify(data.result)
       setOutput(result)
