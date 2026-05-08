@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
+import { novaStream } from '@/lib/api'
 
 const I = ({ d, s = 16 }) => (
   <svg width={s} height={s} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -155,13 +156,7 @@ function NovaAmbient({ pathname }) {
         ? `[The user is on the ${context} in Flashfo.${cardCtx} You are Nova, Flashfo's AI study assistant. Answer helpfully and concisely — you can see what's on their screen.]\n\n${text}`
         : text
 
-      const res = await fetch('/api/nova-stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...history, { role: 'user', content: userContent }]
-        })
-      })
+      const res = await novaStream([...history, { role: 'user', content: userContent }])
 
       if (!res.ok) throw new Error('Stream failed')
 
