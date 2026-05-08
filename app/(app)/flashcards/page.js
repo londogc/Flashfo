@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, Suspense } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 import { logStudySession } from '@/lib/logStudySession'
@@ -50,7 +50,7 @@ function SessionComplete({ cards, topic, hardCards, againCards, sessionRatings, 
   return (
     <div className="p-6 max-w-2xl mx-auto w-full">
       <div style={{textAlign:'center',marginBottom:28,padding:'28px 24px',background:'linear-gradient(135deg,rgba(16,185,129,0.08),rgba(52,211,153,0.04))',border:'1px solid rgba(16,185,129,0.2)',borderRadius:16}}>
-        <div style={{fontSize:40,marginBottom:12}}>{mastered===cards.length?'🎉':hasTrouble?'📚':'✅'}</div>
+        {mastered===cards.length&&<div style={{fontSize:40,marginBottom:12}}>🎉</div>}
         <h2 style={{fontSize:22,fontWeight:900,color:'var(--c-t1)',marginBottom:6,letterSpacing:'-.03em'}}>{mastered===cards.length?'Perfect session!':'Session complete'}</h2>
         <p style={{fontSize:13,color:'var(--c-t2)',margin:0}}>You studied all {cards.length} cards in <em>{topic}</em></p>
       </div>
@@ -85,7 +85,6 @@ function SessionComplete({ cards, topic, hardCards, againCards, sessionRatings, 
 
 function FlashcardsPageInner() {
   const { user } = useAuth()
-  const router = useRouter()
   const searchParams = useSearchParams()
   const audioRef = useRef(null)
   const sessionStartRef = useRef(null)
@@ -119,12 +118,31 @@ function FlashcardsPageInner() {
   const done = cards.length - studyQueue.length
 
   useEffect(() => {
+    // 1. Check if coming from My Stuff with a saved deck
+    const saved = sessionStorage.getItem('flashfo_load_flashcards') || sessionStorage.getItem('flashfo_fc_load')
+    if (saved) {
+      try {
+        const { cards: savedCards, topic: savedTopic, id: savedItemId } = JSON.parse(saved)
+        sessionStorage.removeItem('flashfo_load_flashcards')
+        sessionStorage.removeItem('flashfo_fc_load')
+        if (savedCards?.length) {
+          setCards(savedCards)
+          setTopic(savedTopic || '')
+          setSavedId(savedItemId || null)
+          setStudyQueue(savedCards.map((_,i) => i))
+          sessionStartRef.current = Date.now()
+          return
+        }
+      } catch(e) {}
+    }
+    // 2. Check URL params (from curriculum / auto-generate)
     const q = searchParams.get('q')
     if (q) {
       setTopic(decodeURIComponent(q))
       if (searchParams.get('autoGenerate') === '1') setAutoGen(true)
       return
     }
+    // 3. Load draft for logged-in users
     loadDraft('flashcards').then(draft => {
       if (draft?.data?.cards?.length) {
         setTopic(draft.data.topic || '')
@@ -136,6 +154,20 @@ function FlashcardsPageInner() {
   }, [])
 
   useEffect(() => { if (autoGen && topic.trim() && !loading && !cards.length) { setAutoGen(false); generate() } }, [autoGen, topic])
+
+  // Expose current card to Nova ambient so it can answer questions about it
+  useEffect(() => {
+    if (card && !sessionComplete) {
+      window._flashfoCurrentCard = {
+        front: card.front || card.question || '',
+        back: flipped ? (card.back || card.answer || '') : null,
+        topic: topic || ''
+      }
+    } else {
+      window._flashfoCurrentCard = null
+    }
+    return () => { window._flashfoCurrentCard = null }
+  }, [card, flipped, topic, sessionComplete])
 
   useEffect(() => {
     const id='fc-anims'; if(document.getElementById(id))return
@@ -221,13 +253,15 @@ function FlashcardsPageInner() {
   function addCard(){const n=cards.length;setCards(cs=>[...cs,{front:'New question',back:'New answer'}]);setTimeout(()=>startEdit(n),0)}
   function deleteCard(i){setCards(cs=>cs.filter((_,ci)=>ci!==i));setStudyQueue(q=>q.filter(qi=>qi!==i).map(qi=>qi>i?qi-1:qi));if(editIdx===i)setEditIdx(null)}
 
-  async function generate(){
-    if(!topic.trim())return
+  async function generate(overrideTopic){
+    const t = (overrideTopic || topic).trim()
+    if(!t) return
+    if(overrideTopic) setTopic(overrideTopic)
     setLoading(true);setCards([]);setFlipped(false);setError('');setSavedId(null)
     setStudyQueue([]);setSessionComplete(false);setSessionHardCards([]);setSessionAgainCards([])
     setSessionRatings({again:0,hard:0,easy:0});setDraftBanner(false)
     try{
-      const res=await fetch('/api/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fn:'generateFlashcardsFromText',args:[topic.trim(),count,'English']})})
+      const res=await fetch('/api/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fn:'generateFlashcardsFromText',args:[t,count,'English']})})
       if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||'Server error '+res.status)}
       const data=await res.json()
       const raw=data.result
@@ -239,7 +273,7 @@ function FlashcardsPageInner() {
         setCards(parsed)
         setStudyQueue(parsed.map((_,i)=>i))
         sessionStartRef.current=Date.now()
-        if(user)await saveDraft('flashcards',topic.trim(),{topic:topic.trim(),cards:parsed})
+        if(user)await saveDraft('flashcards',t,{topic:t,cards:parsed})
       }
     }catch{setError('Something went wrong. Please try again.')}
     finally{setLoading(false)}
@@ -267,7 +301,15 @@ function FlashcardsPageInner() {
   function generateFocusedDeck(){
     const weakCards=[...new Map([...sessionHardCards,...sessionAgainCards].map(c=>[c.front||c.question,c])).values()]
     const weakTopics=weakCards.map(c=>c.front||c.question).slice(0,8).join('; ')
-    router.push(`/flashcards?q=${encodeURIComponent(`Create flashcards to help me master these specific concepts from "${topic}": ${weakTopics}`)}&autoGenerate=1`)
+    const focusedTopic=`Create flashcards to help me master these specific concepts from "${topic}": ${weakTopics}`
+    // Reset session state and generate directly — same page, no routing needed
+    setSessionComplete(false)
+    setSessionHardCards([])
+    setSessionAgainCards([])
+    setSessionRatings({again:0,hard:0,easy:0})
+    setFlipped(false)
+    setSavedId(null)
+    generate(focusedTopic)
   }
 
   function startFresh(){setCards([]);setStudyQueue([]);setSessionComplete(false);setDraftBanner(false);clearDraft('flashcards')}
