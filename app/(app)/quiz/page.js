@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
+import { rpc, novaStream } from '@/lib/api'
 
 function printQuizBlank(questions, topic) {
   const win = window.open('', '_blank')
@@ -41,8 +42,7 @@ function SpeakerBtn({ text }) {
     if (busy || !text) return
     setBusy(true)
     try {
-      const res = await fetch('/api/rpc', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fn:'generateOpenAITtsAudio', args:[text,'nova',1] }) })
-      const d = await res.json()
+      const d = await rpc('generateOpenAITtsAudio', [text, 'nova', 1])
       const audio = new Audio('data:'+d.result.mimeType+';base64,'+d.result.base64)
       audio.onended = () => setBusy(false)
       audio.play()
@@ -324,9 +324,7 @@ export default function QuizPage() {
     setMatchAnswers({}); setSaGrades({}); setSubmitted(false); setError(''); setSavedId(null); setDraftBanner(false)
     try {
       const cfg = buildConfig(typeId, count, breakdown)
-      const res = await fetch('/api/rpc', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fn:'generateQuizFromTopic', args:[topic.trim(), cfg] }) })
-      if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.error||'Server error '+res.status) }
-      const data = await res.json()
+      const data = await rpc('generateQuizFromTopic', [topic.trim(), cfg])
       if (data.error) throw new Error(data.error)
       const qs = data.result?.questions || []
       if (!qs.length) { setError('Could not generate quiz. Try a more specific topic.'); return }
