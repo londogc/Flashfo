@@ -21,6 +21,7 @@ export default function LessonBuilder() {
   const set = (k,v) => setForm(p=>({...p,[k]:v}))
 
   useEffect(() => {
+    // 1. Load from My Stuff
     const saved = sessionStorage.getItem('flashfo_load_lesson_plan')
     if (saved) {
       try {
@@ -29,7 +30,8 @@ export default function LessonBuilder() {
         if (savedPlan) { if (savedForm) setForm(savedForm); setPlan(savedPlan); return }
       } catch(e) {}
     }
-  }, [])
+    // 2. Load draft
+    loadDraft('lesson-builder').then(draft => {
       if (draft?.data?.plan) {
         setForm(draft.data.form || form)
         setPlan(draft.data.plan)
