@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { saveItem } from '@/lib/savedItems'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
+import { rpc, novaStream } from '@/lib/api'
 
 const LESSON_TYPES = ['Lecture', 'Discussion', 'Lab / Hands-on', 'Review', 'Assessment']
 const GRADE_LEVELS = ['Elementary (K-2)', 'Elementary (3-5)', 'Middle School (6-8)', 'High School (9-12)', 'AP / College-level']
@@ -44,14 +45,10 @@ export default function LessonBuilder() {
     if (!form.topic.trim()) { setError('Please enter a topic.'); return }
     setLoading(true); setError(''); setPlan(null); setDraftBanner(false)
     try {
-      const res = await fetch('/api/nova-stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemPrompt: 'You are Nova, an expert curriculum designer for Flashfo. Generate detailed, practical US lesson plans. CRITICAL: Write in plain text only — no markdown whatsoever. No #, ##, ###, **, *, -, or backticks. Use plain numbered sections like "1. Learning Objectives" and write in normal prose sentences as a professional teacher would.',
-          messages: [{ role: 'user', content: `Create a detailed ${form.duration} ${form.type.toLowerCase()} lesson plan for ${form.grade} students on the topic: "${form.topic}" (Subject: ${form.subject || 'General'}). ${form.objectives ? 'Learning objectives: ' + form.objectives : ''} Include: 1. Learning Objectives (3-4 specific, measurable goals) 2. Materials Needed 3. Warm-Up / Hook (5 min) 4. Main Instruction (step-by-step with timing) 5. Student Activity 6. Assessment / Exit Ticket 7. Differentiation (support for struggling students + extension for advanced) 8. Homework (optional) Make it practical and immediately usable in a real classroom.` }]
-        })
-      })
+      const res = await novaStream(
+        [{ role: 'user', content: `Create a detailed ${form.duration} ${form.type.toLowerCase()} lesson plan for ${form.grade} students on the topic: "${form.topic}" (Subject: ${form.subject || 'General'}). ${form.objectives ? 'Learning objectives: ' + form.objectives : ''} Include: 1. Learning Objectives (3-4 specific, measurable goals) 2. Materials Needed 3. Warm-Up / Hook (5 min) 4. Main Instruction (step-by-step with timing) 5. Student Activity 6. Assessment / Exit Ticket 7. Differentiation (support for struggling students + extension for advanced) 8. Homework (optional) Make it practical and immediately usable in a real classroom.` }],
+        { systemPrompt: 'You are Nova, an expert curriculum designer for Flashfo. Generate detailed, practical US lesson plans. CRITICAL: Write in plain text only — no markdown whatsoever. No #, ##, ###, **, *, -, or backticks. Use plain numbered sections like "1. Learning Objectives" and write in normal prose sentences as a professional teacher would.' }
+      )
       if (!res.ok) { setLoading(false); setError('Failed to generate. Please try again.'); return }
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
