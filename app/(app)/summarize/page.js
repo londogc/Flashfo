@@ -18,6 +18,14 @@ export default function SummarizePage() {
 
   // Load draft on mount
   useEffect(() => {
+    const saved = sessionStorage.getItem('flashfo_load_summary')
+    if (saved) {
+      try {
+        const { input: savedInput, output: savedOutput } = JSON.parse(saved)
+        sessionStorage.removeItem('flashfo_load_summary')
+        if (savedOutput) { setInput(savedInput || ''); setOutput(savedOutput); return }
+      } catch(e) {}
+    }
     const q = new URLSearchParams(window.location.search).get('q')
     if (q) { setInput(decodeURIComponent(q)); return }
     loadDraft('summarize').then(draft => {
