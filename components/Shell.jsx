@@ -98,7 +98,6 @@ function NovaAmbient({ pathname }) {
   const [input, setInput] = useState('')
   const panelRef = useRef(null)
 
-  // Close panel on outside click
   useEffect(() => {
     if (!open) return
     const handler = (e) => {
@@ -108,25 +107,30 @@ function NovaAmbient({ pathname }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
 
-  // Build context string from current route
   const routeContext = {
-    '/dashboard':     'Dashboard — overview of activity and progress',
-    '/flashcards':    'Flashcards — studying a deck',
-    '/quiz':          'Quiz — taking a quiz',
-    '/ai-tutor':      'Nova AI tutor page',
-    '/study':         'Study hub',
-    '/my-progress':   'Progress page — streaks and stats',
-    '/my-stuff':      'Saved decks and content',
-    '/teach':         'Teacher portal',
-    '/create':        'Create page — generating new content',
-    '/curriculum':    'Curriculum planner',
-    '/student-portal':'Student portal — classes and assignments',
+    '/dashboard':      'Dashboard — overview of activity and progress',
+    '/flashcards':     'Flashcards — studying a deck',
+    '/quiz':           'Quiz — taking a quiz',
+    '/ai-tutor':       'Nova AI tutor page',
+    '/study':          'Study hub',
+    '/my-progress':    'Progress page — streaks and stats',
+    '/my-stuff':       'Saved decks and content',
+    '/teach':          'Teacher portal',
+    '/create':         'Create page — generating new content',
+    '/curriculum':     'Curriculum planner',
+    '/student-portal': 'Student portal — classes and assignments',
   }
   const context = routeContext[pathname] || `Page: ${pathname}`
 
+  function sendToNova() {
+    if (!input.trim()) return
+    window.open(`/ai-tutor?q=${encodeURIComponent(input.trim())}`, '_blank')
+    setInput('')
+    setOpen(false)
+  }
+
   return (
     <>
-      {/* Aura overlay — only visible when panel is open */}
       <div style={{
         position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 89,
         opacity: open ? 1 : 0, transition: 'opacity 0.7s ease',
@@ -137,7 +141,6 @@ function NovaAmbient({ pathname }) {
             ? 'linear-gradient(to right, rgba(99,102,241,0.06) 0%, transparent 30%), linear-gradient(to left, rgba(124,58,237,0.06) 0%, transparent 30%), linear-gradient(to bottom, rgba(99,102,241,0.04) 0%, transparent 20%), linear-gradient(to top, rgba(124,58,237,0.06) 0%, transparent 20%)'
             : 'none',
         }}/>
-        {/* border glow on viewport edges */}
         <div style={{
           position: 'absolute', inset: 0,
           boxShadow: open ? 'inset 0 0 0 2px rgba(99,102,241,0.25), inset 0 0 40px rgba(124,58,237,0.08)' : 'none',
@@ -145,16 +148,12 @@ function NovaAmbient({ pathname }) {
         }}/>
       </div>
 
-      {/* Pill + panel */}
       <div ref={panelRef} style={{
         position: 'fixed',
-        // On mobile, sit above the bottom nav (64px). On desktop, just above bottom edge.
         bottom: 'calc(64px + env(safe-area-inset-bottom, 0px) + 10px)',
-        right: 16,
-        zIndex: 90,
+        right: 16, zIndex: 90,
         display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8,
       }}>
-        {/* Panel */}
         <div style={{
           width: 220,
           background: 'rgba(10,0,26,0.96)',
@@ -167,10 +166,8 @@ function NovaAmbient({ pathname }) {
           pointerEvents: open ? 'all' : 'none',
           transition: 'all 0.22s ease',
         }}>
-          {/* Header */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 10 }}>
             <div style={{ display:'flex', alignItems:'center', gap: 8 }}>
-              {/* Simple circle Nova icon — matches mobile bottom nav */}
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" stroke="#a78bfa" strokeWidth="1.4"/>
                 <circle cx="12" cy="12" r="6" stroke="#a78bfa" strokeWidth="1.4"/>
@@ -181,49 +178,44 @@ function NovaAmbient({ pathname }) {
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#818cf8', animation: 'nova-breathe 2.4s ease-in-out infinite' }}/>
           </div>
 
-          {/* Context chip */}
           <div style={{ display:'flex', alignItems:'center', gap: 5, background:'rgba(99,102,241,0.08)', border:'0.5px solid rgba(99,102,241,0.18)', borderRadius: 7, padding:'5px 8px', marginBottom: 10 }}>
             <div style={{ width:5, height:5, borderRadius:'50%', background:'#6366f1', flexShrink:0, animation:'nova-pulse 1.5s infinite' }}/>
             <span style={{ fontSize: 10, color:'rgba(241,240,255,0.42)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{context}</span>
           </div>
 
-          {/* Message */}
           <p style={{ fontSize: 12, color:'rgba(241,240,255,0.78)', lineHeight: 1.55, marginBottom: 11 }}>
-            I can see what you're working on. Ask me anything or let me help you right here.
+            I can see what you're working on. Ask me anything and I'll open in a new tab so you don't lose your place.
           </p>
 
-          {/* Input */}
           <div style={{ display:'flex', gap: 6, alignItems:'center', background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.08)', borderRadius: 9, padding:'6px 9px' }}>
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && input.trim()) window.location.href = `/ai-tutor?q=${encodeURIComponent(input)}` }}
+              onKeyDown={e => { if (e.key === 'Enter') sendToNova() }}
               placeholder="Ask Nova anything…"
               style={{ flex:1, background:'transparent', border:'none', outline:'none', fontSize:11, color:'rgba(241,240,255,0.7)', fontFamily:'inherit' }}
             />
-            <button
-              onClick={() => { if (input.trim()) window.location.href = `/ai-tutor?q=${encodeURIComponent(input)}` }}
-              style={{ width:20, height:20, borderRadius:6, background:'rgba(99,102,241,0.18)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <button onClick={sendToNova} style={{ width:20, height:20, borderRadius:6, background:'rgba(99,102,241,0.18)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2.5" strokeLinecap="round"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
             </button>
           </div>
+
+          <a href="/ai-tutor" target="_blank" style={{ display:'block', textAlign:'center', marginTop: 8, fontSize: 10, color:'rgba(129,140,248,0.5)', textDecoration:'none' }}>
+            Open full Nova ↗
+          </a>
         </div>
 
-        {/* Pill trigger */}
-        <div
-          onClick={() => setOpen(o => !o)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 7,
-            background: open ? 'rgba(99,102,241,0.14)' : 'rgba(13,0,34,0.9)',
-            border: `0.5px solid ${open ? 'rgba(129,140,248,0.5)' : 'rgba(124,58,237,0.38)'}`,
-            borderRadius: 40, padding: '8px 14px 8px 10px',
-            cursor: 'pointer', backdropFilter: 'blur(12px)',
-            boxShadow: open
-              ? '0 4px 20px rgba(0,0,0,0.5), 0 0 20px rgba(124,58,237,0.28)'
-              : '0 4px 18px rgba(0,0,0,0.45), 0 0 14px rgba(124,58,237,0.18)',
-            transition: 'all 0.2s', userSelect: 'none',
-          }}>
-          {/* Pulsing indigo dot */}
+        <div onClick={() => setOpen(o => !o)} style={{
+          display: 'flex', alignItems: 'center', gap: 7,
+          background: open ? 'rgba(99,102,241,0.14)' : 'rgba(13,0,34,0.9)',
+          border: `0.5px solid ${open ? 'rgba(129,140,248,0.5)' : 'rgba(124,58,237,0.38)'}`,
+          borderRadius: 40, padding: '8px 14px 8px 10px',
+          cursor: 'pointer', backdropFilter: 'blur(12px)',
+          boxShadow: open
+            ? '0 4px 20px rgba(0,0,0,0.5), 0 0 20px rgba(124,58,237,0.28)'
+            : '0 4px 18px rgba(0,0,0,0.45), 0 0 14px rgba(124,58,237,0.18)',
+          transition: 'all 0.2s', userSelect: 'none',
+        }}>
           <div style={{
             width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
             background: 'radial-gradient(circle at 35% 35%, #c4b5fd, #7c3aed 60%, #4c1d95)',
@@ -237,7 +229,6 @@ function NovaAmbient({ pathname }) {
     </>
   )
 }
-
 export default function Shell({ children }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
