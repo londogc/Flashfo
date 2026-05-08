@@ -1,4 +1,5 @@
 'use client'
+import { rpc, novaStream } from '@/lib/api'
 import { useState, useEffect, useRef, useCallback } from 'react'
 
 const ORB_CSS = `
@@ -134,11 +135,7 @@ export default function NovaPage() {
     setLoading(true); setNovaState('thinking')
     try{
       const history=messages.map(m=>({role:m.role,text:m.content}))
-      const res=await fetch('/api/nova-stream',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({messages:[...history,{role:'user',text:userMsg}]}),
-      })
+      const res = await novaStream([...history, { role:'user', text:userMsg }])
       if(!res.ok) throw new Error('fail')
       setNovaState('generating')
       const reader=res.body.getReader(); const decoder=new TextDecoder(); let full=''
