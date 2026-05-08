@@ -3,17 +3,28 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { getUserItems, deleteItem, updateSavedItem } from '@/lib/savedItems'
 
-const TYPE_ICONS = {
-  quiz:       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>,
-  flashcards: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>,
-  lesson:     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>,
-  summary:    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
-}
 const TYPE_META = {
-  quiz:       { label:'Quizzes',        color:'bg-blue-500/10 text-blue-500' },
-  flashcards: { label:'Flashcard Decks',color:'bg-violet-500/10 text-violet-500' },
-  lesson:     { label:'Lesson Plans',   color:'bg-amber-500/10 text-amber-500' },
-  summary:    { label:'Summaries',      color:'bg-emerald-500/10 text-emerald-500' },
+  quiz:        { label:'Quizzes',         color:'bg-blue-500/10 text-blue-500',    btn:'Take Quiz',   key:'flashfo_load_quiz',        href:'/quiz' },
+  flashcards:  { label:'Flashcard Decks', color:'bg-violet-500/10 text-violet-500',btn:'Study',       key:'flashfo_load_flashcards',  href:'/flashcards' },
+  lesson_plan: { label:'Lesson Plans',    color:'bg-amber-500/10 text-amber-500',  btn:'Open',        key:'flashfo_load_lesson_plan', href:'/lesson-builder' },
+  study_guide: { label:'Study Guides',    color:'bg-emerald-500/10 text-emerald-400', btn:'Open',     key:'flashfo_load_study_guide', href:'/study-guide' },
+  summary:     { label:'Summaries',       color:'bg-teal-500/10 text-teal-500',    btn:'Open',        key:'flashfo_load_summary',     href:'/summarize' },
+}
+
+const TYPE_ICONS = {
+  quiz:        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>,
+  flashcards:  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>,
+  lesson_plan: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>,
+  study_guide: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>,
+  summary:     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+}
+
+const BTN_COLORS = {
+  quiz:        'bg-blue-700 hover:bg-blue-800 text-white',
+  flashcards:  'bg-violet-600 hover:bg-violet-700 text-white',
+  lesson_plan: 'bg-amber-600 hover:bg-amber-700 text-white',
+  study_guide: 'bg-emerald-600 hover:bg-emerald-700 text-white',
+  summary:     'bg-teal-600 hover:bg-teal-700 text-white',
 }
 
 function timeAgo(ts) {
@@ -25,14 +36,22 @@ function timeAgo(ts) {
   return 'just now'
 }
 
+function openItem(item) {
+  const meta = TYPE_META[item.type]
+  if (!meta) return
+  // Store the full item data in sessionStorage so the destination page can load it
+  sessionStorage.setItem(meta.key, JSON.stringify({ id: item.id, ...item.data }))
+  window.location.href = meta.href
+}
+
 export default function MyStuffPage() {
   const { user, loading: authLoading } = useAuth()
-  const [items, setItems]     = useState([])
+  const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter]   = useState('all')
+  const [filter, setFilter] = useState('all')
   const [expanded, setExpanded] = useState(null)
   const [deleting, setDeleting] = useState(null)
-  const [error, setError]     = useState('')
+  const [error, setError] = useState('')
 
   useEffect(()=>{
     if (!authLoading) {
@@ -46,17 +65,8 @@ export default function MyStuffPage() {
     try {
       const data = await getUserItems(user.id)
       setItems(data)
-    } catch(e) {
-      setError('Error: ' + (e.message || e.code || JSON.stringify(e)))
-    } finally { setLoading(false) }
-  }
-
-  async function togglePublish(item) {
-    const isPublished = item.data?.published
-    try {
-      await updateSavedItem(item.id, { ...item, data: { ...item.data, published: !isPublished } })
-      setItems(prev => prev.map(x => x.id===item.id ? { ...x, data: { ...x.data, published: !isPublished } } : x))
-    } catch(e) {}
+    } catch(e) { setError('Error: ' + (e.message || e.code || JSON.stringify(e))) }
+    finally { setLoading(false) }
   }
 
   async function doDelete(id) {
@@ -69,13 +79,14 @@ export default function MyStuffPage() {
     finally { setDeleting(null) }
   }
 
+  const allTypes = Object.keys(TYPE_META)
   const filtered = filter==='all' ? items : items.filter(i=>i.type===filter)
   const counts = items.reduce((acc,i)=>({...acc,[i.type]:(acc[i.type]||0)+1}),{})
 
   if (!authLoading && !user) return (
     <div className="p-6 max-w-4xl mx-auto w-full text-center">
       <h1 className="text-2xl font-bold text-t1 mb-3">My Stuff</h1>
-      <p className="text-sm text-t2 mb-5">Sign in to save and access your quizzes, flashcards, and lesson plans.</p>
+      <p className="text-sm text-t2 mb-5">Sign in to save and access your content.</p>
       <a href="/auth" className="inline-flex h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 items-center">Sign in →</a>
     </div>
   )
@@ -88,11 +99,10 @@ export default function MyStuffPage() {
           <p className="text-sm text-t2">{items.length} saved item{items.length!==1?'s':''}</p>
         </div>
         <div className="flex gap-2 flex-wrap justify-end">
-          {['all',...Object.keys(TYPE_META)].map(f=>(
-            <button key={f} onClick={()=>setFilter(f)}
-              className={`h-7 px-3 rounded-full text-[12px] font-medium border transition-all ${filter===f?'bg-blue-700 text-white border-blue-700':'bg-surface text-t2 border-line hover:border-blue-300'}`}>
+          {['all',...allTypes].map(f=>(
+            <button key={f} onClick={()=>setFilter(f)} className={`h-7 px-3 rounded-full text-[12px] font-medium border transition-all ${filter===f?'bg-blue-700 text-white border-blue-700':'bg-surface text-t2 border-line hover:border-blue-300'}`}>
               {f==='all'?'All':TYPE_META[f]?.label}
-              {f!=='all'&&counts[f]&&<span className="ml-1 opacity-60">({counts[f]})</span>}
+              {f!=='all'&&counts[f]?<span className="ml-1 opacity-60">({counts[f]})</span>:null}
             </button>
           ))}
         </div>
@@ -106,8 +116,7 @@ export default function MyStuffPage() {
         ))}</div>
       ) : filtered.length===0 ? (
         <div className="bg-surface border border-line rounded-xl p-10 text-center">
-          <p className="text-t2 text-sm mb-4">{filter==='all'?'Nothing saved yet. Generate something and save it!':('No '+TYPE_META[filter]?.label+' saved yet.')}</p>
-          
+          <p className="text-t2 text-sm mb-4">{filter==='all'?'Nothing saved yet. Generate something and save it!':'No '+TYPE_META[filter]?.label+' saved yet.'}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -128,11 +137,15 @@ export default function MyStuffPage() {
                     </div>
                   </div>
                   <div className="flex gap-2 flex-shrink-0 items-center">
-                    {item.type==='quiz'&&<a href={'/quiz?load='+item.id} className="h-7 px-3 bg-blue-700 text-white text-[11px] font-semibold rounded-lg hover:bg-blue-800 flex items-center" onClick={e=>{e.stopPropagation();sessionStorage.setItem('flashfo_quiz_load',JSON.stringify({id:item.id,...item.data}))}}>Take Quiz</a>}
-                    {item.type==='flashcards'&&<a href={'/flashcards?load='+item.id} className="h-7 px-3 bg-violet-600 text-white text-[11px] font-semibold rounded-lg hover:bg-violet-700 flex items-center" onClick={e=>{e.stopPropagation();sessionStorage.setItem('flashfo_fc_load',JSON.stringify({id:item.id,...item.data}))}}>Study</a>}
-                    <button onClick={e=>{e.stopPropagation();if(confirm('Delete "'+item.title+'"?'))doDelete(item.id)}}
-                      disabled={deleting===item.id}
-                      className="h-7 px-2 text-[11px] text-red-400 border border-red-200 dark:border-red-500/30 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-40">
+                    {meta.btn && (
+                      <button
+                        onClick={e=>{ e.stopPropagation(); openItem(item) }}
+                        className={`h-7 px-3 text-[11px] font-semibold rounded-lg flex items-center ${BTN_COLORS[item.type] || 'bg-blue-700 text-white'}`}
+                      >
+                        {meta.btn}
+                      </button>
+                    )}
+                    <button onClick={e=>{e.stopPropagation();if(confirm('Delete "'+item.title+'"?'))doDelete(item.id)}} disabled={deleting===item.id} className="h-7 px-2 text-[11px] text-red-400 border border-red-200 dark:border-red-500/30 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-40">
                       {deleting===item.id?'...':'✕'}
                     </button>
                     <span className="text-t3 text-sm">{isOpen?'▲':'▼'}</span>
@@ -156,8 +169,11 @@ export default function MyStuffPage() {
                         {item.data.cards.length>3&&<div className="text-[11px] text-t3">+{item.data.cards.length-3} more cards</div>}
                       </div>
                     )}
-                    {(item.type==='lesson'||item.type==='summary')&&item.data?.output&&(
+                    {(item.type==='lesson_plan'||item.type==='study_guide'||item.type==='summary')&&item.data?.output&&(
                       <p className="text-[12px] text-t2 whitespace-pre-wrap line-clamp-6">{item.data.output.substring(0,400)}{item.data.output.length>400?'...':''}</p>
+                    )}
+                    {(item.type==='lesson_plan'||item.type==='study_guide'||item.type==='summary')&&item.data?.plan&&(
+                      <p className="text-[12px] text-t2 whitespace-pre-wrap line-clamp-6">{item.data.plan.substring(0,400)}{item.data.plan.length>400?'...':''}</p>
                     )}
                   </div>
                 )}
