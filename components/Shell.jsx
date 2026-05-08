@@ -308,9 +308,22 @@ function NovaAmbient({ pathname }) {
             </button>
           </div>
 
-          <a href="/ai-tutor" target="_blank" style={{ display:'block', textAlign:'center', fontSize:10, color:'rgba(129,140,248,0.4)', textDecoration:'none' }}>
+          <button
+            onClick={() => {
+              if (messages.length > 0) {
+                // Convert panel messages to ai-tutor format and pass via localStorage
+                const handoff = messages.map(m => ({
+                  role: m.role === 'nova' ? 'assistant' : 'user',
+                  content: m.text
+                }))
+                localStorage.setItem('flashfo_nova_handoff', JSON.stringify(handoff))
+              }
+              window.open('/ai-tutor', '_blank')
+            }}
+            style={{ display:'block', width:'100%', textAlign:'center', fontSize:10, color:'rgba(129,140,248,0.4)', background:'none', border:'none', cursor:'pointer', padding:'4px 0 0', fontFamily:'inherit' }}
+          >
             Open full Nova ↗
-          </a>
+          </button>
         </div>
 
         {/* Pill */}
