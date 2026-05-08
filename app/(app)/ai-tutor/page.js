@@ -33,17 +33,7 @@ function initBg(canvas) {
   resize()
   const ro = new ResizeObserver(resize); ro.observe(canvas)
   const VS=`attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}`
-  const FS=`precision highp float;uniform float uT;uniform vec2 uR;varying vec2 vU;
-  vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}
-  float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}
-  float fbm(vec2 p){float v=0.,a=.5;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<6;i++){v+=a*n(p);p=r*p*2.01;a*=.52;}return v;}
-  void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.06;
-  vec2 q=vec2(fbm(uv*1.7+t),fbm(uv*1.7+vec2(5.2,1.3)+t*.8));
-  vec2 r2=vec2(fbm(uv*1.7+3.4*q+t*.6),fbm(uv*1.7+3.4*q+vec2(8.3,2.8)+t*.45));
-  float f=fbm(uv*1.7+3.4*r2+t*.3);f=clamp(f,0.,1.);
-  vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));
-  col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));
-  vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.8,.0,1.);col+=.01;gl_FragColor=vec4(col,1.);}`
+  const FS=`precision highp float;uniform float uT;uniform vec2 uR;varying vec2 vU; vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);} float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);} float fbm(vec2 p){float v=0.,a=.5;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<6;i++){v+=a*n(p);p=r*p*2.01;a*=.52;}return v;} void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.06; vec2 q=vec2(fbm(uv*1.7+t),fbm(uv*1.7+vec2(5.2,1.3)+t*.8)); vec2 r2=vec2(fbm(uv*1.7+3.4*q+t*.6),fbm(uv*1.7+3.4*q+vec2(8.3,2.8)+t*.45)); float f=fbm(uv*1.7+3.4*r2+t*.3);f=clamp(f,0.,1.); vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f)); col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f)); vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.8,.0,1.);col+=.01;gl_FragColor=vec4(col,1.);}`
   function mkS(t,s){const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh}
   const prog=gl.createProgram()
   gl.attachShader(prog,mkS(gl.VERTEX_SHADER,VS));gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog)
@@ -53,8 +43,7 @@ function initBg(canvas) {
   let t=0,running=true
   canvas._stop=()=>{running=false;ro.disconnect()}
   ;(function draw(){
-    if(!running)return
-    requestAnimationFrame(draw);t+=.009
+    if(!running)return requestAnimationFrame(draw);t+=.009
     gl.clearColor(.02,.03,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(prog)
     gl.uniform1f(uT,t);gl.uniform2f(uR,canvas.width,canvas.height)
     gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(aP)
@@ -83,6 +72,7 @@ export default function NovaPage() {
   const [input,setInput] = useState('')
   const [loading,setLoading] = useState(false)
   const [greeting,setGreeting] = useState(true)
+  const [handoffBanner,setHandoffBanner] = useState(false)
   const msgsRef = useRef(null)
   const inputBarRef = useRef(null)
   const inputRef = useRef(null)
@@ -96,13 +86,31 @@ export default function NovaPage() {
     return()=>document.getElementById('nova-orb-css')?.remove()
   },[])
 
-  useEffect(()=>{ if(bgRef.current) initBg(bgRef.current); return()=>bgRef.current?._stop?.() },[])
+  useEffect(()=>{
+    if(bgRef.current) initBg(bgRef.current)
+    return()=>bgRef.current?._stop?.()
+  },[])
 
-  useEffect(()=>{ if(msgsRef.current) msgsRef.current.scrollTop=msgsRef.current.scrollHeight },[messages,loading])
+  // ── Load handoff conversation from Nova ambient panel ──────────────────────
+  useEffect(()=>{
+    try {
+      const raw = localStorage.getItem('flashfo_nova_handoff')
+      if (!raw) return
+      localStorage.removeItem('flashfo_nova_handoff')
+      const msgs = JSON.parse(raw)
+      if (msgs?.length) {
+        setMessages(msgs)
+        setGreeting(false)
+        setHandoffBanner(true)
+        setTimeout(() => setHandoffBanner(false), 4000)
+      }
+    } catch(e) {}
+  },[])
 
-  // ── iOS keyboard: when focused, use visualViewport to scroll input into view ──
-  // This works WITH interactiveWidget: 'resizes-visual' in layout.js:
-  // keyboard overlays the page, we just scroll the msgs container so input bar is visible.
+  useEffect(()=>{
+    if(msgsRef.current) msgsRef.current.scrollTop=msgsRef.current.scrollHeight
+  },[messages,loading])
+
   const scrollInputIntoView = useCallback(()=>{
     const vv = window.visualViewport
     if (!vv || !inputBarRef.current) return
@@ -127,7 +135,8 @@ export default function NovaPage() {
     try{
       const history=messages.map(m=>({role:m.role,text:m.content}))
       const res=await fetch('/api/nova-stream',{
-        method:'POST', headers:{'Content-Type':'application/json'},
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
         body:JSON.stringify({messages:[...history,{role:'user',text:userMsg}]}),
       })
       if(!res.ok) throw new Error('fail')
@@ -141,7 +150,9 @@ export default function NovaPage() {
       }
     }catch{
       setMessages(prev=>[...prev,{role:'assistant',content:'Sorry, something went wrong. Please try again.'}])
-    }finally{ setLoading(false); setNovaState('idle') }
+    }finally{
+      setLoading(false); setNovaState('idle')
+    }
   },[loading,messages])
 
   const handleKey=e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(input)} }
@@ -152,17 +163,14 @@ export default function NovaPage() {
   const stateColor=novaState==='idle'?'#10b981':novaState==='thinking'?'#fbbf24':'#818cf8'
 
   return (
-    // height:100% fills whatever space the Shell's content area gives us — above the bottom nav
     <div style={{display:'flex',flexDirection:'column',height:'100%',position:'relative',overflow:'hidden'}}>
-
       {/* FLUID BG */}
       <canvas ref={bgRef} style={{position:'absolute',inset:0,width:'100%',height:'100%',zIndex:0,pointerEvents:'none'}}/>
 
       {/* TOPBAR */}
       <div style={{
         flexShrink:0, zIndex:1, position:'relative',
-        padding:'12px 18px',
-        borderBottom:'1px solid rgba(255,255,255,0.08)',
+        padding:'12px 18px', borderBottom:'1px solid rgba(255,255,255,0.08)',
         background:'rgba(5,7,9,0.65)', backdropFilter:'blur(20px)',
         display:'flex', alignItems:'center', gap:12,
       }}>
@@ -181,9 +189,19 @@ export default function NovaPage() {
           <div style={{fontSize:16,fontWeight:800,color:'#e2e8f0',letterSpacing:'-.02em'}}>Nova</div>
           <div style={{fontSize:11,fontWeight:500,color:stateColor}}>{stateText}</div>
         </div>
+        {/* Handoff banner */}
+        {handoffBanner && (
+          <div style={{
+            marginLeft:'auto', fontSize:11, color:'rgba(167,139,250,0.7)',
+            background:'rgba(99,102,241,0.1)', border:'1px solid rgba(99,102,241,0.2)',
+            borderRadius:20, padding:'4px 10px', animation:'nova-handoff-fade 4s ease forwards',
+          }}>
+            ✦ Continuing from panel
+          </div>
+        )}
       </div>
 
-      {/* MESSAGES — flex:1 fills space between topbar and input bar */}
+      {/* MESSAGES */}
       <div ref={msgsRef} className="nv-msgs" style={{
         flex:1, overflowY:'auto', overflowX:'hidden',
         WebkitOverflowScrolling:'touch',
@@ -230,7 +248,7 @@ export default function NovaPage() {
         )}
       </div>
 
-      {/* INPUT BAR — flex-shrink:0 keeps it at the bottom of the content area, above Shell nav */}
+      {/* INPUT BAR */}
       <div ref={inputBarRef} style={{
         flexShrink:0, zIndex:1, position:'relative',
         padding:'10px 14px 14px',
@@ -250,14 +268,10 @@ export default function NovaPage() {
             rows={1}
             disabled={loading}
             style={{
-              flex:1, minHeight:42, maxHeight:110,
-              borderRadius:21,
-              background:'rgba(255,255,255,.06)',
-              border:'1.5px solid rgba(255,255,255,.11)',
-              padding:'11px 16px',
-              fontSize:16,   /* ≥16px prevents iOS auto-zoom */
-              color:'#e2e8f0', fontFamily:'inherit',
-              outline:'none', resize:'none', lineHeight:1.4,
+              flex:1, minHeight:42, maxHeight:110, borderRadius:21,
+              background:'rgba(255,255,255,.06)', border:'1.5px solid rgba(255,255,255,.11)',
+              padding:'11px 16px', fontSize:16, color:'#e2e8f0',
+              fontFamily:'inherit', outline:'none', resize:'none', lineHeight:1.4,
             }}
           />
           <button
@@ -278,7 +292,6 @@ export default function NovaPage() {
           </button>
         </div>
       </div>
-
     </div>
   )
 }
