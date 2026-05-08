@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 import { logStudySession } from '@/lib/logStudySession'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
+import { rpc, novaStream } from '@/lib/api'
 
 function printDeck(cards, topic) {
   const win = window.open('', '_blank')
@@ -21,8 +22,7 @@ function SpeakerBtn({ text, audioRef }) {
     if (busy) { setBusy(false); return }
     setBusy(true)
     try {
-      const res = await fetch('/api/rpc', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fn:'generateOpenAITtsAudio', args:[text,'nova',1] }) })
-      const d = await res.json()
+      const d = await rpc('generateOpenAITtsAudio', [text, 'nova', 1])
       const audio = new Audio('data:'+d.result.mimeType+';base64,'+d.result.base64)
       if (audioRef) audioRef.current = audio
       audio.onended = () => { setBusy(false); if(audioRef) audioRef.current = null }
@@ -261,9 +261,7 @@ function FlashcardsPageInner() {
     setStudyQueue([]);setSessionComplete(false);setSessionHardCards([]);setSessionAgainCards([])
     setSessionRatings({again:0,hard:0,easy:0});setDraftBanner(false)
     try{
-      const res=await fetch('/api/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fn:'generateFlashcardsFromText',args:[t,count,'English']})})
-      if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||'Server error '+res.status)}
-      const data=await res.json()
+      const data = await rpc('generateFlashcardsFromText', [t, count, 'English'])
       const raw=data.result
       let parsed=[]
       if(raw?.cards)parsed=raw.cards
