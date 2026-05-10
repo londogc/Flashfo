@@ -231,14 +231,36 @@ export default function NovaPage() {
     }, 100)
   }, [])
 
+  const compressImage = (dataUrl) => new Promise(resolve => {
+    const img = new Image()
+    img.onerror = () => resolve(null)
+    img.onload = () => {
+      const MAX = 1024
+      let { width, height } = img
+      if (width > MAX || height > MAX) {
+        if (width > height) { height = Math.round(height * MAX / width); width = MAX }
+        else { width = Math.round(width * MAX / height); height = MAX }
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = width; canvas.height = height
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+      canvas.toBlob(blob => {
+        if (!blob) { resolve(null); return }
+        const r = new FileReader()
+        r.onload = ev2 => resolve({ base64: ev2.target.result.split(',')[1], mimeType: 'image/jpeg', preview: ev2.target.result })
+        r.readAsDataURL(blob)
+      }, 'image/jpeg', 0.82)
+    }
+    img.src = dataUrl
+  })
+
   const handleImageSelect = useCallback((e) => {
     const files = Array.from(e.target.files || [])
     files.forEach(file => {
       const reader = new FileReader()
-      reader.onload = (ev) => {
-        const dataUrl = ev.target.result
-        const base64 = dataUrl.split(',')[1]
-        setPendingImages(prev => [...prev, { base64, mimeType: file.type, preview: dataUrl }])
+      reader.onload = async (ev) => {
+        const compressed = await compressImage(ev.target.result)
+        if (compressed) setPendingImages(prev => [...prev, compressed])
       }
       reader.readAsDataURL(file)
     })
@@ -259,7 +281,7 @@ export default function NovaPage() {
     setLoading(true)
     setNovaState('thinking')
     try {
-      const history = messages.map(m => ({ role: m.role, text: m.content, images: m.images }))
+      const history = messages.map(m => ({ role: m.role, text: m.content }))
       const res = await novaStream([...history, { role: 'user', text: userMsg, images: imagesToSend }])
       if (!res.ok) throw new Error('fail')
       setNovaState('generating')
@@ -406,7 +428,7 @@ export default function NovaPage() {
               <circle cx="12" cy="13" r="4" />
             </svg>
           </button>
-          <input ref={imageInputRef} type="file" accept="image/*" multiple capture="environment" style={{ display: 'none' }} onChange={handleImageSelect} />
+          <input ref={imageInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleImageSelect} />
           <textarea ref={inputRef} className="nv-ta" value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={handleKey} onFocus={scrollInputIntoView}
             onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 110) + 'px' }}
