@@ -9,6 +9,7 @@ const TYPE_META = {
   lesson_plan: { label:'Lesson Plans',    color:'bg-amber-500/10 text-amber-500',  btn:'Open',        key:'flashfo_load_lesson_plan', href:'/lesson-builder' },
   study_guide: { label:'Study Guides',    color:'bg-emerald-500/10 text-emerald-400', btn:'Open',     key:'flashfo_load_study_guide', href:'/study-guide' },
   summary:     { label:'Summaries',       color:'bg-teal-500/10 text-teal-500',    btn:'Open',        key:'flashfo_load_summary',     href:'/summarize' },
+  conversation:{ label:'Nova Chats',       color:'bg-purple-500/10 text-purple-400',btn:'Open in Nova', key:'flashfo_nova_history',     href:'/ai-tutor' },
 }
 
 const TYPE_ICONS = {
@@ -25,6 +26,7 @@ const BTN_COLORS = {
   lesson_plan: 'bg-amber-600 hover:bg-amber-700 text-white',
   study_guide: 'bg-emerald-600 hover:bg-emerald-700 text-white',
   summary:     'bg-teal-600 hover:bg-teal-700 text-white',
+  conversation:'bg-purple-600 hover:bg-purple-700 text-white',
 }
 
 function timeAgo(ts) {
@@ -39,7 +41,12 @@ function timeAgo(ts) {
 function openItem(item) {
   const meta = TYPE_META[item.type]
   if (!meta) return
-  // Store the full item data in sessionStorage so the destination page can load it
+  if (item.type === 'conversation') {
+    const msgs = item.data?.messages || []
+    sessionStorage.setItem('flashfo_nova_history', JSON.stringify(msgs))
+    window.location.href = '/ai-tutor'
+    return
+  }
   sessionStorage.setItem(meta.key, JSON.stringify({ id: item.id, ...item.data }))
   window.location.href = meta.href
 }
@@ -172,7 +179,17 @@ export default function MyStuffPage() {
                     {(item.type==='lesson_plan'||item.type==='study_guide'||item.type==='summary')&&item.data?.output&&(
                       <p className="text-[12px] text-t2 whitespace-pre-wrap line-clamp-6">{item.data.output.substring(0,400)}{item.data.output.length>400?'...':''}</p>
                     )}
-                    {(item.type==='lesson_plan'||item.type==='study_guide'||item.type==='summary')&&item.data?.plan&&(
+                    {item.type==='conversation'&&item.data?.messages&&(
+                <div className="space-y-2">
+                  {item.data.messages.slice(0,4).map((m,i)=>(
+                    <div key={i} className={`text-[12px] ${m.role==='user'?'text-t1':'text-t2'}`}>
+                      <span className="font-semibold">{m.role==='user'?'You':'Nova'}:</span> {(m.content||'').slice(0,120)}{(m.content||'').length>120?'...':''}
+                    </div>
+                  ))}
+                  {item.data.messages.length>4&&<div className="text-[11px] text-t3">+{item.data.messages.length-4} more messages</div>}
+                </div>
+              )}
+              {(item.type==='lesson_plan'||item.type==='study_guide'||item.type==='summary')&&item.data?.plan&&(
                       <p className="text-[12px] text-t2 whitespace-pre-wrap line-clamp-6">{item.data.plan.substring(0,400)}{item.data.plan.length>400?'...':''}</p>
                     )}
                   </div>
