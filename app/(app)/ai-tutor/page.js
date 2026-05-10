@@ -142,7 +142,7 @@ function CodeBlock({ lang, code }) {
         </div>
       </div>
       {preview && previewable ? (
-        <iframe sandbox="allow-scripts allow-same-origin" srcDoc={srcDoc} title="Preview"
+        <iframe sandbox="allow-scripts" srcDoc={srcDoc} title="Preview"
           style={{ width: '100%', height: 280, border: 'none', background: '#fff', display: 'block' }} />
       ) : (
         <pre style={{ margin: 0, padding: '12px 14px', background: 'rgba(0,0,0,0.45)', overflowX: 'auto', fontSize: 12, lineHeight: 1.65, color: '#e2e8f0', fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
@@ -208,6 +208,13 @@ export default function NovaPage() {
 
   useEffect(() => {
     try {
+      const saved = sessionStorage.getItem('flashfo_nova_history')
+      if (saved) { const msgs = JSON.parse(saved); if (msgs?.length) { setMessages(msgs); setGreeting(false) } }
+    } catch(e) {}
+  }, [])
+
+  useEffect(() => {
+    try {
       const raw = localStorage.getItem('flashfo_nova_handoff')
       if (!raw) return
       localStorage.removeItem('flashfo_nova_handoff')
@@ -219,6 +226,17 @@ export default function NovaPage() {
   useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight
   }, [messages, loading])
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      try {
+        const toSave = messages.map(m => ({ role: m.role, content: m.content }))
+        sessionStorage.setItem('flashfo_nova_history', JSON.stringify(toSave))
+      } catch(e) {}
+    } else {
+      sessionStorage.removeItem('flashfo_nova_history')
+    }
+  }, [messages])
 
   const scrollInputIntoView = useCallback(() => {
     const vv = window.visualViewport
@@ -320,7 +338,7 @@ export default function NovaPage() {
     } catch (err) { console.error('[Nova action]', err) }
   }, [])
 
-  const clearChat = useCallback(() => { setMessages([]); setGreeting(true); setPendingImages([]) }, [])
+  const clearChat = useCallback(() => { setMessages([]); setGreeting(true); setPendingImages([]); sessionStorage.removeItem('flashfo_nova_history') }, [])
   const handleKey = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) } }
 
   const dotColor = novaState === 'idle' ? '#10b981' : novaState === 'thinking' ? '#fbbf24' : '#818cf8'
