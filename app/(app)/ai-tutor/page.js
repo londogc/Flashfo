@@ -324,7 +324,24 @@ export default function NovaPage() {
     } catch (err) { console.error('[Nova action]', err) }
   }, [])
 
-  const clearChat = useCallback(() => { setMessages([]); setGreeting(true); setPendingImages([]) }, [])
+  const saveChat = useCallback(async () => {
+    if (!user || !messages.length) return
+    const firstMsg = messages.find(m => m.role === 'user')?.content || 'Nova conversation'
+    const title = firstMsg.slice(0, 60) + (firstMsg.length > 60 ? '...' : '')
+    try {
+      await saveItem(user.id, 'conversation', title, {
+        messages: messages.map(m => ({ role: m.role, content: m.content })),
+        savedAt: new Date().toISOString()
+      })
+      setSavedChat(true)
+      setTimeout(() => setSavedChat(false), 2500)
+    } catch(e) { console.error('[Nova save]', e) }
+  }, [user, messages])
+
+  const clearChat = useCallback(() => {
+    setMessages([]); setGreeting(true); setPendingImages([])
+    sessionStorage.removeItem('flashfo_nova_history')
+  }, [])
   const handleKey = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) } }
 
   const dotColor = novaState === 'idle' ? '#10b981' : novaState === 'thinking' ? '#fbbf24' : '#818cf8'
