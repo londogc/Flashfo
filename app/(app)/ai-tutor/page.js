@@ -1,5 +1,7 @@
 'use client'
 import { rpc, novaStream } from '@/lib/api'
+import { saveItem } from '@/lib/savedItems'
+import { useAuth } from '@/lib/useAuth'
 import { useState, useEffect, useRef, useCallback } from 'react'
 
 const ORB_CSS = `
@@ -142,7 +144,7 @@ function CodeBlock({ lang, code }) {
         </div>
       </div>
       {preview && previewable ? (
-        <iframe sandbox="allow-scripts" srcDoc={srcDoc} title="Preview"
+        <iframe sandbox="allow-scripts allow-same-origin" srcDoc={srcDoc} title="Preview"
           style={{ width: '100%', height: 280, border: 'none', background: '#fff', display: 'block' }} />
       ) : (
         <pre style={{ margin: 0, padding: '12px 14px', background: 'rgba(0,0,0,0.45)', overflowX: 'auto', fontSize: 12, lineHeight: 1.65, color: '#e2e8f0', fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
@@ -170,7 +172,9 @@ function MessageBody({ content }) {
 }
 
 export default function NovaPage() {
+  const { user } = useAuth()
   const [novaState, setNovaState] = useState('idle')
+  const [savedChat, setSavedChat] = useState(false)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -208,13 +212,6 @@ export default function NovaPage() {
 
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem('flashfo_nova_history')
-      if (saved) { const msgs = JSON.parse(saved); if (msgs?.length) { setMessages(msgs); setGreeting(false) } }
-    } catch(e) {}
-  }, [])
-
-  useEffect(() => {
-    try {
       const raw = localStorage.getItem('flashfo_nova_handoff')
       if (!raw) return
       localStorage.removeItem('flashfo_nova_handoff')
@@ -226,17 +223,6 @@ export default function NovaPage() {
   useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight
   }, [messages, loading])
-
-  useEffect(() => {
-    if (messages.length > 0) {
-      try {
-        const toSave = messages.map(m => ({ role: m.role, content: m.content }))
-        sessionStorage.setItem('flashfo_nova_history', JSON.stringify(toSave))
-      } catch(e) {}
-    } else {
-      sessionStorage.removeItem('flashfo_nova_history')
-    }
-  }, [messages])
 
   const scrollInputIntoView = useCallback(() => {
     const vv = window.visualViewport
@@ -338,7 +324,7 @@ export default function NovaPage() {
     } catch (err) { console.error('[Nova action]', err) }
   }, [])
 
-  const clearChat = useCallback(() => { setMessages([]); setGreeting(true); setPendingImages([]); sessionStorage.removeItem('flashfo_nova_history') }, [])
+  const clearChat = useCallback(() => { setMessages([]); setGreeting(true); setPendingImages([]) }, [])
   const handleKey = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) } }
 
   const dotColor = novaState === 'idle' ? '#10b981' : novaState === 'thinking' ? '#fbbf24' : '#818cf8'
@@ -362,10 +348,16 @@ export default function NovaPage() {
             <span style={{ fontSize: 10, color: 'rgba(167,139,250,0.65)', marginRight: 4 }}>❖ Continued</span>
           )}
           {messages.length > 0 && (
-            <button onClick={clearChat}
-              style={{ background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.16)', borderRadius: 8, cursor: 'pointer', color: 'rgba(255,255,255,0.5)', fontSize: 11, padding: '3px 10px', fontFamily: 'inherit' }}>
-              Clear
-            </button>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={saveChat}
+                style={{ background: savedChat ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.08)', border: savedChat ? '0.5px solid rgba(52,211,153,0.4)' : '0.5px solid rgba(255,255,255,0.16)', borderRadius: 8, cursor: 'pointer', color: savedChat ? '#34d399' : 'rgba(255,255,255,0.5)', fontSize: 11, padding: '3px 10px', fontFamily: 'inherit', transition: 'all 0.2s' }}>
+                {savedChat ? 'Saved ✓' : 'Save'}
+              </button>
+              <button onClick={clearChat}
+                style={{ background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.16)', borderRadius: 8, cursor: 'pointer', color: 'rgba(255,255,255,0.5)', fontSize: 11, padding: '3px 10px', fontFamily: 'inherit' }}>
+                Clear
+              </button>
+            </div>
           )}
         </div>
       </div>
