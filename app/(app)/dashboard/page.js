@@ -156,7 +156,7 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 20, padding: '4px 12px' }}>
               <span style={{ width: 5, height: 5, background: '#4ade80', borderRadius: '50%', display: 'inline-block', animation: 'pulse-dot 1.2s infinite' }}></span>
               <span style={{ fontSize: 11, color: '#4ade80', fontWeight: 600 }}>{classes.length} class{classes.length !== 1 ? 'es' : ''} active</span>
-            </div>
+            </a>
           )}
           {dueToday > 0 && (
             <a href="/flashcards" style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, padding: '4px 12px', textDecoration: 'none' }}>
@@ -222,7 +222,7 @@ export default function DashboardPage() {
         <div style={{ fontSize: 10, color: 'var(--c-t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Quick tools</div>
         <div className="dash-tools" style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10 }}>
           {TOOLS.map((t,i) => (
-            <div key={t.href} onClick={() => { window.location.href = t.href }} style={{ background: t.bg, border: '1px solid ' + t.border, borderRadius: 14, padding: 14, textDecoration: 'none', transition: 'transform 0.15s, box-shadow 0.15s', display: 'block', animation: `card-in 0.4s ease ${i*60}ms both`, cursor: 'pointer' }}
+            <a key={t.href} href={t.href} style={{ background: t.bg, border: '1px solid ' + t.border, borderRadius: 14, padding: 14, textDecoration: 'none', transition: 'transform 0.15s, box-shadow 0.15s', display: 'block', animation: `card-in 0.4s ease ${i*60}ms both`, cursor: 'pointer' }}
               onMouseEnter={e => { e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.boxShadow='0 8px 24px ' + t.color + '22'; }}
               onMouseLeave={e => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; }}>
               <div style={{ width: 30, height: 30, borderRadius: 10, background: t.bg.replace('0.12','0.2'), display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
