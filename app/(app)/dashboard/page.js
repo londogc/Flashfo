@@ -156,7 +156,7 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 20, padding: '4px 12px' }}>
               <span style={{ width: 5, height: 5, background: '#4ade80', borderRadius: '50%', display: 'inline-block', animation: 'pulse-dot 1.2s infinite' }}></span>
               <span style={{ fontSize: 11, color: '#4ade80', fontWeight: 600 }}>{classes.length} class{classes.length !== 1 ? 'es' : ''} active</span>
-            </a>
+            </div>
           )}
           {dueToday > 0 && (
             <a href="/flashcards" style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, padding: '4px 12px', textDecoration: 'none' }}>
@@ -230,7 +230,7 @@ export default function DashboardPage() {
               </div>
               <div style={{ fontSize: 12, fontWeight: 700, color: t.color }}>{t.label}</div>
               <div style={{ fontSize: 10, color: 'var(--c-t3)', marginTop: 2 }}>{t.sub}</div>
-            </div>
+            </a>
           ))}
         </div>
       </div>
