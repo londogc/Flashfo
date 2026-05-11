@@ -48,7 +48,7 @@ function SessionComplete({ cards, topic, hardCards, againCards, sessionRatings, 
   const needsWork = [...new Map([...hardCards,...againCards].map(c=>[c.front||c.question,c])).values()]
   const hasTrouble = needsWork.length > 0
   return (
-    <div className="p-6 max-w-2xl mx-auto w-full">
+    <div className="p-6 max-w-2xl mx-auto w-full" style={{ borderTop: `3px solid ${cardTheme.accent}`, background: cardTheme.tint }}>
       <div style={{textAlign:'center',marginBottom:28,padding:'28px 24px',background:'linear-gradient(135deg,rgba(16,185,129,0.08),rgba(52,211,153,0.04))',border:'1px solid rgba(16,185,129,0.2)',borderRadius:16}}>
         {mastered===cards.length&&<div style={{fontSize:40,marginBottom:12}}>🎉</div>}
         <h2 style={{fontSize:22,fontWeight:900,color:'var(--c-t1)',marginBottom:6,letterSpacing:'-.03em'}}>{mastered===cards.length?'Perfect session!':'Session complete'}</h2>
@@ -83,8 +83,16 @@ function SessionComplete({ cards, topic, hardCards, againCards, sessionRatings, 
   )
 }
 
+const CARD_THEMES = {
+  default:  { accent: '#6366f1', glow: 'rgba(99,102,241,0.12)',  tint: 'rgba(99,102,241,0.03)'  },
+  midnight: { accent: '#3b82f6', glow: 'rgba(37,99,235,0.12)',   tint: 'rgba(37,99,235,0.03)'   },
+  forest:   { accent: '#10b981', glow: 'rgba(16,185,129,0.12)',  tint: 'rgba(16,185,129,0.03)'  },
+  ember:    { accent: '#f97316', glow: 'rgba(249,115,22,0.12)',  tint: 'rgba(249,115,22,0.03)'  },
+}
+
 function FlashcardsPageInner() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
+  const cardTheme = CARD_THEMES[profile?.flashcard_theme] || CARD_THEMES.default
   const searchParams = useSearchParams()
   const audioRef = useRef(null)
   const sessionStartRef = useRef(null)
