@@ -172,6 +172,8 @@ export default function MobileShell({ children }) {
 
   return (
     <>
+      {/* Solid fallback so WebGL failure / slow init doesn't show raw body */}
+      <div style={{ position:'fixed', inset:0, background:'#06040f', zIndex:-1 }} />
       <AuroraCanvas paletteIdx={paletteIdx} />
       <div style={{ position:'fixed', inset:0, zIndex:8, pointerEvents:'none', transition:'box-shadow 0.5s ease',
         boxShadow: novaOpen ? 'inset 0 0 40px rgba(139,92,246,0.35),inset 0 0 80px rgba(99,102,241,0.2),inset 0 0 120px rgba(167,139,250,0.1)' : 'none' }} />
