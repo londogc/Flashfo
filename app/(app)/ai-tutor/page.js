@@ -212,6 +212,10 @@ export default function NovaPage() {
 
   useEffect(() => {
     try {
+      const prefill = sessionStorage.getItem('nova_prefill')
+      if (prefill) { setInput(prefill); sessionStorage.removeItem('nova_prefill'); setGreeting(false) }
+    } catch (e) { }
+    try {
       const raw = localStorage.getItem('flashfo_nova_handoff')
       if (!raw) return
       localStorage.removeItem('flashfo_nova_handoff')
