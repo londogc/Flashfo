@@ -264,7 +264,39 @@ async function generateQuizFromTopic(topic, config) {
   return callOpenAIJson('You are an expert quiz generator. Return ONLY valid JSON.', `Generate a quiz about: ${String(topic || '').trim()}\nCreate: ${lines.join(', ')}\nReturn JSON: {"questions":[{"type":"mcq","question":"...","options":["A","B","C","D"],"answerIndex":0,"explanation":"..."}]}`);
 }
 
-const handlers = { summarizeText, summarizeFromUrl, summarizeTopic, summarizeImportedFile, generateEssayOutlineFromText, generateFlashcardsFromText, generateFlashcardsFromUrl, generateFlashcardsFromImportedFile, generateQuizAdvancedFromText, generateQuizAdvancedFromUrl, generateQuizAdvancedFromImportedFile, generateLessonPlanFromItems, translateFlashfoTexts, generateStudyGuideFromText, explainSimplyFromText, generateOpenAITtsAudio, searchWebSources, exportTextToGoogleDoc, saveFlashfoJsonToDrive, readDriveTextFile, runLearningFeature, generateChatResponse, generateQuizFromTopic };
+async function fetchUrlPreview(url) {
+  const text = await fetchUrlText(url)
+  // Extract a title-like first line and truncate content for preview
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+  const title = lines[0]?.slice(0, 120) || url
+  return { title, content: trimForModel(text, 12000) }
+}
+
+async function generateFromSources(sources, action, instructions, targetLanguage) {
+  if (!Array.isArray(sources) || sources.length === 0) throw new Error('No sources provided.')
+  const compiled = sources.map((s, i) =>
+    `--- SOURCE ${i + 1}: ${String(s.title || 'Untitled')} ---\n${s.url ? `URL: ${s.url}\n` : ''}${String(s.content || '').slice(0, 6000)}`
+  ).join('\n\n')
+  const actionMap = {
+    flashcards: 'Create a comprehensive set of flashcards covering the key concepts from these sources. Return JSON: {"cards":[{"front":"...","back":"..."}]}',
+    quiz: 'Create a 10-question quiz (mix of MCQ and short answer) covering these sources. Return JSON: {"questions":[{"type":"mcq","question":"...","options":["A","B","C","D"],"answerIndex":0,"explanation":"..."}]}',
+    summary: 'Write a clear, comprehensive summary of all these sources combined. Highlight the most important points.',
+    study_guide: 'Create a structured study guide from these sources. Include: Key Concepts, Important Terms, Main Arguments, and Review Questions.',
+    ask: instructions || 'Answer this question using only the provided sources as context.',
+  }
+  const task = actionMap[action] || actionMap.summary
+  const lang = getLanguageInstruction(targetLanguage)
+  const prompt = `TASK: ${task}${instructions && action === 'ask' ? `\nQUESTION: ${instructions}` : ''}${lang}\n\nSOURCES:\n${trimForModel(compiled, 18000)}`
+  const systemPrompt = action === 'flashcards' || action === 'quiz'
+    ? 'You generate educational study materials. Return ONLY valid JSON, no markdown.'
+    : 'You are a helpful study assistant. Be clear, thorough, and well-structured.'
+  return (await callOpenAI({ model: DEFAULT_MODEL, input: [
+    { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
+    { role: 'user', content: [{ type: 'input_text', text: prompt }] },
+  ]})).trim()
+}
+
+const handlers = { summarizeText, summarizeFromUrl, summarizeTopic, summarizeImportedFile, generateEssayOutlineFromText, generateFlashcardsFromText, generateFlashcardsFromUrl, generateFlashcardsFromImportedFile, generateQuizAdvancedFromText, generateQuizAdvancedFromUrl, generateQuizAdvancedFromImportedFile, generateLessonPlanFromItems, translateFlashfoTexts, generateStudyGuideFromText, explainSimplyFromText, generateOpenAITtsAudio, searchWebSources, exportTextToGoogleDoc, saveFlashfoJsonToDrive, readDriveTextFile, runLearningFeature, generateChatResponse, generateQuizFromTopic, fetchUrlPreview, generateFromSources };
 
 export async function POST(request) {
   try {
@@ -285,7 +317,7 @@ export async function POST(request) {
       'generateFlashcardsFromText','generateFlashcardsFromUrl','generateFlashcardsFromImportedFile',
       'generateQuizAdvancedFromText','generateQuizAdvancedFromUrl','generateQuizAdvancedFromImportedFile',
       'generateLessonPlanFromItems','generateStudyGuideFromText','generateQuizFromTopic',
-      'runLearningFeature','generateChatResponse',
+      'runLearningFeature','generateChatResponse','generateFromSources',
     ])
     if (AI_GEN_FNS.has(fn)) {
       const sbAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
