@@ -278,6 +278,36 @@ export async function POST(request) {
     }
     const { fn, args = [] } = await request.json();
     if (!fn || !Object.prototype.hasOwnProperty.call(handlers, fn)) throw new Error(`Unknown function: ${fn}`);
+
+    // ── Free tier: 5 AI generations per month ────────────────────────────────
+    const AI_GEN_FNS = new Set([
+      'summarizeText','summarizeFromUrl','summarizeTopic','summarizeImportedFile',
+      'generateFlashcardsFromText','generateFlashcardsFromUrl','generateFlashcardsFromImportedFile',
+      'generateQuizAdvancedFromText','generateQuizAdvancedFromUrl','generateQuizAdvancedFromImportedFile',
+      'generateLessonPlanFromItems','generateStudyGuideFromText','generateQuizFromTopic',
+      'runLearningFeature','generateChatResponse',
+    ])
+    if (AI_GEN_FNS.has(fn)) {
+      const sbAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+      const { data: profile } = await sbAdmin.from('profiles').select('plan').eq('id', user.id).single()
+      const plan = profile?.plan || 'free'
+      const isPaid = plan === 'pro' || plan === 'teacher' || plan === 'school'
+      if (!isPaid) {
+        // Count generations this calendar month
+        const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0)
+        const { count } = await sbAdmin.from('generation_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('created_at', monthStart.toISOString())
+        if ((count || 0) >= 5) {
+          return Response.json({ error: 'free_limit_reached', message: 'You\'ve used your 5 free AI generations this month. Upgrade to Pro for unlimited access.' }, { status: 403 })
+        }
+        // Log this generation
+        await sbAdmin.from('generation_log').insert({ user_id: user.id, fn })
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     const safeArgs = (Array.isArray(args) ? args : []).map(arg => typeof arg === 'string' ? arg.slice(0, MAX_INPUT_LENGTH) : arg);
     const result = await handlers[fn](...safeArgs);
     return Response.json({ result });
