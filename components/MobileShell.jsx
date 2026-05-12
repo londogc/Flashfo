@@ -60,23 +60,18 @@ function IconBullseye({ active }) {
 }
 
 // ── Blurred-blob aurora (no WebGL, no flat gradients) ────────────────────────
+// ── PERF: animations removed — blur+keyframe = GPU repaint every frame on iOS
+// ── TO REVERT: add animation:'ff-b1 20s ease-in-out infinite' etc. back to
+//    each blob div and restore the <style> keyframes block below. See git log.
 function Aurora({ palIdx }) {
   const pal = PALETTES[palIdx] || PALETTES[0]
   return (
-    <>
-      <style>{`
-        @keyframes ff-b1{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(12%,18%) scale(1.15)}66%{transform:translate(-8%,8%) scale(0.9)}}
-        @keyframes ff-b2{0%,100%{transform:translate(0,0) scale(1)}40%{transform:translate(-14%,-10%) scale(1.2)}75%{transform:translate(8%,-5%) scale(0.85)}}
-        @keyframes ff-b3{0%,100%{transform:translate(0,0) scale(1)}55%{transform:translate(6%,-15%) scale(1.1)}}
-      `}</style>
-      <div style={{ position:'fixed', inset:0, zIndex:1, background:pal.bg, overflow:'hidden', pointerEvents:'none', transition:'background 1.4s ease' }}>
-        <div style={{ position:'absolute', width:'70vw', height:'55vw', borderRadius:'50%', background:pal.b1, filter:'blur(72px)', opacity:0.55, top:'-5%', left:'-10%', animation:'ff-b1 20s ease-in-out infinite', transition:'background 1.4s ease' }}/>
-        <div style={{ position:'absolute', width:'65vw', height:'50vw', borderRadius:'50%', background:pal.b2, filter:'blur(80px)', opacity:0.4, top:'25%', right:'-15%', animation:'ff-b2 26s ease-in-out infinite', transition:'background 1.4s ease' }}/>
-        <div style={{ position:'absolute', width:'50vw', height:'45vw', borderRadius:'50%', background:pal.b3, filter:'blur(64px)', opacity:0.3, bottom:'-10%', left:'20%', animation:'ff-b3 32s ease-in-out infinite', transition:'background 1.4s ease' }}/>
-        {/* darkening vignette */}
-        <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)' }}/>
-      </div>
-    </>
+    <div style={{ position:'fixed', inset:0, zIndex:1, background:pal.bg, overflow:'hidden', pointerEvents:'none', transition:'background 1.4s ease' }}>
+      <div style={{ position:'absolute', width:'70vw', height:'55vw', borderRadius:'50%', background:pal.b1, filter:'blur(72px)', opacity:0.55, top:'-5%', left:'-10%', willChange:'transform', transform:'translateZ(0)', transition:'background 1.4s ease' }}/>
+      <div style={{ position:'absolute', width:'65vw', height:'50vw', borderRadius:'50%', background:pal.b2, filter:'blur(80px)', opacity:0.4, top:'25%', right:'-15%', willChange:'transform', transform:'translateZ(0)', transition:'background 1.4s ease' }}/>
+      <div style={{ position:'absolute', width:'50vw', height:'45vw', borderRadius:'50%', background:pal.b3, filter:'blur(64px)', opacity:0.3, bottom:'-10%', left:'20%', willChange:'transform', transform:'translateZ(0)', transition:'background 1.4s ease' }}/>
+      <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)' }}/>
+    </div>
   )
 }
 
