@@ -517,7 +517,7 @@ export default function Shell({ children }) {
 if (isMobile) return <MobileShell>{children}</MobileShell>
   
   return (
-    <div style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'var(--c-bg)' }}>
+    <div className="ff-desktop-shell" style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'var(--c-bg)' }}>
       {/* Nova Ambient — floats above everything, hidden on /ai-tutor */}
       {pathname !== '/ai-tutor' && <NovaAmbient pathname={pathname} />}
 
