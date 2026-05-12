@@ -176,6 +176,7 @@ export default function NovaPage() {
   const [novaState, setNovaState] = useState('idle')
   const [savedChat, setSavedChat] = useState(false)
   const [messages, setMessages] = useState([])
+  const [prefillMsg, setPrefillMsg] = useState(null)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [greeting, setGreeting] = useState(true)
@@ -210,10 +211,36 @@ export default function NovaPage() {
     return () => { if (shellBar) shellBar.style.display = '' }
   }, [])
 
+  // Restore persisted chat on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('ff-nova-messages')
+      if (saved) {
+        const msgs = JSON.parse(saved)
+        if (msgs?.length) { setMessages(msgs); setGreeting(false) }
+      }
+    } catch(e) {}
+  }, [])
+
+  // Persist messages whenever they change
+  useEffect(() => {
+    if (messages.length === 0) return
+    try { localStorage.setItem('ff-nova-messages', JSON.stringify(messages.map(m => ({ role:m.role, content:m.content })))) } catch(e) {}
+  }, [messages])
+
+  // Auto-send prefill from Nova island drawer
+  useEffect(() => {
+    if (prefillMsg && !loading) { send(prefillMsg); setPrefillMsg(null) }
+  }, [prefillMsg, send, loading])
+
   useEffect(() => {
     try {
       const prefill = sessionStorage.getItem('nova_prefill')
-      if (prefill) { setInput(prefill); sessionStorage.removeItem('nova_prefill'); setGreeting(false) }
+      if (prefill) {
+        sessionStorage.removeItem('nova_prefill')
+        setGreeting(false)
+        setPrefillMsg(prefill)
+      }
     } catch (e) { }
     try {
       const raw = localStorage.getItem('flashfo_nova_handoff')
@@ -345,6 +372,7 @@ export default function NovaPage() {
   const clearChat = useCallback(() => {
     setMessages([]); setGreeting(true); setPendingImages([])
     sessionStorage.removeItem('flashfo_nova_history')
+    try { localStorage.removeItem('ff-nova-messages') } catch(e) {}
   }, [])
   const handleKey = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) } }
 
