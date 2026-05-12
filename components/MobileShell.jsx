@@ -1,17 +1,42 @@
 'use client'
 // Flashfo — MobileShell
-// Full mobile layout: WebGL aurora background, floating island nav,
+// Full mobile layout: CSS aurora background (iOS-safe), floating island nav,
 // Nova morphing drawer, per-page palette shifts, edge glow.
 // Replaces the desktop Shell entirely on mobile (< 768px).
 
 import { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 
+// CSS gradient palettes — no WebGL, works on all iOS Safari
 const PALETTES = [
-  { c1: [0.40, 0.18, 0.80], c2: [0.00, 0.10, 0.50], base: [0.04, 0.03, 0.10] },
-  { c1: [0.05, 0.65, 0.55], c2: [0.00, 0.30, 0.25], base: [0.02, 0.06, 0.06] },
-  { c1: [0.30, 0.05, 0.70], c2: [0.05, 0.05, 0.40], base: [0.03, 0.02, 0.12] },
-  { c1: [0.75, 0.30, 0.10], c2: [0.50, 0.05, 0.20], base: [0.08, 0.03, 0.04] },
+  // 0 — Home/Dashboard: purple/indigo
+  {
+    bg: '#06040f',
+    g1: 'radial-gradient(ellipse 80% 50% at 20% 20%, rgba(99,102,241,0.28) 0%, transparent 70%)',
+    g2: 'radial-gradient(ellipse 60% 40% at 80% 70%, rgba(139,92,246,0.18) 0%, transparent 65%)',
+    g3: 'radial-gradient(ellipse 50% 60% at 60% 10%, rgba(167,139,250,0.12) 0%, transparent 60%)',
+  },
+  // 1 — My Stuff: teal/emerald
+  {
+    bg: '#030d0c',
+    g1: 'radial-gradient(ellipse 80% 50% at 20% 20%, rgba(5,150,105,0.28) 0%, transparent 70%)',
+    g2: 'radial-gradient(ellipse 60% 40% at 80% 70%, rgba(16,185,129,0.18) 0%, transparent 65%)',
+    g3: 'radial-gradient(ellipse 50% 60% at 60% 10%, rgba(52,211,153,0.1) 0%, transparent 60%)',
+  },
+  // 2 — Nova: deep violet/blue
+  {
+    bg: '#04020f',
+    g1: 'radial-gradient(ellipse 80% 50% at 30% 30%, rgba(124,58,237,0.35) 0%, transparent 70%)',
+    g2: 'radial-gradient(ellipse 60% 40% at 75% 65%, rgba(99,102,241,0.22) 0%, transparent 65%)',
+    g3: 'radial-gradient(ellipse 50% 60% at 55% 5%,  rgba(196,181,253,0.1) 0%, transparent 60%)',
+  },
+  // 3 — Profile: warm amber/rose
+  {
+    bg: '#0d0603',
+    g1: 'radial-gradient(ellipse 80% 50% at 20% 20%, rgba(217,119,6,0.28) 0%, transparent 70%)',
+    g2: 'radial-gradient(ellipse 60% 40% at 80% 70%, rgba(219,39,119,0.18) 0%, transparent 65%)',
+    g3: 'radial-gradient(ellipse 50% 60% at 60% 10%, rgba(251,146,60,0.1) 0%, transparent 60%)',
+  },
 ]
 
 const PATH_TO_PALETTE = {
@@ -23,87 +48,53 @@ function rootPath(pathname) {
   return '/' + (pathname.split('/').filter(Boolean)[0] || '')
 }
 
-function AuroraCanvas({ paletteIdx }) {
-  const canvasRef = useRef(null)
-  const stateRef = useRef({
-    gl: null, uniforms: {}, raf: null,
-    current: { c1: [...PALETTES[0].c1], c2: [...PALETTES[0].c2], base: [...PALETTES[0].base] },
-    target: 0, start: null,
-  })
-
-  useEffect(() => { stateRef.current.target = paletteIdx }, [paletteIdx])
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
-    const gl = canvas.getContext('webgl')
-    if (!gl) return
-    stateRef.current.gl = gl
-
-    const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0,1);}'
-    const FS = `precision mediump float;
-      uniform float t;uniform vec2 res;uniform vec3 uC1,uC2,uBase;
-      float noise(vec2 p){vec2 i=floor(p);vec2 f=fract(p);vec2 u=f*f*(3.-2.*f);
-        float a=fract(sin(dot(i,vec2(127.1,311.7)))*43758.5);
-        float b=fract(sin(dot(i+vec2(1,0),vec2(127.1,311.7)))*43758.5);
-        float c=fract(sin(dot(i+vec2(0,1),vec2(127.1,311.7)))*43758.5);
-        float d=fract(sin(dot(i+vec2(1,1),vec2(127.1,311.7)))*43758.5);
-        return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);}
-      vec3 pal(float x){return uBase+vec3(0.05,0.02,0.12)*cos(6.28*(uC1*x+uC2));}
-      void main(){
-        vec2 uv=gl_FragCoord.xy/res;vec2 q=uv*2.-1.;q.x*=res.x/res.y;
-        float tt=t*.18;
-        vec2 pp=q+vec2(sin(tt*.7+q.y*1.2)*.3,cos(tt*.5+q.x*.9)*.25);
-        float n=noise(pp*2.5+tt);float n2=noise(pp*1.2-tt*.6+vec2(3.7,1.2));
-        float n3=noise(pp*4.+tt*1.3+vec2(1.5,4.2));
-        float v=n*.5+n2*.3+n3*.2;
-        vec3 col=uBase;
-        col=mix(col,pal(v+tt*.05)*1.4,smoothstep(.35,.75,v)*.65);
-        col=mix(col,uC1*.7,smoothstep(.55,.9,n2)*.35);
-        float vig=smoothstep(0.,.8,1.-length(q*vec2(.5,.4)));
-        col*=vig*1.2+.1;gl_FragColor=vec4(clamp(col,0.,1.),1.);}`
-
-    function mkShader(type, src) {
-      const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s
-    }
-    const prog = gl.createProgram()
-    gl.attachShader(prog, mkShader(gl.VERTEX_SHADER, VS))
-    gl.attachShader(prog, mkShader(gl.FRAGMENT_SHADER, FS))
-    gl.linkProgram(prog); gl.useProgram(prog)
-    const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW)
-    const pLoc = gl.getAttribLocation(prog, 'p')
-    gl.enableVertexAttribArray(pLoc); gl.vertexAttribPointer(pLoc, 2, gl.FLOAT, false, 0, 0)
-    stateRef.current.uniforms = {
-      t: gl.getUniformLocation(prog,'t'), res: gl.getUniformLocation(prog,'res'),
-      c1: gl.getUniformLocation(prog,'uC1'), c2: gl.getUniformLocation(prog,'uC2'),
-      base: gl.getUniformLocation(prog,'uBase'),
-    }
-    gl.uniform2f(stateRef.current.uniforms.res, canvas.width, canvas.height)
-    function lerp(a, b, t) { return a + (b - a) * t }
-    function frame(ts) {
-      const s = stateRef.current
-      if (!s.start) s.start = ts
-      const tp = PALETTES[s.target]
-      s.current = {
-        c1: s.current.c1.map((v,i) => lerp(v, tp.c1[i], 0.035)),
-        c2: s.current.c2.map((v,i) => lerp(v, tp.c2[i], 0.035)),
-        base: s.current.base.map((v,i) => lerp(v, tp.base[i], 0.035)),
-      }
-      const { c1, c2, base } = s.current
-      gl.uniform1f(s.uniforms.t, (ts - s.start) / 1000)
-      gl.uniform3fv(s.uniforms.c1, c1); gl.uniform3fv(s.uniforms.c2, c2)
-      gl.uniform3fv(s.uniforms.base, base)
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-      s.raf = requestAnimationFrame(frame)
-    }
-    stateRef.current.raf = requestAnimationFrame(frame)
-    return () => { if (stateRef.current.raf) cancelAnimationFrame(stateRef.current.raf) }
-  }, [])
-
-  return <canvas ref={canvasRef} style={{ position:'fixed', inset:0, width:'100%', height:'100%', zIndex:0, pointerEvents:'none' }} />
+function AuroraBg({ paletteIdx }) {
+  const pal = PALETTES[paletteIdx] || PALETTES[0]
+  return (
+    <>
+      <style>{`
+        @keyframes ff-drift1 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          33%      { transform: translate(8%,12%) scale(1.08); }
+          66%      { transform: translate(-5%,6%) scale(0.95); }
+        }
+        @keyframes ff-drift2 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          40%      { transform: translate(-10%,-8%) scale(1.12); }
+          70%      { transform: translate(6%,-4%) scale(0.92); }
+        }
+        @keyframes ff-drift3 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          50%      { transform: translate(4%,-10%) scale(1.06); }
+        }
+      `}</style>
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 1,
+        background: pal.bg,
+        transition: 'background 1.2s ease',
+        pointerEvents: 'none', overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: pal.g1,
+          animation: 'ff-drift1 18s ease-in-out infinite',
+          transition: 'background 1.2s ease',
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: pal.g2,
+          animation: 'ff-drift2 24s ease-in-out infinite',
+          transition: 'background 1.2s ease',
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: pal.g3,
+          animation: 'ff-drift3 30s ease-in-out infinite',
+          transition: 'background 1.2s ease',
+        }} />
+      </div>
+    </>
+  )
 }
 
 function NovaBullseye({ active }) {
@@ -172,18 +163,25 @@ export default function MobileShell({ children }) {
 
   return (
     <>
-      {/* Solid fallback so WebGL failure / slow init doesn't show raw body */}
-      <div style={{ position:'fixed', inset:0, background:'#06040f', zIndex:-1 }} />
-      <AuroraCanvas paletteIdx={paletteIdx} />
+      {/* CSS aurora — reliable on all iOS Safari, no WebGL needed */}
+      <AuroraBg paletteIdx={paletteIdx} />
+
+      {/* Edge glow when Nova open */}
       <div style={{ position:'fixed', inset:0, zIndex:8, pointerEvents:'none', transition:'box-shadow 0.5s ease',
         boxShadow: novaOpen ? 'inset 0 0 40px rgba(139,92,246,0.35),inset 0 0 80px rgba(99,102,241,0.2),inset 0 0 120px rgba(167,139,250,0.1)' : 'none' }} />
+
+      {/* Scrollable content area */}
       <div style={{ position:'fixed', inset:0, zIndex:10, overflowY:'auto', overflowX:'hidden',
         WebkitOverflowScrolling:'touch', overscrollBehavior:'contain' }}
         onClick={() => { if (novaOpen) setNovaOpen(false) }}>
         <div style={{ minHeight:'100%', paddingBottom:110 }}>{children}</div>
       </div>
+
+      {/* Floating island nav */}
       <div style={{ position:'fixed', bottom:18, left:'50%', transform:'translateX(-50%)', zIndex:30,
         display:'flex', flexDirection:'column', alignItems:'center' }}>
+
+        {/* Nova drawer */}
         <div style={{ overflow:'hidden', maxHeight:novaOpen?58:0, opacity:novaOpen?1:0, marginBottom:novaOpen?9:0,
           width:290, transition:'max-height 0.45s cubic-bezier(0.4,0,0.2,1),opacity 0.35s ease,margin-bottom 0.4s' }}>
           <div style={{ background:'rgba(255,255,255,0.06)', backdropFilter:'blur(40px) saturate(180%)',
@@ -203,9 +201,11 @@ export default function MobileShell({ children }) {
             </button>
           </div>
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:2, background:'rgba(10,8,22,0.72)',
+
+        {/* Island tabs */}
+        <div style={{ display:'flex', alignItems:'center', gap:2, background:'rgba(10,8,22,0.85)',
           backdropFilter:'blur(28px)', WebkitBackdropFilter:'blur(28px)',
-          border:novaOpen?'0.5px solid rgba(139,92,246,0.45)':'0.5px solid rgba(255,255,255,0.11)',
+          border:novaOpen?'0.5px solid rgba(139,92,246,0.45)':'0.5px solid rgba(255,255,255,0.15)',
           borderRadius:40, padding:'7px 8px',
           boxShadow:novaOpen?'0 8px 32px rgba(0,0,0,0.55),0 0 24px rgba(99,102,241,0.25)':'0 8px 32px rgba(0,0,0,0.55)',
           transition:'border-color 0.35s,box-shadow 0.35s' }}>
@@ -213,7 +213,7 @@ export default function MobileShell({ children }) {
             const active = isTabActive(tab)
             return (
               <div key={i} style={{ display:'flex', alignItems:'center' }}>
-                {i > 0 && <div style={{ width:0.5, height:16, background:'rgba(255,255,255,0.09)', flexShrink:0, margin:'0 1px' }} />}
+                {i > 0 && <div style={{ width:0.5, height:16, background:'rgba(255,255,255,0.12)', flexShrink:0, margin:'0 1px' }} />}
                 <a href={tab.href||'#'} onClick={(e) => handleTabClick(tab,e)}
                   style={{ display:'flex', alignItems:'center', borderRadius:30,
                     padding:tab.nova?'8px 11px':'8px 12px',
@@ -224,7 +224,7 @@ export default function MobileShell({ children }) {
                     background:'radial-gradient(ellipse at center,rgba(99,102,241,0.28) 0%,transparent 70%)' }} />}
                   {tab.nova ? <NovaBullseye active={active} /> : (
                     <i className={`ti ti-${tab.icon}`} style={{ fontSize:20, position:'relative', zIndex:1,
-                      color:active?'#c4b5fd':'rgba(255,255,255,0.3)',
+                      color:active?'#c4b5fd':'rgba(255,255,255,0.5)',
                       transform:active?'scale(1.08)':'scale(1)', transition:'color 0.25s,transform 0.2s' }} />
                   )}
                   {active && <span style={{ fontSize:12, fontWeight:500, color:'#c4b5fd', marginLeft:6,
