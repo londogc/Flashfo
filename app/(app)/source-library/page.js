@@ -151,7 +151,7 @@ export default function SourceLibraryPage() {
       setGenResult({ action: genAction, text: result })
     } catch (e) {
       const msg = e.message || ''
-      if (msg.includes('free_limit_reached')) setGenError('You've used your 5 free generations this month. Upgrade to Pro for unlimited access.')
+      if (msg.includes('free_limit_reached')) setGenError("You've used your 5 free generations this month. Upgrade to Pro for unlimited access.")
       else setGenError(msg || 'Generation failed.')
     }
     setGenerating(false)
