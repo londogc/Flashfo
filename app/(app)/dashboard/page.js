@@ -104,7 +104,6 @@ function TodayInHistory() {
 
 export default function DashboardPage() {
   const isMobile = useIsMobile()
-if (isMobile) return <MobileDashboard />
   const { user, profile, loading } = useAuth()
   const [classes, setClasses] = useState([])
   const [assignments, setAssignments] = useState([])
@@ -140,6 +139,8 @@ if (isMobile) return <MobileDashboard />
     if (hw) setAssignments(hw)
     setDataLoading(false)
   }
+
+  if (isMobile) return <MobileDashboard />
 
   const firstName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
   const hour = new Date().getHours()
