@@ -1,6 +1,6 @@
 'use client'
 // Flashfo — MobileDashboard
-import { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -55,7 +55,10 @@ const HERO_COLORS = [
   ['rgba(5,150,105,0.28)', 'rgba(52,211,153,0.18)'],
 ]
 
-function ParticleCanvas({ colorIdx = 0 }) {
+// ── PERF: memoized, pauses on tab hidden, reduced 35→18 particles
+// ── TO REVERT: remove React.memo wrapper, remove visibilitychange listener,
+//    change 18 back to 35. See git log.
+const ParticleCanvas = React.memo(function ParticleCanvas({ colorIdx = 0 }) {
   const ref = useRef(null)
   const rafRef = useRef(null)
   useEffect(() => {
@@ -63,13 +66,14 @@ function ParticleCanvas({ colorIdx = 0 }) {
     const ctx = canvas.getContext('2d')
     const W = canvas.offsetWidth || 308, H = canvas.offsetHeight || 118
     canvas.width = W; canvas.height = H
-    const pts = Array.from({length:35}, () => ({
+    const pts = Array.from({length:18}, () => ({  // was 35
       x:Math.random()*W, y:Math.random()*H,
       vx:(Math.random()-.5)*.32, vy:(Math.random()-.5)*.18,
       r:Math.random()*1.3+.3, col:`hsl(${240+Math.random()*60},70%,75%)`,
     }))
     const [c1,c2] = HERO_COLORS[colorIdx % HERO_COLORS.length]
     function draw() {
+      if (document.visibilityState === 'hidden') { rafRef.current=requestAnimationFrame(draw); return }
       ctx.clearRect(0,0,W,H); ctx.fillStyle='rgba(12,10,30,0.88)'; ctx.fillRect(0,0,W,H)
       const g=ctx.createRadialGradient(W*.75,H*.25,0,W*.75,H*.25,100); g.addColorStop(0,c1); g.addColorStop(1,'transparent')
       ctx.fillStyle=g; ctx.fillRect(0,0,W,H)
@@ -90,7 +94,7 @@ function ParticleCanvas({ colorIdx = 0 }) {
     return ()=>{if(rafRef.current)cancelAnimationFrame(rafRef.current)}
   },[colorIdx])
   return <canvas ref={ref} style={{ position:'absolute', inset:0, width:'100%', height:'100%' }} />
-}
+})
 
 const QUICK_TOOLS = [
   { href:'/flashcards',    label:'Flashcards',  desc:'Build a deck',     icon:'cards',       bg:'linear-gradient(135deg,#6366f1,#818cf8)', glow:'#6366f1', ic:'rgba(99,102,241,0.3)',  icCol:'#a5b4fc' },
