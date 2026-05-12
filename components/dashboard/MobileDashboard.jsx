@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
 // ── Inline SVG icons (no Tabler font needed) ─────────────────────────────────
 function TI({ name, size=16, color='currentColor', style={} }) {
@@ -139,6 +140,7 @@ function timeAgo(d){
 }
 
 function ContinueCard({ items }) {
+  const router = useRouter()
   const [cur,setCur]=useState(0)
   const timerRef=useRef(null)
   const lastSaved=items[0]||null
@@ -148,6 +150,11 @@ function ContinueCard({ items }) {
   const quizItem=items.find(it=>it.type==='quiz')
   const quizScore=quizItem?.data?.score!=null?`${Math.round(quizItem.data.score)}%`:(quizItem?`${quizItem.data?.questions?.length||0}q`:'—')
   const novaCount=items.filter(it=>it.type==='conversation').length
+
+  const ROUTE_FOR_TYPE = {
+    flashcards:'/flashcards', quiz:'/quiz', summary:'/summarize',
+    study_guide:'/study-guide', lesson_plan:'/lesson-builder', conversation:'/ai-tutor'
+  }
 
   const SLIDES=[
     lastSaved  &&{type:lastSaved.type,  label:'Last Saved',        item:lastSaved,  colorIdx:0},
@@ -159,12 +166,27 @@ function ContinueCard({ items }) {
   const total=SLIDES.length
   const advance=useCallback(()=>setCur(c=>(c+1)%total),[total])
   useEffect(()=>{timerRef.current=setInterval(advance,5000);return()=>clearInterval(timerRef.current)},[advance])
-  function jump(i){clearInterval(timerRef.current);setCur(i);timerRef.current=setInterval(advance,5000)}
+  function jump(i,e){e?.stopPropagation();clearInterval(timerRef.current);setCur(i);timerRef.current=setInterval(advance,5000)}
+  function prev(e){e.stopPropagation();jump((cur-1+total)%total)}
+  function next(e){e.stopPropagation();jump((cur+1)%total)}
+
+  function openCard() {
+    const slide=SLIDES[cur]
+    if(!slide||slide.type==='snapshot') return
+    const route=ROUTE_FOR_TYPE[slide.type]||'/my-stuff'
+    if(slide.type==='conversation' && slide.item?.data?.messages?.length) {
+      try { localStorage.setItem('flashfo_nova_handoff', JSON.stringify(slide.item.data.messages)) } catch(_) {}
+    }
+    router.push(route)
+  }
 
   const slide=SLIDES[cur]; const colors=chipColor(slide?.type)
+  const isClickable = slide?.type && slide.type !== 'snapshot'
 
   return(
-    <div style={{position:'relative',height:118,borderRadius:20,overflow:'hidden',border:'0.5px solid rgba(255,255,255,0.1)',marginBottom:14}}>
+    <div style={{position:'relative',height:118,borderRadius:20,overflow:'hidden',border:'0.5px solid rgba(255,255,255,0.1)',marginBottom:14,
+      cursor:isClickable?'pointer':'default'}}
+      onClick={openCard}>
       <ParticleCanvas colorIdx={slide?.colorIdx??0}/>
       <div style={{position:'absolute',inset:0,zIndex:2,display:'flex',flexDirection:'column',justifyContent:'space-between',padding:'14px 16px'}}>
         <div style={{display:'inline-flex',alignItems:'center',gap:5,background:'rgba(255,255,255,0.1)',backdropFilter:'blur(8px)',border:'0.5px solid rgba(255,255,255,0.18)',borderRadius:20,padding:'3px 9px',width:'fit-content'}}>
@@ -199,9 +221,12 @@ function ContinueCard({ items }) {
           </div>
         )}
       </div>
-      <div style={{position:'absolute',bottom:9,left:'50%',transform:'translateX(-50%)',display:'flex',gap:5,zIndex:5}}>
+      {/* Prev/Next tap zones + dot indicators */}
+      <div style={{position:'absolute',top:0,left:0,width:'35%',height:'100%',zIndex:5}} onClick={prev}/>
+      <div style={{position:'absolute',top:0,right:0,width:'35%',height:'100%',zIndex:5}} onClick={next}/>
+      <div style={{position:'absolute',bottom:9,left:'50%',transform:'translateX(-50%)',display:'flex',gap:5,zIndex:6}}>
         {SLIDES.map((_,i)=>(
-          <div key={i} onClick={()=>jump(i)} style={{height:5,borderRadius:3,cursor:'pointer',width:i===cur?14:5,background:i===cur?'rgba(255,255,255,0.75)':'rgba(255,255,255,0.2)',transition:'all 0.3s'}}/>
+          <div key={i} onClick={e=>jump(i,e)} style={{height:5,borderRadius:3,cursor:'pointer',width:i===cur?14:5,background:i===cur?'rgba(255,255,255,0.75)':'rgba(255,255,255,0.2)',transition:'all 0.3s'}}/>
         ))}
       </div>
     </div>
