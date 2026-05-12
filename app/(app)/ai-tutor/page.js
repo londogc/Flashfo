@@ -385,6 +385,26 @@ export default function NovaPage() {
       <canvas ref={bgRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }} />
 
       <div style={{ flexShrink: 0, zIndex: 2, position: 'relative', padding: '10px 14px 8px' }}>
+        {/* Compact nav strip — replaces the island which is hidden on this page */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 8 }}>
+          <div style={{ display:'flex', gap:4 }}>
+            {[
+              { href:'/dashboard', label:'Home', path:'M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z M9 21V12h6v9' },
+              { href:'/my-stuff',  label:'My Stuff', path:'M12 2L2 7l10 5 10-5-10-5z M2 12l10 5 10-5 M2 17l10 5 10-5' },
+              { href:'/profile',   label:'Profile', path:'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2 M12 11a4 4 0 100-8 4 4 0 000 8z' },
+            ].map(tab => (
+              <a key={tab.href} href={tab.href}
+                style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:20,
+                  background:'rgba(255,255,255,0.07)', border:'0.5px solid rgba(255,255,255,0.12)',
+                  textDecoration:'none', touchAction:'manipulation', WebkitTapHighlightColor:'transparent' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  {tab.path.split(' M').map((p,i) => <path key={i} d={(i===0?'':' M')+p}/>)}
+                </svg>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.55)', fontWeight:500 }}>{tab.label}</span>
+              </a>
+            ))}
+          </div>
+        </div>
         <div style={{ background: 'rgba(255,255,255,0.07)', border: '0.5px solid rgba(129,140,248,0.32)', borderRadius: 30, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 8, backdropFilter: 'blur(12px)' }}>
           <div style={{ position: 'relative', flexShrink: 0, width: 20, height: 20 }}>
             <div className={`nv-orb nv-orb-${novaState}`} style={{ width: 20, height: 20 }}><div className="nv-gloss" /></div>
