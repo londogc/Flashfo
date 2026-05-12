@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/useAuth'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
 import { rpc, novaStream } from '@/lib/api'
+import { supabase } from '@/lib/supabase'
 
 function printQuizBlank(questions, topic) {
   const win = window.open('', '_blank')
@@ -535,7 +536,24 @@ export default function QuizPage() {
             })}
           </div>
           <div className="flex flex-wrap gap-3 items-center">
-            {!submitted&&<button onClick={()=>setSubmitted(true)} disabled={Object.keys(selected).length===0&&!Object.keys(saInputs).some(k=>saInputs[k]?.trim())} className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 disabled:opacity-40">Submit Answers</button>}
+            {!submitted&&<button onClick={async()=>{
+              setSubmitted(true)
+              // Write to quiz_attempts for progress tracking & parent dashboard
+              if(user && topic) {
+                try {
+                  const totalQ = questions.length
+                  const autoC = questions.filter((q,i)=>{
+                    if(q.type==='short_answer'||q.type==='matching') return false
+                    if(q.type==='fill_blank') return checkFitbAnswer(fitbInputs[i],q.correctAnswer)
+                    return selected[i]===q.answerIndex
+                  }).length
+                  await supabase.from('quiz_attempts').insert({
+                    user_id: user.id, topic, subject: null,
+                    correct: autoC, total: totalQ,
+                  })
+                } catch(e) { /* non-critical, don't block UI */ }
+              }
+            }} disabled={Object.keys(selected).length===0&&!Object.keys(saInputs).some(k=>saInputs[k]?.trim())} className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 disabled:opacity-40">Submit Answers</button>}
             <button onClick={()=>setShowKey(true)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 flex items-center gap-1.5"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="7"/><path d="M8 5v4m0 2.5v.5"/></svg>Answer Key</button>
             <button onClick={()=>printQuizBlank(questions,topic)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 flex items-center gap-1.5"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print Quiz</button>
             <button onClick={()=>setEditMode(true)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2">Edit / Add Questions</button>
