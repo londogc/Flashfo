@@ -514,7 +514,8 @@ export default function Shell({ children }) {
     { label:'Student Portal', href:'/student-portal',icon:'studentp' },
   ]
   const filteredCmds = cmdQuery ? CMD_ITEMS.filter(c => c.label.toLowerCase().includes(cmdQuery.toLowerCase())) : CMD_ITEMS
-
+if (isMobile) return <MobileShell>{children}</MobileShell>
+  
   return (
     <div style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'var(--c-bg)' }}>
       {/* Nova Ambient — floats above everything, hidden on /ai-tutor */}
