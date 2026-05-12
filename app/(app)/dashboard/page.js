@@ -5,7 +5,11 @@ import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import StreakCard from '@/components/StreakCard'
 import { useIsMobile } from '@/hooks/useIsMobile'
-import MobileDashboard from '@/components/dashboard/MobileDashboard'
+import dynamic from 'next/dynamic'
+// Dynamic import — MobileDashboard is code-split into its own chunk.
+// Desktop users never download it. TO REVERT: replace with:
+//   import MobileDashboard from '@/components/dashboard/MobileDashboard'
+const MobileDashboard = dynamic(() => import('@/components/dashboard/MobileDashboard'), { ssr: false })
 
 const TOOLS = [
   { href:'/ai-tutor',    label:'Nova',        sub:'AI tutor',     icon:'M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z', color:'#a78bfa', bg:'rgba(124,58,237,0.12)', border:'rgba(124,58,237,0.25)' },
