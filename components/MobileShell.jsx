@@ -148,7 +148,8 @@ export default function MobileShell({ children }) {
           paddingBottom: pathname.startsWith('/ai-tutor') ? 0 : 110 }}>{children}</div>
       </div>
 
-      {/* Floating island */}
+      {/* Floating island — hidden on ai-tutor (has its own input bar) */}
+      {!pathname.startsWith('/ai-tutor') && (
       <div style={{ position:'fixed', bottom:18, left:'50%', transform:'translateX(-50%)', zIndex:30,
         display:'flex', flexDirection:'column', alignItems:'center', width:'max-content' }}>
 
@@ -208,6 +209,7 @@ export default function MobileShell({ children }) {
           })}
         </div>
       </div>
+      )}
     </>
   )
 }
