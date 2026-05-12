@@ -97,6 +97,34 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 })
     }
 
+    // ── Free tier: 5 AI generations per month ──────────────────────────────
+    const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const sbKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const profileRes = await fetch(`${sbUrl}/rest/v1/profiles?select=plan&id=eq.${user.id}&limit=1`, {
+      headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}`, Accept: 'application/json' }
+    })
+    const [profile] = await profileRes.json().catch(() => [{}])
+    const plan = profile?.plan || 'free'
+    const isPaid = plan === 'pro' || plan === 'teacher' || plan === 'school'
+    if (!isPaid) {
+      const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0)
+      const countRes = await fetch(
+        `${sbUrl}/rest/v1/generation_log?select=id&user_id=eq.${user.id}&created_at=gte.${monthStart.toISOString()}`,
+        { headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}`, Prefer: 'count=exact', Accept: 'application/json' } }
+      )
+      const total = parseInt(countRes.headers.get('content-range')?.split('/')[1] || '0', 10)
+      if (total >= 5) {
+        return NextResponse.json({ error: 'free_limit_reached', message: "You've used your 5 free AI generations this month. Upgrade to Pro for unlimited access." }, { status: 403 })
+      }
+      // Log this generation (fire and forget)
+      fetch(`${sbUrl}/rest/v1/generation_log`, {
+        method: 'POST',
+        headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ user_id: user.id, fn: 'novaStream' })
+      }).catch(() => {})
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
     const { messages } = await request.json()
 
     const safeMessages = (Array.isArray(messages) ? messages : [])
