@@ -1,235 +1,203 @@
 'use client'
-// Flashfo — MobileShell
-// Full mobile layout: CSS aurora background (iOS-safe), floating island nav,
-// Nova morphing drawer, per-page palette shifts, edge glow.
-// Replaces the desktop Shell entirely on mobile (< 768px).
-
 import { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 
-// CSS gradient palettes — no WebGL, works on all iOS Safari
-const PALETTES = [
-  // 0 — Home/Dashboard: purple/indigo
-  {
-    bg: '#06040f',
-    g1: 'radial-gradient(ellipse 80% 50% at 20% 20%, rgba(99,102,241,0.28) 0%, transparent 70%)',
-    g2: 'radial-gradient(ellipse 60% 40% at 80% 70%, rgba(139,92,246,0.18) 0%, transparent 65%)',
-    g3: 'radial-gradient(ellipse 50% 60% at 60% 10%, rgba(167,139,250,0.12) 0%, transparent 60%)',
-  },
-  // 1 — My Stuff: teal/emerald
-  {
-    bg: '#030d0c',
-    g1: 'radial-gradient(ellipse 80% 50% at 20% 20%, rgba(5,150,105,0.28) 0%, transparent 70%)',
-    g2: 'radial-gradient(ellipse 60% 40% at 80% 70%, rgba(16,185,129,0.18) 0%, transparent 65%)',
-    g3: 'radial-gradient(ellipse 50% 60% at 60% 10%, rgba(52,211,153,0.1) 0%, transparent 60%)',
-  },
-  // 2 — Nova: deep violet/blue
-  {
-    bg: '#04020f',
-    g1: 'radial-gradient(ellipse 80% 50% at 30% 30%, rgba(124,58,237,0.35) 0%, transparent 70%)',
-    g2: 'radial-gradient(ellipse 60% 40% at 75% 65%, rgba(99,102,241,0.22) 0%, transparent 65%)',
-    g3: 'radial-gradient(ellipse 50% 60% at 55% 5%,  rgba(196,181,253,0.1) 0%, transparent 60%)',
-  },
-  // 3 — Profile: warm amber/rose
-  {
-    bg: '#0d0603',
-    g1: 'radial-gradient(ellipse 80% 50% at 20% 20%, rgba(217,119,6,0.28) 0%, transparent 70%)',
-    g2: 'radial-gradient(ellipse 60% 40% at 80% 70%, rgba(219,39,119,0.18) 0%, transparent 65%)',
-    g3: 'radial-gradient(ellipse 50% 60% at 60% 10%, rgba(251,146,60,0.1) 0%, transparent 60%)',
-  },
-]
+// Per-page aurora palettes — blob colours only
+const PALETTES = {
+  0: { bg:'#05030d', b1:'#4f46e5', b2:'#7c3aed', b3:'#2563eb' }, // home: indigo/violet
+  1: { bg:'#021009', b1:'#059669', b2:'#0d9488', b3:'#10b981' }, // my-stuff: emerald/teal
+  2: { bg:'#04020e', b1:'#7c3aed', b2:'#4f46e5', b3:'#6d28d9' }, // nova: deep violet
+  3: { bg:'#0e0502', b1:'#d97706', b2:'#db2777', b3:'#ea580c' }, // profile: amber/rose
+}
+const PATH_PAL = { '/dashboard':0,'/my-stuff':0,'/my-progress':0,'/ai-tutor':2,'/profile':3,'/settings':3 }
+function rootPath(p){ return '/'+(p.split('/').filter(Boolean)[0]||'') }
 
-const PATH_TO_PALETTE = {
-  '/dashboard': 0, '/my-stuff': 0, '/my-progress': 0,
-  '/ai-tutor': 2, '/profile': 3, '/settings': 3,
+// ── Inline SVG icons (Tabler-style, no font required) ────────────────────────
+function IconHome({ size=20, color='currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
+      <path d="M9 21V12h6v9"/>
+    </svg>
+  )
+}
+function IconStack({ size=20, color='currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+      <path d="M2 12l10 5 10-5"/>
+      <path d="M2 17l10 5 10-5"/>
+    </svg>
+  )
+}
+function IconUser({ size=20, color='currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+    </svg>
+  )
+}
+function IconSend({ size=14, color='currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 2L11 13"/>
+      <path d="M22 2L15 22l-4-9-9-4 20-7z"/>
+    </svg>
+  )
+}
+function IconBullseye({ active }) {
+  const col = active ? 'rgba(196,181,253,0.95)' : 'rgba(196,181,253,0.55)'
+  const glow = active ? 'drop-shadow(0 0 8px rgba(167,139,250,0.9))' : 'drop-shadow(0 0 4px rgba(167,139,250,0.4))'
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" style={{ display:'block', filter:glow, transition:'filter 0.3s' }}>
+      <circle cx="11" cy="11" r="10" stroke={col} strokeWidth="1.3"/>
+      <circle cx="11" cy="11" r="6.5" stroke={col} strokeWidth="1.3"/>
+      <circle cx="11" cy="11" r="3" stroke={col} strokeWidth="1.3"/>
+      <circle cx="11" cy="11" r="1.3" fill={col}/>
+    </svg>
+  )
 }
 
-function rootPath(pathname) {
-  return '/' + (pathname.split('/').filter(Boolean)[0] || '')
-}
-
-function AuroraBg({ paletteIdx }) {
-  const pal = PALETTES[paletteIdx] || PALETTES[0]
+// ── Blurred-blob aurora (no WebGL, no flat gradients) ────────────────────────
+function Aurora({ palIdx }) {
+  const pal = PALETTES[palIdx] || PALETTES[0]
   return (
     <>
       <style>{`
-        @keyframes ff-drift1 {
-          0%,100% { transform: translate(0,0) scale(1); }
-          33%      { transform: translate(8%,12%) scale(1.08); }
-          66%      { transform: translate(-5%,6%) scale(0.95); }
-        }
-        @keyframes ff-drift2 {
-          0%,100% { transform: translate(0,0) scale(1); }
-          40%      { transform: translate(-10%,-8%) scale(1.12); }
-          70%      { transform: translate(6%,-4%) scale(0.92); }
-        }
-        @keyframes ff-drift3 {
-          0%,100% { transform: translate(0,0) scale(1); }
-          50%      { transform: translate(4%,-10%) scale(1.06); }
-        }
+        @keyframes ff-b1{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(12%,18%) scale(1.15)}66%{transform:translate(-8%,8%) scale(0.9)}}
+        @keyframes ff-b2{0%,100%{transform:translate(0,0) scale(1)}40%{transform:translate(-14%,-10%) scale(1.2)}75%{transform:translate(8%,-5%) scale(0.85)}}
+        @keyframes ff-b3{0%,100%{transform:translate(0,0) scale(1)}55%{transform:translate(6%,-15%) scale(1.1)}}
       `}</style>
-      <div style={{
-        position: 'fixed', inset: 0, zIndex: 1,
-        background: pal.bg,
-        transition: 'background 1.2s ease',
-        pointerEvents: 'none', overflow: 'hidden',
-      }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: pal.g1,
-          animation: 'ff-drift1 18s ease-in-out infinite',
-          transition: 'background 1.2s ease',
-        }} />
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: pal.g2,
-          animation: 'ff-drift2 24s ease-in-out infinite',
-          transition: 'background 1.2s ease',
-        }} />
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: pal.g3,
-          animation: 'ff-drift3 30s ease-in-out infinite',
-          transition: 'background 1.2s ease',
-        }} />
+      <div style={{ position:'fixed', inset:0, zIndex:1, background:pal.bg, overflow:'hidden', pointerEvents:'none', transition:'background 1.4s ease' }}>
+        <div style={{ position:'absolute', width:'70vw', height:'55vw', borderRadius:'50%', background:pal.b1, filter:'blur(72px)', opacity:0.55, top:'-5%', left:'-10%', animation:'ff-b1 20s ease-in-out infinite', transition:'background 1.4s ease' }}/>
+        <div style={{ position:'absolute', width:'65vw', height:'50vw', borderRadius:'50%', background:pal.b2, filter:'blur(80px)', opacity:0.4, top:'25%', right:'-15%', animation:'ff-b2 26s ease-in-out infinite', transition:'background 1.4s ease' }}/>
+        <div style={{ position:'absolute', width:'50vw', height:'45vw', borderRadius:'50%', background:pal.b3, filter:'blur(64px)', opacity:0.3, bottom:'-10%', left:'20%', animation:'ff-b3 32s ease-in-out infinite', transition:'background 1.4s ease' }}/>
+        {/* darkening vignette */}
+        <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)' }}/>
       </div>
     </>
   )
 }
 
-function NovaBullseye({ active }) {
-  const col = active ? 'rgba(196,181,253,0.95)' : 'rgba(196,181,253,0.55)'
-  const glow = active ? 'drop-shadow(0 0 9px rgba(167,139,250,0.95))' : 'drop-shadow(0 0 5px rgba(167,139,250,0.45))'
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"
-      style={{ display:'block', filter:glow, transition:'filter 0.3s' }}>
-      <circle cx="11" cy="11" r="10" stroke={col} strokeWidth="1.2" />
-      <circle cx="11" cy="11" r="6.5" stroke={col} strokeWidth="1.2" />
-      <circle cx="11" cy="11" r="3" stroke={col} strokeWidth="1.2" />
-      <circle cx="11" cy="11" r="1.2" fill={col} />
-    </svg>
-  )
-}
-
+// ── Shell ────────────────────────────────────────────────────────────────────
 export default function MobileShell({ children }) {
   const pathname = usePathname()
   const router = useRouter()
   const [novaOpen, setNovaOpen] = useState(false)
   const [novaInput, setNovaInput] = useState('')
-  const [paletteIdx, setPaletteIdx] = useState(0)
-  const novaInputRef = useRef(null)
+  const [palIdx, setPalIdx] = useState(0)
+  const novaRef = useRef(null)
 
   useEffect(() => {
-    if (novaOpen) { setPaletteIdx(2); return }
-    const base = rootPath(pathname)
-    setPaletteIdx(PATH_TO_PALETTE[base] ?? 0)
+    if (novaOpen) { setPalIdx(2); return }
+    setPalIdx(PATH_PAL[rootPath(pathname)] ?? 0)
   }, [pathname, novaOpen])
 
   useEffect(() => { setNovaOpen(false) }, [pathname])
 
   const TABS = [
-    { href: '/dashboard', label: 'Home',     icon: 'home',    palIdx: 0 },
-    { href: '/my-stuff',  label: 'My Stuff', icon: 'stack-2', palIdx: 1 },
-    { href: null,         label: 'Nova',     nova: true,      palIdx: 2 },
-    { href: '/profile',   label: 'Profile',  icon: 'user',    palIdx: 3 },
+    { href:'/dashboard', label:'Home',     Icon:IconHome  },
+    { href:'/my-stuff',  label:'My Stuff', Icon:IconStack },
+    { href:null,         label:'Nova',     nova:true      },
+    { href:'/profile',   label:'Profile',  Icon:IconUser  },
   ]
 
-  const activePath = rootPath(pathname)
-
-  function isTabActive(tab) {
+  const active = rootPath(pathname)
+  function isActive(tab) {
     if (tab.nova) return novaOpen
-    return tab.href && (pathname === tab.href || activePath === tab.href)
+    return tab.href && (pathname === tab.href || active === tab.href)
   }
 
-  function handleTabClick(tab, e) {
+  function onTab(tab, e) {
     e.preventDefault()
     if (tab.nova) {
       const next = !novaOpen
       setNovaOpen(next)
-      if (next) setTimeout(() => novaInputRef.current?.focus(), 450)
+      if (next) setTimeout(() => novaRef.current?.focus(), 400)
     } else {
       setNovaOpen(false)
       router.push(tab.href)
     }
   }
 
-  function handleNovaSend() {
+  function sendNova() {
     const q = novaInput.trim()
     if (!q) return
     setNovaInput(''); setNovaOpen(false)
-    try { sessionStorage.setItem('nova_prefill', q) } catch (_) {}
+    try { sessionStorage.setItem('nova_prefill', q) } catch(_) {}
     router.push('/ai-tutor')
   }
 
   return (
     <>
-      {/* CSS aurora — reliable on all iOS Safari, no WebGL needed */}
-      <AuroraBg paletteIdx={paletteIdx} />
+      <Aurora palIdx={palIdx} />
 
-      {/* Edge glow when Nova open */}
-      <div style={{ position:'fixed', inset:0, zIndex:8, pointerEvents:'none', transition:'box-shadow 0.5s ease',
-        boxShadow: novaOpen ? 'inset 0 0 40px rgba(139,92,246,0.35),inset 0 0 80px rgba(99,102,241,0.2),inset 0 0 120px rgba(167,139,250,0.1)' : 'none' }} />
+      {/* Nova edge glow */}
+      <div style={{ position:'fixed', inset:0, zIndex:8, pointerEvents:'none', transition:'box-shadow 0.5s',
+        boxShadow: novaOpen ? 'inset 0 0 50px rgba(109,40,217,0.4), inset 0 0 100px rgba(99,102,241,0.2)' : 'none' }} />
 
-      {/* Scrollable content area */}
+      {/* Page content */}
       <div style={{ position:'fixed', inset:0, zIndex:10, overflowY:'auto', overflowX:'hidden',
         WebkitOverflowScrolling:'touch', overscrollBehavior:'contain' }}
         onClick={() => { if (novaOpen) setNovaOpen(false) }}>
         <div style={{ minHeight:'100%', paddingBottom:110 }}>{children}</div>
       </div>
 
-      {/* Floating island nav */}
+      {/* Floating island */}
       <div style={{ position:'fixed', bottom:18, left:'50%', transform:'translateX(-50%)', zIndex:30,
-        display:'flex', flexDirection:'column', alignItems:'center' }}>
+        display:'flex', flexDirection:'column', alignItems:'center', width:'max-content' }}>
 
         {/* Nova drawer */}
-        <div style={{ overflow:'hidden', maxHeight:novaOpen?58:0, opacity:novaOpen?1:0, marginBottom:novaOpen?9:0,
-          width:290, transition:'max-height 0.45s cubic-bezier(0.4,0,0.2,1),opacity 0.35s ease,margin-bottom 0.4s' }}>
-          <div style={{ background:'rgba(255,255,255,0.06)', backdropFilter:'blur(40px) saturate(180%)',
-            WebkitBackdropFilter:'blur(40px) saturate(180%)', border:'0.5px solid rgba(255,255,255,0.14)',
-            borderRadius:22, padding:'9px 9px 9px 15px', display:'flex', alignItems:'center', gap:8,
-            boxShadow:'0 0 0 0.5px rgba(139,92,246,0.2) inset,0 8px 32px rgba(0,0,0,0.3)' }}>
-            <input ref={novaInputRef} value={novaInput} onChange={e => setNovaInput(e.target.value)}
-              onKeyDown={e => { if (e.key==='Enter') handleNovaSend() }}
-              onClick={e => e.stopPropagation()} placeholder="Ask Nova anything…"
+        <div style={{ overflow:'hidden', maxHeight:novaOpen?60:0, opacity:novaOpen?1:0,
+          marginBottom:novaOpen?8:0, width:286,
+          transition:'max-height 0.4s cubic-bezier(.4,0,.2,1), opacity 0.3s, margin-bottom 0.35s' }}>
+          <div style={{ background:'rgba(15,10,35,0.85)', backdropFilter:'blur(40px)',
+            WebkitBackdropFilter:'blur(40px)', border:'0.5px solid rgba(139,92,246,0.35)',
+            borderRadius:20, padding:'8px 8px 8px 14px', display:'flex', alignItems:'center', gap:8,
+            boxShadow:'0 0 0 0.5px rgba(139,92,246,0.15) inset, 0 8px 32px rgba(0,0,0,0.4)' }}>
+            <input ref={novaRef} value={novaInput} onChange={e=>setNovaInput(e.target.value)}
+              onKeyDown={e=>{ if(e.key==='Enter') sendNova() }}
+              onClick={e=>e.stopPropagation()}
+              placeholder="Ask Nova anything…"
               style={{ flex:1, background:'none', border:'none', outline:'none', fontSize:13,
-                color:'rgba(255,255,255,0.85)', fontFamily:'inherit' }} />
-            <button onClick={e => { e.stopPropagation(); handleNovaSend() }}
-              style={{ width:30, height:30, borderRadius:'50%', background:'rgba(139,92,246,0.4)',
-                border:'0.5px solid rgba(167,139,250,0.4)', display:'flex', alignItems:'center',
+                color:'rgba(255,255,255,0.85)', fontFamily:'inherit' }}/>
+            <button onClick={e=>{ e.stopPropagation(); sendNova() }}
+              style={{ width:32, height:32, borderRadius:'50%', background:'rgba(124,58,237,0.5)',
+                border:'0.5px solid rgba(167,139,250,0.5)', display:'flex', alignItems:'center',
                 justifyContent:'center', flexShrink:0, cursor:'pointer' }}>
-              <i className="ti ti-send" style={{ fontSize:12, color:'rgba(255,255,255,0.9)' }} />
+              <IconSend size={13} color="rgba(255,255,255,0.95)" />
             </button>
           </div>
         </div>
 
-        {/* Island tabs */}
-        <div style={{ display:'flex', alignItems:'center', gap:2, background:'rgba(10,8,22,0.85)',
-          backdropFilter:'blur(28px)', WebkitBackdropFilter:'blur(28px)',
-          border:novaOpen?'0.5px solid rgba(139,92,246,0.45)':'0.5px solid rgba(255,255,255,0.15)',
-          borderRadius:40, padding:'7px 8px',
-          boxShadow:novaOpen?'0 8px 32px rgba(0,0,0,0.55),0 0 24px rgba(99,102,241,0.25)':'0 8px 32px rgba(0,0,0,0.55)',
-          transition:'border-color 0.35s,box-shadow 0.35s' }}>
+        {/* Tab bar */}
+        <div style={{ display:'flex', alignItems:'center', gap:0,
+          background:'rgba(8,6,20,0.88)', backdropFilter:'blur(28px)', WebkitBackdropFilter:'blur(28px)',
+          border: novaOpen ? '0.5px solid rgba(124,58,237,0.5)' : '0.5px solid rgba(255,255,255,0.12)',
+          borderRadius:40, padding:'6px 6px',
+          boxShadow: novaOpen
+            ? '0 8px 32px rgba(0,0,0,0.6), 0 0 28px rgba(99,102,241,0.3)'
+            : '0 8px 32px rgba(0,0,0,0.6)',
+          transition:'border-color 0.3s, box-shadow 0.3s' }}>
           {TABS.map((tab, i) => {
-            const active = isTabActive(tab)
+            const on = isActive(tab)
             return (
               <div key={i} style={{ display:'flex', alignItems:'center' }}>
-                {i > 0 && <div style={{ width:0.5, height:16, background:'rgba(255,255,255,0.12)', flexShrink:0, margin:'0 1px' }} />}
-                <a href={tab.href||'#'} onClick={(e) => handleTabClick(tab,e)}
-                  style={{ display:'flex', alignItems:'center', borderRadius:30,
-                    padding:tab.nova?'8px 11px':'8px 12px',
-                    background:active?'rgba(99,102,241,0.2)':'none', textDecoration:'none',
-                    cursor:'pointer', touchAction:'manipulation', WebkitTapHighlightColor:'transparent',
-                    transition:'background 0.25s', position:'relative', overflow:'hidden' }}>
-                  {active && !tab.nova && <div style={{ position:'absolute', inset:0, borderRadius:30, pointerEvents:'none',
-                    background:'radial-gradient(ellipse at center,rgba(99,102,241,0.28) 0%,transparent 70%)' }} />}
-                  {tab.nova ? <NovaBullseye active={active} /> : (
-                    <i className={`ti ti-${tab.icon}`} style={{ fontSize:20, position:'relative', zIndex:1,
-                      color:active?'#c4b5fd':'rgba(255,255,255,0.5)',
-                      transform:active?'scale(1.08)':'scale(1)', transition:'color 0.25s,transform 0.2s' }} />
-                  )}
-                  {active && <span style={{ fontSize:12, fontWeight:500, color:'#c4b5fd', marginLeft:6,
-                    overflow:'hidden', whiteSpace:'nowrap', maxWidth:80, opacity:1,
-                    position:'relative', zIndex:1 }}>{tab.label}</span>}
+                {i > 0 && (
+                  <div style={{ width:1, height:14, background:'rgba(255,255,255,0.1)', margin:'0 2px', flexShrink:0 }}/>
+                )}
+                <a href={tab.href||'#'} onClick={e=>onTab(tab,e)}
+                  style={{ display:'flex', alignItems:'center', justifyContent:'center',
+                    borderRadius:32, padding:'9px 14px',
+                    background: on ? 'rgba(99,102,241,0.22)' : 'transparent',
+                    textDecoration:'none', cursor:'pointer',
+                    touchAction:'manipulation', WebkitTapHighlightColor:'transparent',
+                    transition:'background 0.2s', minWidth:46 }}>
+                  {tab.nova
+                    ? <IconBullseye active={on}/>
+                    : <tab.Icon size={20} color={on ? '#c4b5fd' : 'rgba(255,255,255,0.45)'}/>
+                  }
                 </a>
               </div>
             )
