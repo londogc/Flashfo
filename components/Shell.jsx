@@ -7,7 +7,11 @@ import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import { novaStream } from '@/lib/api'
 import { useIsMobile } from '@/hooks/useIsMobile'
-import MobileShell from '@/components/MobileShell'
+import dynamic from 'next/dynamic'
+// Dynamic import — MobileShell is code-split into its own chunk.
+// Desktop users never download it. TO REVERT: replace with:
+//   import MobileShell from '@/components/MobileShell'
+const MobileShell = dynamic(() => import('@/components/MobileShell'), { ssr: false })
 
 const I = ({ d, s = 16 }) => (
   <svg width={s} height={s} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
