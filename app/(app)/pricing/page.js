@@ -17,9 +17,48 @@ export default function PricingPage() {
     script.id = 'pg-js'
     script.textContent = PG_JS
     document.body.appendChild(script)
-    document.querySelectorAll('.pc-student .pc-btn, .btn-cta, .mob-cta-btn').forEach(b => b.addEventListener('click', () => router.push('/auth')))
-    document.querySelectorAll('.pc-teacher .pc-btn').forEach(b => b.addEventListener('click', () => router.push('/auth')))
+    // Price IDs from Stripe — monthly then annual
+    const PRICES = {
+      student: { monthly: 'price_1TS69gLu7zMVJuloo7S44sow', annual: 'price_1TS6BtLu7zMVJuloFSLuTJou' },
+      teacher: { monthly: 'price_1TS6DHLu7zMVJuloSHQ9zT1c', annual: 'price_1TS6E6Lu7zMVJuloQJP7uNz2' },
+    }
+
+    async function startCheckout(plan) {
+      // Get current session — if not signed in, go to /auth first
+      const { data: { session } } = await window.__supabase.auth.getSession()
+      if (!session) { router.push('/auth?redirect=/pricing'); return }
+
+      const isAnnual = document.getElementById('thumb')?.classList.contains('on')
+      const priceId = PRICES[plan][isAnnual ? 'annual' : 'monthly']
+      const btn = document.querySelector(`.pc-${plan === 'student' ? 'student' : 'teacher'} .pc-btn`)
+      if (btn) { btn.textContent = 'Redirecting…'; btn.disabled = true }
+
+      try {
+        const res = await fetch('/api/stripe/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+          body: JSON.stringify({ priceId, userId: session.user.id, userEmail: session.user.email }),
+        })
+        const data = await res.json()
+        if (data.url) { window.location.href = data.url }
+        else { alert('Could not start checkout. Please try again.'); if (btn) { btn.textContent = 'Start 3-day free trial →'; btn.disabled = false } }
+      } catch(e) {
+        alert('Something went wrong. Please try again.')
+        if (btn) { btn.textContent = 'Start 3-day free trial →'; btn.disabled = false }
+      }
+    }
+
+    // Inject supabase client for pricing page checkout (loaded from CDN via window)
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm')
+    window.__supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || document.querySelector('meta[name="sb-url"]')?.content || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || document.querySelector('meta[name="sb-key"]')?.content || ''
+    )
+
+    document.querySelectorAll('.pc-student .pc-btn').forEach(b => b.addEventListener('click', () => startCheckout('student')))
+    document.querySelectorAll('.pc-teacher .pc-btn').forEach(b => b.addEventListener('click', () => startCheckout('teacher')))
     document.querySelectorAll('.pc-school .pc-btn').forEach(b => b.addEventListener('click', () => router.push('/contact')))
+    document.querySelectorAll('.btn-cta, .mob-cta-btn').forEach(b => b.addEventListener('click', () => router.push('/auth')))
     document.querySelectorAll('.free-btn').forEach(b => b.addEventListener('click', () => router.push('/auth')))
     document.querySelectorAll('.btn-ghost').forEach(b => b.addEventListener('click', () => router.push('/auth')))
     return () => {
