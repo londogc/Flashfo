@@ -1,11 +1,33 @@
 'use client'
 // Flashfo — MobileDashboard
-// Mobile-only dashboard content. Rendered by app/(app)/dashboard/page.js
-// when isMobile is true. All data fetching lives here.
-
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
+
+// ── Inline SVG icons (no Tabler font needed) ─────────────────────────────────
+function TI({ name, size=16, color='currentColor', style={} }) {
+  const s = { display:'block', flexShrink:0, ...style }
+  const p = { fill:'none', stroke:color, strokeWidth:1.8, strokeLinecap:'round', strokeLinejoin:'round' }
+  switch(name) {
+    case 'cards':         return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><rect {...p} x="2" y="5" width="20" height="14" rx="2"/><path {...p} d="M16 2l2 3M6 2l2 3M2 10h20"/></svg>
+    case 'help-circle':   return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><circle {...p} cx="12" cy="12" r="10"/><path {...p} d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+    case 'file-text':     return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><path {...p} d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path {...p} d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+    case 'search':        return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><circle {...p} cx="11" cy="11" r="8"/><path {...p} d="M21 21l-4.35-4.35"/></svg>
+    case 'book':          return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><path {...p} d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z"/></svg>
+    case 'layout':        return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><rect {...p} x="3" y="3" width="18" height="18" rx="2"/><path {...p} d="M3 9h18M9 21V9"/></svg>
+    case 'users':         return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><path {...p} d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle {...p} cx="9" cy="7" r="4"/><path {...p} d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    case 'calendar':      return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><rect {...p} x="3" y="4" width="18" height="18" rx="2"/><path {...p} d="M16 2v4M8 2v4M3 10h18"/></svg>
+    case 'school':        return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><path {...p} d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    case 'chalkboard':    return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><rect {...p} x="2" y="3" width="20" height="14" rx="1"/><path {...p} d="M8 21h8M12 17v4"/></svg>
+    case 'flame':         return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><path {...p} d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 3z"/></svg>
+    case 'device-gamepad-2': return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><rect {...p} x="2" y="6" width="20" height="12" rx="2"/><path {...p} d="M6 12h4M8 10v4M15 11h.01M17 13h.01"/></svg>
+    case 'download':      return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><path {...p} d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+    case 'user-check':    return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><path {...p} d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle {...p} cx="8.5" cy="7" r="4"/><path {...p} d="M17 11l2 2 4-4"/></svg>
+    case 'clock':         return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><circle {...p} cx="12" cy="12" r="10"/><path {...p} d="M12 6v6l4 2"/></svg>
+    case 'sparkles':      return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><path {...p} d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3zM5 18l.75 2.25L8 21l-2.25.75L5 24l-.75-2.25L2 21l2.25-.75L5 18zM19 2l.5 1.5L21 4l-1.5.5L19 6l-.5-1.5L17 4l1.5-.5L19 2z"/></svg>
+    default:              return <svg width={size} height={size} viewBox="0 0 24 24" style={s}><circle {...p} cx="12" cy="12" r="10"/></svg>
+  }
+}
 
 // Creature SVG (self-contained, mirrors Shell.jsx)
 function CreatureSVG({ id, size }) {
@@ -208,7 +230,7 @@ function HistoryCard() {
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
         <div style={{display:'flex',alignItems:'center',gap:7}}>
           <div style={{width:28,height:28,borderRadius:8,background:'rgba(251,146,60,0.15)',border:'0.5px solid rgba(251,146,60,0.3)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <i className="ti ti-clock" style={{fontSize:14,color:'#fb923c'}}/>
+            <TI name="clock" size={14} color="#fb923c"/>
           </div>
           <span style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.5)',textTransform:'uppercase',letterSpacing:'0.1em'}}>This Day in History</span>
         </div>
@@ -276,7 +298,7 @@ export default function MobileDashboard() {
       <div style={{padding:'0 16px'}}>
         {items.length>0?(<ContinueCard items={items}/>):(
           <div style={{height:118,borderRadius:20,marginBottom:14,overflow:'hidden',background:'rgba(255,255,255,0.04)',border:'0.5px solid rgba(255,255,255,0.08)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:6}}>
-            <i className="ti ti-sparkles" style={{fontSize:24,color:'rgba(255,255,255,0.3)'}}/>
+            <TI name="sparkles" size={24} color="rgba(255,255,255,0.3)"/>
             <div style={{fontSize:13,color:'rgba(255,255,255,0.4)'}}>Start creating to see your progress here</div>
           </div>
         )}
@@ -287,7 +309,7 @@ export default function MobileDashboard() {
               <div style={{position:'absolute',inset:0,background:t.bg,opacity:0.12}}/>
               <div style={{position:'absolute',top:-10,right:-10,width:60,height:60,borderRadius:'50%',background:`radial-gradient(${t.glow},transparent)`,opacity:0.4}}/>
               <div style={{width:34,height:34,borderRadius:10,background:t.ic,color:t.icCol,display:'flex',alignItems:'center',justifyContent:'center',position:'relative',zIndex:1}}>
-                <i className={`ti ti-${t.icon}`} style={{fontSize:17}}/>
+                <TI name={t.icon} size={17} color={t.icCol}/>
               </div>
               <div style={{position:'relative',zIndex:1}}>
                 <div style={{fontSize:13,fontWeight:600,color:'rgba(255,255,255,0.92)'}}>{t.label}</div>
@@ -300,7 +322,7 @@ export default function MobileDashboard() {
         <div style={{display:'flex',gap:7,overflowX:'auto',paddingBottom:12,WebkitOverflowScrolling:'touch',scrollbarWidth:'none'}}>
           {MORE_TOOLS.map(t=>(
             <a key={t.href} href={t.href} style={{display:'flex',alignItems:'center',gap:6,flexShrink:0,background:'rgba(255,255,255,0.05)',border:'0.5px solid rgba(255,255,255,0.1)',borderRadius:20,padding:'6px 12px',textDecoration:'none',touchAction:'manipulation',WebkitTapHighlightColor:'transparent'}}>
-              <i className={`ti ti-${t.icon}`} style={{fontSize:13,color:'rgba(255,255,255,0.45)'}}/>
+              <TI name={t.icon} size={13} color="rgba(255,255,255,0.45)"/>
               <span style={{fontSize:12,color:'rgba(255,255,255,0.65)',fontWeight:500,whiteSpace:'nowrap'}}>{t.label}</span>
             </a>
           ))}
