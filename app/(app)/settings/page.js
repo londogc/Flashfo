@@ -22,6 +22,10 @@ export default function SettingsPage() {
   const [bannerUrl, setBannerUrl] = useState(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [bannerUploading, setBannerUploading] = useState(false)
+  const [linkCodeVal, setLinkCodeVal] = useState('')
+  const [generatingCode, setGeneratingCode] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
+  const [regen, setRegen] = useState(false)
   const avatarRef = useRef(null)
   const bannerRef = useRef(null)
 
@@ -39,8 +43,30 @@ export default function SettingsPage() {
       setProfile({ full_name: data.full_name || '', grade_level: data.grade_level || '', role: data.role || 'student' })
       setAvatarUrl(data.avatar_url || null)
       setBannerUrl(data.banner_url || null)
+      if (data.link_code) setLinkCodeVal(data.link_code)
     }
     setLoading(false)
+  }
+
+  function makeCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    return Array.from({length:8}, () => chars[Math.floor(Math.random()*chars.length)]).join('')
+  }
+
+  async function generateLinkCode() {
+    setGeneratingCode(true)
+    const code = makeCode()
+    await supabase.from('profiles').update({ link_code: code }).eq('id', user.id)
+    setLinkCodeVal(code)
+    setGeneratingCode(false)
+  }
+
+  async function regenerateLinkCode() {
+    setRegen(true)
+    const code = makeCode()
+    await supabase.from('profiles').update({ link_code: code }).eq('id', user.id)
+    setLinkCodeVal(code)
+    setRegen(false)
   }
 
   function applyTheme(t, store = true) {
@@ -212,6 +238,33 @@ export default function SettingsPage() {
       </div>
 
       {/* Account */}
+      <div className="bg-surface border border-line rounded-2xl p-5">
+        <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-1">Share with Parent</h2>
+        <p className="text-[12px] text-t3 mb-4">Give a parent or guardian visibility into your study activity.</p>
+        {linkCodeVal ? (
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex-1 h-10 bg-surface2 border border-line rounded-xl px-4 flex items-center font-mono text-sm text-t1 tracking-widest select-all">
+                {linkCodeVal}
+              </div>
+              <button onClick={() => { navigator.clipboard?.writeText(linkCodeVal); setLinkCopied(true); setTimeout(()=>setLinkCopied(false),2000) }}
+                className="h-10 px-4 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 shrink-0">
+                {linkCopied ? 'Copied!' : 'Copy code'}
+              </button>
+            </div>
+            <p className="text-[12px] text-t3">Share this code with your parent. They enter it at flashfo.org/parent to link your account.</p>
+            <button onClick={regenerateLinkCode} disabled={regen} className="mt-3 text-[12px] text-t3 hover:text-t2 underline">
+              {regen ? 'Regenerating…' : 'Generate new code'}
+            </button>
+          </div>
+        ) : (
+          <button onClick={generateLinkCode} disabled={generatingCode}
+            className="h-9 px-4 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 disabled:opacity-60">
+            {generatingCode ? 'Generating…' : 'Generate parent link code'}
+          </button>
+        )}
+      </div>
+
       <div className="bg-surface border border-line rounded-2xl p-5">
         <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-4">Account</h2>
         <div className="space-y-2">
