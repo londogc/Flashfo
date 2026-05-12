@@ -11,7 +11,7 @@ import MobileShell from '@/components/MobileShell'
 
 const I = ({ d, s = 16 }) => (
   <svg width={s} height={s} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d={d}/
+    <path d={d}/>
   </svg>
 )
 
