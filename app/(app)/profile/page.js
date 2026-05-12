@@ -251,6 +251,7 @@ export default function ProfilePage() {
   async function savePrefs() {
     setSavingPrefs(true)
     await supabase.from('profiles').update({ avatar_id: avatarId, tagline, flashcard_theme: theme }).eq('id', user.id)
+    await refreshProfile()
     setSavingPrefs(false)
   }
 
@@ -262,7 +263,7 @@ export default function ProfilePage() {
       p_bio: form.bio||null,
     })
     if (err) { setError(err.message); setSaving(false); return }
-    window.location.href = '/'
+    window.location.href = '/dashboard'
   }
 
   if (loading) return <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'50vh',color:'var(--c-t3)',fontSize:14 }}>Loading...</div>
@@ -289,7 +290,7 @@ export default function ProfilePage() {
           <h1 style={{ fontSize:22,fontWeight:800,color:'var(--c-t1)',marginBottom:4,letterSpacing:'-0.3px' }}>Profile</h1>
           <p style={{ fontSize:13,color:'var(--c-t2)' }}>Manage your Flashfo account.</p>
         </div>
-        <a href="/" style={{ height:36,padding:'0 14px',background:'var(--c-surface2)',border:'1px solid var(--c-line)',color:'var(--c-t2)',borderRadius:10,fontSize:13,fontWeight:500,display:'inline-flex',alignItems:'center',textDecoration:'none' }}>← Dashboard</a>
+        <a href="/dashboard" style={{ height:36,padding:'0 14px',background:'var(--c-surface2)',border:'1px solid var(--c-line)',color:'var(--c-t2)',borderRadius:10,fontSize:13,fontWeight:500,display:'inline-flex',alignItems:'center',textDecoration:'none' }}>← Dashboard</a>
       </div>
 
       {/* Banner + Avatar */}
@@ -423,7 +424,7 @@ export default function ProfilePage() {
             style={{ height:40,padding:'0 20px',background:'#1d4ed8',color:'white',border:'none',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer',opacity:saving?0.7:1 }}>
             {saving?'Saving...':'Save changes'}
           </button>
-          <a href="/" style={{ fontSize:13,color:'var(--c-t3)',textDecoration:'none' }}>Cancel</a>
+          <a href="/dashboard" style={{ fontSize:13,color:'var(--c-t3)',textDecoration:'none' }}>Cancel</a>
         </div>
       </form>
 
