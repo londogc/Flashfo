@@ -241,8 +241,26 @@ export default function MobileDashboard() {
       .then(({data})=>{if(data)setItems(data)})
   },[user])
 
-  if(loading)return null
   const firstName=(profile?.full_name||user?.email||'').split(' ')[0]||'there'
+
+  if(loading) return (
+    <div style={{padding:'34px 20px 12px',fontFamily:'-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:28}}>
+        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+          <div style={{height:11,width:90,borderRadius:6,background:'rgba(255,255,255,0.07)'}}/>
+          <div style={{height:20,width:130,borderRadius:8,background:'rgba(255,255,255,0.1)'}}/>
+        </div>
+        <div style={{width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,0.08)'}}/>
+      </div>
+      <div style={{height:118,borderRadius:20,background:'rgba(255,255,255,0.05)',border:'0.5px solid rgba(255,255,255,0.08)',marginBottom:14}}/>
+      <div style={{height:11,width:80,borderRadius:6,background:'rgba(255,255,255,0.06)',marginBottom:9}}/>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:9}}>
+        {[0,1,2,3,4,5].map(i=>(
+          <div key={i} style={{height:88,borderRadius:16,background:'rgba(255,255,255,0.04)',border:'0.5px solid rgba(255,255,255,0.07)'}}/>
+        ))}
+      </div>
+    </div>
+  )
 
   return(
     <div style={{fontFamily:'-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif',color:'#fff'}}>
