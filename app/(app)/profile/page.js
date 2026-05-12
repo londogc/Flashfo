@@ -427,6 +427,39 @@ export default function ProfilePage() {
         </div>
       </form>
 
+      {/* Plan */}
+      <div style={{ margin:'0 20px 16px',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:18,padding:20 }}>
+        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12 }}>
+          <div>
+            <div style={{ fontSize:13,fontWeight:700,color:'var(--c-t1)',marginBottom:2 }}>Current plan</div>
+            <div style={{ display:'inline-flex',alignItems:'center',gap:6,marginTop:4 }}>
+              {(profile?.plan==='pro'||profile?.plan==='teacher'||profile?.plan==='school') ? (
+                <span style={{ background:'linear-gradient(90deg,#6366f1,#a78bfa)',color:'#fff',fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20 }}>
+                  {profile.plan==='teacher'?'Teacher':profile.plan==='school'?'School':'Pro'} ✦
+                </span>
+              ) : (
+                <span style={{ background:'rgba(99,102,241,0.1)',border:'1px solid rgba(99,102,241,0.25)',color:'#818cf8',fontSize:11,fontWeight:600,padding:'3px 10px',borderRadius:20 }}>
+                  Free
+                </span>
+              )}
+            </div>
+          </div>
+          {(!profile?.plan || profile?.plan==='free') && (
+            <a href="/pricing" style={{ display:'inline-flex',alignItems:'center',gap:5,height:36,padding:'0 14px',background:'linear-gradient(90deg,#4f46e5,#7c3aed)',color:'#fff',border:'none',borderRadius:10,fontSize:12,fontWeight:700,textDecoration:'none' }}>
+              Upgrade →
+            </a>
+          )}
+        </div>
+        {(!profile?.plan || profile?.plan==='free') && (
+          <div style={{ fontSize:12,color:'var(--c-t2)',lineHeight:1.5 }}>
+            Upgrade to Pro for unlimited AI generation, priority access, and advanced features.
+          </div>
+        )}
+        {(profile?.plan==='pro'||profile?.plan==='teacher'||profile?.plan==='school') && (
+          <div style={{ fontSize:12,color:'var(--c-t2)' }}>You're on the {profile.plan} plan. Thank you for supporting Flashfo! 🎉</div>
+        )}
+      </div>
+
       {/* Sign out */}
       <div style={{ margin:'0 20px',background:'var(--c-surface)',border:'1px solid #fecaca',borderRadius:18,padding:20 }}>
         <div style={{ fontSize:13,fontWeight:700,color:'#dc2626',marginBottom:4 }}>Sign out</div>
