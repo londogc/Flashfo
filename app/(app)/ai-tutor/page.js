@@ -228,11 +228,6 @@ export default function NovaPage() {
     try { localStorage.setItem('ff-nova-messages', JSON.stringify(messages.map(m => ({ role:m.role, content:m.content })))) } catch(e) {}
   }, [messages])
 
-  // Auto-send prefill from Nova island drawer
-  useEffect(() => {
-    if (prefillMsg && !loading) { send(prefillMsg); setPrefillMsg(null) }
-  }, [prefillMsg, send, loading])
-
   useEffect(() => {
     try {
       const prefill = sessionStorage.getItem('nova_prefill')
@@ -374,6 +369,11 @@ export default function NovaPage() {
     sessionStorage.removeItem('flashfo_nova_history')
     try { localStorage.removeItem('ff-nova-messages') } catch(e) {}
   }, [])
+
+  // Auto-send prefill — must be after send is defined
+  useEffect(() => {
+    if (prefillMsg && !loading) { send(prefillMsg); setPrefillMsg(null) }
+  }, [prefillMsg, send, loading])
   const handleKey = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) } }
 
   const dotColor = novaState === 'idle' ? '#10b981' : novaState === 'thinking' ? '#fbbf24' : '#818cf8'
@@ -381,7 +381,7 @@ export default function NovaPage() {
   const stateLabel = novaState === 'idle' ? 'Online' : novaState === 'thinking' ? 'Thinking...' : 'Generating...'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', maxHeight: '100dvh', position: 'relative', overflow: 'hidden' }}>
       <canvas ref={bgRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }} />
 
       <div style={{ flexShrink: 0, zIndex: 2, position: 'relative', padding: '10px 14px 8px' }}>
@@ -465,7 +465,7 @@ export default function NovaPage() {
         )}
       </div>
 
-      <div ref={inputBarRef} style={{ flexShrink: 0, zIndex: 1, position: 'relative', padding: '8px 14px 14px', borderTop: '1px solid rgba(255,255,255,.07)', background: 'rgba(5,7,9,.92)', backdropFilter: 'blur(24px)' }}>
+      <div ref={inputBarRef} style={{ flexShrink: 0, zIndex: 1, position: 'relative', padding: '8px 14px 14px', paddingBottom: 'max(14px, calc(env(safe-area-inset-bottom) + 14px))', borderTop: '1px solid rgba(255,255,255,.07)', background: 'rgba(5,7,9,.92)', backdropFilter: 'blur(24px)' }}>
         {pendingImages.length > 0 && (
           <div style={{ display: 'flex', gap: 8, paddingBottom: 8, flexWrap: 'wrap' }}>
             {pendingImages.map((img, i) => (
