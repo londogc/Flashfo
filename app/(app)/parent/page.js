@@ -11,11 +11,41 @@ export default function ParentDashboard() {
   const [selected, setSelected] = useState(null)
   const [activity, setActivity] = useState([])
   const [loading, setLoading] = useState(true)
+  const [linkCode, setLinkCode] = useState('')
+  const [linking, setLinking] = useState(false)
+  const [linkError, setLinkError] = useState('')
 
   useEffect(() => {
     if (!user) { router.push('/auth'); return }
     loadChildren()
   }, [user])
+
+  async function handleLinkChild() {
+    const code = linkCode.trim().toUpperCase()
+    if (!code) return
+    setLinking(true); setLinkError('')
+    // Find child by link_code on their profile
+    const { data: profile, error: findErr } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('link_code', code)
+      .single()
+    if (findErr || !profile) {
+      setLinkError('No account found with that code. Ask your child to check Settings → Share with Parent.')
+      setLinking(false); return
+    }
+    if (profile.id === user.id) {
+      setLinkError("You can't link your own account."); setLinking(false); return
+    }
+    const { error: linkErr } = await supabase.from('parent_child_links').insert({
+      parent_id: user.id, child_id: profile.id
+    })
+    if (linkErr && !linkErr.message.includes('duplicate')) {
+      setLinkError(linkErr.message); setLinking(false); return
+    }
+    setLinkCode(''); await loadChildren()
+    setLinking(false)
+  }
 
   async function loadChildren() {
     const { data } = await supabase
@@ -72,9 +102,16 @@ export default function ParentDashboard() {
           <div style={{ fontSize: 15, fontWeight: 600, color: '#3b82f6', marginBottom: 6 }}>Link your child's account</div>
           <div style={{ fontSize: 14, color: 'var(--c-t2)', marginBottom: 14 }}>Ask your child to go to Settings → Share with Parent and send you their link code.</div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <input placeholder="Enter your child's link code" style={{ flex: 1, padding: '10px 14px', background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 8, fontSize: 14, color: 'var(--c-t1)' }}/>
-            <button style={{ padding: '10px 20px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Link account</button>
+            <input value={linkCode} onChange={e => setLinkCode(e.target.value.toUpperCase().trim())}
+              placeholder="Enter your child's link code" maxLength={10}
+              onKeyDown={e => e.key === 'Enter' && handleLinkChild()}
+              style={{ flex: 1, padding: '10px 14px', background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 8, fontSize: 14, color: 'var(--c-t1)' }}/>
+            <button onClick={handleLinkChild} disabled={linking || !linkCode.trim()}
+              style={{ padding: '10px 20px', background: linking ? '#1d4ed8' : '#2563eb', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: linking ? 0.7 : 1 }}>
+              {linking ? 'Linking…' : 'Link account'}
+            </button>
           </div>
+          {linkError && <p style={{ fontSize: 13, color: '#f87171', margin: '8px 0 0' }}>{linkError}</p>}
         </div>
       )}
 
