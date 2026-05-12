@@ -7,6 +7,10 @@ export default function PageTransition({ children }) {
   const pathname = usePathname()
 
   useEffect(() => {
+    // Skip animation on mobile — position:fixed children in MobileShell
+    // get trapped in stacking contexts created by opacity/transform.
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return
+
     const el = ref.current
     if (!el) return
     el.style.opacity = '0'
@@ -22,7 +26,7 @@ export default function PageTransition({ children }) {
   }, [pathname])
 
   return (
-    <div ref={ref} style={{ opacity: 0, transform: 'translateY(12px)', willChange: 'opacity, transform' }}>
+    <div ref={ref} style={{ opacity: 1 }}>
       {children}
     </div>
   )
