@@ -6,10 +6,12 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import { novaStream } from '@/lib/api'
+import { useIsMobile } from '@/hooks/useIsMobile'
+import MobileShell from '@/components/MobileShell'
 
 const I = ({ d, s = 16 }) => (
   <svg width={s} height={s} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d={d}/>
+    <path d={d}/
   </svg>
 )
 
@@ -363,6 +365,7 @@ export default function Shell({ children }) {
   useEffect(() => setMounted(true), [])
   const pathname = usePathname()
   const router = useRouter()
+    const isMobile = useIsMobile()
   const { user, profile, loading: authLoading, signOut } = useAuth()
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false
