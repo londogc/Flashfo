@@ -137,11 +137,15 @@ export default function MobileShell({ children }) {
       <div style={{ position:'fixed', inset:0, zIndex:8, pointerEvents:'none', transition:'box-shadow 0.5s',
         boxShadow: novaOpen ? 'inset 0 0 50px rgba(109,40,217,0.4), inset 0 0 100px rgba(99,102,241,0.2)' : 'none' }} />
 
-      {/* Page content */}
-      <div style={{ position:'fixed', inset:0, zIndex:10, overflowY:'auto', overflowX:'hidden',
+      {/* Page content — ai-tutor owns its own scroll */}
+      <div style={{ position:'fixed', inset:0, zIndex:10,
+        overflowY: pathname.startsWith('/ai-tutor') ? 'hidden' : 'auto',
+        overflowX:'hidden',
         WebkitOverflowScrolling:'touch', overscrollBehavior:'contain' }}
         onClick={() => { if (novaOpen) setNovaOpen(false) }}>
-        <div style={{ minHeight:'100%', paddingBottom:110 }}>{children}</div>
+        <div style={{ minHeight: pathname.startsWith('/ai-tutor') ? '100%' : undefined,
+          height: pathname.startsWith('/ai-tutor') ? '100%' : undefined,
+          paddingBottom: pathname.startsWith('/ai-tutor') ? 0 : 110 }}>{children}</div>
       </div>
 
       {/* Floating island */}
