@@ -145,6 +145,8 @@ export default function DashboardPage() {
         })
       }
     } catch {}
+    try {
+      const { data: enroll } = await supabase
         .from('student_enrollments').select('classroom_id, classrooms(name, subject)').eq('student_id', user.id)
       if (enroll) setClasses(enroll.map(e => e.classrooms).filter(Boolean))
       const { data: hw } = await supabase
