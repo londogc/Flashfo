@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { saveItem } from '@/lib/savedItems'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
 import { rpc, novaStream } from '@/lib/api'
@@ -109,6 +110,7 @@ const CHIPS = [
 
 export default function StudyGuidePage() {
   const { user } = useAuth()
+  const isMobile  = useIsMobile()
 
   const [topic,    setTopic]    = useState('')
   const [depth,    setDepth]    = useState('standard')
@@ -225,7 +227,7 @@ export default function StudyGuidePage() {
 
       {/* Two-column layout — shown only on input state */}
       {!output && !loading && (
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, alignItems:'start' }}>
+        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:20, alignItems:'start' }}>
 
           {/* Left — input */}
           <div>
@@ -266,8 +268,8 @@ export default function StudyGuidePage() {
             </button>
           </div>
 
-          {/* Right — guide structure preview */}
-          <div>
+          {/* Right — guide structure, hidden on mobile */}
+          {!isMobile && <div>
             <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>Guide structure</div>
             <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
               {OUTLINE_SECTIONS.map((s,i) => (
@@ -283,13 +285,13 @@ export default function StudyGuidePage() {
                 </div>
               ))}
             </div>
-          </div>
+          </div>}
         </div>
       )}
 
       {/* Loading state */}
       {loading && (
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, alignItems:'start' }}>
+        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:20, alignItems:'start' }}>
           <div>
             <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, padding:'14px 16px' }}>
               <div style={{ fontSize:13, color:'rgba(255,255,255,0.4)', lineHeight:1.7 }}>{topic}</div>
@@ -306,7 +308,7 @@ export default function StudyGuidePage() {
               <span style={{ fontSize:13, color:'rgba(52,211,153,0.7)' }}>Nova is writing your study guide…</span>
             </div>
           </div>
-          <div>
+          {!isMobile && <div>
             <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>Guide structure</div>
             <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
               {OUTLINE_SECTIONS.map((s,i) => (
@@ -320,7 +322,7 @@ export default function StudyGuidePage() {
                 </div>
               ))}
             </div>
-          </div>
+          </div>}
         </div>
       )}
 
