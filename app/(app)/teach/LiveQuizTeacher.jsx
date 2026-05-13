@@ -938,7 +938,7 @@ export default function LiveQuizTeacher() {
             <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:280, overflowY:'auto' }}>
               {studentList.map(({ participant: p, topicScores, status }) => {
                 const meta = statusMeta[status]
-                const weakTopics = Object.entries(topicScores).filter(([,d])=>d.total>0&&d.correct/d.total<0.6).sort(([,a],[,b]=>a.correct/a.total-b.correct/b.total)).map(([t])=>t)
+                const weakTopics = Object.entries(topicScores).filter(([,d])=>d.total>0&&d.correct/d.total<0.6).sort(([,a],[,b])=>a.correct/a.total-b.correct/b.total).map(([t])=>t)
                 return (
                   <div key={p.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:10 }}>
                     <div style={{ width:34, height:34, borderRadius:'50%', background:meta.bg, border:`1px solid ${meta.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:meta.color, flexShrink:0 }}>
