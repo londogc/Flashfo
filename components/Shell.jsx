@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { novaStream } from '@/lib/api'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import dynamic from 'next/dynamic'
+import StickyNotes from '@/components/StickyNotes'
 // Dynamic import — MobileShell is code-split into its own chunk.
 // Desktop users never download it. TO REVERT: replace with:
 //   import MobileShell from '@/components/MobileShell'
@@ -518,8 +519,8 @@ export default function Shell({ children }) {
     { label:'Student Portal', href:'/student-portal',icon:'studentp' },
   ]
   const filteredCmds = cmdQuery ? CMD_ITEMS.filter(c => c.label.toLowerCase().includes(cmdQuery.toLowerCase())) : CMD_ITEMS
-if (isMobile) return <MobileShell>{children}</MobileShell>
-  
+if (isMobile) return <><MobileShell>{children}</MobileShell><StickyNotes/></>
+
   return (
     <div className="ff-desktop-shell" style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'var(--c-bg)' }}>
       {/* Nova Ambient — floats above everything, hidden on /ai-tutor */}
@@ -793,6 +794,7 @@ if (isMobile) return <MobileShell>{children}</MobileShell>
           </button>
         </nav>
       </div>
+      <StickyNotes/>
     </div>
   )
 }
