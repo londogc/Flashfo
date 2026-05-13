@@ -507,8 +507,8 @@ export default function Shell({ children }) {
       {/* ── Main content area ── */}
       <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0, position:'relative' }}>
 
-        {/* Topbar */}
-        <div style={{ height:52, flexShrink:0, display:'flex', alignItems:'center', padding:'0 20px', gap:10, borderBottom:'0.5px solid rgba(255,255,255,0.06)', background:'rgba(255,255,255,0.015)', position:'relative', zIndex:5 }}>
+        {/* Topbar — hidden on /ai-tutor (Nova manages its own full-height layout) */}
+        {pathname !== '/ai-tutor' && <div style={{ height:52, flexShrink:0, display:'flex', alignItems:'center', padding:'0 20px', gap:10, borderBottom:'0.5px solid rgba(255,255,255,0.06)', background:'rgba(255,255,255,0.015)', position:'relative', zIndex:5 }}>
           <span style={{ fontSize:13, fontWeight:500, color:'rgba(255,255,255,0.65)' }}>
             {navItems.find(n=>n.href&&(pathname===n.href||pathname.startsWith(n.href+'/')))?.label||'Flashfo'}
           </span>
@@ -571,12 +571,12 @@ export default function Shell({ children }) {
               )}
             </div>
           </div>
-        </div>
+        </div>}
 
-        {/* Page content */}
-        <div style={{ flex:1, overflowY:'auto', overflowX:'hidden', WebkitOverflowScrolling:'touch', background:'#04030c', position:'relative' }}>
-          <div style={{ position:'fixed', top:52, left:58, right:0, bottom:0, pointerEvents:'none', zIndex:0, background:`radial-gradient(ellipse 40% 30% at 80% 10%, rgba(${accent.r},0.06) 0%, transparent 70%)`, transition:'background 0.7s ease' }}/>
-          <div style={{ position:'relative', zIndex:1 }}>{children}</div>
+        {/* Page content — overflow:hidden on /ai-tutor so Nova controls its own scroll */}
+        <div style={{ flex:1, overflow: pathname === '/ai-tutor' ? 'hidden' : 'auto', overflowX:'hidden', WebkitOverflowScrolling:'touch', background:'#04030c', position:'relative' }}>
+          {pathname !== '/ai-tutor' && <div style={{ position:'fixed', top:52, left:58, right:0, bottom:0, pointerEvents:'none', zIndex:0, background:`radial-gradient(ellipse 40% 30% at 80% 10%, rgba(${accent.r},0.06) 0%, transparent 70%)`, transition:'background 0.7s ease' }}/>}
+          <div style={{ position:'relative', zIndex:1, height: pathname === '/ai-tutor' ? '100%' : undefined }}>{children}</div>
         </div>
       </div>
 
