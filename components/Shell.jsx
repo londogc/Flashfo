@@ -17,6 +17,7 @@ const ACCENT_MAP = {
   '/my-progress':    { h:'#0ea5e9', r:'14,165,233'  },
   '/review':         { h:'#f59e0b', r:'245,158,11'  },
   '/exam-countdown': { h:'#a78bfa', r:'167,139,250' },
+  '/shared-decks':   { h:'#6366f1', r:'99,102,241'  },
   '/ai-tutor':       { h:'#8b5cf6', r:'139,92,246'  },
   '/create':         { h:'#10b981', r:'16,185,129'  },
   '/flashcards':     { h:'#3b82f6', r:'59,130,246'  },  // blue
@@ -57,6 +58,7 @@ const ICONS = {
   assignments: 'M13 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V2a1 1 0 00-1-1zM5 5h6m-6 3h6m-6 3h4',
   review:      'M1 8a7 7 0 0112.5-4.3M15 8a7 7 0 01-12.5 4.3M13 3l2 1-1 2M3 13l-2-1 1-2',
   exam:        'M8 1l1.5 3h3l-2.5 2 1 3L8 7.5 5 9l1-3L3.5 4h3z M2 13h12M4 11v2M8 11v2M12 11v2',
+  shared:      'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zm9 11v-1.5a3 3 0 00-2-2.83M13 7.13A3 3 0 0115 10',
   settings:    'M12.4 8a4.4 4.4 0 11-8.8 0 4.4 4.4 0 018.8 0zM14.3 9.2l1.7 1-2 3.5-1.7-1a6 6 0 01-1.8 1l-.3 2h-4l-.3-2a6 6 0 01-1.8-1l-1.7 1-2-3.5 1.7-1A6 6 0 012 8c0-.4 0-.8.1-1.2L.4 5.8l2-3.5 1.7 1A6 6 0 016 2.3L6.3.3h4l.3 2a6 6 0 011.8 1l1.7-1 2 3.5-1.7 1c.1.4.1.8.1 1.2s0 .8-.2 1.2z',
   notif:       'M8 1a6 6 0 016 6v3l2 2H2l2-2V7a6 6 0 016-6zm-1 13h2a1 1 0 01-2 0z',
   search:      'M7 1a6 6 0 100 12A6 6 0 007 1zm7 14l-3-3',
@@ -109,6 +111,7 @@ const NAV_STUDENT = [
   { href:'/my-progress',      label:'My Progress',     icon:'progress',    minPlan:'student' },
   { href:'/review',           label:'Review',          icon:'review',      minPlan:'student' },
   { href:'/exam-countdown',   label:'Exam Countdown',  icon:'exam',        minPlan:'student' },
+  { href:'/shared-decks',     label:'Shared Decks',    icon:'shared',      minPlan:'student' },
   { href:'/assignments',      label:'Assignments',     icon:'assignments', minPlan:'student' },
   { href:'/student-portal', label:'Student Portal', icon:'studentp',    minPlan:'student' },
   { href:'/collab-decks',   label:'Collab Decks',   icon:'collab',      minPlan:'student' },
