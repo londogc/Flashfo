@@ -22,26 +22,24 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('ff-theme');var d=t!=='light';var bg=d?'#0d1117':'#f1f5f9';document.documentElement.style.background=bg;document.documentElement.style.backgroundColor=bg;if(d)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');}catch(e){}})()`}}/>
-        <style dangerouslySetInnerHTML={{ __html: `
-          *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-          html,body{margin:0;padding:0;min-height:100%}
-          html.dark,html.dark body{background-color:#0d1117!important;color-scheme:dark}
-          html:not(.dark),html:not(.dark) body{background-color:#f1f5f9!important;color-scheme:light}
-          .ff-desktop-only{display:flex!important}
-          @media(max-width:767px){.ff-desktop-only{display:none!important}aside{display:none!important}}
-          .ff-mobile-only{display:none!important}
-          @media(max-width:767px){.ff-mobile-only{display:block!important}}
-          .ff-mobile-block{display:none!important}
-          @media(max-width:767px){.ff-mobile-block{display:flex!important}}
-          .ff-mid-mobile-only{display:none!important}
-          @media(max-width:1099px){.ff-mid-mobile-only{display:flex!important}}
-          @media(min-width:768px)and(max-width:1099px){aside.ff-desktop-only{width:56px!important;min-width:56px!important;max-width:56px!important;overflow:hidden!important}.ff-desktop-dark-toggle{display:none!important}}
-          @media(max-width:767px){.ff-desktop-shell{display:none!important}}
-          @media(max-width:767px){.ff-content{padding-bottom:80px!important}}
-          @keyframes ff-shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
-          .ff-skeleton{background:linear-gradient(90deg,var(--c-surface2,#21262d) 25%,var(--c-surface,#161b22) 50%,var(--c-surface2,#21262d) 75%);background-size:800px 100%;animation:ff-shimmer 1.4s infinite linear;border-radius:8px}
-        `}}/>
+        {/*
+          Theme detection script — runs before React hydrates to prevent dark/light flash.
+          suppressHydrationWarning silences React #425 on this element (the script tag's
+          text content is set by the server but React doesn't need to match it exactly).
+
+          The <style dangerouslySetInnerHTML> that used to be here was REMOVED because:
+          - Every rule in it is already in globals.css (ff-desktop-only, ff-mobile-only,
+            skeleton shimmer, html/body resets, etc.)
+          - Having it here AND in globals.css caused React hydration error #425
+            ("Text content does not match server-rendered HTML") on every page load,
+            which React recovered from on desktop but CRASHED on mobile iOS.
+        */}
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('ff-theme');var d=t!=='light';var bg=d?'#0d1117':'#f1f5f9';document.documentElement.style.background=bg;document.documentElement.style.backgroundColor=bg;if(d)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');}catch(e){document.documentElement.classList.add('dark');}})()`
+          }}
+        />
       </head>
       <body suppressHydrationWarning>
         <PageTransition>
