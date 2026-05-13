@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { supabase } from '@/lib/supabase'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 import { logStudySession } from '@/lib/logStudySession'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
@@ -122,6 +123,42 @@ const CHIPS = [
   'The French Revolution','Calculus derivatives','Python data structures',
   'Cardiovascular anatomy','Spanish irregular verbs','The Cold War',
 ]
+
+// ── Publish toggle ────────────────────────────────────────────────────────────
+
+function PublishToggle({ deckId }) {
+  const [isPublic, setIsPublic] = useState(null)
+  const [saving,   setSaving]   = useState(false)
+
+  useEffect(() => {
+    if (!deckId) return
+    supabase.from('saved_items').select('is_public').eq('id', deckId).single()
+      .then(({ data }) => setIsPublic(data?.is_public || false))
+      .catch(() => {})
+  }, [deckId])
+
+  async function toggle() {
+    setSaving(true)
+    const next = !isPublic
+    try {
+      await supabase.from('saved_items').update({ is_public: next }).eq('id', deckId)
+      setIsPublic(next)
+    } catch {}
+    setSaving(false)
+  }
+
+  if (isPublic === null) return null
+
+  return (
+    <button onClick={toggle} disabled={saving}
+      style={{ padding:'7px 10px', borderRadius:7, fontSize:11, fontWeight:600, border:`1px solid ${isPublic?'rgba(99,102,241,0.35)':'rgba(255,255,255,0.09)'}`, background:isPublic?'rgba(99,102,241,0.1)':'rgba(255,255,255,0.03)', color:isPublic?'#a5b4fc':'var(--c-t3)', cursor:'pointer', textAlign:'left', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6, opacity:saving?.6:1, transition:'all .15s' }}>
+      <div style={{ width:14, height:14, borderRadius:3, border:`1.5px solid ${isPublic?'#6366f1':'rgba(255,255,255,0.2)'}`, background:isPublic?'#6366f1':'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+        {isPublic && <svg width="9" height="9" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" fill="none" strokeLinecap="round"/></svg>}
+      </div>
+      {isPublic ? 'Public — in Shared Decks' : 'Share publicly'}
+    </button>
+  )
+}
 
 // ── Nova Explain Differently ──────────────────────────────────────────────────
 
@@ -920,6 +957,7 @@ function FlashcardsPageInner() {
           <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
             {user && <button onClick={()=>{setSaveTitle(topic);setShowSave(true)}} style={{ padding:'7px 10px', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid rgba(52,211,153,0.22)', background:'rgba(16,185,129,0.06)', color:'#34d399', cursor:'pointer', textAlign:'left', fontFamily:'inherit' }}>{savedId?'Update save':'Save to My Stuff'}</button>}
             {saveFeedback && <span style={{ fontSize:10, color:'#34d399', fontWeight:500 }}>{saveFeedback}</span>}
+            {savedId && user && <PublishToggle deckId={savedId}/>}
             <button onClick={()=>{shareLink(cards,topic);setCopied(true);setTimeout(()=>setCopied(false),2000)}} style={{ padding:'7px 10px', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:copied?'#34d399':'var(--c-t2)', cursor:'pointer', textAlign:'left', fontFamily:'inherit' }}>{copied?'Link copied!':'Share deck'}</button>
             <button onClick={restartSession} style={{ padding:'7px 10px', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t2)', cursor:'pointer', textAlign:'left', fontFamily:'inherit' }}>↺ Restart session</button>
           </div>
