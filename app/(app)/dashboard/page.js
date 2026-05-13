@@ -84,6 +84,7 @@ export default function DashboardPage() {
   const [assignments,  setAssignments]  = useState([])
   const [dataLoading,  setDataLoading]  = useState(true)
   const [dueToday,     setDueToday]     = useState(0)
+  const [weakCardCount,setWeakCardCount]= useState(0)
   const [continueIdx,  setContinueIdx]  = useState(0)
   const [mobileFailed, setMobileFailed] = useState(false)
 
@@ -95,9 +96,11 @@ export default function DashboardPage() {
   async function loadData() {
     setDataLoading(true)
     try {
-      const sm2 = JSON.parse(localStorage.getItem('ff-sm2')||'{}')
+      const reviews = JSON.parse(localStorage.getItem('ff-card-reviews')||'{}')
       const now = Date.now()
-      setDueToday(Object.values(sm2).filter(c => c.nextReview && c.nextReview <= now).length)
+      setDueToday(Object.values(reviews).filter(r => r.nextReview && r.nextReview <= now).length)
+      // Weak = easeFactor < 2.0 and reviewed at least twice
+      setWeakCardCount(Object.values(reviews).filter(r => r.repetitions >= 2 && r.easeFactor < 2.0).length)
     } catch {}
     try {
       const { data: enroll } = await supabase
@@ -123,19 +126,22 @@ export default function DashboardPage() {
   const continueCards = useMemo(() => {
     const hasAsgn = !dataLoading && assignments.length > 0
     const hasDue  = !dataLoading && dueToday > 0
+    const hasWeak = !dataLoading && weakCardCount > 0
     const card1 = hasAsgn
       ? { badge:'Assignment', title:assignments[0].title, sub:dueLabel, href:'/assignments', cta:'Open →' }
       : hasDue
-        ? { badge:'Review', title:`${dueToday} card${dueToday!==1?'s':''} ready to review`, sub:'Spaced repetition · due now', href:'/flashcards', cta:'Review →' }
-        : { badge:'Study', title:'Explore your study tools', sub:'Flashcards, quizzes, guides & more', href:'/study', cta:'Study now →' }
-    const card2 = { badge:'Nova', title:'Ask Nova anything', sub:'Your AI study assistant is ready', href:'/ai-tutor', cta:'Ask Nova →' }
+        ? { badge:'Review', title:`${dueToday} card${dueToday!==1?'s':''} ready to review`, sub:'Spaced repetition · due now', href:'/review', cta:'Review →' }
+        : { badge:'Study', title:'Explore your study tools', sub:'Flashcards, quizzes, guides & more', href:'/flashcards', cta:'Study now →' }
+    const card2 = hasWeak
+      ? { badge:'Weak Spots', title:`${weakCardCount} card${weakCardCount!==1?'s':''} need attention`, sub:'Based on your review history', href:'/my-progress?tab=flashcards', cta:'Drill now →' }
+      : { badge:'Nova', title:'Ask Nova anything', sub:'Your AI study assistant is ready', href:'/ai-tutor', cta:'Ask Nova →' }
     const card3 = hasAsgn && hasDue
-      ? { badge:'Review', title:`${dueToday} card${dueToday!==1?'s':''} ready to review`, sub:'Spaced repetition · due now', href:'/flashcards', cta:'Review →' }
+      ? { badge:'Review', title:`${dueToday} card${dueToday!==1?'s':''} ready to review`, sub:'Spaced repetition · due now', href:'/review', cta:'Review →' }
       : hasAsgn
         ? { badge:'My Progress', title:"See how you're doing", sub:'Streaks, stats & weak spots', href:'/my-progress', cta:'View →' }
         : { badge:'My Stuff', title:'Browse saved content', sub:'Notes, decks and study guides', href:'/my-stuff', cta:'Open →' }
     return [card1, card2, card3]
-  }, [assignments, dueToday, dueLabel, dataLoading])
+  }, [assignments, dueToday, dueLabel, dataLoading, weakCardCount])
 
   // Cycling useEffect also moved above early return — same reason
   useEffect(() => {
