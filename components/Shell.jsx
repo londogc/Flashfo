@@ -288,16 +288,8 @@ export default function Shell({ children }) {
 
   useEffect(() => { document.body.setAttribute('data-path', pathname) }, [pathname])
 
-  useEffect(() => {
-    const id = 'shell-anim'
-    if (document.getElementById(id)) return
-    const s = document.createElement('style'); s.id = id
-    s.textContent = [
-      '@keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.75)}}',
-      '@media(max-width:767px){.ff-desktop-shell{display:none!important}}',
-    ].join('')
-    document.head.appendChild(s)
-  }, [])
+  // ff-desktop-shell hide rule + nova-pulse keyframe moved to globals.css
+  // so they apply at first paint without any JS execution.
 
   // Realtime role sync (picks up settings-page saves immediately, no need to refresh tab)
   useEffect(() => {
