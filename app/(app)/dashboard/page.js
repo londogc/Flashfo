@@ -111,6 +111,38 @@ export default function DashboardPage() {
     setDataLoading(false)
   }
 
+  // ── ALL HOOKS MUST BE ABOVE ANY EARLY RETURN (Rules of Hooks) ──────────────
+  // useMemo + useEffect were previously below the mobile early return, which
+  // crashed mobile the moment useLayoutEffect in useIsMobile flipped isMobile
+  // to true: React saw fewer hooks called → "Rendered fewer hooks" → crash.
+  const nextAsgn = assignments[0]
+  const dueLabel = nextAsgn?.due_date
+    ? `Due ${new Date(nextAsgn.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}`
+    : 'No due date'
+
+  const continueCards = useMemo(() => {
+    const hasAsgn = !dataLoading && assignments.length > 0
+    const hasDue  = !dataLoading && dueToday > 0
+    const card1 = hasAsgn
+      ? { badge:'Assignment', title:assignments[0].title, sub:dueLabel, href:'/assignments', cta:'Open →' }
+      : hasDue
+        ? { badge:'Review', title:`${dueToday} card${dueToday!==1?'s':''} ready to review`, sub:'Spaced repetition · due now', href:'/flashcards', cta:'Review →' }
+        : { badge:'Study', title:'Explore your study tools', sub:'Flashcards, quizzes, guides & more', href:'/study', cta:'Study now →' }
+    const card2 = { badge:'Nova', title:'Ask Nova anything', sub:'Your AI study assistant is ready', href:'/ai-tutor', cta:'Ask Nova →' }
+    const card3 = hasAsgn && hasDue
+      ? { badge:'Review', title:`${dueToday} card${dueToday!==1?'s':''} ready to review`, sub:'Spaced repetition · due now', href:'/flashcards', cta:'Review →' }
+      : hasAsgn
+        ? { badge:'My Progress', title:"See how you're doing", sub:'Streaks, stats & weak spots', href:'/my-progress', cta:'View →' }
+        : { badge:'My Stuff', title:'Browse saved content', sub:'Notes, decks and study guides', href:'/my-stuff', cta:'Open →' }
+    return [card1, card2, card3]
+  }, [assignments, dueToday, dueLabel, dataLoading])
+
+  // Cycling useEffect also moved above early return — same reason
+  useEffect(() => {
+    const t = setInterval(() => setContinueIdx(i => (i+1) % 3), 5000)
+    return () => clearInterval(t)
+  }, [])
+
   // Render mobile view — with fallback in case component doesn't exist
   if (isMobile && !mobileFailed) {
     return (
@@ -118,40 +150,9 @@ export default function DashboardPage() {
     )
   }
 
-  const firstName   = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
-  const hour        = new Date().getHours()
-  const greeting    = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-  const nextAsgn    = assignments[0]
-  const dueLabel    = nextAsgn?.due_date
-    ? `Due ${new Date(nextAsgn.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}`
-    : 'No due date'
-
-  // Always exactly 3 cards — cycling is always active
-  const continueCards = useMemo(() => {
-    const hasAsgn = !dataLoading && assignments.length > 0
-    const hasDue  = !dataLoading && dueToday > 0
-
-    const card1 = hasAsgn
-      ? { badge:'Assignment', title:assignments[0].title, sub:dueLabel, href:'/assignments', cta:'Open →' }
-      : hasDue
-        ? { badge:'Review', title:`${dueToday} card${dueToday!==1?'s':''} ready to review`, sub:'Spaced repetition · due now', href:'/flashcards', cta:'Review →' }
-        : { badge:'Study', title:'Explore your study tools', sub:'Flashcards, quizzes, guides & more', href:'/study', cta:'Study now →' }
-
-    const card2 = { badge:'Nova', title:'Ask Nova anything', sub:'Your AI study assistant is ready', href:'/ai-tutor', cta:'Ask Nova →' }
-
-    const card3 = hasAsgn && hasDue
-      ? { badge:'Review', title:`${dueToday} card${dueToday!==1?'s':''} ready to review`, sub:'Spaced repetition · due now', href:'/flashcards', cta:'Review →' }
-      : hasAsgn
-        ? { badge:'My Progress', title:"See how you're doing", sub:'Streaks, stats & weak spots', href:'/my-progress', cta:'View →' }
-        : { badge:'My Stuff', title:'Browse saved content', sub:'Notes, decks and study guides', href:'/my-stuff', cta:'Open →' }
-
-    return [card1, card2, card3]
-  }, [assignments, dueToday, dueLabel, dataLoading])
-
-  useEffect(() => {
-    const t = setInterval(() => setContinueIdx(i => (i+1) % 3), 5000)
-    return () => clearInterval(t)
-  }, [])
+  const firstName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
+  const hour      = new Date().getHours()
+  const greeting  = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
   const cc   = continueCards[continueIdx]
   const card = { background:'rgba(255,255,255,0.025)', border:'0.5px solid rgba(255,255,255,0.07)', borderRadius:16, overflow:'hidden' }
