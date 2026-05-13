@@ -60,7 +60,9 @@ const NAV = [
   { href:'/ai-tutor', label:'Nova', icon:'nova', minPlan:'student', nova:true },
   { href:'/teach', label:'Teach', icon:'teach', minPlan:'teacher' },
   { href:'/student-portal',label:'Student Portal',icon:'studentp', minPlan:'student' },
+  { href:'/assignments', label:'Assignments', icon:'mystuff', minPlan:'student' },
   { href:'/my-stuff', label:'My Stuff', icon:'mystuff', minPlan:'student' },
+  { href:'/source-library', label:'Source Library', icon:'study', minPlan:'student' },
   { href:'/curriculum', label:'Curriculum', icon:'curriculum',minPlan:'teacher' },
   { href:'/collab-decks', label:'Collab Decks', icon:'collab', minPlan:'school' },
   { href:'/my-progress', label:'My Progress', icon:'progress', minPlan:'student' },
@@ -442,7 +444,7 @@ export default function Shell({ children }) {
   async function handleSignOut() {
     await signOut()
     setShowUserMenu(false)
-    router.push('/auth')
+    window.location.href = '/auth'
   }
 
   const firstName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || null
