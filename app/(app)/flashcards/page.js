@@ -149,6 +149,9 @@ function FlashcardsPageInner() {
   const [copied,      setCopied]      = useState(false)
   const [autoGen,     setAutoGen]     = useState(false)
   const [draftBanner, setDraftBanner] = useState(false)
+  const [importText,  setImportText]  = useState('')
+  const [importError, setImportError] = useState('')
+  const fileInputRef = useRef(null)
   const [studyQueue,  setStudyQueue]  = useState([])
   const [sessionComplete,    setSessionComplete]    = useState(false)
   const [sessionHardCards,   setSessionHardCards]   = useState([])
@@ -281,6 +284,89 @@ function FlashcardsPageInner() {
   function addCard()     { const n=cards.length; setCards(cs=>[...cs,{front:'New question',back:'New answer'}]); setTimeout(()=>startEdit(n),0) }
   function deleteCard(i) { setCards(cs=>cs.filter((_,ci)=>ci!==i)); setStudyQueue(q=>q.filter(qi=>qi!==i).map(qi=>qi>i?qi-1:qi)); if (editIdx===i) setEditIdx(null) }
 
+  // ── CSV / TSV / text import ─────────────────────────────────────────────────
+  // Supports:
+  //   CSV:  front,back  or  "front","back"
+  //   TSV:  front\tback  (Quizlet / Anki export)
+  //   Simple separators:  front - back  /  front: back
+  //   Unstructured text:  fall through to Nova
+
+  function parseImportText(raw) {
+    const lines = raw.trim().split(/\r?\n/).filter(l => l.trim())
+    if (!lines.length) return null
+
+    const cards = []
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed) continue
+
+      // Tab-separated (Quizlet / Anki)
+      if (trimmed.includes('\t')) {
+        const [front, ...rest] = trimmed.split('\t')
+        const back = rest.join('\t').trim()
+        if (front.trim() && back) cards.push({ front: front.trim(), back })
+        continue
+      }
+
+      // CSV — handle quoted fields
+      if (trimmed.includes(',')) {
+        // Simple quoted CSV: "front","back"
+        const quoted = trimmed.match(/^"([^"]+)"\s*,\s*"([^"]+)"$/)
+        if (quoted) { cards.push({ front: quoted[1].trim(), back: quoted[2].trim() }); continue }
+        // Plain CSV: front,back (split on first comma only)
+        const comma = trimmed.indexOf(',')
+        const front = trimmed.slice(0, comma).trim()
+        const back  = trimmed.slice(comma + 1).trim()
+        if (front && back) { cards.push({ front, back }); continue }
+      }
+
+      // Dash separator: front - back (but not inside a word)
+      const dash = trimmed.match(/^(.+?)\s{1,3}-{1,2}\s{1,3}(.+)$/)
+      if (dash) { cards.push({ front: dash[1].trim(), back: dash[2].trim() }); continue }
+
+      // Colon separator: front: back
+      const colon = trimmed.match(/^([^:]+):\s+(.+)$/)
+      if (colon) { cards.push({ front: colon[1].trim(), back: colon[2].trim() }); continue }
+    }
+
+    return cards.length >= 2 ? cards : null
+  }
+
+  async function handleImport() {
+    const raw = importText.trim()
+    if (!raw) { setImportError('Paste some content to import.'); return }
+    setImportError('')
+
+    // Try to parse as structured data first (no API cost)
+    const parsed = parseImportText(raw)
+    if (parsed) {
+      setCards(parsed)
+      setStudyQueue(parsed.map((_,i) => i))
+      sessionStartRef.current = Date.now()
+      setTopic(parsed[0]?.front?.slice(0,40) || 'Imported deck')
+      if (user) await saveDraft('flashcards', 'Imported deck', { topic:'Imported deck', cards:parsed })
+      return
+    }
+
+    // Unstructured text — hand to Nova to extract cards
+    setTopic(raw.slice(0, 60))
+    await generate(raw)
+  }
+
+  function handleFileUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      setImportText(ev.target.result || '')
+      setImportError('')
+    }
+    reader.readAsText(file)
+    // reset so same file can be re-selected
+    e.target.value = ''
+  }
+
   // ── Generate ────────────────────────────────────────────────────────────────
 
   async function generate(overrideTopic) {
@@ -398,12 +484,48 @@ function FlashcardsPageInner() {
             </div>
 
             {inputTab === 'import' ? (
-              <div style={{ padding:'20px 16px', display:'flex', flexDirection:'column', alignItems:'center', gap:10 }}>
-                <div style={{ width:40, height:40, borderRadius:10, background:'rgba(59,130,246,0.08)', border:'1px solid rgba(59,130,246,0.2)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div>
+                {/* File upload zone */}
+                <div
+                  onClick={()=>fileInputRef.current?.click()}
+                  style={{ margin:'12px 14px 0', padding:'14px', border:'1.5px dashed rgba(59,130,246,0.25)', borderRadius:10, display:'flex', alignItems:'center', gap:12, cursor:'pointer', background:'rgba(59,130,246,0.04)', transition:'all .15s' }}>
+                  <div style={{ width:32, height:32, borderRadius:8, background:'rgba(59,130,246,0.1)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.65)' }}>Upload a file</div>
+                    <div style={{ fontSize:10, color:'rgba(255,255,255,0.28)', marginTop:1 }}>.csv · .tsv · .txt · .md</div>
+                  </div>
+                  <div style={{ marginLeft:'auto', fontSize:11, fontWeight:600, color:'rgba(96,165,250,0.6)', padding:'4px 10px', border:'1px solid rgba(59,130,246,0.25)', borderRadius:6 }}>Browse</div>
                 </div>
-                <p style={{ fontSize:12, color:'var(--c-t2)', textAlign:'center', lineHeight:1.6, margin:0 }}>Drop a CSV, text file, or paste tab-separated terms<br/><span style={{ color:'var(--c-t3)', fontSize:11 }}>Format: front, back (one card per line)</span></p>
-                <textarea value={topic} onChange={e=>setTopic(e.target.value)} rows={4} placeholder="front term, back definition&#10;photosynthesis, process plants use to make food from sunlight&#10;mitosis, cell division producing two identical daughter cells" style={{ width:'100%', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:8, padding:'10px 12px', fontSize:12, color:'#e2e8f0', outline:'none', resize:'none', fontFamily:'inherit', lineHeight:1.6 }}/>
+                <input ref={fileInputRef} type="file" accept=".csv,.tsv,.txt,.md" onChange={handleFileUpload} style={{ display:'none' }}/>
+
+                {/* Divider */}
+                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px' }}>
+                  <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.07)' }}/>
+                  <span style={{ fontSize:10, color:'rgba(255,255,255,0.2)', fontWeight:600 }}>OR PASTE BELOW</span>
+                  <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.07)' }}/>
+                </div>
+
+                {/* Paste area */}
+                <textarea
+                  value={importText}
+                  onChange={e=>{ setImportText(e.target.value); setImportError('') }}
+                  rows={5}
+                  placeholder={'front term, back definition\nphotosynthesis, process plants use to make food\nmitosis, cell division producing two identical cells\n\nAlso supports tab-separated (Quizlet export) and plain text.'}
+                  style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'#e2e8f0', fontFamily:'inherit', fontSize:12, lineHeight:1.7, padding:'0 16px 12px', resize:'none', display:'block' }}
+                />
+
+                {/* Format chips */}
+                <div style={{ padding:'8px 14px 10px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', gap:6, flexWrap:'wrap' }}>
+                  {[['CSV','front, back'],['Quizlet','front\\tback'],['Anki','.txt export'],['Plain text','Nova extracts']].map(([fmt,hint])=>(
+                    <div key={fmt} style={{ padding:'3px 9px', borderRadius:20, fontSize:10, fontWeight:600, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.3)' }}>
+                      <span style={{ color:'rgba(255,255,255,0.5)' }}>{fmt}</span> · {hint}
+                    </div>
+                  ))}
+                </div>
+
+                {importError && <div style={{ padding:'6px 14px 8px', fontSize:11, color:'#f87171' }}>{importError}</div>}
               </div>
             ) : (
               <textarea
@@ -440,15 +562,15 @@ function FlashcardsPageInner() {
           {error && <div style={{ fontSize:12, color:'#f87171', marginTop:8 }}>{error}</div>}
 
           <button
-            onClick={()=>generate()}
-            disabled={loading||!topic.trim()}
-            style={{ width:'100%', padding:'13px', borderRadius:11, border:'none', background:'linear-gradient(135deg,#2563eb,#4f46e5)', color:'#fff', fontSize:13, fontWeight:800, cursor:loading||!topic.trim()?'not-allowed':'pointer', opacity:loading||!topic.trim()?0.55:1, marginTop:11, fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:9, letterSpacing:'-.01em', boxShadow:'0 4px 18px rgba(37,99,235,0.28)', transition:'all .15s' }}>
+            onClick={()=> inputTab==='import' ? handleImport() : generate()}
+            disabled={loading||(inputTab==='import' ? !importText.trim() : !topic.trim())}
+            style={{ width:'100%', padding:'13px', borderRadius:11, border:'none', background:'linear-gradient(135deg,#2563eb,#4f46e5)', color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer', opacity:loading||(inputTab==='import'?!importText.trim():!topic.trim())?0.55:1, marginTop:11, fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:9, letterSpacing:'-.01em', boxShadow:'0 4px 18px rgba(37,99,235,0.28)', transition:'all .15s' }}>
             {loading ? (
               <>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation:'_fcspin .7s linear infinite', flexShrink:0 }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
-                Generating…
+                {inputTab==='import' ? 'Importing…' : 'Generating…'}
               </>
-            ) : 'Generate flashcards →'}
+            ) : inputTab==='import' ? 'Import cards →' : 'Generate flashcards →'}
           </button>
         </div>
 
