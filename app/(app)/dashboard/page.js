@@ -6,7 +6,15 @@ import { supabase } from '@/lib/supabase'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import dynamic from 'next/dynamic'
 
-const MobileDashboard = dynamic(() => import('@/components/dashboard/MobileDashboard'), { ssr: false })
+// Guard the dynamic import — if MobileDashboard doesn't exist or crashes,
+// fall back to the desktop layout rather than white-screening.
+const MobileDashboard = dynamic(
+  () => import('@/components/dashboard/MobileDashboard').catch(() => {
+    // If the component doesn't exist, render null (desktop layout will show instead)
+    return { default: () => null }
+  }),
+  { ssr: false, loading: () => null }
+)
 
 function TodayInHistory() {
   const [events, setEvents] = useState([])
@@ -16,20 +24,20 @@ function TodayInHistory() {
   useEffect(() => {
     const now = new Date(); const m = now.getMonth()+1; const d = now.getDate()
     fetch(`https://en.wikipedia.org/api/rest_v1/feed/onthisday/selected/${m}/${d}`)
-      .then(r=>r.json())
+      .then(r => r.json())
       .then(data => {
-        const BAD = ['kill','killed','murder','assassin','massacre','genocide','execut','suicide','terror','bomb','attack','shot','hung','hanged','beheaded','lynch','slaughter','riot','civil war','world war','holocaust','rape','torture','hostage','hijack','crash killed','died in','casualties','wounded']
+        const BAD = ['kill','killed','murder','assassin','massacre','genocide','execut','suicide','terror','bomb','attack','shot','hung','hanged','beheaded','lynch','slaughter','riot','civil war','world war','holocaust','rape','torture','hostage','hijack']
         const items = (data.selected||[])
-          .filter(e=>e.text&&e.year&&!BAD.some(w=>e.text.toLowerCase().includes(w)))
-          .slice(0,6).map(e=>({year:e.year,text:e.text}))
+          .filter(e => e.text && e.year && !BAD.some(w => e.text.toLowerCase().includes(w)))
+          .slice(0,6).map(e => ({year:e.year, text:e.text}))
         setEvents(items); setLoading(false)
-      }).catch(()=>setLoading(false))
+      }).catch(() => setLoading(false))
   }, [])
 
   useEffect(() => {
-    if (events.length<2) return
-    const t = setInterval(()=>setIdx(i=>(i+1)%events.length), 9000)
-    return ()=>clearInterval(t)
+    if (events.length < 2) return
+    const t = setInterval(() => setIdx(i => (i+1) % events.length), 9000)
+    return () => clearInterval(t)
   }, [events])
 
   const event = events[idx]
@@ -46,18 +54,18 @@ function TodayInHistory() {
       </div>
       {loading ? (
         <div style={{ height:60, display:'flex', alignItems:'center', gap:8 }}>
-          <div style={{ width:20, height:20, borderRadius:'50%', border:'2px solid #fb923c', borderTopColor:'transparent', animation:'spin 0.8s linear infinite' }}/>
+          <div style={{ width:20, height:20, borderRadius:'50%', border:'2px solid #fb923c', borderTopColor:'transparent', animation:'dash-spin 0.8s linear infinite' }}/>
           <span style={{ fontSize:12, color:'rgba(255,255,255,0.3)' }}>Loading today's events…</span>
         </div>
       ) : event ? (
-        <div style={{ animation:'fadeSlide 0.4s ease' }} key={idx}>
+        <div key={idx} style={{ animation:'fadeSlide 0.4s ease' }}>
           <div style={{ display:'inline-block', background:'rgba(251,146,60,0.12)', border:'1px solid rgba(251,146,60,0.2)', borderRadius:6, padding:'2px 8px', fontSize:11, fontWeight:700, color:'#fb923c', marginBottom:8 }}>{event.year}</div>
           <p style={{ fontSize:13, color:'rgba(255,255,255,0.75)', lineHeight:1.55, margin:'0 0 12px' }}>
-            {event.text.length>140?event.text.slice(0,140)+'…':event.text}
+            {event.text.length > 140 ? event.text.slice(0,140)+'…' : event.text}
           </p>
           <div style={{ display:'flex', gap:4 }}>
-            {events.map((_,i)=>(
-              <button key={i} onClick={()=>setIdx(i)}
+            {events.map((_,i) => (
+              <button key={i} onClick={() => setIdx(i)}
                 style={{ width:i===idx?16:5, height:5, borderRadius:3, background:i===idx?'#fb923c':'rgba(255,255,255,0.12)', border:'none', cursor:'pointer', transition:'all 0.25s', padding:0 }}/>
             ))}
           </div>
@@ -70,13 +78,14 @@ function TodayInHistory() {
 }
 
 export default function DashboardPage() {
-  const isMobile = useIsMobile()
-  const { user, profile, loading } = useAuth()
-  const [classes,     setClasses]     = useState([])
-  const [assignments, setAssignments] = useState([])
-  const [dataLoading, setDataLoading] = useState(true)
-  const [dueToday,    setDueToday]    = useState(0)
-  const [continueIdx, setContinueIdx] = useState(0)
+  const isMobile        = useIsMobile()
+  const { user, profile } = useAuth()
+  const [classes,      setClasses]      = useState([])
+  const [assignments,  setAssignments]  = useState([])
+  const [dataLoading,  setDataLoading]  = useState(true)
+  const [dueToday,     setDueToday]     = useState(0)
+  const [continueIdx,  setContinueIdx]  = useState(0)
+  const [mobileFailed, setMobileFailed] = useState(false)
 
   useEffect(() => {
     if (user) loadData()
@@ -88,33 +97,39 @@ export default function DashboardPage() {
     try {
       const sm2 = JSON.parse(localStorage.getItem('ff-sm2')||'{}')
       const now = Date.now()
-      setDueToday(Object.values(sm2).filter(c=>c.nextReview&&c.nextReview<=now).length)
+      setDueToday(Object.values(sm2).filter(c => c.nextReview && c.nextReview <= now).length)
     } catch {}
-    const { data: enroll } = await supabase
-      .from('student_enrollments').select('classroom_id, classrooms(name, subject)').eq('student_id',user.id)
-    if (enroll) setClasses(enroll.map(e=>e.classrooms).filter(Boolean))
-    const { data: hw } = await supabase
-      .from('homework_assignments').select('id, title, due_date, classroom_id')
-      .eq('classroom_id', enroll?.[0]?.classroom_id).order('due_date',{ascending:true}).limit(3)
-    if (hw) setAssignments(hw)
+    try {
+      const { data: enroll } = await supabase
+        .from('student_enrollments').select('classroom_id, classrooms(name, subject)').eq('student_id', user.id)
+      if (enroll) setClasses(enroll.map(e => e.classrooms).filter(Boolean))
+      const { data: hw } = await supabase
+        .from('homework_assignments').select('id, title, due_date, classroom_id')
+        .eq('classroom_id', enroll?.[0]?.classroom_id).order('due_date',{ascending:true}).limit(3)
+      if (hw) setAssignments(hw)
+    } catch {}
     setDataLoading(false)
   }
 
-  if (isMobile) return <MobileDashboard/>
+  // Render mobile view — with fallback in case component doesn't exist
+  if (isMobile && !mobileFailed) {
+    return (
+      <MobileDashboard onError={() => setMobileFailed(true)}/>
+    )
+  }
 
-  const firstName  = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
-  const hour       = new Date().getHours()
-  const greeting   = hour<12?'Good morning':hour<17?'Good afternoon':'Good evening'
-  const nextAsgn   = assignments[0]
-  const dueLabel   = nextAsgn?.due_date ? `Due ${new Date(nextAsgn.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}` : 'No due date'
+  const firstName   = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
+  const hour        = new Date().getHours()
+  const greeting    = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  const nextAsgn    = assignments[0]
+  const dueLabel    = nextAsgn?.due_date
+    ? `Due ${new Date(nextAsgn.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}`
+    : 'No due date'
 
-  // ── Always exactly 3 cards so cycling is always visible ──────────────────
-  // Card 1: most pressing task (assignment → review → general study)
-  // Card 2: Nova (always)
-  // Card 3: secondary action (review if not already shown → my stuff → my progress)
+  // Always exactly 3 cards — cycling is always active
   const continueCards = useMemo(() => {
-    const hasAsgn  = !dataLoading && assignments.length > 0
-    const hasDue   = !dataLoading && dueToday > 0
+    const hasAsgn = !dataLoading && assignments.length > 0
+    const hasDue  = !dataLoading && dueToday > 0
 
     const card1 = hasAsgn
       ? { badge:'Assignment', title:assignments[0].title, sub:dueLabel, href:'/assignments', cta:'Open →' }
@@ -124,32 +139,28 @@ export default function DashboardPage() {
 
     const card2 = { badge:'Nova', title:'Ask Nova anything', sub:'Your AI study assistant is ready', href:'/ai-tutor', cta:'Ask Nova →' }
 
-    // Third card is a different action from card1
     const card3 = hasAsgn && hasDue
       ? { badge:'Review', title:`${dueToday} card${dueToday!==1?'s':''} ready to review`, sub:'Spaced repetition · due now', href:'/flashcards', cta:'Review →' }
       : hasAsgn
-        ? { badge:'My Progress', title:'See how you\'re doing', sub:'Streaks, stats & weak spots', href:'/my-progress', cta:'View →' }
-        : hasDue
-          ? { badge:'Study', title:'Explore your study tools', sub:'Flashcards, quizzes, guides & more', href:'/study', cta:'Study now →' }
-          : { badge:'My Stuff', title:'Browse saved content', sub:'Notes, decks and study guides', href:'/my-stuff', cta:'Open →' }
+        ? { badge:'My Progress', title:"See how you're doing", sub:'Streaks, stats & weak spots', href:'/my-progress', cta:'View →' }
+        : { badge:'My Stuff', title:'Browse saved content', sub:'Notes, decks and study guides', href:'/my-stuff', cta:'Open →' }
 
     return [card1, card2, card3]
   }, [assignments, dueToday, dueLabel, dataLoading])
 
-  // Auto-cycle every 5s — always has 3 cards so this always runs
   useEffect(() => {
-    const t = setInterval(()=>setContinueIdx(i=>(i+1)%3), 5000)
-    return ()=>clearInterval(t)
+    const t = setInterval(() => setContinueIdx(i => (i+1) % 3), 5000)
+    return () => clearInterval(t)
   }, [])
 
-  const cc  = continueCards[continueIdx]
+  const cc   = continueCards[continueIdx]
   const card = { background:'rgba(255,255,255,0.025)', border:'0.5px solid rgba(255,255,255,0.07)', borderRadius:16, overflow:'hidden' }
 
   return (
     <div style={{ padding:'28px 28px 80px', maxWidth:900, margin:'0 auto' }}>
       <style>{`
         @keyframes dash-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes dash-spin{to{transform:rotate(360deg)}}
         @keyframes fadeSlide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
         .dash-card{animation:dash-in 0.3s cubic-bezier(.4,0,.2,1) both}
       `}</style>
@@ -160,27 +171,26 @@ export default function DashboardPage() {
         <div style={{ fontSize:26, fontWeight:600, color:'rgba(255,255,255,0.88)', letterSpacing:'-0.03em' }}>{firstName}</div>
       </div>
 
-      {/* ── 1. Continue card — always 3 distinct cards, cycling every 5s ── */}
+      {/* Continue card — always 3 cards, cycles every 5s */}
       <div className="dash-card" style={{ ...card, marginBottom:12, animationDelay:'0.05s', position:'relative', minHeight:110 }}>
         <canvas id="dash-particle-canvas" style={{ position:'absolute', inset:0, width:'100%', height:'100%', borderRadius:16 }}/>
         <div style={{ position:'relative', zIndex:1, padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:'rgba(255,255,255,0.1)', border:'0.5px solid rgba(255,255,255,0.18)', borderRadius:20, padding:'3px 9px', marginBottom:8 }}>
               <div style={{ width:5, height:5, borderRadius:'50%', background:'#c4b5fd', boxShadow:'0 0 5px #c4b5fd' }}/>
-              <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'rgba(255,255,255,0.8)', transition:'all 0.3s' }}>{cc.badge}</span>
+              <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'rgba(255,255,255,0.8)' }}>{cc.badge}</span>
             </div>
-            <div style={{ fontSize:16, fontWeight:600, color:'#fff', marginBottom:4, letterSpacing:'-0.02em', transition:'all 0.3s' }}>{cc.title}</div>
-            <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)', transition:'all 0.3s' }}>{cc.sub}</div>
+            <div style={{ fontSize:16, fontWeight:600, color:'#fff', marginBottom:4, letterSpacing:'-0.02em' }}>{cc.title}</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{cc.sub}</div>
           </div>
           <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8, flexShrink:0 }}>
             <Link href={cc.href}
               style={{ height:32, padding:'0 14px', background:'rgba(99,102,241,0.25)', border:'0.5px solid rgba(99,102,241,0.4)', borderRadius:9, display:'flex', alignItems:'center', fontSize:12, fontWeight:600, color:'#c4b5fd', textDecoration:'none', whiteSpace:'nowrap' }}>
               {cc.cta}
             </Link>
-            {/* Dot indicators */}
             <div style={{ display:'flex', gap:4 }}>
-              {continueCards.map((_,i)=>(
-                <button key={i} onClick={()=>setContinueIdx(i)}
+              {continueCards.map((_,i) => (
+                <button key={i} onClick={() => setContinueIdx(i)}
                   style={{ width:i===continueIdx?14:5, height:5, borderRadius:3, background:i===continueIdx?'#c4b5fd':'rgba(255,255,255,0.2)', border:'none', cursor:'pointer', transition:'all 0.3s', padding:0 }}/>
               ))}
             </div>
@@ -189,54 +199,49 @@ export default function DashboardPage() {
       </div>
       <ParticleInit/>
 
-      {/* ── 2. Stats row ── */}
+      {/* Stats row */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
-
-        {/* Due for review */}
         <div className="dash-card" style={{ ...card, padding:'16px 20px', animationDelay:'0.1s' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
             <span style={{ fontSize:10, fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:'rgba(255,255,255,0.25)' }}>Due for review</span>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.4" strokeLinecap="round"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 4v4l3 1.5"/></svg>
           </div>
           <div style={{ fontSize:32, fontWeight:600, color:dueToday>0?'#c4b5fd':'rgba(255,255,255,0.35)', letterSpacing:'-0.04em', lineHeight:1, marginBottom:12 }}>{dueToday}</div>
-          {dueToday>0&&(
-            <Link href="/flashcards" style={{ display:'inline-flex', alignItems:'center', gap:4, height:28, padding:'0 12px', background:'rgba(99,102,241,0.15)', border:'0.5px solid rgba(99,102,241,0.3)', borderRadius:8, fontSize:11, fontWeight:600, color:'#c4b5fd', textDecoration:'none' }}>Review now →</Link>
-          )}
+          {dueToday>0 && <Link href="/flashcards" style={{ display:'inline-flex', alignItems:'center', height:28, padding:'0 12px', background:'rgba(99,102,241,0.15)', border:'0.5px solid rgba(99,102,241,0.3)', borderRadius:8, fontSize:11, fontWeight:600, color:'#c4b5fd', textDecoration:'none' }}>Review now →</Link>}
         </div>
 
-        {/* Class activity */}
         <div className="dash-card" style={{ ...card, padding:'16px 20px', animationDelay:'0.13s' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
             <span style={{ fontSize:10, fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:'rgba(255,255,255,0.25)' }}>Class activity</span>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.4" strokeLinecap="round"><path d="M8 1l7 3.5-7 3.5-7-3.5zm-5 5.5v4c0 2 2.2 3 5 3s5-1 5-3V10"/></svg>
           </div>
-          {classes.length>0?(
+          {classes.length > 0 ? (
             <>
               <div style={{ display:'flex', gap:5, flexWrap:'wrap', marginBottom:8 }}>
-                {classes.slice(0,3).map((cls,i)=>{
+                {classes.slice(0,3).map((cls,i) => {
                   const colors=['#c4b5fd','#34d399','#60a5fa']
                   return <span key={i} style={{ fontSize:11, fontWeight:600, padding:'3px 8px', borderRadius:6, background:colors[i%3]+'22', border:`0.5px solid ${colors[i%3]}44`, color:colors[i%3] }}>{cls.name||cls.subject||'Class'}</span>
                 })}
               </div>
               <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{classes.length} class{classes.length!==1?'es':''} enrolled</div>
             </>
-          ):(
+          ) : (
             <>
               <div style={{ fontSize:13, color:'rgba(255,255,255,0.35)', marginBottom:8 }}>No classes yet</div>
-              <Link href="/student-portal" style={{ display:'inline-flex', alignItems:'center', gap:4, height:28, padding:'0 12px', background:'rgba(20,184,166,0.12)', border:'0.5px solid rgba(20,184,166,0.3)', borderRadius:8, fontSize:11, fontWeight:600, color:'#34d399', textDecoration:'none' }}>Join a class →</Link>
+              <Link href="/student-portal" style={{ display:'inline-flex', alignItems:'center', height:28, padding:'0 12px', background:'rgba(20,184,166,0.12)', border:'0.5px solid rgba(20,184,166,0.3)', borderRadius:8, fontSize:11, fontWeight:600, color:'#34d399', textDecoration:'none' }}>Join a class →</Link>
             </>
           )}
         </div>
       </div>
 
-      {/* ── 3. Nova suggestion ── */}
+      {/* Nova suggestion */}
       <div className="dash-card" style={{ ...card, padding:'16px 20px', marginBottom:12, animationDelay:'0.16s', display:'flex', alignItems:'center', gap:14 }}>
         <div style={{ width:38, height:38, borderRadius:12, background:'rgba(139,92,246,0.18)', border:'0.5px solid rgba(139,92,246,0.3)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#c4b5fd" strokeWidth="1.4" strokeLinecap="round"><circle cx="8" cy="8" r="7"/><circle cx="8" cy="8" r="4"/><circle cx="8" cy="8" r="1.5" fill="#c4b5fd" stroke="none"/></svg>
         </div>
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontSize:13, fontWeight:500, color:'rgba(255,255,255,0.8)', marginBottom:2 }}>
-            {dataLoading?'Nova is ready…':assignments.length>0?`Continue working on "${assignments[0].title.slice(0,30)}${assignments[0].title.length>30?'…':''}"` : 'Start studying — ask Nova anything'}
+            {dataLoading ? 'Nova is ready…' : assignments.length > 0 ? `Continue working on "${assignments[0].title.slice(0,30)}${assignments[0].title.length>30?'…':''}"` : 'Start studying — ask Nova anything'}
           </div>
           <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>Your AI tutor is always available</div>
         </div>
@@ -245,7 +250,7 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* ── 4. This Day in History ── */}
+      {/* This Day in History */}
       <div className="dash-card" style={{ animationDelay:'0.19s' }}>
         <TodayInHistory/>
       </div>
@@ -256,22 +261,23 @@ export default function DashboardPage() {
 function ParticleInit() {
   useEffect(() => {
     const canvas = document.getElementById('dash-particle-canvas')
-    if (!canvas||canvas._init) return
+    if (!canvas || canvas._init) return
     canvas._init = true
     const ctx = canvas.getContext('2d')
     const W = canvas.offsetWidth, H = canvas.offsetHeight
     canvas.width = W; canvas.height = H
-    const pts = Array.from({length:22},()=>({
-      x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.15,
-      r:Math.random()*1.2+.4,col:`hsl(${250+Math.random()*40},70%,75%)`
+    const pts = Array.from({length:22}, () => ({
+      x:Math.random()*W, y:Math.random()*H,
+      vx:(Math.random()-.5)*.3, vy:(Math.random()-.5)*.15,
+      r:Math.random()*1.2+.4, col:`hsl(${250+Math.random()*40},70%,75%)`
     }))
     let raf
     function draw() {
       ctx.clearRect(0,0,W,H)
-      ctx.fillStyle='rgba(12,10,30,0.82)';ctx.fillRect(0,0,W,H)
+      ctx.fillStyle='rgba(12,10,30,0.82)'; ctx.fillRect(0,0,W,H)
       const g=ctx.createRadialGradient(W*.8,H*.2,0,W*.8,H*.2,110)
-      g.addColorStop(0,'rgba(99,102,241,0.35)');g.addColorStop(1,'transparent')
-      ctx.fillStyle=g;ctx.fillRect(0,0,W,H)
+      g.addColorStop(0,'rgba(99,102,241,0.35)'); g.addColorStop(1,'transparent')
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H)
       for(let i=0;i<pts.length;i++){
         for(let j=i+1;j<pts.length;j++){
           const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy)
@@ -286,7 +292,7 @@ function ParticleInit() {
       raf=requestAnimationFrame(draw)
     }
     draw()
-    return()=>cancelAnimationFrame(raf)
-  },[])
+    return () => cancelAnimationFrame(raf)
+  }, [])
   return null
 }
