@@ -1,5 +1,6 @@
 import './globals.css'
 import PageTransition from '@/components/PageTransition'
+import NavigationProgress from '@/components/NavigationProgress'
 
 export const metadata = {
   // PRE-LAUNCH: Remove robots line on June 1st before deploying
@@ -42,6 +43,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body suppressHydrationWarning>
+        <NavigationProgress />
         <PageTransition>
           {children}
         </PageTransition>
