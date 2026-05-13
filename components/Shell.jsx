@@ -7,10 +7,8 @@ import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import { novaStream } from '@/lib/api'
 import { useIsMobile } from '@/hooks/useIsMobile'
-import dynamic from 'next/dynamic'
+import MobileShell from '@/components/MobileShell'
 import StickyNotes from '@/components/StickyNotes'
-
-const MobileShell = dynamic(() => import('@/components/MobileShell'), { ssr: false })
 
 // ── Accent system ─────────────────────────────────────────────────────────────
 const ACCENT_MAP = {
@@ -394,7 +392,9 @@ export default function Shell({ children }) {
   ]
   const filteredCmds = cmdQuery ? CMD_ITEMS.filter(c=>c.label.toLowerCase().includes(cmdQuery.toLowerCase())) : CMD_ITEMS
 
-  if (isMobile) return <><MobileShell>{children}</MobileShell><StickyNotes/></>
+  // StickyNotes intentionally excluded from mobile — backdrop-filter:blur causes
+  // GPU compositing lag on iOS. Notes UX (drag, resize) doesn't suit mobile anyway.
+  if (isMobile) return <MobileShell>{children}</MobileShell>
 
   return (
     <div className="ff-desktop-shell" style={{ display:'flex', height:'100dvh', overflow:'hidden', background:'#04030c', position:'relative' }}>
