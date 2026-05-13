@@ -1,11 +1,14 @@
 'use client'
-// Two fixes:
-// 1. CRASH: canvas ref={el => el && initBg(el)} fired BEFORE the dangerouslySetInnerHTML
-//    script tag ran on mobile (iOS strict execution order). Moved initBg into a useEffect
-//    with a useRef — now it's always defined before it's called.
-// 2. SIGN-IN DEFAULT: useState('signup') + useEffect URL read caused a flash where
-//    /auth?tab=signin briefly showed signup. Fixed by reading URL params synchronously
-//    inside the useState initializer.
+// Fixes applied:
+// 1. HYDRATION CRASH (#418/#422): The previous fix read window.location.search inside
+//    useState() initializer → server returns 'signup', client returns 'signin' for
+//    /auth?tab=signin → mismatch → crash. Fixed: useState stays 'signup' on both
+//    server and client. URL param is read in useEffect (after hydration), safe.
+// 2. ORIGINAL CRASH (#425): dangerouslySetInnerHTML on <script> tag caused server/client
+//    HTML mismatch (Next.js strips/defers script content in SSR). Fixed: WebGL moved
+//    entirely into a useEffect with useRef — no script tag, no mismatch.
+// 3. WEBGL SAFETY: Entire WebGL setup wrapped in try/catch so any GPU-specific failure
+//    (null program, shader compile error, etc.) fails silently instead of crashing.
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -13,15 +16,10 @@ import { supabase } from '@/lib/supabase'
 export default function AuthPage() {
   const router = useRouter()
 
-  // Read URL param synchronously — no flash, no useEffect race
-  const [tab, setTab] = useState(() => {
-    if (typeof window === 'undefined') return 'signup'
-    return new URLSearchParams(window.location.search).get('tab') === 'signin'
-      ? 'signin'
-      : 'signup'
-  })
-
-  const [step,     setStep]     = useState('form')    // 'form' | 'role'
+  // IMPORTANT: must be 'signup' here — same value on server AND client during hydration.
+  // URL params are read in useEffect below (after hydration) to avoid mismatch.
+  const [tab,      setTab]      = useState('signup')
+  const [step,     setStep]     = useState('form')
   const [role,     setRole]     = useState('student')
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
@@ -29,71 +27,89 @@ export default function AuthPage() {
   const [error,    setError]    = useState('')
   const [success,  setSuccess]  = useState('')
 
-  // canvas ref — initBg defined here so it's always in scope
   const bgRef = useRef(null)
 
-  // If already logged in, redirect to dashboard
+  // Read URL params AFTER hydration — safe, no mismatch
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('tab') === 'signin') setTab('signin')
+  }, [])
+
+  // Redirect if already logged in
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) router.replace('/dashboard')
-    })
+    }).catch(() => {})  // ignore stale refresh token errors
   }, [])
 
-  // WebGL fluid background — properly scoped, with cleanup
+  // WebGL fluid background — in useEffect so it's never in SSR HTML (no hydration mismatch)
+  // Entire setup in try/catch so any GPU failure is silent (background is decorative)
   useEffect(() => {
     const canvas = bgRef.current
     if (!canvas || canvas._init) return
     canvas._init = true
 
-    const gl = canvas.getContext('webgl')
-    if (!gl) return
+    try {
+      const gl = canvas.getContext('webgl')
+      if (!gl) return
 
-    let running = true
+      let running = true
 
-    function resize() {
-      canvas.width  = innerWidth
-      canvas.height = innerHeight
-      gl.viewport(0, 0, canvas.width, canvas.height)
-    }
-    resize()
-    window.addEventListener('resize', resize)
+      const resize = () => {
+        canvas.width  = innerWidth
+        canvas.height = innerHeight
+        gl.viewport(0, 0, canvas.width, canvas.height)
+      }
+      resize()
+      window.addEventListener('resize', resize)
 
-    const VS = `attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}`
-    const FS = `precision highp float;uniform float uT;uniform vec2 uR;varying vec2 vU;vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}float fbm(vec2 p){float v=0.,a=.5;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<5;i++){v+=a*n(p);p=r*p*2.01;a*=.5;}return v;}void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.05;vec2 q=vec2(fbm(uv*1.6+t),fbm(uv*1.6+vec2(5.2,1.3)+t*.8));vec2 r=vec2(fbm(uv*1.6+3.4*q+t*.6),fbm(uv*1.6+3.4*q+vec2(8.3,2.8)+t*.45));float f=fbm(uv*1.6+3.4*r+t*.3);f=clamp(f,0.,1.);vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.8,.0,1.);col+=.01;gl_FragColor=vec4(col,1.);}`
+      const VS = `attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}`
+      const FS = `precision highp float;uniform float uT;uniform vec2 uR;varying vec2 vU;vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}float fbm(vec2 p){float v=0.,a=.5;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<5;i++){v+=a*n(p);p=r*p*2.01;a*=.5;}return v;}void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.05;vec2 q=vec2(fbm(uv*1.6+t),fbm(uv*1.6+vec2(5.2,1.3)+t*.8));vec2 r=vec2(fbm(uv*1.6+3.4*q+t*.6),fbm(uv*1.6+3.4*q+vec2(8.3,2.8)+t*.45));float f=fbm(uv*1.6+3.4*r+t*.3);f=clamp(f,0.,1.);vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.8,.0,1.);col+=.01;gl_FragColor=vec4(col,1.);}`
 
-    function mkS(t, s) { const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh); return sh }
-    const prog = gl.createProgram()
-    gl.attachShader(prog, mkS(gl.VERTEX_SHADER, VS))
-    gl.attachShader(prog, mkS(gl.FRAGMENT_SHADER, FS))
-    gl.linkProgram(prog)
+      const mkS = (t, s) => {
+        const sh = gl.createShader(t)
+        if (!sh) throw new Error('shader null')
+        gl.shaderSource(sh, s)
+        gl.compileShader(sh)
+        return sh
+      }
 
-    const buf = gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW)
+      const prog = gl.createProgram()
+      if (!prog) throw new Error('program null')
+      gl.attachShader(prog, mkS(gl.VERTEX_SHADER, VS))
+      gl.attachShader(prog, mkS(gl.FRAGMENT_SHADER, FS))
+      gl.linkProgram(prog)
 
-    const uT = gl.getUniformLocation(prog, 'uT')
-    const uR = gl.getUniformLocation(prog, 'uR')
-    const aP = gl.getAttribLocation(prog, 'aP')
-    let t = 0
-
-    ;(function draw() {
-      if (!running) return
-      requestAnimationFrame(draw)
-      t += 0.01
-      gl.clearColor(0.02, 0.03, 0.06, 1)
-      gl.clear(gl.COLOR_BUFFER_BIT)
-      gl.useProgram(prog)
-      gl.uniform1f(uT, t)
-      gl.uniform2f(uR, canvas.width, canvas.height)
+      const buf = gl.createBuffer()
       gl.bindBuffer(gl.ARRAY_BUFFER, buf)
-      gl.enableVertexAttribArray(aP)
-      gl.vertexAttribPointer(aP, 2, gl.FLOAT, false, 0, 0)
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-    })()
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW)
 
-    return () => {
-      running = false
-      window.removeEventListener('resize', resize)
+      const uT = gl.getUniformLocation(prog, 'uT')
+      const uR = gl.getUniformLocation(prog, 'uR')
+      const aP = gl.getAttribLocation(prog, 'aP')
+      let t = 0
+
+      ;(function draw() {
+        if (!running) return
+        requestAnimationFrame(draw)
+        t += 0.01
+        gl.clearColor(0.02, 0.03, 0.06, 1)
+        gl.clear(gl.COLOR_BUFFER_BIT)
+        gl.useProgram(prog)
+        gl.uniform1f(uT, t)
+        gl.uniform2f(uR, canvas.width, canvas.height)
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+        gl.enableVertexAttribArray(aP)
+        gl.vertexAttribPointer(aP, 2, gl.FLOAT, false, 0, 0)
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+      })()
+
+      return () => {
+        running = false
+        window.removeEventListener('resize', resize)
+      }
+    } catch {
+      // WebGL not available or failed — background is decorative, safe to skip
     }
   }, [])
 
@@ -110,50 +126,52 @@ export default function AuthPage() {
 
   async function handleRoleConfirm() {
     setError(''); setLoading(true)
-    const { error } = await supabase.auth.signUp({
-      email: email.trim(), password,
-      options: {
-        emailRedirectTo: `${location.origin}/dashboard`,
-        data: { role },
-      },
-    })
-    setLoading(false)
-    if (error) { setStep('form'); return setError(error.message) }
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session?.user?.id) {
-      await supabase.from('profiles').upsert({ id: session.user.id, role }, { onConflict: 'id' })
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: email.trim(), password,
+        options: { emailRedirectTo: `${location.origin}/dashboard`, data: { role } },
+      })
+      if (error) { setStep('form'); setError(error.message); setLoading(false); return }
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user?.id) {
+        await supabase.from('profiles').upsert({ id: session.user.id, role }, { onConflict: 'id' })
+      }
+      setSuccess('Check your email to confirm your account, then sign in.')
+      setTab('signin'); setStep('form')
+    } catch (e) {
+      setError('Something went wrong. Please try again.')
     }
-    setSuccess('Check your email to confirm your account, then sign in.')
-    setTab('signin'); setStep('form')
+    setLoading(false)
   }
 
   async function handleSignIn(e) {
     e.preventDefault()
     setError(''); setSuccess(''); setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
-    setLoading(false)
-    if (error) return setError(error.message)
-    router.replace('/dashboard')
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+      if (error) { setError(error.message); setLoading(false); return }
+      router.replace('/dashboard')
+    } catch (e) {
+      setError('Something went wrong. Please try again.')
+      setLoading(false)
+    }
   }
 
   const isSignIn = tab === 'signin'
 
   const ROLES = [
     {
-      id:'student', label:'Student',
-      desc:'Flashcards, quizzes, Nova AI tutor, study guides',
+      id:'student', label:'Student', desc:'Flashcards, quizzes, Nova AI tutor, study guides',
       color:'#6366f1', bg:'rgba(99,102,241,0.12)', border:'rgba(99,102,241,0.35)',
       icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>,
     },
     {
-      id:'teacher', label:'Teacher',
-      desc:'Live quizzes, lesson plans, class rosters, assignments',
+      id:'teacher', label:'Teacher', desc:'Live quizzes, lesson plans, class rosters, assignments',
       color:'#f59e0b', bg:'rgba(245,158,11,0.12)', border:'rgba(245,158,11,0.35)',
       icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="1"/><path d="M8 21h8M12 17v4"/></svg>,
     },
     {
-      id:'parent', label:'Parent',
-      desc:"Track your child's quiz scores and study activity",
+      id:'parent', label:'Parent', desc:"Track your child's quiz scores and study activity",
       color:'#34d399', bg:'rgba(52,211,153,0.12)', border:'rgba(52,211,153,0.35)',
       icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>,
     },
@@ -206,7 +224,7 @@ export default function AuthPage() {
         .trial-badge svg{width:12px;height:12px;fill:none;stroke:rgba(255,255,255,0.25);stroke-width:1.5;stroke-linecap:round}
       `}</style>
 
-      {/* Background — no dangerouslySetInnerHTML, driven by useEffect above */}
+      {/* Canvas with ref — no script tag, no SSR mismatch */}
       <canvas id="auth-bg" ref={bgRef}/>
 
       <div className="auth-wrap">
@@ -225,19 +243,19 @@ export default function AuthPage() {
           <div className="auth-nav-right">
             {isSignIn
               ? <>New here? <a href="/auth">Sign up free</a></>
-              : <>Already have an account? <a href="/auth?tab=signin">Sign in</a></>
-            }
+              : <>Already have an account? <a href="/auth?tab=signin">Sign in</a></>}
           </div>
         </nav>
 
         <div className="auth-main">
           <div className="auth-card">
             <div className="auth-tabs">
-              <button className={`auth-tab${!isSignIn?' active':''}`} onClick={() => { setTab('signup'); setStep('form'); setError(''); setSuccess('') }}>Sign up</button>
-              <button className={`auth-tab${isSignIn?' active':''}`}  onClick={() => { setTab('signin'); setStep('form'); setError(''); setSuccess('') }}>Sign in</button>
+              <button className={`auth-tab${!isSignIn?' active':''}`}
+                onClick={() => { setTab('signup'); setStep('form'); setError(''); setSuccess('') }}>Sign up</button>
+              <button className={`auth-tab${isSignIn?' active':''}`}
+                onClick={() => { setTab('signin'); setStep('form'); setError(''); setSuccess('') }}>Sign in</button>
             </div>
 
-            {/* Role selector — signup step 2 */}
             {!isSignIn && step === 'role' ? (
               <>
                 <div className="auth-title">I am signing up as a…</div>
@@ -246,13 +264,12 @@ export default function AuthPage() {
                 <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
                   {ROLES.map(r => (
                     <div key={r.id} onClick={() => setRole(r.id)}
-                      style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 16px', borderRadius:14,
+                      style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 16px', borderRadius:14, cursor:'pointer', transition:'all 0.15s',
                         border:`1.5px solid ${role===r.id ? r.border : 'rgba(255,255,255,0.09)'}`,
-                        background: role===r.id ? r.bg : 'rgba(255,255,255,0.03)',
-                        cursor:'pointer', transition:'all 0.15s' }}>
-                      <div style={{ width:42, height:42, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
+                        background: role===r.id ? r.bg : 'rgba(255,255,255,0.03)' }}>
+                      <div style={{ width:42, height:42, borderRadius:12, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.15s',
                         background: role===r.id ? r.bg : 'rgba(255,255,255,0.06)',
-                        color: role===r.id ? r.color : 'rgba(255,255,255,0.35)', transition:'all 0.15s' }}>
+                        color: role===r.id ? r.color : 'rgba(255,255,255,0.35)' }}>
                         {r.icon}
                       </div>
                       <div style={{ flex:1 }}>
@@ -304,8 +321,7 @@ export default function AuthPage() {
                 <div className="auth-bottom">
                   {isSignIn
                     ? <>Don't have an account? <a href="/auth">Sign up free</a></>
-                    : <>Already have an account? <a href="/auth?tab=signin">Sign in</a></>
-                  }
+                    : <>Already have an account? <a href="/auth?tab=signin">Sign in</a></>}
                 </div>
                 {!isSignIn && (
                   <div className="trial-badge">
