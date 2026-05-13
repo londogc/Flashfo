@@ -5,29 +5,36 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const THEMES = [
-  { id:'light', label:'Light', icon:'M8 1v1M8 14v1M1 8h1M14 8h1M3 3l.7.7M12.3 12.3l.7.7M3 13l.7-.7M12.3 3.7l.7-.7M11 8a3 3 0 11-6 0 3 3 0 016 0z' },
-  { id:'dark',  label:'Dark',  icon:'M13 8.5A5.5 5.5 0 016 2a6 6 0 100 12 5.5 5.5 0 007-5.5z' },
-  { id:'system',label:'System',icon:'M2 3h12v10H2zm0 10h12M8 13v2' },
+  { id:'light',  label:'Light',  icon:'M8 1v1M8 14v1M1 8h1M14 8h1M3 3l.7.7M12.3 12.3l.7.7M3 13l.7-.7M12.3 3.7l.7-.7M11 8a3 3 0 11-6 0 3 3 0 016 0z' },
+  { id:'dark',   label:'Dark',   icon:'M13 8.5A5.5 5.5 0 016 2a6 6 0 100 12 5.5 5.5 0 007-5.5z' },
+  { id:'system', label:'System', icon:'M2 3h12v10H2zm0 10h12M8 13v2' },
 ]
+
+const GRADE_OPTIONS = ['K','1','2','3','4','5','6','7','8','9','10','11','12','College / University','Graduate School','Other']
 
 export default function SettingsPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [profile, setProfile] = useState({ full_name:'', grade_level:'', role:'student' })
-  const [theme, setTheme] = useState('system')
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [avatarUrl, setAvatarUrl] = useState(null)
-  const [bannerUrl, setBannerUrl] = useState(null)
+
+  const [profile,    setProfile]    = useState({ full_name:'', grade_level:'', role:'student' })
+  const [theme,      setTheme]      = useState('system')
+  const [saving,     setSaving]     = useState(false)
+  const [saved,      setSaved]      = useState(false)
+  const [saveError,  setSaveError]  = useState('')
+  const [loading,    setLoading]    = useState(true)
+  const [avatarUrl,  setAvatarUrl]  = useState(null)
+  const [bannerUrl,  setBannerUrl]  = useState(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [bannerUploading, setBannerUploading] = useState(false)
-  const [linkCodeVal, setLinkCodeVal] = useState('')
-  const [generatingCode, setGeneratingCode] = useState(false)
-  const [linkCopied, setLinkCopied] = useState(false)
-  const [regen, setRegen] = useState(false)
-  const avatarRef = useRef(null)
-  const bannerRef = useRef(null)
+  const [linkCodeVal,     setLinkCodeVal]     = useState('')
+  const [generatingCode,  setGeneratingCode]  = useState(false)
+  const [linkCopied,      setLinkCopied]      = useState(false)
+  const [regen,           setRegen]           = useState(false)
+
+  const avatarRef    = useRef(null)
+  const bannerRef    = useRef(null)
+  // Track original role so we know if it changed and need a page reload
+  const originalRole = useRef('student')
 
   useEffect(() => {
     if (user) loadProfile()
@@ -44,6 +51,7 @@ export default function SettingsPage() {
       setAvatarUrl(data.avatar_url || null)
       setBannerUrl(data.banner_url || null)
       if (data.link_code) setLinkCodeVal(data.link_code)
+      originalRole.current = data.role || 'student'
     }
     setLoading(false)
   }
@@ -71,21 +79,49 @@ export default function SettingsPage() {
 
   function applyTheme(t, store = true) {
     const root = document.documentElement
-    if (t === 'dark') root.classList.add('dark')
-    else if (t === 'light') root.classList.remove('dark')
+    if (t === 'dark')        root.classList.add('dark')
+    else if (t === 'light')  root.classList.remove('dark')
     else {
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) root.classList.add('dark')
       else root.classList.remove('dark')
     }
-    if (store) localStorage.setItem('flashfo-theme', t)
+    if (store) { localStorage.setItem('flashfo-theme', t); setTheme(t) }
   }
 
   async function save() {
     if (!user) return
     setSaving(true)
-    await supabase.from('profiles').upsert({ id: user.id, ...profile })
-    setSaving(false); setSaved(true)
+    setSaveError('')
+
+    // Use update() not upsert() — profile row always exists after sign-up
+    // upsert can silently fail if RLS only permits UPDATE and not INSERT
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        full_name:   profile.full_name,
+        grade_level: profile.grade_level,
+        role:        profile.role,
+      })
+      .eq('id', user.id)
+
+    setSaving(false)
+
+    if (error) {
+      // Surface the actual Supabase error so we know what's wrong
+      setSaveError(error.message || 'Save failed. Check your Supabase RLS policies allow profile updates.')
+      return
+    }
+
+    setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+
+    // Role changed — must do a hard reload so Shell re-reads the updated profile
+    // and shows the correct nav (student vs teacher).
+    // router.push() alone won't do it because useAuth caches the profile in memory.
+    if (profile.role !== originalRole.current) {
+      originalRole.current = profile.role
+      setTimeout(() => { window.location.href = '/dashboard' }, 700)
+    }
   }
 
   async function signOut() {
@@ -93,7 +129,24 @@ export default function SettingsPage() {
     router.push('/')
   }
 
-  const GRADE_OPTIONS = ['K','1','2','3','4','5','6','7','8','9','10','11','12','College / University','Graduate School','Other']
+  const uploadMedia = async (file, type) => {
+    if (!user || !file) return
+    const setter    = type === 'avatar' ? setAvatarUploading : setBannerUploading
+    const urlSetter = type === 'avatar' ? setAvatarUrl       : setBannerUrl
+    const field     = type === 'avatar' ? 'avatar_url'       : 'banner_url'
+    setter(true)
+    try {
+      const ext    = file.name.split('.').pop()
+      const path   = user.id + '/' + type + '.' + ext
+      const bucket = type === 'avatar' ? 'avatars' : 'banners'
+      const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, { upsert:true, contentType: file.type })
+      if (upErr) throw upErr
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path)
+      urlSetter(data.publicUrl)
+      await supabase.from('profiles').update({ [field]: data.publicUrl }).eq('id', user.id)
+    } catch(e) { console.error(e) }
+    setter(false)
+  }
 
   if (authLoading || loading) return (
     <div className="p-6 flex items-center justify-center min-h-64">
@@ -109,15 +162,15 @@ export default function SettingsPage() {
   )
 
   return (
-    <div className="p-6 max-w-2xl mx-auto w-full" style={{ paddingBottom: 100 }}>
+    <div className="p-6 max-w-2xl mx-auto w-full" style={{ paddingBottom:100 }}>
       <h1 className="text-2xl font-bold text-t1 tracking-tight mb-6">Settings</h1>
 
       {/* Profile */}
       <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
         <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-4">Profile</h2>
-        {/* ── Banner ── */}
-        <div className="relative mb-4 cursor-pointer rounded-xl overflow-hidden" style={{ height: 100 }}
-          onClick={() => bannerRef.current?.click()}>
+
+        {/* Banner */}
+        <div className="relative mb-4 cursor-pointer rounded-xl overflow-hidden" style={{ height:100 }} onClick={() => bannerRef.current?.click()}>
           {bannerUrl
             ? <img src={bannerUrl} alt="banner" className="w-full h-full object-cover"/>
             : <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-surface2 border border-dashed border-line">
@@ -128,7 +181,7 @@ export default function SettingsPage() {
         </div>
         <input ref={bannerRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) uploadMedia(e.target.files[0], 'banner') }}/>
 
-        {/* ── Avatar + Name ── */}
+        {/* Avatar + name */}
         <div className="flex items-center gap-4 mb-5">
           <div className="relative cursor-pointer flex-shrink-0" onClick={() => avatarRef.current?.click()}>
             {avatarUrl
@@ -151,26 +204,29 @@ export default function SettingsPage() {
         </div>
         <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) uploadMedia(e.target.files[0], 'avatar') }}/>
 
-        {/* ── Form fields ── */}
+        {/* Form fields */}
         <div className="space-y-4">
           <div>
             <label className="text-[11px] font-bold text-t3 uppercase tracking-wider block mb-1.5">Full Name</label>
-            <input value={profile.full_name} onChange={e => setProfile(p => ({...p, full_name: e.target.value}))}
-              placeholder="Your full name"
+            <input value={profile.full_name} onChange={e => setProfile(p => ({...p, full_name: e.target.value}))} placeholder="Your full name"
               className="w-full h-10 px-3 rounded-xl bg-surface2 border border-line text-sm text-t1 outline-none focus:border-blue-500 transition-colors"/>
           </div>
 
           <div>
             <label className="text-[11px] font-bold text-t3 uppercase tracking-wider block mb-1.5">Role</label>
             <div className="flex gap-2">
-              {['student','teacher'].map(r => (
+              {['student','teacher','parent'].map(r => (
                 <button key={r} onClick={() => setProfile(p => ({...p, role: r}))}
-                  className={'flex-1 h-10 rounded-xl text-sm font-semibold border transition-colors ' +
-                    (profile.role === r ? 'bg-blue-600 border-blue-600 text-white' : 'bg-surface2 border-line text-t2 hover:border-blue-500')}>
+                  className={'flex-1 h-10 rounded-xl text-sm font-semibold border transition-colors ' + (profile.role === r ? 'bg-blue-600 border-blue-600 text-white' : 'bg-surface2 border-line text-t2 hover:border-blue-500')}>
                   {r.charAt(0).toUpperCase() + r.slice(1)}
                 </button>
               ))}
             </div>
+            {profile.role !== originalRole.current && (
+              <p className="text-[11px] text-amber-500 mt-2">
+                Changing role will reload the page to apply the new navigation.
+              </p>
+            )}
           </div>
 
           <div>
@@ -183,32 +239,39 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 mt-5">
+        {/* Save */}
+        <div className="flex items-center gap-3 mt-5 flex-wrap">
           <button onClick={save} disabled={saving}
             className="h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl disabled:opacity-60 transition-colors">
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
-          {saved && <span className="text-[12px] text-emerald-500 font-medium">Saved!</span>}
+          {saved     && <span className="text-[12px] text-emerald-500 font-medium">Saved! {profile.role !== originalRole.current ? 'Redirecting…' : ''}</span>}
+          {saveError && (
+            <div style={{ flex:1, padding:'6px 10px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:8, fontSize:11, color:'#f87171', lineHeight:1.5 }}>
+              <strong>Save failed:</strong> {saveError}
+              {saveError.includes('policy') || saveError.includes('permission') || saveError.includes('42501') ? (
+                <span> — Run this in Supabase SQL: <code style={{ background:'rgba(255,255,255,0.1)', padding:'1px 4px', borderRadius:3 }}>CREATE POLICY "Users update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);</code></span>
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Appearance — light/dark theme */}
+      {/* Appearance */}
       <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
         <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-4">Appearance</h2>
         <div className="flex gap-2">
           {THEMES.map(t => (
-            <button key={t.id} onClick={()=>applyTheme(t.id)}
+            <button key={t.id} onClick={() => applyTheme(t.id)}
               className={'flex-1 flex flex-col items-center gap-2 py-3 rounded-xl border transition-all ' + (theme===t.id ? 'bg-blue-700 border-blue-700 text-white' : 'bg-surface2 border-line text-t2 hover:border-blue-500')}>
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                <path d={t.icon}/>
-              </svg>
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d={t.icon}/></svg>
               <span className="text-[11px] font-semibold">{t.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Profile & Avatar — creature, tagline, flashcard theme */}
+      {/* Profile & Avatar */}
       <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
         <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-3">Profile &amp; Avatar</h2>
         <p style={{ fontSize:13, color:'var(--c-t2)', marginBottom:14, lineHeight:1.5 }}>
@@ -230,23 +293,20 @@ export default function SettingsPage() {
           </div>
           <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-surface text-t3 border border-line">Free</span>
         </div>
-        <button onClick={()=>router.push('/pricing')}
-          style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 18px', borderRadius:9, border:'none', background:'linear-gradient(90deg,#4f46e5,#7c3aed)', color:'white', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+        <button onClick={() => router.push('/pricing')} style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 18px', borderRadius:9, border:'none', background:'linear-gradient(90deg,#4f46e5,#7c3aed)', color:'white', fontSize:13, fontWeight:700, cursor:'pointer' }}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
           Upgrade to Pro →
         </button>
       </div>
 
-      {/* Account */}
-      <div className="bg-surface border border-line rounded-2xl p-5">
+      {/* Share with Parent */}
+      <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
         <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-1">Share with Parent</h2>
         <p className="text-[12px] text-t3 mb-4">Give a parent or guardian visibility into your study activity.</p>
         {linkCodeVal ? (
           <div>
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex-1 h-10 bg-surface2 border border-line rounded-xl px-4 flex items-center font-mono text-sm text-t1 tracking-widest select-all">
-                {linkCodeVal}
-              </div>
+              <div className="flex-1 h-10 bg-surface2 border border-line rounded-xl px-4 flex items-center font-mono text-sm text-t1 tracking-widest select-all">{linkCodeVal}</div>
               <button onClick={() => { navigator.clipboard?.writeText(linkCodeVal); setLinkCopied(true); setTimeout(()=>setLinkCopied(false),2000) }}
                 className="h-10 px-4 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 shrink-0">
                 {linkCopied ? 'Copied!' : 'Copy code'}
@@ -258,13 +318,13 @@ export default function SettingsPage() {
             </button>
           </div>
         ) : (
-          <button onClick={generateLinkCode} disabled={generatingCode}
-            className="h-9 px-4 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 disabled:opacity-60">
+          <button onClick={generateLinkCode} disabled={generatingCode} className="h-9 px-4 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 disabled:opacity-60">
             {generatingCode ? 'Generating…' : 'Generate parent link code'}
           </button>
         )}
       </div>
 
+      {/* Account */}
       <div className="bg-surface border border-line rounded-2xl p-5">
         <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-4">Account</h2>
         <div className="space-y-2">
@@ -283,25 +343,4 @@ export default function SettingsPage() {
       </div>
     </div>
   )
-
-  const uploadMedia = async (file, type) => {
-    if (!user || !file) return
-    const setter = type === 'avatar' ? setAvatarUploading : setBannerUploading
-    const urlSetter = type === 'avatar' ? setAvatarUrl : setBannerUrl
-    const field = type === 'avatar' ? 'avatar_url' : 'banner_url'
-    setter(true)
-    try {
-      const ext = file.name.split('.').pop()
-      const path = user.id + '/' + type + '.' + ext
-      const bucket = type === 'avatar' ? 'avatars' : 'banners'
-      const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, { upsert:true, contentType: file.type })
-      if (upErr) throw upErr
-      const { data } = supabase.storage.from(bucket).getPublicUrl(path)
-      const url = data.publicUrl
-      urlSetter(url)
-      await supabase.from('profiles').upsert({ id: user.id, [field]: url })
-    } catch (e) { console.error(e) }
-    setter(false)
-  }
-
 }
