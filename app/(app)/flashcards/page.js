@@ -754,6 +754,7 @@ function FlashcardsPageInner() {
           <div style={{ marginTop:'auto', display:'flex', flexDirection:'column', gap:6 }}>
             <button onClick={()=>{setShowEdit(true);setEditIdx(null)}} style={{ width:'100%', padding:'6px 0', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t2)', cursor:'pointer', fontFamily:'inherit' }}>Edit Deck</button>
             <button onClick={()=>printDeck(cards,topic)} style={{ width:'100%', padding:'6px 0', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t2)', cursor:'pointer', fontFamily:'inherit' }}>Print</button>
+            <button onClick={()=>{ sessionStorage.setItem('flashfo_study_modes', JSON.stringify({cards,topic})); window.location.href='/study-modes' }} style={{ width:'100%', padding:'6px 0', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid rgba(99,102,241,0.3)', background:'rgba(99,102,241,0.08)', color:'#a5b4fc', cursor:'pointer', fontFamily:'inherit' }}>Study Modes</button>
             <button onClick={startFresh} style={{ width:'100%', padding:'6px 0', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t2)', cursor:'pointer', fontFamily:'inherit' }}>New Deck</button>
           </div>
         </div>
