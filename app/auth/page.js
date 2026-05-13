@@ -1,53 +1,124 @@
 'use client'
-import { useState, useEffect } from 'react'
+// Two fixes:
+// 1. CRASH: canvas ref={el => el && initBg(el)} fired BEFORE the dangerouslySetInnerHTML
+//    script tag ran on mobile (iOS strict execution order). Moved initBg into a useEffect
+//    with a useRef — now it's always defined before it's called.
+// 2. SIGN-IN DEFAULT: useState('signup') + useEffect URL read caused a flash where
+//    /auth?tab=signin briefly showed signup. Fixed by reading URL params synchronously
+//    inside the useState initializer.
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 export default function AuthPage() {
   const router = useRouter()
-  const [tab, setTab] = useState('signup')   // 'signup' | 'signin'
-  const [step, setStep] = useState('form')   // 'form' | 'role' (signup only)
-  const [role, setRole] = useState('student') // 'student' | 'teacher' | 'parent'
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
 
-  // If already logged in, go to dashboard
+  // Read URL param synchronously — no flash, no useEffect race
+  const [tab, setTab] = useState(() => {
+    if (typeof window === 'undefined') return 'signup'
+    return new URLSearchParams(window.location.search).get('tab') === 'signin'
+      ? 'signin'
+      : 'signup'
+  })
+
+  const [step,     setStep]     = useState('form')    // 'form' | 'role'
+  const [role,     setRole]     = useState('student')
+  const [email,    setEmail]    = useState('')
+  const [password, setPassword] = useState('')
+  const [loading,  setLoading]  = useState(false)
+  const [error,    setError]    = useState('')
+  const [success,  setSuccess]  = useState('')
+
+  // canvas ref — initBg defined here so it's always in scope
+  const bgRef = useRef(null)
+
+  // If already logged in, redirect to dashboard
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) router.replace('/dashboard')
     })
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('tab') === 'signin') setTab('signin')
+  }, [])
+
+  // WebGL fluid background — properly scoped, with cleanup
+  useEffect(() => {
+    const canvas = bgRef.current
+    if (!canvas || canvas._init) return
+    canvas._init = true
+
+    const gl = canvas.getContext('webgl')
+    if (!gl) return
+
+    let running = true
+
+    function resize() {
+      canvas.width  = innerWidth
+      canvas.height = innerHeight
+      gl.viewport(0, 0, canvas.width, canvas.height)
+    }
+    resize()
+    window.addEventListener('resize', resize)
+
+    const VS = `attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}`
+    const FS = `precision highp float;uniform float uT;uniform vec2 uR;varying vec2 vU;vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}float fbm(vec2 p){float v=0.,a=.5;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<5;i++){v+=a*n(p);p=r*p*2.01;a*=.5;}return v;}void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.05;vec2 q=vec2(fbm(uv*1.6+t),fbm(uv*1.6+vec2(5.2,1.3)+t*.8));vec2 r=vec2(fbm(uv*1.6+3.4*q+t*.6),fbm(uv*1.6+3.4*q+vec2(8.3,2.8)+t*.45));float f=fbm(uv*1.6+3.4*r+t*.3);f=clamp(f,0.,1.);vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.8,.0,1.);col+=.01;gl_FragColor=vec4(col,1.);}`
+
+    function mkS(t, s) { const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh); return sh }
+    const prog = gl.createProgram()
+    gl.attachShader(prog, mkS(gl.VERTEX_SHADER, VS))
+    gl.attachShader(prog, mkS(gl.FRAGMENT_SHADER, FS))
+    gl.linkProgram(prog)
+
+    const buf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW)
+
+    const uT = gl.getUniformLocation(prog, 'uT')
+    const uR = gl.getUniformLocation(prog, 'uR')
+    const aP = gl.getAttribLocation(prog, 'aP')
+    let t = 0
+
+    ;(function draw() {
+      if (!running) return
+      requestAnimationFrame(draw)
+      t += 0.01
+      gl.clearColor(0.02, 0.03, 0.06, 1)
+      gl.clear(gl.COLOR_BUFFER_BIT)
+      gl.useProgram(prog)
+      gl.uniform1f(uT, t)
+      gl.uniform2f(uR, canvas.width, canvas.height)
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+      gl.enableVertexAttribArray(aP)
+      gl.vertexAttribPointer(aP, 2, gl.FLOAT, false, 0, 0)
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    })()
+
+    return () => {
+      running = false
+      window.removeEventListener('resize', resize)
+    }
   }, [])
 
   async function handleSignUp(e) {
     e.preventDefault()
     setError(''); setLoading(true)
-    // Validate first, then show role selector
     if (!email.trim() || password.length < 6) {
       setError('Please enter a valid email and a password of at least 6 characters.')
       setLoading(false); return
     }
     setLoading(false)
-    setStep('role') // Show role selector before creating account
+    setStep('role')
   }
 
   async function handleRoleConfirm() {
     setError(''); setLoading(true)
     const { error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
+      email: email.trim(), password,
       options: {
         emailRedirectTo: `${location.origin}/dashboard`,
-        data: { role }, // stored in raw_user_meta_data, picked up by profile trigger
-      }
+        data: { role },
+      },
     })
     setLoading(false)
     if (error) { setStep('form'); return setError(error.message) }
-    // Also update profile directly in case trigger doesn't handle metadata
     const { data: { session } } = await supabase.auth.getSession()
     if (session?.user?.id) {
       await supabase.from('profiles').upsert({ id: session.user.id, role }, { onConflict: 'id' })
@@ -59,10 +130,7 @@ export default function AuthPage() {
   async function handleSignIn(e) {
     e.preventDefault()
     setError(''); setSuccess(''); setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    })
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     setLoading(false)
     if (error) return setError(error.message)
     router.replace('/dashboard')
@@ -72,37 +140,22 @@ export default function AuthPage() {
 
   const ROLES = [
     {
-      id: 'student',
-      label: 'Student',
-      desc: 'Flashcards, quizzes, Nova AI tutor, study guides',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
-        </svg>
-      ),
-      color: '#6366f1', bg: 'rgba(99,102,241,0.12)', border: 'rgba(99,102,241,0.35)',
+      id:'student', label:'Student',
+      desc:'Flashcards, quizzes, Nova AI tutor, study guides',
+      color:'#6366f1', bg:'rgba(99,102,241,0.12)', border:'rgba(99,102,241,0.35)',
+      icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>,
     },
     {
-      id: 'teacher',
-      label: 'Teacher',
-      desc: 'Live quizzes, lesson plans, class rosters, assignments',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="3" width="20" height="14" rx="1"/><path d="M8 21h8M12 17v4"/>
-        </svg>
-      ),
-      color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.35)',
+      id:'teacher', label:'Teacher',
+      desc:'Live quizzes, lesson plans, class rosters, assignments',
+      color:'#f59e0b', bg:'rgba(245,158,11,0.12)', border:'rgba(245,158,11,0.35)',
+      icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="1"/><path d="M8 21h8M12 17v4"/></svg>,
     },
     {
-      id: 'parent',
-      label: 'Parent',
-      desc: 'Track your child\'s quiz scores and study activity',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-        </svg>
-      ),
-      color: '#34d399', bg: 'rgba(52,211,153,0.12)', border: 'rgba(52,211,153,0.35)',
+      id:'parent', label:'Parent',
+      desc:"Track your child's quiz scores and study activity",
+      color:'#34d399', bg:'rgba(52,211,153,0.12)', border:'rgba(52,211,153,0.35)',
+      icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>,
     },
   ]
 
@@ -114,7 +167,6 @@ export default function AuthPage() {
         html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;background:#050709;color:#e2e8f0}
         #auth-bg{position:fixed;inset:0;z-index:0;pointer-events:none}
         .auth-wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
-        /* NAV */
         .auth-nav{padding:18px 32px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
         .auth-logo{display:flex;align-items:center;gap:10px;text-decoration:none;cursor:pointer}
         .auth-logo-ring{position:relative;width:34px;height:34px}
@@ -125,14 +177,11 @@ export default function AuthPage() {
         .auth-nav-right{font-size:14px;color:rgba(255,255,255,0.45)}
         .auth-nav-right a{color:#818cf8;font-weight:600;text-decoration:none;margin-left:6px}
         .auth-nav-right a:hover{color:#a5b4fc}
-        /* MAIN */
         .auth-main{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
         .auth-card{background:rgba(10,14,24,0.92);border:1px solid rgba(255,255,255,0.09);border-radius:20px;padding:32px;width:100%;max-width:420px;backdrop-filter:blur(24px)}
-        /* TABS */
         .auth-tabs{display:flex;background:rgba(255,255,255,0.05);border-radius:12px;padding:4px;margin-bottom:28px}
         .auth-tab{flex:1;padding:10px;border-radius:9px;font-size:14px;font-weight:700;text-align:center;cursor:pointer;transition:all .2s;color:rgba(255,255,255,0.35);border:none;background:none;font-family:inherit}
         .auth-tab.active{background:rgba(255,255,255,0.1);color:#e2e8f0}
-        /* FORM */
         .auth-title{font-size:22px;font-weight:900;letter-spacing:-.04em;color:#e2e8f0;margin-bottom:4px}
         .auth-sub{font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:24px}
         .form-group{margin-bottom:16px}
@@ -157,24 +206,27 @@ export default function AuthPage() {
         .trial-badge svg{width:12px;height:12px;fill:none;stroke:rgba(255,255,255,0.25);stroke-width:1.5;stroke-linecap:round}
       `}</style>
 
-      {/* Background WebGL fluid */}
-      <canvas id="auth-bg" ref={el => el && initBg(el)} />
+      {/* Background — no dangerouslySetInnerHTML, driven by useEffect above */}
+      <canvas id="auth-bg" ref={bgRef}/>
 
       <div className="auth-wrap">
         <nav className="auth-nav">
           <a className="auth-logo" href="/">
             <div className="auth-logo-ring">
-              <div className="auth-logo-spin" />
+              <div className="auth-logo-spin"/>
               <div className="auth-logo-inner">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="#3b82f6">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
               </div>
             </div>
             <span className="auth-logo-word">Flashfo</span>
           </a>
           <div className="auth-nav-right">
-            {isSignIn ? <>New here?<a href="/auth">Sign up free</a></> : <>Already have an account?<a href="/auth?tab=signin">Sign in</a></>}
+            {isSignIn
+              ? <>New here? <a href="/auth">Sign up free</a></>
+              : <>Already have an account? <a href="/auth?tab=signin">Sign in</a></>
+            }
           </div>
         </nav>
 
@@ -182,10 +234,10 @@ export default function AuthPage() {
           <div className="auth-card">
             <div className="auth-tabs">
               <button className={`auth-tab${!isSignIn?' active':''}`} onClick={() => { setTab('signup'); setStep('form'); setError(''); setSuccess('') }}>Sign up</button>
-              <button className={`auth-tab${isSignIn?' active':''}`} onClick={() => { setTab('signin'); setStep('form'); setError(''); setSuccess('') }}>Sign in</button>
+              <button className={`auth-tab${isSignIn?' active':''}`}  onClick={() => { setTab('signin'); setStep('form'); setError(''); setSuccess('') }}>Sign in</button>
             </div>
 
-            {/* Role selector — shows after email/password entered on signup */}
+            {/* Role selector — signup step 2 */}
             {!isSignIn && step === 'role' ? (
               <>
                 <div className="auth-title">I am signing up as a…</div>
@@ -198,30 +250,30 @@ export default function AuthPage() {
                         border:`1.5px solid ${role===r.id ? r.border : 'rgba(255,255,255,0.09)'}`,
                         background: role===r.id ? r.bg : 'rgba(255,255,255,0.03)',
                         cursor:'pointer', transition:'all 0.15s' }}>
-                      <div style={{ width:42, height:42, borderRadius:12, background: role===r.id ? r.bg : 'rgba(255,255,255,0.06)',
-                        display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
+                      <div style={{ width:42, height:42, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
+                        background: role===r.id ? r.bg : 'rgba(255,255,255,0.06)',
                         color: role===r.id ? r.color : 'rgba(255,255,255,0.35)', transition:'all 0.15s' }}>
                         {r.icon}
                       </div>
                       <div style={{ flex:1 }}>
-                        <div style={{ fontSize:15, fontWeight:700, color: role===r.id ? '#e2e8f0' : 'rgba(255,255,255,0.65)', marginBottom:2 }}>{r.label}</div>
+                        <div style={{ fontSize:15, fontWeight:700, marginBottom:2, color: role===r.id ? '#e2e8f0' : 'rgba(255,255,255,0.65)' }}>{r.label}</div>
                         <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', lineHeight:1.4 }}>{r.desc}</div>
                       </div>
-                      <div style={{ width:18, height:18, borderRadius:'50%', border:`2px solid ${role===r.id ? r.color : 'rgba(255,255,255,0.2)'}`,
-                        background: role===r.id ? r.color : 'transparent', flexShrink:0, transition:'all 0.15s',
-                        display:'flex', alignItems:'center', justifyContent:'center' }}>
+                      <div style={{ width:18, height:18, borderRadius:'50%', flexShrink:0, transition:'all 0.15s', display:'flex', alignItems:'center', justifyContent:'center',
+                        border:`2px solid ${role===r.id ? r.color : 'rgba(255,255,255,0.2)'}`,
+                        background: role===r.id ? r.color : 'transparent' }}>
                         {role===r.id && <svg width="9" height="9" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>}
                       </div>
                     </div>
                   ))}
                 </div>
-                {role === 'parent' && (
+                {role==='parent' && (
                   <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', marginBottom:14, padding:'8px 12px', background:'rgba(255,255,255,0.04)', borderRadius:10, lineHeight:1.5 }}>
                     Parents need a separate account from their child. Use Settings → Share with Parent to link accounts after signing up.
                   </div>
                 )}
                 <button className="submit-btn" onClick={handleRoleConfirm} disabled={loading}>
-                  {loading ? 'Creating account…' : `Continue as ${ROLES.find(r=>r.id===role)?.label} →`}
+                  {loading ? 'Creating account…' : `Continue as ${ROLES.find(r => r.id===role)?.label} →`}
                 </button>
                 <div style={{ textAlign:'center', marginTop:14 }}>
                   <button onClick={() => setStep('form')} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.35)', fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>← Back</button>
@@ -231,10 +283,8 @@ export default function AuthPage() {
               <>
                 <div className="auth-title">{isSignIn ? 'Welcome back' : 'Create your account'}</div>
                 <div className="auth-sub">{isSignIn ? 'Sign in to your Flashfo account.' : "You're starting a 3-day free trial."}</div>
-
-                {error && <div className="auth-error">{error}</div>}
+                {error   && <div className="auth-error">{error}</div>}
                 {success && <div className="auth-success">{success}</div>}
-
                 <form onSubmit={isSignIn ? handleSignIn : handleSignUp}>
                   <div className="form-group">
                     <label className="form-label">Email</label>
@@ -243,21 +293,18 @@ export default function AuthPage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Password</label>
-                    <input className="form-input" type="password"
-                      placeholder={isSignIn ? '••••••••' : 'Create a password'}
-                      value={password} onChange={e => setPassword(e.target.value)}
-                      required disabled={loading} minLength={6}/>
+                    <input className="form-input" type="password" placeholder={isSignIn ? '••••••••' : 'Create a password'}
+                      value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6}/>
                   </div>
                   {isSignIn && <div className="forgot"><a href="/auth/reset">Forgot password?</a></div>}
                   <button className="submit-btn" type="submit" disabled={loading}>
                     {loading ? 'Please wait...' : isSignIn ? 'Sign in →' : 'Continue →'}
                   </button>
                 </form>
-
                 <div className="auth-bottom">
                   {isSignIn
-                    ? <>Don't have an account?<a href="/auth">Sign up free</a></>
-                    : <>Already have an account?<a href="/auth?tab=signin">Sign in</a></>
+                    ? <>Don't have an account? <a href="/auth">Sign up free</a></>
+                    : <>Already have an account? <a href="/auth?tab=signin">Sign in</a></>
                   }
                 </div>
                 {!isSignIn && (
@@ -271,22 +318,6 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
-
-      <script dangerouslySetInnerHTML={{ __html: `
-        function initBg(c) {
-          if (!c || c._init) return; c._init = true;
-          var gl = c.getContext('webgl'); if (!gl) return;
-          function resize() { c.width = innerWidth; c.height = innerHeight; gl.viewport(0,0,c.width,c.height); }
-          resize(); window.addEventListener('resize', resize);
-          var VS = 'attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}';
-          var FS = 'precision highp float;uniform float uT;uniform vec2 uR;varying vec2 vU;vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}float fbm(vec2 p){float v=0.,a=.5;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<5;i++){v+=a*n(p);p=r*p*2.01;a*=.5;}return v;}void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.05;vec2 q=vec2(fbm(uv*1.6+t),fbm(uv*1.6+vec2(5.2,1.3)+t*.8));vec2 r=vec2(fbm(uv*1.6+3.4*q+t*.6),fbm(uv*1.6+3.4*q+vec2(8.3,2.8)+t*.45));float f=fbm(uv*1.6+3.4*r+t*.3);f=clamp(f,0.,1.);vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.8,.0,1.);col+=.01;gl_FragColor=vec4(col,1.);}';
-          function mkS(t,s){var sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;}
-          var prog=gl.createProgram();gl.attachShader(prog,mkS(gl.VERTEX_SHADER,VS));gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);
-          var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
-          var uT=gl.getUniformLocation(prog,'uT'),uR=gl.getUniformLocation(prog,'uR'),aP=gl.getAttribLocation(prog,'aP');
-          var t=0;(function draw(){requestAnimationFrame(draw);t+=.01;gl.clearColor(.02,.03,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(prog);gl.uniform1f(uT,t);gl.uniform2f(uR,c.width,c.height);gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(aP);gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);})();
-        }
-      ` }} />
     </>
   )
 }
