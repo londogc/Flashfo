@@ -698,7 +698,7 @@ function FlashcardsPageInner() {
             <h1 style={{ fontSize:18, fontWeight:800, color:'var(--c-t1)', letterSpacing:'-.02em' }}>Flashcards</h1>
             <p style={{ fontSize:12, color:'var(--c-t2)' }}>{cards.length} cards · {done} done · {remaining} left</p>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:6' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
             {user && <button onClick={()=>{setSaveTitle(topic);setShowSave(true)}} style={{ height:30, padding:'0 10px', background:'#059669', color:'#fff', border:'none', borderRadius:7, fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>{savedId?'Update':'Save'}</button>}
             <button onClick={()=>printDeck(cards,topic)} style={{ height:30, padding:'0 10px', fontSize:11, color:'var(--c-t2)', border:'1px solid var(--c-line)', borderRadius:7, background:'none', cursor:'pointer', fontFamily:'inherit' }}>Print</button>
             <button onClick={()=>{setShowEdit(true);setEditIdx(null)}} style={{ height:30, padding:'0 10px', fontSize:11, color:'var(--c-t2)', border:'1px solid var(--c-line)', borderRadius:7, background:'none', cursor:'pointer', fontFamily:'inherit' }}>Edit</button>
