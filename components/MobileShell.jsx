@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 
 // Per-page aurora palettes — blob colours only
@@ -101,7 +101,25 @@ export default function MobileShell({ children }) {
   const [novaOpen, setNovaOpen] = useState(false)
   const [novaInput, setNovaInput] = useState('')
   const [palIdx, setPalIdx] = useState(0)
-  const novaRef = useRef(null)
+  const novaRef    = useRef(null)
+  const contentRef = useRef(null)   // fades page content only — not Aurora or tab bar
+  const firstMount = useRef(true)
+
+  // Fade only the content area on navigation, not the chrome.
+  // useLayoutEffect fires before paint so content is never seen mid-swap.
+  useLayoutEffect(() => {
+    if (firstMount.current) { firstMount.current = false; return }
+    const el = contentRef.current
+    if (!el) return
+    el.style.transition = 'none'
+    el.style.opacity    = '0'
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.style.transition = 'opacity 0.18s ease'
+        el.style.opacity    = '1'
+      })
+    })
+  }, [pathname])
 
   useEffect(() => {
     if (novaOpen) { setPalIdx(2); return }
@@ -165,7 +183,7 @@ export default function MobileShell({ children }) {
         WebkitOverflowScrolling: 'touch',
         overscrollBehavior: 'contain',
       }} onClick={() => { if (novaOpen) setNovaOpen(false) }}>
-        <div style={{
+        <div ref={contentRef} style={{
           minHeight: pathname.startsWith('/ai-tutor') ? '100%' : undefined,
           height:    pathname.startsWith('/ai-tutor') ? '100%' : undefined,
           paddingBottom: pathname.startsWith('/ai-tutor') ? 0 : 110,
