@@ -149,14 +149,6 @@ export default function DashboardPage() {
   const firstName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-  const subjectColors = classes.map((cls, i) => ({ ...cls, color: SUBJECT_COLORS[i % SUBJECT_COLORS.length] }))
-
-
-  if (isMobile) return <MobileDashboard />
-
-  const firstName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
   const nextAssignment = assignments[0]
   const dueLabel = nextAssignment?.due_date ? `Due ${new Date(nextAssignment.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}` : 'No due date'
   const savedCount = 0 // placeholder — fetched by My Stuff
