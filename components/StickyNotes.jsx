@@ -21,9 +21,11 @@ const STORAGE_KEY = 'ff-sticky-notes'
 function uid() { return Math.random().toString(36).slice(2,10) }
 
 function load() {
+  if (typeof window === 'undefined') return []
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch { return [] }
 }
 function save(notes) {
+  if (typeof window === 'undefined') return
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)) } catch {}
 }
 
