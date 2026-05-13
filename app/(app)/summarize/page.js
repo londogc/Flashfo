@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { saveItem } from '@/lib/savedItems'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
 import { rpc } from '@/lib/api'
@@ -15,6 +16,7 @@ const CHIPS = [
 
 export default function SummarizePage() {
   const { user } = useAuth()
+  const isMobile  = useIsMobile()
 
   const [input,       setInput]       = useState('')
   const [output,      setOutput]      = useState('')
@@ -125,8 +127,8 @@ export default function SummarizePage() {
         ))}
       </div>
 
-      {/* Main input — full width, paste-first design */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, alignItems:'start' }}>
+      {/* Main input — single column on mobile, two-column on desktop */}
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:20, alignItems:'start' }}>
 
         {/* Left col — input */}
         <div>
@@ -167,8 +169,8 @@ export default function SummarizePage() {
           </button>
         </div>
 
-        {/* Right col — before/after preview */}
-        <div>
+        {/* Right col — before/after preview, hidden on mobile */}
+        {!isMobile && <div>
           <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>Before & after</div>
 
           <div style={{ display:'grid', gridTemplateColumns:'1fr 24px 1fr', gap:8, alignItems:'start', marginBottom:14 }}>
@@ -193,7 +195,7 @@ export default function SummarizePage() {
               </div>
             ))}
           </div>
-        </div>
+        </div>}
       </div>
 
       {/* ── Output ── */}
