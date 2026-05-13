@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase'
 export default function AuthPage() {
   const router = useRouter()
   const [tab, setTab] = useState('signup')   // 'signup' | 'signin'
+  const [step, setStep] = useState('form')   // 'form' | 'role' (signup only)
+  const [role, setRole] = useState('student') // 'student' | 'teacher' | 'parent'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,23 +19,41 @@ export default function AuthPage() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) router.replace('/dashboard')
     })
-    // Read ?tab=signin from URL
     const params = new URLSearchParams(window.location.search)
     if (params.get('tab') === 'signin') setTab('signin')
   }, [])
 
   async function handleSignUp(e) {
     e.preventDefault()
-    setError(''); setSuccess(''); setLoading(true)
+    setError(''); setLoading(true)
+    // Validate first, then show role selector
+    if (!email.trim() || password.length < 6) {
+      setError('Please enter a valid email and a password of at least 6 characters.')
+      setLoading(false); return
+    }
+    setLoading(false)
+    setStep('role') // Show role selector before creating account
+  }
+
+  async function handleRoleConfirm() {
+    setError(''); setLoading(true)
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { emailRedirectTo: `${location.origin}/dashboard` }
+      options: {
+        emailRedirectTo: `${location.origin}/dashboard`,
+        data: { role }, // stored in raw_user_meta_data, picked up by profile trigger
+      }
     })
     setLoading(false)
-    if (error) return setError(error.message)
+    if (error) { setStep('form'); return setError(error.message) }
+    // Also update profile directly in case trigger doesn't handle metadata
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.user?.id) {
+      await supabase.from('profiles').upsert({ id: session.user.id, role }, { onConflict: 'id' })
+    }
     setSuccess('Check your email to confirm your account, then sign in.')
-    setTab('signin')
+    setTab('signin'); setStep('form')
   }
 
   async function handleSignIn(e) {
@@ -49,6 +69,42 @@ export default function AuthPage() {
   }
 
   const isSignIn = tab === 'signin'
+
+  const ROLES = [
+    {
+      id: 'student',
+      label: 'Student',
+      desc: 'Flashcards, quizzes, Nova AI tutor, study guides',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+      ),
+      color: '#6366f1', bg: 'rgba(99,102,241,0.12)', border: 'rgba(99,102,241,0.35)',
+    },
+    {
+      id: 'teacher',
+      label: 'Teacher',
+      desc: 'Live quizzes, lesson plans, class rosters, assignments',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="1"/><path d="M8 21h8M12 17v4"/>
+        </svg>
+      ),
+      color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.35)',
+    },
+    {
+      id: 'parent',
+      label: 'Parent',
+      desc: 'Track your child\'s quiz scores and study activity',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+        </svg>
+      ),
+      color: '#34d399', bg: 'rgba(52,211,153,0.12)', border: 'rgba(52,211,153,0.35)',
+    },
+  ]
 
   return (
     <>
@@ -125,61 +181,92 @@ export default function AuthPage() {
         <div className="auth-main">
           <div className="auth-card">
             <div className="auth-tabs">
-              <button className={`auth-tab${!isSignIn?' active':''}`} onClick={() => { setTab('signup'); setError(''); setSuccess('') }}>Sign up</button>
-              <button className={`auth-tab${isSignIn?' active':''}`} onClick={() => { setTab('signin'); setError(''); setSuccess('') }}>Sign in</button>
+              <button className={`auth-tab${!isSignIn?' active':''}`} onClick={() => { setTab('signup'); setStep('form'); setError(''); setSuccess('') }}>Sign up</button>
+              <button className={`auth-tab${isSignIn?' active':''}`} onClick={() => { setTab('signin'); setStep('form'); setError(''); setSuccess('') }}>Sign in</button>
             </div>
 
-            <div className="auth-title">{isSignIn ? 'Welcome back' : 'Create your account'}</div>
-            <div className="auth-sub">{isSignIn ? 'Sign in to your Flashfo account.' : "You're starting a 3-day free trial of Student Pro."}</div>
+            {/* Role selector — shows after email/password entered on signup */}
+            {!isSignIn && step === 'role' ? (
+              <>
+                <div className="auth-title">I am signing up as a…</div>
+                <div className="auth-sub" style={{ marginBottom:20 }}>Choose your account type. You can change this later in settings.</div>
+                {error && <div className="auth-error">{error}</div>}
+                <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
+                  {ROLES.map(r => (
+                    <div key={r.id} onClick={() => setRole(r.id)}
+                      style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 16px', borderRadius:14,
+                        border:`1.5px solid ${role===r.id ? r.border : 'rgba(255,255,255,0.09)'}`,
+                        background: role===r.id ? r.bg : 'rgba(255,255,255,0.03)',
+                        cursor:'pointer', transition:'all 0.15s' }}>
+                      <div style={{ width:42, height:42, borderRadius:12, background: role===r.id ? r.bg : 'rgba(255,255,255,0.06)',
+                        display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
+                        color: role===r.id ? r.color : 'rgba(255,255,255,0.35)', transition:'all 0.15s' }}>
+                        {r.icon}
+                      </div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:15, fontWeight:700, color: role===r.id ? '#e2e8f0' : 'rgba(255,255,255,0.65)', marginBottom:2 }}>{r.label}</div>
+                        <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', lineHeight:1.4 }}>{r.desc}</div>
+                      </div>
+                      <div style={{ width:18, height:18, borderRadius:'50%', border:`2px solid ${role===r.id ? r.color : 'rgba(255,255,255,0.2)'}`,
+                        background: role===r.id ? r.color : 'transparent', flexShrink:0, transition:'all 0.15s',
+                        display:'flex', alignItems:'center', justifyContent:'center' }}>
+                        {role===r.id && <svg width="9" height="9" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {role === 'parent' && (
+                  <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', marginBottom:14, padding:'8px 12px', background:'rgba(255,255,255,0.04)', borderRadius:10, lineHeight:1.5 }}>
+                    Parents need a separate account from their child. Use Settings → Share with Parent to link accounts after signing up.
+                  </div>
+                )}
+                <button className="submit-btn" onClick={handleRoleConfirm} disabled={loading}>
+                  {loading ? 'Creating account…' : `Continue as ${ROLES.find(r=>r.id===role)?.label} →`}
+                </button>
+                <div style={{ textAlign:'center', marginTop:14 }}>
+                  <button onClick={() => setStep('form')} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.35)', fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>← Back</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="auth-title">{isSignIn ? 'Welcome back' : 'Create your account'}</div>
+                <div className="auth-sub">{isSignIn ? 'Sign in to your Flashfo account.' : "You're starting a 3-day free trial."}</div>
 
-            {error && <div className="auth-error">{error}</div>}
-            {success && <div className="auth-success">{success}</div>}
+                {error && <div className="auth-error">{error}</div>}
+                {success && <div className="auth-success">{success}</div>}
 
-            <form onSubmit={isSignIn ? handleSignIn : handleSignUp}>
-              <div className="form-group">
-                <label className="form-label">Email</label>
-                <input
-                  className="form-input"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Password</label>
-                <input
-                  className="form-input"
-                  type="password"
-                  placeholder={isSignIn ? '••••••••' : 'Create a password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  minLength={6}
-                />
-              </div>
-              {isSignIn && (
-                <div className="forgot"><a href="/auth/reset">Forgot password?</a></div>
-              )}
-              <button className="submit-btn" type="submit" disabled={loading}>
-                {loading ? 'Please wait...' : isSignIn ? 'Sign in →' : 'Start 3-day free trial →'}
-              </button>
-            </form>
+                <form onSubmit={isSignIn ? handleSignIn : handleSignUp}>
+                  <div className="form-group">
+                    <label className="form-label">Email</label>
+                    <input className="form-input" type="email" placeholder="you@example.com"
+                      value={email} onChange={e => setEmail(e.target.value)} required disabled={loading}/>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Password</label>
+                    <input className="form-input" type="password"
+                      placeholder={isSignIn ? '••••••••' : 'Create a password'}
+                      value={password} onChange={e => setPassword(e.target.value)}
+                      required disabled={loading} minLength={6}/>
+                  </div>
+                  {isSignIn && <div className="forgot"><a href="/auth/reset">Forgot password?</a></div>}
+                  <button className="submit-btn" type="submit" disabled={loading}>
+                    {loading ? 'Please wait...' : isSignIn ? 'Sign in →' : 'Continue →'}
+                  </button>
+                </form>
 
-            <div className="auth-bottom">
-              {isSignIn
-                ? <>Don't have an account?<a href="/auth">Sign up free</a></>
-                : <>Already have an account?<a href="/auth?tab=signin">Sign in</a></>
-              }
-            </div>
-            {!isSignIn && (
-              <div className="trial-badge">
-                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                3-day free trial · no charge until day 4 · cancel any time
-              </div>
+                <div className="auth-bottom">
+                  {isSignIn
+                    ? <>Don't have an account?<a href="/auth">Sign up free</a></>
+                    : <>Already have an account?<a href="/auth?tab=signin">Sign in</a></>
+                  }
+                </div>
+                {!isSignIn && (
+                  <div className="trial-badge">
+                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    3-day free trial · no charge until day 4 · cancel any time
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
