@@ -1,36 +1,17 @@
 'use client'
-// THE FIX:
-// Root layout wraps everything in <PageTransition> (a 'use client' component).
-// That + the auth page's style/canvas creates persistent React #425 hydration
-// mismatches that React recovers from on desktop but CRASHES on mobile.
-//
-// Solution: mounted guard. Server renders a plain dark div (stable, no form, no
-// canvas, no dynamic content). Client hydrates that same div — perfect match,
-// zero error. After mount useEffect fires, full auth UI renders client-only.
-// Auth pages don't need SSR/SEO so this is safe.
-
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
+// Mounted guard: server renders a stable dark div, client renders
+// the full auth UI after mount. No hydration mismatch possible.
 export default function AuthPage() {
   const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Server + initial client render: a stable dark background.
-  // This matches EXACTLY between server and client → no hydration error.
-  if (!mounted) {
-    return <div style={{ position: 'fixed', inset: 0, background: '#050709' }} />
-  }
-
-  // After mount: full auth UI, rendered client-only.
+  useEffect(() => { setMounted(true) }, [])
+  if (!mounted) return <div style={{ position:'fixed', inset:0, background:'#050709' }} />
   return <AuthUI />
 }
 
-// All dynamic content lives here — only ever runs on the client.
 function AuthUI() {
   const router = useRouter()
   const [tab,      setTab]      = useState('signup')
@@ -43,10 +24,9 @@ function AuthUI() {
   const [success,  setSuccess]  = useState('')
   const bgRef = useRef(null)
 
-  // Read URL param now that we're client-only — no hydration risk
+  // Safe to read URL params here — client only
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('tab') === 'signin') setTab('signin')
+    if (new URLSearchParams(window.location.search).get('tab') === 'signin') setTab('signin')
   }, [])
 
   // Redirect if already logged in
@@ -56,7 +36,7 @@ function AuthUI() {
       .catch(() => {})
   }, [])
 
-  // WebGL background — fully try/caught, silent fail on unsupported GPUs
+  // WebGL background — fully try/caught so any GPU failure is silent
   useEffect(() => {
     const canvas = bgRef.current
     if (!canvas || canvas._init) return
@@ -65,57 +45,36 @@ function AuthUI() {
       const gl = canvas.getContext('webgl')
       if (!gl) return
       let running = true
-      const resize = () => {
-        canvas.width = innerWidth; canvas.height = innerHeight
-        gl.viewport(0, 0, canvas.width, canvas.height)
-      }
-      resize()
-      window.addEventListener('resize', resize)
+      const resize = () => { canvas.width = innerWidth; canvas.height = innerHeight; gl.viewport(0,0,canvas.width,canvas.height) }
+      resize(); window.addEventListener('resize', resize)
       const VS = `attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}`
       const FS = `precision highp float;uniform float uT;uniform vec2 uR;varying vec2 vU;vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}float fbm(vec2 p){float v=0.,a=.5;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<5;i++){v+=a*n(p);p=r*p*2.01;a*=.5;}return v;}void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.05;vec2 q=vec2(fbm(uv*1.6+t),fbm(uv*1.6+vec2(5.2,1.3)+t*.8));vec2 r=vec2(fbm(uv*1.6+3.4*q+t*.6),fbm(uv*1.6+3.4*q+vec2(8.3,2.8)+t*.45));float f=fbm(uv*1.6+3.4*r+t*.3);f=clamp(f,0.,1.);vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.8,.0,1.);col+=.01;gl_FragColor=vec4(col,1.);}`
-      const mkS = (t, s) => { const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh); return sh }
+      const mkS = (t,s) => { const sh = gl.createShader(t); gl.shaderSource(sh,s); gl.compileShader(sh); return sh }
       const prog = gl.createProgram()
       gl.attachShader(prog, mkS(gl.VERTEX_SHADER, VS))
       gl.attachShader(prog, mkS(gl.FRAGMENT_SHADER, FS))
       gl.linkProgram(prog)
-      const buf = gl.createBuffer()
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+      const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf)
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW)
-      const uT = gl.getUniformLocation(prog,'uT'), uR = gl.getUniformLocation(prog,'uR'), aP = gl.getAttribLocation(prog,'aP')
-      let t = 0;
-      (function draw() {
-        if (!running) return
-        requestAnimationFrame(draw); t += .01
-        gl.clearColor(.02,.03,.06,1); gl.clear(gl.COLOR_BUFFER_BIT)
-        gl.useProgram(prog); gl.uniform1f(uT,t); gl.uniform2f(uR,canvas.width,canvas.height)
-        gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.enableVertexAttribArray(aP)
-        gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0); gl.drawArrays(gl.TRIANGLE_STRIP,0,4)
-      })()
-      return () => { running = false; window.removeEventListener('resize', resize) }
-    } catch { /* silent fail — background is decorative */ }
+      const uT=gl.getUniformLocation(prog,'uT'), uR=gl.getUniformLocation(prog,'uR'), aP=gl.getAttribLocation(prog,'aP')
+      let t=0;(function draw(){if(!running)return;requestAnimationFrame(draw);t+=.01;gl.clearColor(.02,.03,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(prog);gl.uniform1f(uT,t);gl.uniform2f(uR,canvas.width,canvas.height);gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(aP);gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLE_STRIP,0,4)})()
+      return () => { running=false; window.removeEventListener('resize',resize) }
+    } catch { /* silent — background is decorative */ }
   }, [])
 
   async function handleSignUp(e) {
     e.preventDefault(); setError(''); setLoading(true)
-    if (!email.trim() || password.length < 6) {
-      setError('Please enter a valid email and a password of at least 6 characters.')
-      setLoading(false); return
-    }
+    if (!email.trim() || password.length < 6) { setError('Please enter a valid email and a password of at least 6 characters.'); setLoading(false); return }
     setLoading(false); setStep('role')
   }
 
   async function handleRoleConfirm() {
     setError(''); setLoading(true)
     try {
-      const { error } = await supabase.auth.signUp({
-        email: email.trim(), password,
-        options: { emailRedirectTo: `${location.origin}/dashboard`, data: { role } },
-      })
+      const { error } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: `${location.origin}/dashboard`, data: { role } } })
       if (error) { setStep('form'); setError(error.message); setLoading(false); return }
       const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user?.id) {
-        await supabase.from('profiles').upsert({ id: session.user.id, role }, { onConflict: 'id' })
-      }
+      if (session?.user?.id) await supabase.from('profiles').upsert({ id: session.user.id, role }, { onConflict: 'id' })
       setSuccess('Check your email to confirm your account, then sign in.')
       setTab('signin'); setStep('form')
     } catch { setError('Something went wrong. Please try again.') }
@@ -155,7 +114,6 @@ function AuthUI() {
         @keyframes spin{100%{transform:rotate(360deg)}}
         .auth-nav-right{font-size:14px;color:rgba(255,255,255,0.45)}
         .auth-nav-right a{color:#818cf8;font-weight:600;text-decoration:none;margin-left:6px}
-        .auth-nav-right a:hover{color:#a5b4fc}
         .auth-main{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
         .auth-card{background:rgba(10,14,24,0.92);border:1px solid rgba(255,255,255,0.09);border-radius:20px;padding:32px;width:100%;max-width:420px;backdrop-filter:blur(24px)}
         .auth-tabs{display:flex;background:rgba(255,255,255,0.05);border-radius:12px;padding:4px;margin-bottom:28px}
@@ -204,56 +162,56 @@ function AuthUI() {
         <div className="auth-main">
           <div className="auth-card">
             <div className="auth-tabs">
-              <button className={`auth-tab${!isSignIn?' active':''}`} onClick={() => { setTab('signup'); setStep('form'); setError(''); setSuccess('') }}>Sign up</button>
-              <button className={`auth-tab${isSignIn?' active':''}`}  onClick={() => { setTab('signin'); setStep('form'); setError(''); setSuccess('') }}>Sign in</button>
+              <button className={`auth-tab${!isSignIn?' active':''}`} onClick={()=>{setTab('signup');setStep('form');setError('');setSuccess('')}}>Sign up</button>
+              <button className={`auth-tab${isSignIn?' active':''}`}  onClick={()=>{setTab('signin');setStep('form');setError('');setSuccess('')}}>Sign in</button>
             </div>
 
-            {!isSignIn && step === 'role' ? (
+            {!isSignIn && step==='role' ? (
               <>
                 <div className="auth-title">I am signing up as a…</div>
-                <div className="auth-sub" style={{ marginBottom:20 }}>Choose your account type. You can change this later.</div>
+                <div className="auth-sub" style={{marginBottom:20}}>Choose your account type. You can change this later.</div>
                 {error && <div className="auth-error">{error}</div>}
-                <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
-                  {ROLES.map(r => (
-                    <div key={r.id} onClick={() => setRole(r.id)} style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 16px', borderRadius:14, cursor:'pointer', transition:'all 0.15s', border:`1.5px solid ${role===r.id?r.border:'rgba(255,255,255,0.09)'}`, background:role===r.id?r.bg:'rgba(255,255,255,0.03)' }}>
-                      <div style={{ width:42, height:42, borderRadius:12, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.15s', background:role===r.id?r.bg:'rgba(255,255,255,0.06)', color:role===r.id?r.color:'rgba(255,255,255,0.35)' }}>{r.icon}</div>
-                      <div style={{ flex:1 }}>
-                        <div style={{ fontSize:15, fontWeight:700, marginBottom:2, color:role===r.id?'#e2e8f0':'rgba(255,255,255,0.65)' }}>{r.label}</div>
-                        <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', lineHeight:1.4 }}>{r.desc}</div>
+                <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:20}}>
+                  {ROLES.map(r=>(
+                    <div key={r.id} onClick={()=>setRole(r.id)} style={{display:'flex',alignItems:'center',gap:14,padding:'14px 16px',borderRadius:14,cursor:'pointer',transition:'all 0.15s',border:`1.5px solid ${role===r.id?r.border:'rgba(255,255,255,0.09)'}`,background:role===r.id?r.bg:'rgba(255,255,255,0.03)'}}>
+                      <div style={{width:42,height:42,borderRadius:12,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.15s',background:role===r.id?r.bg:'rgba(255,255,255,0.06)',color:role===r.id?r.color:'rgba(255,255,255,0.35)'}}>{r.icon}</div>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:15,fontWeight:700,marginBottom:2,color:role===r.id?'#e2e8f0':'rgba(255,255,255,0.65)'}}>{r.label}</div>
+                        <div style={{fontSize:12,color:'rgba(255,255,255,0.3)',lineHeight:1.4}}>{r.desc}</div>
                       </div>
-                      <div style={{ width:18, height:18, borderRadius:'50%', flexShrink:0, transition:'all 0.15s', display:'flex', alignItems:'center', justifyContent:'center', border:`2px solid ${role===r.id?r.color:'rgba(255,255,255,0.2)'}`, background:role===r.id?r.color:'transparent' }}>
-                        {role===r.id && <svg width="9" height="9" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>}
+                      <div style={{width:18,height:18,borderRadius:'50%',flexShrink:0,transition:'all 0.15s',display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${role===r.id?r.color:'rgba(255,255,255,0.2)'}`,background:role===r.id?r.color:'transparent'}}>
+                        {role===r.id&&<svg width="9" height="9" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>}
                       </div>
                     </div>
                   ))}
                 </div>
                 <button className="submit-btn" onClick={handleRoleConfirm} disabled={loading}>{loading?'Creating account…':`Continue as ${ROLES.find(r=>r.id===role)?.label} →`}</button>
-                <div style={{ textAlign:'center', marginTop:14 }}>
-                  <button onClick={() => setStep('form')} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.35)', fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>← Back</button>
+                <div style={{textAlign:'center',marginTop:14}}>
+                  <button onClick={()=>setStep('form')} style={{background:'none',border:'none',color:'rgba(255,255,255,0.35)',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>← Back</button>
                 </div>
               </>
             ) : (
               <>
-                <div className="auth-title">{isSignIn ? 'Welcome back' : 'Create your account'}</div>
-                <div className="auth-sub">{isSignIn ? 'Sign in to your Flashfo account.' : "You're starting a 3-day free trial."}</div>
+                <div className="auth-title">{isSignIn?'Welcome back':'Create your account'}</div>
+                <div className="auth-sub">{isSignIn?'Sign in to your Flashfo account.':"You're starting a 3-day free trial."}</div>
                 {error   && <div className="auth-error">{error}</div>}
                 {success && <div className="auth-success">{success}</div>}
-                <form onSubmit={isSignIn ? handleSignIn : handleSignUp}>
+                <form onSubmit={isSignIn?handleSignIn:handleSignUp}>
                   <div className="form-group">
                     <label className="form-label">Email</label>
-                    <input className="form-input" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading}/>
+                    <input className="form-input" type="email" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} required disabled={loading}/>
                   </div>
                   <div className="form-group">
                     <label className="form-label">Password</label>
-                    <input className="form-input" type="password" placeholder={isSignIn?'••••••••':'Create a password'} value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6}/>
+                    <input className="form-input" type="password" placeholder={isSignIn?'••••••••':'Create a password'} value={password} onChange={e=>setPassword(e.target.value)} required disabled={loading} minLength={6}/>
                   </div>
-                  {isSignIn && <div className="forgot"><a href="/auth/reset">Forgot password?</a></div>}
+                  {isSignIn&&<div className="forgot"><a href="/auth/reset">Forgot password?</a></div>}
                   <button className="submit-btn" type="submit" disabled={loading}>{loading?'Please wait...':isSignIn?'Sign in →':'Continue →'}</button>
                 </form>
                 <div className="auth-bottom">
-                  {isSignIn ? <>Don't have an account? <a href="/auth">Sign up free</a></> : <>Already have an account? <a href="/auth?tab=signin">Sign in</a></>}
+                  {isSignIn?<>Don't have an account? <a href="/auth">Sign up free</a></>:<>Already have an account? <a href="/auth?tab=signin">Sign in</a></>}
                 </div>
-                {!isSignIn && (
+                {!isSignIn&&(
                   <div className="trial-badge">
                     <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                     3-day free trial · no charge until day 4 · cancel any time
