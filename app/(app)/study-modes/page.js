@@ -62,6 +62,16 @@ function ModeSelector({ topic, cardCount, onSelect }) {
       desc: 'Write everything you remember, Nova scores it',
       best: 'Free recall · simulates exam conditions',
     },
+    {
+      id: 'audio',
+      label: 'Audio',
+      color: '#fb923c',
+      bg: 'rgba(251,146,60,0.08)',
+      border: 'rgba(251,146,60,0.25)',
+      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fb923c" strokeWidth="1.8" strokeLinecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>,
+      desc: 'Listen to cards read aloud, hands-free',
+      best: 'Passive review · gym, commute, walking',
+    },
   ]
 
   return (
@@ -75,7 +85,7 @@ function ModeSelector({ topic, cardCount, onSelect }) {
         <strong style={{ color:'var(--c-t1)' }}>{topic}</strong> · {cardCount} cards
       </p>
 
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:14 }}>
         {MODES.map(m => (
           <button key={m.id} onClick={() => onSelect(m.id)}
             style={{ padding:'22px 18px', borderRadius:14, border:`1px solid ${m.border}`, background:m.bg, cursor:'pointer', textAlign:'left', fontFamily:'inherit', transition:'all .15s' }}>
@@ -658,6 +668,270 @@ function BlurtMode({ cards, topic, onBack }) {
   )
 }
 
+// ── AUDIO MODE ────────────────────────────────────────────────────────────────
+
+function AudioMode({ cards, topic, onBack }) {
+  const [cardIdx,    setCardIdx]    = useState(0)
+  const [phase,      setPhase]      = useState('idle')   // idle|front|front-pause|back|back-pause|done
+  const [running,    setRunning]    = useState(false)
+  const [speed,      setSpeed]      = useState(1)        // playback rate
+  const [completed,  setCompleted]  = useState(0)
+  const [loadingTts, setLoadingTts] = useState(false)
+
+  const audioRef    = useRef(null)
+  const runningRef  = useRef(false)
+  const cardIdxRef  = useRef(0)
+
+  // Cleanup on unmount
+  useEffect(() => () => {
+    runningRef.current = false
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
+  }, [])
+
+  const PAUSES = { front: 1800, back: 3000 }  // ms between front→back and back→next
+
+  function sleep(ms) {
+    return new Promise(resolve => {
+      const t = setTimeout(resolve, ms)
+      // Store so we could cancel — simplified here
+      return () => clearTimeout(t)
+    })
+  }
+
+  async function playText(text) {
+    return new Promise(async resolve => {
+      if (!runningRef.current) { resolve(); return }
+      setLoadingTts(true)
+      try {
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
+        const { rpc: rpcFn } = await import('@/lib/api')
+        const d = await rpcFn('generateOpenAITtsAudio', [text, 'nova', 1])
+        if (!runningRef.current) { resolve(); return }
+        setLoadingTts(false)
+        const audio = new Audio('data:'+d.result.mimeType+';base64,'+d.result.base64)
+        audio.playbackRate = speed
+        audioRef.current = audio
+        audio.onended  = () => { audioRef.current = null; resolve() }
+        audio.onerror  = () => { audioRef.current = null; resolve() }
+        audio.play().catch(() => resolve())
+      } catch {
+        setLoadingTts(false)
+        resolve()
+      }
+    })
+  }
+
+  async function runCard(idx) {
+    if (!runningRef.current || idx >= cards.length) {
+      if (idx >= cards.length) { setPhase('done'); setRunning(false); runningRef.current = false }
+      return
+    }
+
+    const card = cards[idx]
+    cardIdxRef.current = idx
+    setCardIdx(idx)
+
+    // Front
+    setPhase('front')
+    await playText(card.front || card.question || '')
+    if (!runningRef.current) return
+
+    // Pause before back
+    setPhase('front-pause')
+    await sleep(PAUSES.front)
+    if (!runningRef.current) return
+
+    // Back
+    setPhase('back')
+    await playText(card.back || card.answer || '')
+    if (!runningRef.current) return
+
+    // Pause before next card
+    setPhase('back-pause')
+    await sleep(PAUSES.back)
+    if (!runningRef.current) return
+
+    setCompleted(c => c + 1)
+    runCard(idx + 1)
+  }
+
+  function start() {
+    runningRef.current = true
+    setRunning(true)
+    runCard(cardIdxRef.current)
+  }
+
+  function pause() {
+    runningRef.current = false
+    setRunning(false)
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
+    setPhase('idle')
+    setLoadingTts(false)
+  }
+
+  function skip() {
+    runningRef.current = false
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
+    setLoadingTts(false)
+    const next = Math.min(cardIdxRef.current + 1, cards.length - 1)
+    cardIdxRef.current = next
+    setCardIdx(next)
+    setPhase('idle')
+    if (running) {
+      setTimeout(() => {
+        runningRef.current = true
+        runCard(next)
+      }, 100)
+    }
+  }
+
+  function prev() {
+    runningRef.current = false
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
+    setLoadingTts(false)
+    const prev = Math.max(cardIdxRef.current - 1, 0)
+    cardIdxRef.current = prev
+    setCardIdx(prev)
+    setPhase('idle')
+    if (running) {
+      setTimeout(() => {
+        runningRef.current = true
+        runCard(prev)
+      }, 100)
+    }
+  }
+
+  function restart() {
+    runningRef.current = false
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
+    cardIdxRef.current = 0
+    setCardIdx(0)
+    setCompleted(0)
+    setPhase('idle')
+    setRunning(false)
+    setLoadingTts(false)
+  }
+
+  const card     = cards[cardIdx]
+  const progress = cards.length > 0 ? ((completed) / cards.length) * 100 : 0
+  const isDone   = phase === 'done'
+  const isFront  = phase === 'front' || phase === 'front-pause'
+  const isBack   = phase === 'back' || phase === 'back-pause'
+
+  if (isDone) return (
+    <div style={{ padding:'40px 24px', maxWidth:480, margin:'0 auto', textAlign:'center', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+      <div style={{ padding:'32px 24px', background:'rgba(251,146,60,0.07)', border:'1px solid rgba(251,146,60,0.2)', borderRadius:16, marginBottom:20 }}>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fb923c" strokeWidth="1.5" strokeLinecap="round" style={{ margin:'0 auto 14px', display:'block' }}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <div style={{ fontSize:22, fontWeight:900, color:'var(--c-t1)', marginBottom:6, letterSpacing:'-.03em' }}>All done!</div>
+        <div style={{ fontSize:13, color:'var(--c-t2)' }}>{cards.length} cards · {topic}</div>
+      </div>
+      <div style={{ display:'flex', gap:10 }}>
+        <button onClick={restart} style={{ flex:1, padding:'11px 0', borderRadius:10, border:'1px solid rgba(251,146,60,0.3)', background:'rgba(251,146,60,0.08)', color:'#fb923c', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>↺ Listen again</button>
+        <button onClick={onBack} style={{ flex:1, padding:'11px 0', borderRadius:10, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t2)', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Switch mode</button>
+      </div>
+    </div>
+  )
+
+  return (
+    <div style={{ padding:'28px 24px', maxWidth:560, margin:'0 auto', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+        <div>
+          <div style={{ fontSize:11, fontWeight:700, color:'#fb923c', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:2 }}>Audio mode</div>
+          <div style={{ fontSize:13, color:'var(--c-t2)' }}>{topic} · {completed}/{cards.length} cards</div>
+        </div>
+        <button onClick={onBack} style={{ fontSize:12, color:'rgba(255,255,255,0.3)', background:'none', border:'none', cursor:'pointer', fontFamily:'inherit', fontWeight:600 }}>← Change mode</button>
+      </div>
+
+      {/* Progress */}
+      <div style={{ height:3, background:'var(--c-line)', borderRadius:2, overflow:'hidden', marginBottom:24 }}>
+        <div style={{ height:'100%', width:progress+'%', background:'#fb923c', borderRadius:2, transition:'width .5s' }}/>
+      </div>
+
+      {/* Card display */}
+      <div style={{ background:'var(--c-surface)', border:'1.5px solid '+(isBack?'rgba(251,146,60,0.4)':'rgba(255,255,255,0.1)'), borderRadius:16, padding:'32px 28px', textAlign:'center', minHeight:200, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:14, marginBottom:20, transition:'border-color .3s' }}>
+
+        {/* Phase badge */}
+        <div style={{ fontSize:9, fontWeight:800, letterSpacing:'.08em', textTransform:'uppercase', padding:'3px 10px', borderRadius:20, background: isBack?'rgba(251,146,60,0.1)':'rgba(255,255,255,0.07)', color: isBack?'#fb923c':'rgba(255,255,255,0.4)', border:'1px solid '+(isBack?'rgba(251,146,60,0.25)':'rgba(255,255,255,0.1)') }}>
+          {phase==='idle' ? 'Ready' : isFront ? 'Question' : isBack ? 'Answer' : '···'}
+        </div>
+
+        {/* Card text */}
+        <div style={{ fontSize:18, fontWeight:700, color:'var(--c-t1)', lineHeight:1.45, maxWidth:400 }}>
+          {phase === 'idle' || isFront ? (card?.front || card?.question) : (card?.back || card?.answer)}
+        </div>
+
+        {/* Loading TTS indicator */}
+        {loadingTts && (
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <div style={{ width:5, height:5, borderRadius:'50%', background:'#fb923c', animation:'nova-pulse .9s ease-in-out infinite' }}/>
+            <span style={{ fontSize:11, color:'rgba(251,146,60,0.6)' }}>Loading audio…</span>
+          </div>
+        )}
+
+        {/* Animated speaker wave when playing */}
+        {(phase==='front'||phase==='back') && !loadingTts && (
+          <div style={{ display:'flex', alignItems:'center', gap:3, height:16 }}>
+            {[1,2,3,4,3,2,1].map((h,i) => (
+              <div key={i} style={{ width:3, height:h*4, background:'#fb923c', borderRadius:2, opacity:.7, animation:`nova-pulse ${0.6+i*0.1}s ease-in-out infinite`, animationDelay:`${i*0.08}s` }}/>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Card navigation */}
+      <div style={{ display:'flex', gap:4, justifyContent:'center', flexWrap:'wrap', marginBottom:20 }}>
+        {cards.slice(0, Math.min(cards.length, 20)).map((_,i) => (
+          <div key={i} style={{ width:8, height:8, borderRadius:'50%', background: i<completed?'#fb923c': i===cardIdx?'rgba(251,146,60,0.6)':'rgba(255,255,255,0.12)', transition:'all .3s' }}/>
+        ))}
+        {cards.length > 20 && <span style={{ fontSize:10, color:'rgba(255,255,255,0.2)', marginLeft:4 }}>+{cards.length-20}</span>}
+      </div>
+
+      {/* Controls */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:12, marginBottom:20 }}>
+        {/* Prev */}
+        <button onClick={prev} disabled={cardIdx===0}
+          style={{ width:40, height:40, borderRadius:'50%', border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t2)', cursor:cardIdx===0?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'center', opacity:cardIdx===0?.3:1 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 20L9 12l10-8v16z"/><line x1="5" y1="4" x2="5" y2="20"/></svg>
+        </button>
+
+        {/* Play / Pause */}
+        <button onClick={running ? pause : start}
+          style={{ width:64, height:64, borderRadius:'50%', border:'none', background: running?'rgba(251,146,60,0.15)':'linear-gradient(135deg,#ea580c,#fb923c)', color: running?'#fb923c':'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow: running?'none':'0 4px 20px rgba(251,146,60,0.35)', transition:'all .2s' }}>
+          {running ? (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          ) : (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+          )}
+        </button>
+
+        {/* Next */}
+        <button onClick={skip} disabled={cardIdx>=cards.length-1}
+          style={{ width:40, height:40, borderRadius:'50%', border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t2)', cursor:cardIdx>=cards.length-1?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'center', opacity:cardIdx>=cards.length-1?.3:1 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 4l10 8-10 8V4z"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
+        </button>
+      </div>
+
+      {/* Speed selector */}
+      <div style={{ display:'flex', alignItems:'center', gap:8, justifyContent:'center' }}>
+        <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)', fontWeight:600 }}>Speed</span>
+        {[0.75, 1, 1.25, 1.5].map(s => (
+          <button key={s} onClick={()=>{ setSpeed(s); if(audioRef.current) audioRef.current.playbackRate=s }}
+            style={{ padding:'4px 10px', borderRadius:20, fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', border:'1px solid '+(speed===s?'rgba(251,146,60,0.4)':'rgba(255,255,255,0.1)'), background:speed===s?'rgba(251,146,60,0.1)':'rgba(255,255,255,0.04)', color:speed===s?'#fb923c':'rgba(255,255,255,0.35)' }}>
+            {s}×
+          </button>
+        ))}
+      </div>
+
+      {!running && phase==='idle' && (
+        <div style={{ textAlign:'center', marginTop:14, fontSize:12, color:'rgba(255,255,255,0.25)' }}>
+          Press play · each card is read front then back · auto-advances
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Page wrapper ──────────────────────────────────────────────────────────────
 
 export default function StudyModesPage() {
@@ -690,5 +964,6 @@ export default function StudyModesPage() {
   if (mode === 'write') return <WriteMode  cards={deck.cards} topic={deck.topic} onBack={()=>setMode(null)}/>
   if (mode === 'match') return <MatchMode  cards={deck.cards} topic={deck.topic} onBack={()=>setMode(null)}/>
   if (mode === 'blurt') return <BlurtMode  cards={deck.cards} topic={deck.topic} onBack={()=>setMode(null)}/>
+  if (mode === 'audio') return <AudioMode  cards={deck.cards} topic={deck.topic} onBack={()=>setMode(null)}/>
   return null
 }
