@@ -235,6 +235,16 @@ function FlashcardsPageInner() {
 
   // ── Session actions ─────────────────────────────────────────────────────────
 
+  // ── Spaced repetition ──────────────────────────────────────────────────────
+  // Card IDs are content-based (hash of front text) not positional, so deck
+  // edits and reorders don't wipe a card's review history.
+  function cardId(front) {
+    const s = (front||'').toLowerCase().trim()
+    let h = 0
+    for (let i = 0; i < s.length; i++) { h = Math.imul(31, h) + s.charCodeAt(i) | 0 }
+    return 'fc-' + Math.abs(h).toString(36)
+  }
+
   function stopAudio() { if (audioRef?.current) { audioRef.current.pause(); audioRef.current=null } }
 
   function recordSM2(cardId, quality) {
@@ -252,7 +262,7 @@ function FlashcardsPageInner() {
   function handleAgain() {
     if (!card||studyQueue.length===0) return
     stopAudio(); setFlipped(false)
-    recordSM2('card-'+currentIdx, 1)
+    recordSM2(cardId(card.front||card.question), 1)
     setSessionRatings(r=>({...r,again:r.again+1}))
     setSessionAgainCards(prev=>{ const key=card.front||card.question; if (prev.find(c=>(c.front||c.question)===key)) return prev; return [...prev,card] })
     setStudyQueue(q=>{ if (q.length<=1) return []; return [...q.slice(1),q[0]] })
@@ -261,7 +271,7 @@ function FlashcardsPageInner() {
   function handleHard() {
     if (!card||studyQueue.length===0) return
     stopAudio(); setFlipped(false)
-    recordSM2('card-'+currentIdx, 3)
+    recordSM2(cardId(card.front||card.question), 3)
     setSessionRatings(r=>({...r,hard:r.hard+1}))
     setSessionHardCards(prev=>{ const key=card.front||card.question; if (prev.find(c=>(c.front||c.question)===key)) return prev; return [...prev,card] })
     setStudyQueue(q=>{ if (q.length<=1) return []; const curr=q[0]; const rem=q.slice(1); const at=Math.max(1,Math.ceil(rem.length/2)); return [...rem.slice(0,at),curr,...rem.slice(at)] })
@@ -270,7 +280,7 @@ function FlashcardsPageInner() {
   function handleEasy() {
     if (!card||studyQueue.length===0) return
     stopAudio(); setFlipped(false)
-    recordSM2('card-'+currentIdx, 5)
+    recordSM2(cardId(card.front||card.question), 5)
     setSessionRatings(r=>({...r,easy:r.easy+1}))
     setStudyQueue(q=>q.slice(1))
     setSessionHardCards(prev=>prev.filter(c=>(c.front||c.question)!==(card.front||card.question)))
@@ -441,13 +451,15 @@ function FlashcardsPageInner() {
 
       {/* Due today banner */}
       {dueToday > 0 && (
-        <div style={{ background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.22)', borderRadius:10, padding:'11px 16px', marginBottom:20, display:'flex', alignItems:'center', gap:12 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-          <div style={{ flex:1 }}>
-            <p style={{ margin:0, fontWeight:700, fontSize:13, color:'#f59e0b' }}>{dueToday} card{dueToday>1?'s':''} ready to review</p>
-            <p style={{ margin:0, fontSize:11, color:'rgba(255,255,255,0.3)' }}>Your spaced repetition queue is waiting</p>
+        <a href="/review" style={{ textDecoration:'none', display:'block', marginBottom:20 }}>
+          <div style={{ background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.22)', borderRadius:10, padding:'11px 16px', display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <div style={{ flex:1 }}>
+              <p style={{ margin:0, fontWeight:700, fontSize:13, color:'#f59e0b' }}>{dueToday} card{dueToday>1?'s':''} ready to review</p>
+              <p style={{ margin:0, fontSize:11, color:'rgba(255,255,255,0.3)' }}>Tap to start your review session →</p>
+            </div>
           </div>
-        </div>
+        </a>
       )}
 
       {/* Page header */}
