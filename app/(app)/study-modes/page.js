@@ -94,6 +94,73 @@ function ModeSelector({ topic, cardCount, onSelect }) {
   )
 }
 
+// ── Nova Explain Panel (shared) ───────────────────────────────────────────────
+
+const EXPLAIN_STYLES = [
+  { id:'simpler', label:'Simpler'  },
+  { id:'analogy', label:'Analogy'  },
+  { id:'example', label:'Example'  },
+  { id:'eli5',    label:'ELI5'     },
+]
+
+function WriteModeExplainPanel({ card }) {
+  const [open,         setOpen]         = useState(false)
+  const [explainStyle, setExplainStyle] = useState(null)
+  const [explanation,  setExplanation]  = useState('')
+  const [explaining,   setExplaining]   = useState(false)
+
+  async function explain(style) {
+    if (explaining) return
+    setExplainStyle(style); setExplanation(''); setExplaining(true)
+    const front = card?.front || card?.question || ''
+    const back  = card?.back  || card?.answer  || ''
+    const stylePrompts = {
+      simpler: 'Explain this in the simplest possible terms, no jargon.',
+      analogy: 'Use a creative analogy comparing this to everyday life.',
+      example: 'Give a concrete real-world example that makes this stick.',
+      eli5:    "Explain like I'm 5 — extremely simple, short sentences.",
+    }
+    try {
+      await novaStream(
+        [{ role:'user', content:`Concept: "${front}"\nExplanation: "${back}"\n\nTask: ${stylePrompts[style]}\nKeep it under 4 sentences.` }],
+        chunk => setExplanation(p => p + chunk),
+        { systemOverride:'You are Nova, a friendly study assistant. Give vivid, memorable alternative explanations. Get straight to it — no "Sure!" or preamble.' }
+      )
+    } catch { setExplanation('Unable to load explanation.') }
+    finally  { setExplaining(false) }
+  }
+
+  if (!open) return (
+    <button onClick={()=>setOpen(true)} style={{ width:'100%', padding:'8px 0', borderRadius:9, border:'1px solid rgba(167,139,250,0.2)', background:'rgba(167,139,250,0.06)', color:'rgba(167,139,250,0.7)', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginBottom:14 }}>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+      Explain differently
+    </button>
+  )
+
+  return (
+    <div style={{ background:'rgba(10,8,22,0.9)', border:'1px solid rgba(167,139,250,0.25)', borderRadius:12, padding:'14px 16px', marginBottom:14 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+          <div style={{ width:20, height:20, borderRadius:'50%', background:'radial-gradient(circle at 33% 33%,#c4b5fd,#7c3aed 40%,#4c1d95 70%,#08001a)', flexShrink:0 }}/>
+          <span style={{ fontSize:12, fontWeight:700, color:'#a78bfa' }}>Nova</span>
+        </div>
+        <button onClick={()=>setOpen(false)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer', fontSize:14 }}>✕</button>
+      </div>
+      <div style={{ display:'flex', gap:5, marginBottom:10, flexWrap:'wrap' }}>
+        {EXPLAIN_STYLES.map(s => (
+          <button key={s.id} onClick={()=>explain(s.id)} disabled={explaining}
+            style={{ padding:'4px 11px', borderRadius:20, fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', border:'1px solid '+(explainStyle===s.id?'rgba(167,139,250,0.5)':'rgba(255,255,255,0.1)'), background:explainStyle===s.id?'rgba(167,139,250,0.15)':'rgba(255,255,255,0.04)', color:explainStyle===s.id?'#c4b5fd':'rgba(255,255,255,0.4)', opacity:explaining&&explainStyle!==s.id?.4:1 }}>
+            {s.label}
+          </button>
+        ))}
+      </div>
+      {!explainStyle && <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)' }}>Pick a style to get a fresh explanation.</div>}
+      {explaining && <div style={{ display:'flex', alignItems:'center', gap:7 }}><div style={{ width:6, height:6, borderRadius:'50%', background:'#a78bfa', animation:'nova-pulse .9s ease-in-out infinite' }}/><span style={{ fontSize:12, color:'rgba(167,139,250,0.6)' }}>Nova is thinking…</span></div>}
+      {explanation && <div style={{ fontSize:13, color:'rgba(255,255,255,0.85)', lineHeight:1.7 }}>{explanation}</div>}
+    </div>
+  )
+}
+
 // ── WRITE MODE ────────────────────────────────────────────────────────────────
 
 function WriteMode({ cards, topic, onBack }) {
@@ -229,6 +296,11 @@ function WriteMode({ cards, topic, onBack }) {
             <div style={{ fontSize:12, color:'rgba(255,255,255,0.35)', marginTop:6, lineHeight:1.5 }}>{novaGrade}</div>
           )}
         </div>
+      )}
+
+      {/* Explain differently — shown after wrong/close result */}
+      {(result === 'wrong' || result === 'close') && (
+        <WriteModeExplainPanel card={card}/>
       )}
 
       {grading && (
