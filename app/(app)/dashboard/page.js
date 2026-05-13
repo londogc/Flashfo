@@ -85,6 +85,7 @@ export default function DashboardPage() {
   const [dataLoading,  setDataLoading]  = useState(true)
   const [dueToday,     setDueToday]     = useState(0)
   const [weakCardCount,setWeakCardCount]= useState(0)
+  const [weekStats,    setWeekStats]    = useState(null)  // { daysStudied, cardsStudied, minutesSpent, streak, prevCards }
   const [continueIdx,  setContinueIdx]  = useState(0)
   const [mobileFailed, setMobileFailed] = useState(false)
 
@@ -103,7 +104,47 @@ export default function DashboardPage() {
       setWeakCardCount(Object.values(reviews).filter(r => r.repetitions >= 2 && r.easeFactor < 2.0).length)
     } catch {}
     try {
-      const { data: enroll } = await supabase
+      // Weekly snapshot — last 14 days so we can compare this week vs last
+      const twoWeeksAgo = new Date(); twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 13)
+      const { data: sessions } = await supabase
+        .from('study_sessions')
+        .select('date, cards_studied, minutes_spent')
+        .eq('user_id', user.id)
+        .gte('date', twoWeeksAgo.toISOString().split('T')[0])
+        .order('date', { ascending: true })
+
+      if (sessions?.length) {
+        const today    = new Date().toISOString().split('T')[0]
+        const weekAgo  = new Date(); weekAgo.setDate(weekAgo.getDate() - 6)
+        const weekAgoStr = weekAgo.toISOString().split('T')[0]
+        const thisWeek = sessions.filter(s => s.date >= weekAgoStr)
+        const lastWeek = sessions.filter(s => s.date < weekAgoStr)
+        // Build 7-day activity array
+        const activity = Array.from({length:7}, (_,i) => {
+          const d = new Date(); d.setDate(d.getDate() - (6-i))
+          const ds = d.toISOString().split('T')[0]
+          const s  = thisWeek.find(x => x.date === ds)
+          return { date:ds, cards: s?.cards_studied||0, mins: s?.minutes_spent||0, isToday: ds===today }
+        })
+        // Streak: consecutive days with at least 1 session ending today/yesterday
+        const allDates = new Set(sessions.map(s => s.date))
+        let streak = 0
+        for (let i = 0; i < 30; i++) {
+          const d = new Date(); d.setDate(d.getDate() - i)
+          if (allDates.has(d.toISOString().split('T')[0])) streak++
+          else if (i === 0) continue  // allow today to not be studied yet
+          else break
+        }
+        setWeekStats({
+          daysStudied:  thisWeek.length,
+          cardsStudied: thisWeek.reduce((s,r) => s+(r.cards_studied||0), 0),
+          minutesSpent: thisWeek.reduce((s,r) => s+(r.minutes_spent||0), 0),
+          prevCards:    lastWeek.reduce((s,r) => s+(r.cards_studied||0), 0),
+          streak,
+          activity,
+        })
+      }
+    } catch {}
         .from('student_enrollments').select('classroom_id, classrooms(name, subject)').eq('student_id', user.id)
       if (enroll) setClasses(enroll.map(e => e.classrooms).filter(Boolean))
       const { data: hw } = await supabase
@@ -256,6 +297,61 @@ export default function DashboardPage() {
           Ask Nova →
         </Link>
       </div>
+
+      {/* Weekly snapshot */}
+      {weekStats && (weekStats.cardsStudied > 0 || weekStats.daysStudied > 0) && (
+        <div className="dash-card" style={{ ...card, padding:'18px 20px', marginBottom:12, animationDelay:'0.2s' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+            <div>
+              <span style={{ fontSize:10, fontWeight:700, letterSpacing:'.08em', textTransform:'uppercase', color:'rgba(255,255,255,0.25)' }}>This week</span>
+              {weekStats.streak > 1 && (
+                <span style={{ marginLeft:10, fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:20, background:'rgba(245,158,11,0.1)', border:'0.5px solid rgba(245,158,11,0.3)', color:'#fbbf24' }}>
+                  🔥 {weekStats.streak} day streak
+                </span>
+              )}
+            </div>
+            <Link href="/my-progress" style={{ fontSize:11, color:'rgba(255,255,255,0.3)', textDecoration:'none', fontWeight:600 }}>Full stats →</Link>
+          </div>
+
+          {/* Stats row */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:14 }}>
+            {[
+              { label:'Days studied',  value: weekStats.daysStudied,  unit:'/ 7',  color:'#60a5fa' },
+              { label:'Cards reviewed', value: weekStats.cardsStudied, unit:'cards', color:'#34d399',
+                trend: weekStats.prevCards > 0 ? (weekStats.cardsStudied >= weekStats.prevCards ? '↑' : '↓') : null,
+                trendColor: weekStats.cardsStudied >= weekStats.prevCards ? '#34d399' : '#f87171' },
+              { label:'Time spent',    value: weekStats.minutesSpent < 60 ? weekStats.minutesSpent : Math.round(weekStats.minutesSpent/60*10)/10,
+                unit: weekStats.minutesSpent < 60 ? 'min' : 'hrs', color:'#a78bfa' },
+            ].map(s => (
+              <div key={s.label} style={{ background:'rgba(255,255,255,0.04)', borderRadius:10, padding:'10px 12px' }}>
+                <div style={{ display:'flex', alignItems:'baseline', gap:4, marginBottom:3 }}>
+                  <span style={{ fontSize:22, fontWeight:800, color:s.color, letterSpacing:'-.03em', lineHeight:1 }}>{s.value}</span>
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{s.unit}</span>
+                  {s.trend && <span style={{ fontSize:11, fontWeight:700, color:s.trendColor, marginLeft:2 }}>{s.trend}</span>}
+                </div>
+                <div style={{ fontSize:10, color:'rgba(255,255,255,0.25)' }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* 7-day activity bars */}
+          <div style={{ display:'flex', gap:4, alignItems:'flex-end', height:36 }}>
+            {weekStats.activity.map((day,i) => {
+              const maxCards = Math.max(...weekStats.activity.map(d=>d.cards), 1)
+              const h = day.cards > 0 ? Math.max(6, Math.round((day.cards/maxCards)*32)) : 3
+              const dayLabel = ['S','M','T','W','T','F','S'][new Date(day.date+'T12:00:00').getDay()]
+              return (
+                <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                  <div style={{ width:'100%', height:32, display:'flex', alignItems:'flex-end' }}>
+                    <div style={{ width:'100%', height:h, borderRadius:3, background: day.isToday ? '#a78bfa' : day.cards>0 ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.07)', transition:'height .3s' }}/>
+                  </div>
+                  <span style={{ fontSize:9, color: day.isToday ? '#a78bfa' : 'rgba(255,255,255,0.2)', fontWeight: day.isToday?700:400 }}>{dayLabel}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* This Day in History */}
       <div className="dash-card" style={{ animationDelay:'0.19s' }}>
