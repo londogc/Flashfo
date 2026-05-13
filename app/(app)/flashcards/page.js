@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 import { logStudySession } from '@/lib/logStudySession'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
@@ -126,6 +127,7 @@ const CHIPS = [
 
 function FlashcardsPageInner() {
   const { user, profile } = useAuth()
+  const isMobile  = useIsMobile()
   const cardTheme = CARD_THEMES[profile?.flashcard_theme] || CARD_THEMES.default
   const searchParams = useSearchParams()
   const audioRef = useRef(null)
@@ -479,8 +481,8 @@ function FlashcardsPageInner() {
         ))}
       </div>
 
-      {/* Two-column layout */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, alignItems:'start' }}>
+      {/* Two-column layout — single column on mobile */}
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:20, alignItems:'start' }}>
 
         {/* Left — input */}
         <div>
@@ -586,8 +588,8 @@ function FlashcardsPageInner() {
           </button>
         </div>
 
-        {/* Right — preview panel */}
-        <div>
+        {/* Right — preview panel, hidden on mobile */}
+        {!isMobile && <div>
           <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>What you'll get</div>
 
           {/* Card stack visual */}
@@ -627,7 +629,7 @@ function FlashcardsPageInner() {
             </div>
             <div style={{ fontSize:11, color:'rgba(255,255,255,0.27)', lineHeight:1.6 }}>After your session, Nova identifies which cards you struggled with and offers to drill just those concepts.</div>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   )
