@@ -123,6 +123,79 @@ const CHIPS = [
   'Cardiovascular anatomy','Spanish irregular verbs','The Cold War',
 ]
 
+// ── Nova Explain Differently ──────────────────────────────────────────────────
+
+const EXPLAIN_STYLES = [
+  { id:'simpler',  label:'Simpler',  desc:'Plain language' },
+  { id:'analogy',  label:'Analogy',  desc:'Compare to something familiar' },
+  { id:'example',  label:'Example',  desc:'Real-world scenario' },
+  { id:'eli5',     label:'ELI5',     desc:"Like I'm 5" },
+]
+
+function NovaExplainPanel({ card, explainStyle, novaExplain, explaining, onExplain }) {
+  const [open, setOpen] = useState(false)
+
+  if (!card) return null
+
+  return (
+    <div style={{ width:'100%', maxWidth:440 }}>
+      {/* Toggle button */}
+      {!open && (
+        <button
+          onClick={() => setOpen(true)}
+          style={{ width:'100%', padding:'7px 0', borderRadius:9, border:'1px solid rgba(167,139,250,0.2)', background:'rgba(167,139,250,0.06)', color:'rgba(167,139,250,0.7)', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:6, transition:'all .15s' }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+          Explain differently
+        </button>
+      )}
+
+      {/* Panel */}
+      {open && (
+        <div style={{ background:'rgba(10,8,22,0.9)', border:'1px solid rgba(167,139,250,0.25)', borderRadius:12, padding:'14px 16px', backdropFilter:'blur(12px)' }}>
+          {/* Header */}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ width:22, height:22, borderRadius:'50%', background:'radial-gradient(circle at 33% 33%,#c4b5fd,#7c3aed 40%,#4c1d95 70%,#08001a)', boxShadow:'0 0 8px rgba(124,58,237,0.5)', flexShrink:0 }}/>
+              <span style={{ fontSize:12, fontWeight:700, color:'#a78bfa' }}>Nova</span>
+            </div>
+            <button onClick={() => { setOpen(false) }} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer', fontSize:14, fontFamily:'inherit', lineHeight:1 }}>✕</button>
+          </div>
+
+          {/* Style selector */}
+          <div style={{ display:'flex', gap:5, marginBottom:12, flexWrap:'wrap' }}>
+            {EXPLAIN_STYLES.map(s => (
+              <button key={s.id}
+                onClick={() => onExplain(s.id)}
+                disabled={explaining}
+                style={{ padding:'4px 11px', borderRadius:20, fontSize:11, fontWeight:700, cursor:explaining?'not-allowed':'pointer', fontFamily:'inherit', transition:'all .15s', border:'1px solid '+(explainStyle===s.id?'rgba(167,139,250,0.5)':'rgba(255,255,255,0.1)'), background:explainStyle===s.id?'rgba(167,139,250,0.15)':'rgba(255,255,255,0.04)', color:explainStyle===s.id?'#c4b5fd':'rgba(255,255,255,0.4)', opacity:explaining&&explainStyle!==s.id?.4:1 }}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Explanation content */}
+          {!explainStyle && !explaining && (
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', lineHeight:1.6 }}>
+              Pick a style above — Nova will re-explain "<span style={{ color:'rgba(255,255,255,0.5)' }}>{card.front||card.question}</span>" in a different way.
+            </div>
+          )}
+
+          {explaining && (
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ width:6, height:6, borderRadius:'50%', background:'#a78bfa', animation:'nova-pulse .9s ease-in-out infinite', flexShrink:0 }}/>
+              <span style={{ fontSize:12, color:'rgba(167,139,250,0.6)' }}>Nova is thinking…</span>
+            </div>
+          )}
+
+          {novaExplain && (
+            <div style={{ fontSize:13, color:'rgba(255,255,255,0.85)', lineHeight:1.7 }}>{novaExplain}</div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main inner component ──────────────────────────────────────────────────────
 
 function FlashcardsPageInner() {
@@ -160,6 +233,11 @@ function FlashcardsPageInner() {
   const [sessionAgainCards,  setSessionAgainCards]  = useState([])
   const [sessionRatings,     setSessionRatings]     = useState({ again:0, hard:0, easy:0 })
   const [dueToday,    setDueToday]    = useState(0)
+
+  // Nova "explain differently" — inline per-card explanations
+  const [novaExplain,   setNovaExplain]   = useState('')    // streamed text
+  const [explaining,    setExplaining]    = useState(false)
+  const [explainStyle,  setExplainStyle]  = useState(null)  // null | 'simpler' | 'analogy' | 'example' | 'eli5'
 
   const currentIdx = studyQueue.length > 0 ? studyQueue[0] : 0
   const card       = cards.length > 0 ? cards[currentIdx] : null
@@ -263,7 +341,7 @@ function FlashcardsPageInner() {
 
   function handleAgain() {
     if (!card||studyQueue.length===0) return
-    stopAudio(); setFlipped(false)
+    stopAudio(); setFlipped(false); setNovaExplain(''); setExplainStyle(null)
     recordSM2(cardId(card.front||card.question), 1)
     setSessionRatings(r=>({...r,again:r.again+1}))
     setSessionAgainCards(prev=>{ const key=card.front||card.question; if (prev.find(c=>(c.front||c.question)===key)) return prev; return [...prev,card] })
@@ -272,7 +350,7 @@ function FlashcardsPageInner() {
 
   function handleHard() {
     if (!card||studyQueue.length===0) return
-    stopAudio(); setFlipped(false)
+    stopAudio(); setFlipped(false); setNovaExplain(''); setExplainStyle(null)
     recordSM2(cardId(card.front||card.question), 3)
     setSessionRatings(r=>({...r,hard:r.hard+1}))
     setSessionHardCards(prev=>{ const key=card.front||card.question; if (prev.find(c=>(c.front||c.question)===key)) return prev; return [...prev,card] })
@@ -281,12 +359,40 @@ function FlashcardsPageInner() {
 
   function handleEasy() {
     if (!card||studyQueue.length===0) return
-    stopAudio(); setFlipped(false)
+    stopAudio(); setFlipped(false); setNovaExplain(''); setExplainStyle(null)
     recordSM2(cardId(card.front||card.question), 5)
     setSessionRatings(r=>({...r,easy:r.easy+1}))
     setStudyQueue(q=>q.slice(1))
     setSessionHardCards(prev=>prev.filter(c=>(c.front||c.question)!==(card.front||card.question)))
     setSessionAgainCards(prev=>prev.filter(c=>(c.front||c.question)!==(card.front||card.question)))
+  }
+
+  // ── Nova "explain differently" ──────────────────────────────────────────────
+
+  async function explainDifferently(style) {
+    if (!card || explaining) return
+    setExplainStyle(style)
+    setExplaining(true)
+    setNovaExplain('')
+    const front = card.front || card.question || ''
+    const back  = card.back  || card.answer  || ''
+    const stylePrompts = {
+      simpler:  'Explain this concept in the simplest possible terms, as if teaching it to someone with no background. Avoid jargon.',
+      analogy:  'Explain this concept using a creative, memorable analogy or comparison to something from everyday life.',
+      example:  'Explain this concept through a concrete, real-world example or scenario that makes it stick.',
+      eli5:     'Explain this concept as if the student is 5 years old — extremely simple language, short sentences, maybe a story.',
+    }
+    try {
+      await novaStream(
+        [{ role:'user', content:`Concept: "${front}"\nStandard explanation: "${back}"\n\nTask: ${stylePrompts[style]}\n\nKeep it under 4 sentences. Be engaging and memorable.` }],
+        chunk => setNovaExplain(prev => prev + chunk),
+        { systemOverride:'You are Nova, a friendly and creative study assistant. Give alternative explanations that are vivid and memorable. Never say "Sure!" or "Of course!". Get straight to the explanation.' }
+      )
+    } catch {
+      setNovaExplain('Unable to load explanation right now.')
+    } finally {
+      setExplaining(false)
+    }
   }
 
   // ── Edit ────────────────────────────────────────────────────────────────────
@@ -786,10 +892,14 @@ function FlashcardsPageInner() {
           </div>
 
           {flipped
-            ? <div style={{ display:'flex', gap:10, alignItems:'center' }}>
-                <button onClick={handleAgain} style={{ padding:'8px 18px', borderRadius:9, fontSize:11, fontWeight:700, border:'1px solid rgba(239,68,68,0.25)', background:'rgba(239,68,68,0.06)', color:'#f87171', cursor:'pointer', fontFamily:'inherit' }}>Again<br/><span style={{fontSize:9,opacity:.7}}>→ end</span></button>
-                <button onClick={handleHard}  style={{ padding:'8px 18px', borderRadius:9, fontSize:11, fontWeight:700, border:'1px solid rgba(245,158,11,0.25)', background:'rgba(245,158,11,0.06)', color:'#fbbf24', cursor:'pointer', fontFamily:'inherit' }}>Hard<br/><span style={{fontSize:9,opacity:.7}}>→ later</span></button>
-                <button onClick={handleEasy}  style={{ padding:'8px 18px', borderRadius:9, fontSize:11, fontWeight:700, border:'1px solid rgba(16,185,129,0.3)', background:'rgba(16,185,129,0.07)', color:'#34d399', cursor:'pointer', fontFamily:'inherit' }}>Easy<br/><span style={{fontSize:9,opacity:.7}}>✓ done</span></button>
+            ? <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10, width:'100%', maxWidth:440 }}>
+                <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+                  <button onClick={handleAgain} style={{ padding:'8px 18px', borderRadius:9, fontSize:11, fontWeight:700, border:'1px solid rgba(239,68,68,0.25)', background:'rgba(239,68,68,0.06)', color:'#f87171', cursor:'pointer', fontFamily:'inherit' }}>Again<br/><span style={{fontSize:9,opacity:.7}}>→ end</span></button>
+                  <button onClick={handleHard}  style={{ padding:'8px 18px', borderRadius:9, fontSize:11, fontWeight:700, border:'1px solid rgba(245,158,11,0.25)', background:'rgba(245,158,11,0.06)', color:'#fbbf24', cursor:'pointer', fontFamily:'inherit' }}>Hard<br/><span style={{fontSize:9,opacity:.7}}>→ later</span></button>
+                  <button onClick={handleEasy}  style={{ padding:'8px 18px', borderRadius:9, fontSize:11, fontWeight:700, border:'1px solid rgba(16,185,129,0.3)', background:'rgba(16,185,129,0.07)', color:'#34d399', cursor:'pointer', fontFamily:'inherit' }}>Easy<br/><span style={{fontSize:9,opacity:.7}}>✓ done</span></button>
+                </div>
+                {/* Nova explain differently */}
+                <NovaExplainPanel card={card} explainStyle={explainStyle} novaExplain={novaExplain} explaining={explaining} onExplain={explainDifferently}/>
               </div>
             : <p style={{ fontSize:12, color:'var(--c-t3)', margin:'0 0 10px' }}>Click or press Space to flip · then rate</p>
           }
@@ -859,7 +969,12 @@ function FlashcardsPageInner() {
           {!flipped && <div style={{ fontSize:11, color:'var(--c-t3)' }}>Tap to reveal answer</div>}
           <div style={{ position:'absolute', bottom:12, right:14 }} onClick={e=>e.stopPropagation()}><SpeakerBtn text={cardFace} audioRef={audioRef}/></div>
         </div>
-        {flipped ? ratingBtns : <div style={{ textAlign:'center', padding:'12px 0', fontSize:12, color:'var(--c-t3)' }}>Rate this card after revealing the answer</div>}
+        {flipped ? (
+          <>
+            {ratingBtns}
+            <NovaExplainPanel card={card} explainStyle={explainStyle} novaExplain={novaExplain} explaining={explaining} onExplain={explainDifferently}/>
+          </>
+        ) : <div style={{ textAlign:'center', padding:'12px 0', fontSize:12, color:'var(--c-t3)' }}>Rate this card after revealing the answer</div>}
       </div>
     </>
   )
