@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
 import { rpc, novaStream } from '@/lib/api'
@@ -275,6 +276,7 @@ function checkFitbAnswer(userAns, correctAns) {
 
 export default function QuizPage() {
   const { user } = useAuth()
+  const isMobile  = useIsMobile()
 
   const [typeId,    setTypeId]    = useState('mcq')
   const [count,     setCount]     = useState(10)
@@ -439,8 +441,8 @@ export default function QuizPage() {
         ))}
       </div>
 
-      {/* Two-column layout */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, alignItems:'start' }}>
+      {/* Two-column layout — single column on mobile */}
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:20, alignItems:'start' }}>
 
         {/* Left — input */}
         <div>
@@ -525,8 +527,8 @@ export default function QuizPage() {
           </button>
         </div>
 
-        {/* Right — live preview */}
-        <div>
+        {/* Right — live preview, hidden on mobile */}
+        {!isMobile && <div>
           <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>Live preview</div>
           <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:16 }}>
             <div style={{ marginBottom:10 }}>
@@ -558,7 +560,7 @@ export default function QuizPage() {
               <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>Answer key included</div>
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   )
