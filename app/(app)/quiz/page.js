@@ -6,15 +6,17 @@ import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
 import { rpc, novaStream } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 
+// ── Print helpers ─────────────────────────────────────────────────────────────
+
 function printQuizBlank(questions, topic) {
   const win = window.open('', '_blank')
-  const qHtml = questions.map(function(q, i) {
-    var labels = ['A','B','C','D']
-    var body = ''
-    if (q.type === 'fill_blank') { body = '<div style="margin:8px 0;border-bottom:1px solid #999;width:200px;display:inline-block"></div>' }
-    else if (q.type === 'short_answer') { body = '<div style="border:1px solid #ddd;border-radius:6px;height:60px;margin-top:6px"></div>' }
-    else if (q.type === 'matching') { body = (q.pairs||[]).map(function(p,j){ return '<div style="display:flex;gap:16px;margin:4px 0"><div style="flex:1;padding:4px 8px;border:1px solid #ddd;border-radius:4px">'+(j+1)+'. '+p.left+'</div><div style="flex:1;padding:4px 8px;border:1px solid #ddd;border-radius:4px">___________</div></div>' }).join('') }
-    else { body = (q.options||(q.type==='true_false'?['True','False']:[])).map(function(o,j){ return '<div style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;margin:3px 0;font-size:12px">'+labels[j]+'. '+o+'</div>' }).join('') }
+  const labels = ['A','B','C','D']
+  const qHtml = questions.map((q,i) => {
+    let body = ''
+    if (q.type==='fill_blank')    body = '<div style="margin:8px 0;border-bottom:1px solid #999;width:200px;display:inline-block"></div>'
+    else if (q.type==='short_answer') body = '<div style="border:1px solid #ddd;border-radius:6px;height:60px;margin-top:6px"></div>'
+    else if (q.type==='matching') body = (q.pairs||[]).map((p,j)=>'<div style="display:flex;gap:16px;margin:4px 0"><div style="flex:1;padding:4px 8px;border:1px solid #ddd;border-radius:4px">'+(j+1)+'. '+p.left+'</div><div style="flex:1;padding:4px 8px;border:1px solid #ddd;border-radius:4px">___________</div></div>').join('')
+    else body = (q.options||(q.type==='true_false'?['True','False']:[])).map((o,j)=>'<div style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;margin:3px 0;font-size:12px">'+labels[j]+'. '+o+'</div>').join('')
     return '<div style="margin-bottom:18px;page-break-inside:avoid"><div style="font-weight:600;margin-bottom:6px">'+(i+1)+'. '+q.question+'</div>'+body+'</div>'
   }).join('')
   win.document.write('<!DOCTYPE html><html><head><title>Quiz</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#111;font-size:13px}h1{font-size:20px}.sub{color:#666;font-size:12px;margin-bottom:24px}@media print{body{margin:20px}}</style></head><body><h1>'+(topic||'Quiz')+'</h1><div class="sub">'+questions.length+' questions</div>'+qHtml+'<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>')
@@ -24,23 +26,25 @@ function printQuizBlank(questions, topic) {
 function printQuizKey(questions, topic) {
   const win = window.open('', '_blank')
   const labels = ['A','B','C','D']
-  const qHtml = questions.map(function(q, i) {
-    var body = ''
-    if (q.type === 'fill_blank') { body = '<div style="padding:4px 8px;background:#d1fae5;border-radius:4px;font-size:12px;display:inline-block">Answer: '+(q.correctAnswer||'')+'</div>' }
-    else if (q.type === 'short_answer') { body = '<div style="padding:4px 8px;background:#dbeafe;border-radius:4px;font-size:12px">Model: '+(q.correctAnswer||'Open-ended')+'</div>' }
-    else if (q.type === 'matching') { body = (q.pairs||[]).map(function(p,j){ return '<div style="font-size:12px;margin:2px 0"><strong>'+(j+1)+'. '+p.left+'</strong> &rarr; '+p.right+'</div>' }).join('') }
-    else { body = (q.options||(q.type==='true_false'?['True','False']:[])).map(function(o,j){ var correct = j === q.answerIndex; return '<div style="padding:4px 8px;border:1px solid '+(correct?'#6ee7b7':'#e5e7eb')+';background:'+(correct?'#d1fae5':'transparent')+';border-radius:4px;margin:3px 0;font-size:12px;font-weight:'+(correct?'600':'normal')+'">'+labels[j]+'. '+o+(correct?' &#10003;':'')+'</div>' }).join('') }
-    var exp = q.explanation ? '<div style="margin-top:6px;font-size:11px;color:#555;background:#f9fafb;padding:5px 8px;border-radius:4px;border-left:3px solid #3b82f6"><strong>Explanation:</strong> '+q.explanation+'</div>' : ''
+  const qHtml = questions.map((q,i) => {
+    let body = ''
+    if (q.type==='fill_blank')    body = '<div style="padding:4px 8px;background:#d1fae5;border-radius:4px;font-size:12px;display:inline-block">Answer: '+(q.correctAnswer||'')+'</div>'
+    else if (q.type==='short_answer') body = '<div style="padding:4px 8px;background:#dbeafe;border-radius:4px;font-size:12px">Model: '+(q.correctAnswer||'Open-ended')+'</div>'
+    else if (q.type==='matching') body = (q.pairs||[]).map((p,j)=>'<div style="font-size:12px;margin:2px 0"><strong>'+(j+1)+'. '+p.left+'</strong> → '+p.right+'</div>').join('')
+    else body = (q.options||(q.type==='true_false'?['True','False']:[])).map((o,j)=>{ const cor=j===q.answerIndex; return '<div style="padding:4px 8px;border:1px solid '+(cor?'#6ee7b7':'#e5e7eb')+';background:'+(cor?'#d1fae5':'transparent')+';border-radius:4px;margin:3px 0;font-size:12px;font-weight:'+(cor?'600':'normal')+'">'+labels[j]+'. '+o+(cor?' ✓':'')+'</div>' }).join('')
+    const exp = q.explanation ? '<div style="margin-top:6px;font-size:11px;color:#555;background:#f9fafb;padding:5px 8px;border-radius:4px;border-left:3px solid #3b82f6"><strong>Explanation:</strong> '+q.explanation+'</div>' : ''
     return '<div style="margin-bottom:18px;page-break-inside:avoid"><div style="font-weight:600;margin-bottom:6px">'+(i+1)+'. '+q.question+'</div>'+body+exp+'</div>'
   }).join('')
-  win.document.write('<!DOCTYPE html><html><head><title>Answer Key</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#111;font-size:13px}h1{font-size:20px}.sub{color:#666;font-size:12px;margin-bottom:24px}@media print{body{margin:20px}}</style></head><body><h1>'+(topic||'Quiz')+' &mdash; Answer Key</h1><div class="sub">'+questions.length+' questions</div>'+qHtml+'<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>')
+  win.document.write('<!DOCTYPE html><html><head><title>Answer Key</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#111;font-size:13px}h1{font-size:20px}.sub{color:#666;font-size:12px;margin-bottom:24px}@media print{body{margin:20px}}</style></head><body><h1>'+(topic||'Quiz')+' — Answer Key</h1><div class="sub">'+questions.length+' questions</div>'+qHtml+'<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>')
   win.document.close()
 }
+
+// ── Speaker button ────────────────────────────────────────────────────────────
 
 function SpeakerBtn({ text }) {
   const [busy, setBusy] = useState(false)
   async function speak() {
-    if (busy || !text) return
+    if (busy||!text) return
     setBusy(true)
     try {
       const d = await rpc('generateOpenAITtsAudio', [text, 'nova', 1])
@@ -50,67 +54,72 @@ function SpeakerBtn({ text }) {
     } catch { setBusy(false) }
   }
   return (
-    <button onClick={e=>{e.stopPropagation();speak()}} title="Listen" className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full hover:bg-blue-500/10 transition-colors" style={{color:busy?'#93c5fd':'#60a5fa',opacity:busy?0.6:1}}>
+    <button onClick={e=>{e.stopPropagation();speak()}} title="Listen"
+      style={{ flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', width:28, height:28, borderRadius:'50%', border:'none', background:'none', cursor:'pointer', color:busy?'#93c5fd':'#60a5fa', opacity:busy?.6:1, transition:'all .15s' }}>
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M3 6h2.5L8 4v8L5.5 10H3V6z"/>
-        {busy?<path d="M10 6.5a2 2 0 010 3"/>:<><path d="M10 5a4 4 0 010 6"/><path d="M12.5 3a7 7 0 010 10"/></>}
+        {busy ? <path d="M10 6.5a2 2 0 010 3"/> : <><path d="M10 5a4 4 0 010 6"/><path d="M12.5 3a7 7 0 010 10"/></>}
       </svg>
     </button>
   )
 }
 
+// ── Answer key modal ──────────────────────────────────────────────────────────
+
 function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations, explanationLoading, explainWrongAnswer }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center" style={{background:'rgba(0,0,0,0.5)',padding:'24px 16px',overflowY:'auto'}}>
-      <div className="bg-surface border border-line rounded-2xl w-full max-w-2xl shadow-2xl">
-        <div className="flex items-center justify-between p-5 border-b border-line">
+    <div style={{ position:'fixed', inset:0, zIndex:50, display:'flex', alignItems:'flex-start', justifyContent:'center', background:'rgba(0,0,0,0.5)', padding:'24px 16px', overflowY:'auto' }}>
+      <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, width:'100%', maxWidth:620, boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 20px', borderBottom:'1px solid var(--c-line)' }}>
           <div>
-            <div className="text-base font-bold text-t1">Answer Key</div>
-            <div className="text-[12px] text-t3 mt-0.5">{topic} &middot; {questions.length} questions</div>
+            <div style={{ fontSize:15, fontWeight:800, color:'var(--c-t1)' }}>Answer Key</div>
+            <div style={{ fontSize:12, color:'var(--c-t3)', marginTop:2 }}>{topic} · {questions.length} questions</div>
           </div>
-          <div className="flex gap-2">
-            <button onClick={()=>printQuizKey(questions,topic)} className="h-8 px-3 bg-blue-700 text-white text-[12px] font-semibold rounded-lg hover:bg-blue-800 flex items-center gap-1.5">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={()=>printQuizKey(questions,topic)} style={{ height:32, padding:'0 12px', background:'#2563eb', color:'#fff', border:'none', borderRadius:8, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6 }}>
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>
+              Print
             </button>
-            <button onClick={onClose} className="h-8 w-8 flex items-center justify-center text-t3 hover:text-t1 hover:bg-surface2 rounded-lg text-lg">&#x2715;</button>
+            <button onClick={onClose} style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', color:'var(--c-t3)', background:'none', border:'none', cursor:'pointer', fontSize:18, borderRadius:8 }}>✕</button>
           </div>
         </div>
-        <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-          {questions.map((q,i)=>(
-            <div key={i} className="nova-card border border-line rounded-xl p-4" style={{animationDelay:i*120+'ms'}}>
-              <p className="text-sm font-semibold text-t1 mb-3">{i+1}. {q.question}</p>
-              {q.type==='fill_blank'&&<div className="px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-600 text-[13px] font-medium">&#10003; {q.correctAnswer||'See rubric'}</div>}
-              {q.type==='short_answer'&&<div className="px-3 py-2 rounded-lg bg-blue-500/10 text-blue-600 text-[13px]">Model: {q.correctAnswer||'Open-ended'}</div>}
-              {q.type==='matching'&&<div className="space-y-1">{(q.pairs||[]).map((p,j)=><div key={j} className="text-[12px] text-t2"><strong>{p.left}</strong> &rarr; {p.right}</div>)}</div>}
-              {(q.type==='mcq'||q.type==='true_false'||!q.type)&&(
-                <div className="space-y-1.5">
+        <div style={{ padding:20, display:'flex', flexDirection:'column', gap:14, maxHeight:'70vh', overflowY:'auto' }}>
+          {questions.map((q,i) => (
+            <div key={i} style={{ background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:12, padding:16 }}>
+              <p style={{ fontSize:13, fontWeight:700, color:'var(--c-t1)', marginBottom:12 }}>{i+1}. {q.question}</p>
+              {q.type==='fill_blank' && <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(16,185,129,0.08)', color:'#34d399', fontSize:13, fontWeight:600 }}>✓ {q.correctAnswer||'See rubric'}</div>}
+              {q.type==='short_answer' && <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(59,130,246,0.08)', color:'#60a5fa', fontSize:13 }}>Model: {q.correctAnswer||'Open-ended'}</div>}
+              {q.type==='matching' && <div style={{ display:'flex', flexDirection:'column', gap:4 }}>{(q.pairs||[]).map((p,j)=><div key={j} style={{ fontSize:12, color:'var(--c-t2)' }}><strong>{p.left}</strong> → {p.right}</div>)}</div>}
+              {(q.type==='mcq'||q.type==='true_false'||!q.type) && (
+                <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
                   {(q.options||['True','False']).map((o,j)=>(
-                    <div key={j} className={'px-3 py-2 rounded-lg text-[13px] flex items-center gap-2 '+(j===q.answerIndex?'bg-emerald-500/10 text-emerald-600 font-semibold border border-emerald-300/50':'text-t3')}>
-                      <span className="font-bold w-4">{['A','B','C','D'][j]}.</span>{o}
-                      {j===q.answerIndex&&<span className="ml-auto text-emerald-500 text-xs font-bold">&#10003; Correct</span>}
+                    <div key={j} style={{ padding:'7px 12px', borderRadius:8, fontSize:13, display:'flex', alignItems:'center', gap:8, background:j===q.answerIndex?'rgba(16,185,129,0.08)':'transparent', border:'1px solid '+(j===q.answerIndex?'rgba(16,185,129,0.25)':'transparent'), color:j===q.answerIndex?'#34d399':'var(--c-t3)' }}>
+                      <span style={{ fontWeight:800, width:16 }}>{['A','B','C','D'][j]}.</span>{o}
+                      {j===q.answerIndex && <span style={{ marginLeft:'auto', fontSize:11, fontWeight:700, color:'#34d399' }}>✓ Correct</span>}
                     </div>
                   ))}
-                  {q.type==='mcq'&&selected&&selected[i]!==undefined&&selected[i]!==q.answerIndex&&(
-                    <div style={{marginTop:12}}>
-                      {novaExplanations&&novaExplanations[i]?(
-                        <div style={{background:'rgba(167,139,250,.06)',border:'1px solid rgba(167,139,250,.2)',borderRadius:10,padding:'14px 16px',marginTop:8}}>
-                          <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:8}}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
-                            <span style={{fontSize:12,fontWeight:700,color:'#a78bfa',letterSpacing:'.06em',textTransform:'uppercase'}}>Nova explains</span>
+                  {q.type==='mcq' && selected && selected[i]!==undefined && selected[i]!==q.answerIndex && (
+                    <div style={{ marginTop:10 }}>
+                      {novaExplanations?.[i] ? (
+                        <div style={{ background:'rgba(167,139,250,0.06)', border:'1px solid rgba(167,139,250,0.18)', borderRadius:10, padding:'12px 14px', marginTop:6 }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:8 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
+                            <span style={{ fontSize:11, fontWeight:700, color:'#a78bfa', letterSpacing:'.05em', textTransform:'uppercase' }}>Nova explains</span>
                           </div>
-                          <p style={{fontSize:13,color:'var(--c-t1)',lineHeight:1.6,margin:0}}>{novaExplanations[i]}</p>
+                          <p style={{ fontSize:13, color:'var(--c-t1)', lineHeight:1.6, margin:0 }}>{novaExplanations[i]}</p>
                         </div>
-                      ):(
-                        <button onClick={()=>explainWrongAnswer&&explainWrongAnswer(i,q,q.options?.[selected[i]]||'Your answer',q.options?.[q.answerIndex]||'Correct answer')} disabled={explanationLoading&&explanationLoading[i]} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 14px',background:'rgba(167,139,250,.07)',border:'1px solid rgba(167,139,250,.18)',borderRadius:8,cursor:'pointer',fontSize:13,fontWeight:600,color:'#a78bfa'}}>
+                      ) : (
+                        <button onClick={()=>explainWrongAnswer&&explainWrongAnswer(i,q,q.options?.[selected[i]]||'Your answer',q.options?.[q.answerIndex]||'Correct answer')} disabled={explanationLoading?.[i]}
+                          style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 14px', background:'rgba(167,139,250,0.07)', border:'1px solid rgba(167,139,250,0.18)', borderRadius:8, cursor:'pointer', fontSize:13, fontWeight:600, color:'#a78bfa', fontFamily:'inherit' }}>
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
-                          {explanationLoading&&explanationLoading[i]?'Nova is thinking...':'Why was I wrong?'}
+                          {explanationLoading?.[i] ? 'Nova is thinking…' : 'Why was I wrong?'}
                         </button>
                       )}
                     </div>
                   )}
                 </div>
               )}
-              {q.explanation&&<div className="mt-3 text-[11px] text-t2 bg-surface2 px-3 py-2 rounded-lg border border-line"><span className="font-semibold text-t1">Explanation: </span>{q.explanation}</div>}
+              {q.explanation && <div style={{ marginTop:10, fontSize:11, color:'var(--c-t2)', background:'var(--c-surface)', padding:'8px 12px', borderRadius:8, border:'1px solid var(--c-line)', lineHeight:1.6 }}><span style={{ fontWeight:700, color:'var(--c-t1)' }}>Explanation: </span>{q.explanation}</div>}
             </div>
           ))}
         </div>
@@ -119,172 +128,191 @@ function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations,
   )
 }
 
+// ── Edit panel ────────────────────────────────────────────────────────────────
+
 function EditPanel({ questions, onSave, onCancel }) {
   const [qs, setQs] = useState(questions.map(q=>({...q,options:[...(q.options||['True','False'])]})))
   const [addType, setAddType] = useState(null)
-  const [newQ, setNewQ] = useState({question:'',options:['','','',''],answerIndex:0,correctAnswer:'',pairs:[{left:'',right:''},{left:'',right:''}]})
-  function updateQ(i,field,val){setQs(d=>d.map((q,idx)=>idx===i?{...q,[field]:val}:q))}
-  function updateOpt(i,j,val){setQs(d=>d.map((q,idx)=>idx===i?{...q,options:q.options.map((o,oi)=>oi===j?val:o)}:q))}
-  function deleteQ(i){setQs(d=>d.filter((_,idx)=>idx!==i))}
-  function commitAdd(){
-    if(!newQ.question.trim())return
+  const [newQ, setNewQ] = useState({ question:'', options:['','','',''], answerIndex:0, correctAnswer:'', pairs:[{left:'',right:''},{left:'',right:''}] })
+
+  function updateQ(i,f,v) { setQs(d=>d.map((q,idx)=>idx===i?{...q,[f]:v}:q)) }
+  function updateOpt(i,j,v) { setQs(d=>d.map((q,idx)=>idx===i?{...q,options:q.options.map((o,oi)=>oi===j?v:o)}:q)) }
+  function deleteQ(i) { setQs(d=>d.filter((_,idx)=>idx!==i)) }
+
+  function commitAdd() {
+    if (!newQ.question.trim()) return
     let q
-    if(addType==='mcq') q={type:'mcq',question:newQ.question,options:newQ.options.filter(o=>o.trim()),answerIndex:newQ.answerIndex,explanation:''}
-    else if(addType==='true_false') q={type:'true_false',question:newQ.question,options:['True','False'],answerIndex:newQ.answerIndex,explanation:''}
-    else if(addType==='short_answer') q={type:'short_answer',question:newQ.question,correctAnswer:newQ.correctAnswer}
-    else if(addType==='fill_blank') q={type:'fill_blank',question:newQ.question,correctAnswer:newQ.correctAnswer}
+    if (addType==='mcq')          q={type:'mcq',question:newQ.question,options:newQ.options.filter(o=>o.trim()),answerIndex:newQ.answerIndex,explanation:''}
+    else if (addType==='true_false') q={type:'true_false',question:newQ.question,options:['True','False'],answerIndex:newQ.answerIndex,explanation:''}
+    else if (addType==='short_answer') q={type:'short_answer',question:newQ.question,correctAnswer:newQ.correctAnswer}
+    else if (addType==='fill_blank')   q={type:'fill_blank',question:newQ.question,correctAnswer:newQ.correctAnswer}
     else q={type:'matching',question:newQ.question,pairs:newQ.pairs.filter(p=>p.left.trim())}
     setQs(d=>[...d,q])
     setAddType(null)
     setNewQ({question:'',options:['','','',''],answerIndex:0,correctAnswer:'',pairs:[{left:'',right:''},{left:'',right:''}]})
   }
+
   return (
-    <div className="p-6 max-w-3xl mx-auto w-full">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-xl font-bold text-t1">Edit Questions <span className="text-sm font-normal text-t3">({qs.length})</span></h2>
-        <div className="flex gap-2">
-          <button onClick={()=>onSave(qs)} className="h-8 px-3 bg-blue-700 text-white text-[12px] font-semibold rounded-lg hover:bg-blue-800">Save Changes</button>
-          <button onClick={onCancel} className="h-8 px-3 bg-surface border border-line text-t2 text-[12px] rounded-lg hover:bg-surface2">Cancel</button>
+    <div style={{ padding:24, maxWidth:680, margin:'0 auto', width:'100%' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+        <h2 style={{ fontSize:18, fontWeight:800, color:'var(--c-t1)' }}>Edit Questions <span style={{ fontSize:13, fontWeight:400, color:'var(--c-t3)' }}>({qs.length})</span></h2>
+        <div style={{ display:'flex', gap:8 }}>
+          <button onClick={()=>onSave(qs)} style={{ height:32, padding:'0 14px', background:'#2563eb', color:'#fff', border:'none', borderRadius:8, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Save Changes</button>
+          <button onClick={onCancel}       style={{ height:32, padding:'0 14px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:8, fontSize:12, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
         </div>
       </div>
-      <div className="space-y-3 mb-5">
+      <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:16 }}>
         {qs.map((q,i)=>(
-          <div key={i} className="bg-surface border border-line rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 uppercase">{(q.type||'mcq').replace(/_/g,' ')}</span>
-              <button onClick={()=>deleteQ(i)} className="ml-auto text-[11px] text-red-400 hover:text-red-600 px-2 h-6 border border-red-200 dark:border-red-500/30 rounded-lg">&#x2715; Delete</button>
+          <div key={i} style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:12, padding:16 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+              <span style={{ fontSize:10, fontWeight:800, padding:'3px 8px', borderRadius:20, background:'rgba(59,130,246,0.1)', color:'#60a5fa', textTransform:'uppercase', letterSpacing:'.04em' }}>{(q.type||'mcq').replace(/_/g,' ')}</span>
+              <button onClick={()=>deleteQ(i)} style={{ marginLeft:'auto', fontSize:11, color:'#f87171', background:'none', border:'1px solid rgba(239,68,68,0.22)', borderRadius:7, height:26, padding:'0 10px', cursor:'pointer', fontFamily:'inherit' }}>✕ Delete</button>
             </div>
-            <textarea value={q.question} onChange={e=>updateQ(i,'question',e.target.value)} className="w-full text-sm text-t1 bg-surface2 border border-line rounded-lg p-2 resize-none outline-none focus:border-blue-400 mb-2" rows={2}/>
-            {(q.type==='short_answer'||q.type==='fill_blank')&&<input value={q.correctAnswer||''} onChange={e=>updateQ(i,'correctAnswer',e.target.value)} placeholder="Correct answer..." className="w-full h-8 text-[13px] text-t1 bg-surface2 border border-line rounded-lg px-2 outline-none focus:border-blue-400"/>}
-            {(q.type==='mcq'||q.type==='true_false'||!q.type)&&(
-              <div className="space-y-1.5">{(q.options||['True','False']).map((o,j)=>(
-                <div key={j} className="flex items-center gap-2">
-                  <button onClick={()=>updateQ(i,'answerIndex',j)} className={'w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] flex-shrink-0 transition-colors '+(q.answerIndex===j?'border-emerald-500 bg-emerald-500 text-white':'border-line text-t3 hover:border-emerald-400')}>{q.answerIndex===j?'✓':['A','B','C','D'][j]}</button>
-                  {q.type==='true_false'?<span className="flex-1 text-[13px] text-t1 px-2">{o}</span>:<input value={o} onChange={e=>updateOpt(i,j,e.target.value)} className="flex-1 h-8 text-[13px] text-t1 bg-surface2 border border-line rounded-lg px-2 outline-none focus:border-blue-400"/>}
-                </div>
-              ))}</div>
+            <textarea value={q.question} onChange={e=>updateQ(i,'question',e.target.value)} rows={2} style={{ width:'100%', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, padding:'8px 10px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit', marginBottom:8 }}/>
+            {(q.type==='short_answer'||q.type==='fill_blank') && <input value={q.correctAnswer||''} onChange={e=>updateQ(i,'correctAnswer',e.target.value)} placeholder="Correct answer…" style={{ width:'100%', height:32, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}/>}
+            {(q.type==='mcq'||q.type==='true_false'||!q.type) && (
+              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                {(q.options||['True','False']).map((o,j)=>(
+                  <div key={j} style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <button onClick={()=>updateQ(i,'answerIndex',j)} style={{ width:24, height:24, borderRadius:'50%', border:'2px solid '+(q.answerIndex===j?'#10b981':'var(--c-line)'), background:q.answerIndex===j?'#10b981':'transparent', color:q.answerIndex===j?'#fff':'var(--c-t3)', fontSize:10, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontFamily:'inherit' }}>{q.answerIndex===j?'✓':['A','B','C','D'][j]}</button>
+                    {q.type==='true_false' ? <span style={{ flex:1, fontSize:13, color:'var(--c-t1)', padding:'0 8px' }}>{o}</span> : <input value={o} onChange={e=>updateOpt(i,j,e.target.value)} style={{ flex:1, height:32, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}/>}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         ))}
       </div>
-      {!addType?(
-        <div className="border-2 border-dashed border-line rounded-xl p-4">
-          <p className="text-[12px] font-semibold text-t3 uppercase tracking-wider mb-3">Add Question</p>
-          <div className="flex gap-2 flex-wrap">
+      {!addType ? (
+        <div style={{ border:'2px dashed rgba(255,255,255,0.09)', borderRadius:12, padding:16 }}>
+          <p style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:10 }}>Add Question</p>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
             {['mcq','true_false','short_answer','fill_blank','matching'].map(t=>(
-              <button key={t} onClick={()=>setAddType(t)} className="h-8 px-3 bg-surface2 border border-line text-t2 text-[12px] font-medium rounded-lg hover:border-blue-400 hover:text-blue-500 transition-colors">
+              <button key={t} onClick={()=>setAddType(t)} style={{ height:32, padding:'0 12px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', fontSize:12, fontWeight:600, borderRadius:8, cursor:'pointer', fontFamily:'inherit' }}>
                 + {t==='mcq'?'MCQ':t==='true_false'?'True/False':t==='short_answer'?'Short Answer':t==='fill_blank'?'Fill Blank':'Matching'}
               </button>
             ))}
           </div>
         </div>
-      ):(
-        <div className="border-2 border-blue-300/40 rounded-xl p-4 bg-blue-500/5">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[12px] font-bold text-blue-500 uppercase">New {addType.replace('_',' ')}</span>
-            <button onClick={()=>setAddType(null)} className="text-t3 hover:text-t1 text-sm">&#x2715;</button>
+      ) : (
+        <div style={{ border:'1.5px solid rgba(59,130,246,0.3)', borderRadius:12, padding:16, background:'rgba(59,130,246,0.04)' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+            <span style={{ fontSize:12, fontWeight:800, color:'#60a5fa', textTransform:'uppercase', letterSpacing:'.04em' }}>New {addType.replace('_',' ')}</span>
+            <button onClick={()=>setAddType(null)} style={{ color:'var(--c-t3)', background:'none', border:'none', cursor:'pointer', fontSize:16, fontFamily:'inherit' }}>✕</button>
           </div>
-          <textarea value={newQ.question} onChange={e=>setNewQ(q=>({...q,question:e.target.value}))} placeholder="Question text..." rows={2} className="w-full text-sm text-t1 bg-surface border border-line rounded-lg p-2 resize-none outline-none focus:border-blue-400 mb-3"/>
-          {(addType==='short_answer'||addType==='fill_blank')&&<input value={newQ.correctAnswer} onChange={e=>setNewQ(q=>({...q,correctAnswer:e.target.value}))} placeholder="Correct answer..." className="w-full h-8 text-[13px] text-t1 bg-surface border border-line rounded-lg px-2 outline-none focus:border-blue-400 mb-3"/>}
-          {addType==='mcq'&&<div className="space-y-1.5 mb-3">{newQ.options.map((o,j)=>(
-            <div key={j} className="flex items-center gap-2">
-              <button onClick={()=>setNewQ(q=>({...q,answerIndex:j}))} className={'w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] flex-shrink-0 '+(newQ.answerIndex===j?'border-emerald-500 bg-emerald-500 text-white':'border-line text-t3')}>{newQ.answerIndex===j?'✓':['A','B','C','D'][j]}</button>
-              <input value={o} onChange={e=>setNewQ(q=>({...q,options:q.options.map((op,oi)=>oi===j?e.target.value:op)}))} placeholder={'Option '+['A','B','C','D'][j]} className="flex-1 h-8 text-[13px] text-t1 bg-surface border border-line rounded-lg px-2 outline-none focus:border-blue-400"/>
+          <textarea value={newQ.question} onChange={e=>setNewQ(q=>({...q,question:e.target.value}))} placeholder="Question text…" rows={2} style={{ width:'100%', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:8, padding:'8px 10px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit', marginBottom:10 }}/>
+          {(addType==='short_answer'||addType==='fill_blank') && <input value={newQ.correctAnswer} onChange={e=>setNewQ(q=>({...q,correctAnswer:e.target.value}))} placeholder="Correct answer…" style={{ width:'100%', height:32, background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', marginBottom:10 }}/>}
+          {addType==='mcq' && (
+            <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:10 }}>
+              {newQ.options.map((o,j)=>(
+                <div key={j} style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <button onClick={()=>setNewQ(q=>({...q,answerIndex:j}))} style={{ width:24, height:24, borderRadius:'50%', border:'2px solid '+(newQ.answerIndex===j?'#10b981':'var(--c-line)'), background:newQ.answerIndex===j?'#10b981':'transparent', color:newQ.answerIndex===j?'#fff':'var(--c-t3)', fontSize:10, cursor:'pointer', flexShrink:0, fontFamily:'inherit' }}>{newQ.answerIndex===j?'✓':['A','B','C','D'][j]}</button>
+                  <input value={o} onChange={e=>setNewQ(q=>({...q,options:q.options.map((op,oi)=>oi===j?e.target.value:op)}))} placeholder={'Option '+['A','B','C','D'][j]} style={{ flex:1, height:32, background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}/>
+                </div>
+              ))}
             </div>
-          ))}</div>}
-          {addType==='true_false'&&<div className="flex gap-3 mb-3">{['True','False'].map((o,j)=><button key={j} onClick={()=>setNewQ(q=>({...q,answerIndex:j}))} className={'flex-1 h-9 rounded-lg border text-[13px] font-medium transition-colors '+(newQ.answerIndex===j?'bg-emerald-500 text-white border-emerald-500':'bg-surface border-line text-t2 hover:border-emerald-400')}>{o}</button>)}</div>}
-          <button onClick={commitAdd} disabled={!newQ.question.trim()} className="h-8 px-4 bg-blue-700 text-white text-[12px] font-semibold rounded-lg hover:bg-blue-800 disabled:opacity-40">Add Question</button>
+          )}
+          {addType==='true_false' && (
+            <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+              {['True','False'].map((o,j)=>(
+                <button key={j} onClick={()=>setNewQ(q=>({...q,answerIndex:j}))} style={{ flex:1, height:36, borderRadius:8, border:'1px solid '+(newQ.answerIndex===j?'#10b981':'var(--c-line)'), background:newQ.answerIndex===j?'#10b981':'var(--c-surface)', color:newQ.answerIndex===j?'#fff':'var(--c-t2)', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>{o}</button>
+              ))}
+            </div>
+          )}
+          <button onClick={commitAdd} disabled={!newQ.question.trim()} style={{ height:32, padding:'0 16px', background:'#2563eb', color:'#fff', border:'none', borderRadius:8, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit', opacity:newQ.question.trim()?1:.4 }}>Add Question</button>
         </div>
       )}
     </div>
   )
 }
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const BASE_TYPES = [
-  {id:'mcq',label:'Multiple Choice'},{id:'true_false',label:'True / False'},
-  {id:'short_answer',label:'Short Answer'},{id:'fill_blank',label:'Fill in the Blank'},
-  {id:'matching',label:'Matching'},{id:'mixed',label:'Mixed'},
+  { id:'mcq',          label:'Multiple Choice' },
+  { id:'true_false',   label:'True / False'    },
+  { id:'short_answer', label:'Short Answer'    },
+  { id:'fill_blank',   label:'Fill in the Blank' },
+  { id:'matching',     label:'Matching'        },
+  { id:'mixed',        label:'Mixed'           },
 ]
 
-function buildConfig(typeId,count,breakdown) {
-  if(typeId==='mcq')return{mcq:count}
-  if(typeId==='true_false')return{true_false:count}
-  if(typeId==='short_answer')return{short_answer:count}
-  if(typeId==='fill_blank')return{fill_blank:count}
-  if(typeId==='matching')return{matching:count}
-  const cfg={}
-  if((breakdown.mcq||0)>0)cfg.mcq=breakdown.mcq
-  if((breakdown.tf||0)>0)cfg.true_false=breakdown.tf
-  if((breakdown.sa||0)>0)cfg.short_answer=breakdown.sa
-  if((breakdown.fitb||0)>0)cfg.fill_blank=breakdown.fitb
-  if((breakdown.match||0)>0)cfg.matching=breakdown.match
+const CHIPS = [
+  'The Cold War','Cell biology','The US Constitution',
+  'Shakespeare tragedies','Macroeconomics','The French Revolution',
+]
+
+const TYPE_LABELS = { mcq:'Multiple Choice', true_false:'True / False', short_answer:'Short Answer', fill_blank:'Fill in the Blank', matching:'Matching' }
+function prettifyType(t) { return TYPE_LABELS[t]||(t||'mcq').replace(/_/g,' ') }
+
+function buildConfig(typeId, count, breakdown) {
+  if (typeId==='mcq')          return { mcq:count }
+  if (typeId==='true_false')   return { true_false:count }
+  if (typeId==='short_answer') return { short_answer:count }
+  if (typeId==='fill_blank')   return { fill_blank:count }
+  if (typeId==='matching')     return { matching:count }
+  const cfg = {}
+  if ((breakdown.mcq||0)>0)   cfg.mcq         = breakdown.mcq
+  if ((breakdown.tf||0)>0)    cfg.true_false   = breakdown.tf
+  if ((breakdown.sa||0)>0)    cfg.short_answer = breakdown.sa
+  if ((breakdown.fitb||0)>0)  cfg.fill_blank   = breakdown.fitb
+  if ((breakdown.match||0)>0) cfg.matching     = breakdown.match
   return cfg
 }
 
-const TYPE_LABELS={mcq:'Multiple Choice',true_false:'True / False',short_answer:'Short Answer',fill_blank:'Fill in the Blank',matching:'Matching'}
-function prettifyType(t){return TYPE_LABELS[t]||(t||'mcq').replace(/_/g,' ')}
-function checkFitbAnswer(userAns,correctAns){
-  if(!userAns||!correctAns)return false
-  const u=userAns.toLowerCase().trim()
-  const correct=correctAns.toLowerCase().trim()
-  if(u===correct)return true
-  const variants=correct.split(/[|/,]/).map(v=>v.trim()).filter(Boolean)
-  if(variants.some(v=>u===v))return true
-  if(variants.some(v=>v.includes(u)||u.includes(v)))return true
+function checkFitbAnswer(userAns, correctAns) {
+  if (!userAns||!correctAns) return false
+  const u = userAns.toLowerCase().trim()
+  const correct = correctAns.toLowerCase().trim()
+  if (u===correct) return true
+  const variants = correct.split(/[|/,]/).map(v=>v.trim()).filter(Boolean)
+  if (variants.some(v=>u===v)) return true
+  if (variants.some(v=>v.includes(u)||u.includes(v))) return true
   return false
 }
 
+// ── Page component ────────────────────────────────────────────────────────────
+
 export default function QuizPage() {
   const { user } = useAuth()
-  const [typeId, setTypeId] = useState('mcq')
-  const [count, setCount] = useState(5)
-  const [breakdown, setBreakdown] = useState({mcq:0,tf:0,sa:0,fitb:0,match:0})
-  const [topic, setTopic] = useState('')
+
+  const [typeId,    setTypeId]    = useState('mcq')
+  const [count,     setCount]     = useState(10)
+  const [breakdown, setBreakdown] = useState({ mcq:0, tf:0, sa:0, fitb:0, match:0 })
+  const [topic,     setTopic]     = useState('')
   const [autoGenTopic, setAutoGenTopic] = useState('')
   const [questions, setQuestions] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [selected, setSelected] = useState({})
-  const [saInputs, setSaInputs] = useState({})
-  const [fitbInputs, setFitbInputs] = useState({})
-  const [matchAnswers, setMatchAnswers] = useState({})
-  const [shuffledRights, setShuffledRights] = useState({})
-  const [saGrades, setSaGrades] = useState({})
-  const [submitted, setSubmitted] = useState(false)
-  const [error, setError] = useState('')
-  const [showKey, setShowKey] = useState(false)
-  const [editMode, setEditMode] = useState(false)
-  const [savedId, setSavedId] = useState(null)
-  const [saving, setSaving] = useState(false)
+  const [loading,   setLoading]   = useState(false)
+
+  const [selected,      setSelected]      = useState({})
+  const [saInputs,      setSaInputs]      = useState({})
+  const [fitbInputs,    setFitbInputs]    = useState({})
+  const [matchAnswers,  setMatchAnswers]  = useState({})
+  const [shuffledRights,setShuffledRights]= useState({})
+  const [saGrades,      setSaGrades]      = useState({})
+  const [submitted,     setSubmitted]     = useState(false)
+  const [error,         setError]         = useState('')
+
+  const [showKey,   setShowKey]   = useState(false)
+  const [editMode,  setEditMode]  = useState(false)
+  const [savedId,   setSavedId]   = useState(null)
+  const [saving,    setSaving]    = useState(false)
   const [saveFeedback, setSaveFeedback] = useState('')
-  const [showSave, setShowSave] = useState(false)
+  const [showSave,  setShowSave]  = useState(false)
   const [saveTitle, setSaveTitle] = useState('')
-  const [novaExplanations, setNovaExplanations] = useState({})
-  const [explanationLoading, setExplanationLoading] = useState({})
+  const [novaExplanations,  setNovaExplanations]  = useState({})
+  const [explanationLoading,setExplanationLoading]= useState({})
   const [draftBanner, setDraftBanner] = useState(false)
 
-  useEffect(() => {
-    const id='quiz-anim'; if(document.getElementById(id))return
-    const s=document.createElement('style'); s.id=id
-    s.textContent="@keyframes spin{to{transform:rotate(360deg)}} @keyframes progress{0%{width:0%}100%{width:88%}} @keyframes nova-pop{0%{opacity:0;transform:translateY(14px) scale(0.97)}60%{opacity:1;transform:translateY(-3px) scale(1.005)}100%{opacity:1;transform:translateY(0) scale(1)}} @keyframes nova-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}} .nova-card{opacity:0;animation:nova-pop .42s cubic-bezier(.22,.68,0,1.2) forwards} .nova-dot-pulse{animation:nova-pulse .9s ease-in-out infinite}"
-    document.head.appendChild(s)
-  }, [])
+  // ── Init ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    // Load from My Stuff
     const saved = sessionStorage.getItem('flashfo_load_quiz') || sessionStorage.getItem('flashfo_quiz_load')
     if (saved) {
       try {
-        const { questions: savedQs, topic: savedTopic, type: savedType, id: savedItemId } = JSON.parse(saved)
-        sessionStorage.removeItem('flashfo_load_quiz')
-        sessionStorage.removeItem('flashfo_quiz_load')
-        if (savedQs?.length) {
-          setQuestions(savedQs)
-          setTopic(savedTopic || '')
-          if (savedType) setTypeId(savedType)
-          setSavedId(savedItemId || null)
-          initMatching(savedQs)
-          return
-        }
+        const { questions:sq, topic:st, type:stype, id:si } = JSON.parse(saved)
+        sessionStorage.removeItem('flashfo_load_quiz'); sessionStorage.removeItem('flashfo_quiz_load')
+        if (sq?.length) { setQuestions(sq); setTopic(st||''); if (stype) setTypeId(stype); setSavedId(si||null); initMatching(sq); return }
       } catch(e) {}
     }
     const params = new URLSearchParams(window.location.search)
@@ -292,59 +320,56 @@ export default function QuizPage() {
     if (q && !topic) {
       const decoded = decodeURIComponent(q)
       setTopic(decoded)
-      if (params.get('autoGenerate') === '1') setAutoGenTopic(decoded)
+      if (params.get('autoGenerate')==='1') setAutoGenTopic(decoded)
       return
     }
     loadDraft('quiz').then(draft => {
       if (draft?.data?.questions?.length) {
-        setTopic(draft.data.topic || '')
-        setTypeId(draft.data.typeId || 'mcq')
-        setCount(draft.data.count || 5)
-        setQuestions(draft.data.questions)
-        initMatching(draft.data.questions)
-        setDraftBanner(true)
+        setTopic(draft.data.topic||''); setTypeId(draft.data.typeId||'mcq')
+        setCount(draft.data.count||10); setQuestions(draft.data.questions)
+        initMatching(draft.data.questions); setDraftBanner(true)
       }
     })
   }, [])
 
   useEffect(() => {
-    if (autoGenTopic.trim() && topic === autoGenTopic && !loading && !questions.length) {
-      generate(); setAutoGenTopic('')
-    }
+    if (autoGenTopic.trim() && topic===autoGenTopic && !loading && !questions.length) { generate(); setAutoGenTopic('') }
   }, [autoGenTopic, topic])
 
   function initMatching(qs) {
-    const s={}
-    qs.forEach((q,i)=>{ if(q.type==='matching'&&q.pairs) s[i]=[...q.pairs.map(p=>p.right)].sort(()=>Math.random()-0.5) })
+    const s = {}
+    qs.forEach((q,i) => { if (q.type==='matching'&&q.pairs) s[i]=[...q.pairs.map(p=>p.right)].sort(()=>Math.random()-.5) })
     setShuffledRights(s)
   }
+
+  // ── Generate ──────────────────────────────────────────────────────────────
 
   async function generate() {
     if (!topic.trim()) return
     setLoading(true); setQuestions([]); setSelected({}); setSaInputs({}); setFitbInputs({})
     setMatchAnswers({}); setSaGrades({}); setSubmitted(false); setError(''); setSavedId(null); setDraftBanner(false)
     try {
-      const cfg = buildConfig(typeId, count, breakdown)
+      const cfg  = buildConfig(typeId, count, breakdown)
       const data = await rpc('generateQuizFromTopic', [topic.trim(), cfg])
       if (data.error) throw new Error(data.error)
-      const qs = data.result?.questions || []
+      const qs = data.result?.questions||[]
       if (!qs.length) { setError('Could not generate quiz. Try a more specific topic.'); return }
       setQuestions(qs); initMatching(qs)
-      if (user) await saveDraft('quiz', topic.trim(), { topic: topic.trim(), typeId, count, questions: qs })
+      if (user) await saveDraft('quiz', topic.trim(), { topic:topic.trim(), typeId, count, questions:qs })
     } catch(e) { setError(e?.message||'Something went wrong. Please try again.') }
     finally { setLoading(false) }
   }
 
+  // ── Save ──────────────────────────────────────────────────────────────────
+
   async function doSave() {
-    if (!user) return
-    setSaving(true)
+    if (!user) return; setSaving(true)
     try {
-      const payload = { questions, topic, type: typeId }
-      if (savedId) { await updateSavedItem(savedId, { title: saveTitle||topic, data: payload }); setSaveFeedback('Updated!') }
-      else { const r = await saveItem(user.id, 'quiz', saveTitle||topic, payload); setSavedId(r.id); setSaveFeedback('Saved!') }
-      setShowSave(false)
-      await clearDraft('quiz')
-      setTimeout(() => setSaveFeedback(''), 3000)
+      const payload = { questions, topic, type:typeId }
+      if (savedId) { await updateSavedItem(savedId,{title:saveTitle||topic,data:payload}); setSaveFeedback('Updated!') }
+      else { const r=await saveItem(user.id,'quiz',saveTitle||topic,payload); setSavedId(r.id); setSaveFeedback('Saved!') }
+      setShowSave(false); await clearDraft('quiz')
+      setTimeout(()=>setSaveFeedback(''), 3000)
     } catch { setSaveFeedback('Save failed') }
     finally { setSaving(false) }
   }
@@ -352,217 +377,349 @@ export default function QuizPage() {
   async function explainWrongAnswer(questionIndex, question, studentAnswerText, correctAnswerText) {
     setExplanationLoading(prev=>({...prev,[questionIndex]:true}))
     try {
-      const res = await fetch('/api/nova/explain-answer', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ question:question.question, studentAnswer:studentAnswerText, correctAnswer:correctAnswerText, topic:topic||'' }) })
+      const res  = await fetch('/api/nova/explain-answer', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ question:question.question, studentAnswer:studentAnswerText, correctAnswer:correctAnswerText, topic:topic||'' }) })
       const data = await res.json()
       setNovaExplanations(prev=>({...prev,[questionIndex]:data.explanation}))
     } catch { setNovaExplanations(prev=>({...prev,[questionIndex]:'Unable to load explanation right now.'})) }
     finally { setExplanationLoading(prev=>({...prev,[questionIndex]:false})) }
   }
 
-  function startFresh() {
-    setQuestions([]); setError(''); setSavedId(null); setDraftBanner(false)
-    clearDraft('quiz')
-  }
+  function startFresh() { setQuestions([]); setError(''); setSavedId(null); setDraftBanner(false); clearDraft('quiz') }
 
-  const autoScore = submitted ? questions.filter((q,i)=>{ if(q.type==='short_answer'||q.type==='matching')return false; if(q.type==='fill_blank')return checkFitbAnswer(fitbInputs[i],q.correctAnswer); return selected[i]===q.answerIndex }).length : 0
-  const saScore = submitted ? Object.values(saGrades).filter(g=>g==='correct').length : 0
-  const score = autoScore + saScore
-  const pct = questions.length ? Math.round(score/questions.length*100) : 0
+  // ── Scoring ───────────────────────────────────────────────────────────────
+
+  const autoScore = submitted ? questions.filter((q,i) => {
+    if (q.type==='short_answer'||q.type==='matching') return false
+    if (q.type==='fill_blank') return checkFitbAnswer(fitbInputs[i], q.correctAnswer)
+    return selected[i]===q.answerIndex
+  }).length : 0
+  const saScore   = submitted ? Object.values(saGrades).filter(g=>g==='correct').length : 0
+  const score     = autoScore + saScore
+  const pct       = questions.length ? Math.round(score/questions.length*100) : 0
   const breakdownTotal = (breakdown.mcq||0)+(breakdown.tf||0)+(breakdown.sa||0)+(breakdown.fitb||0)+(breakdown.match||0)
 
-  if (editMode) return <EditPanel questions={questions} onSave={qs=>{setQuestions(qs);setEditMode(false);setSelected({});setSaInputs({});setFitbInputs({});setMatchAnswers({});setSaGrades({});setSubmitted(false);initMatching(qs)}} onCancel={()=>setEditMode(false)}/>
+  // ── Edit mode ─────────────────────────────────────────────────────────────
 
-  return (
-    <div className="p-6 max-w-3xl mx-auto w-full">
-      <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Quiz</h1>
-      <p className="text-sm text-t2 mb-6">Generate a quiz on any topic and test your knowledge.</p>
+  if (editMode) return (
+    <EditPanel
+      questions={questions}
+      onSave={qs=>{ setQuestions(qs); setEditMode(false); setSelected({}); setSaInputs({}); setFitbInputs({}); setMatchAnswers({}); setSaGrades({}); setSubmitted(false); initMatching(qs) }}
+      onCancel={()=>setEditMode(false)}
+    />
+  )
 
+  // ── Input state ───────────────────────────────────────────────────────────
+
+  if (!questions.length) return (
+    <div style={{ padding:'28px 24px 48px', maxWidth:860, fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+
+      {/* Draft banner */}
       {draftBanner && (
-        <div style={{background:'rgba(99,102,241,0.08)',border:'1px solid rgba(99,102,241,0.22)',borderRadius:10,padding:'10px 14px',marginBottom:16,display:'flex',alignItems:'center',gap:10}}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
-          <span style={{fontSize:12,color:'rgba(241,240,255,0.7)',flex:1}}>Resuming your last quiz — <strong style={{color:'rgba(241,240,255,0.9)'}}>{topic}</strong></span>
-          <button onClick={startFresh} style={{fontSize:11,color:'rgba(241,240,255,0.4)',background:'none',border:'none',cursor:'pointer'}}>Start fresh</button>
+        <div style={{ background:'rgba(99,102,241,0.07)', border:'1px solid rgba(99,102,241,0.2)', borderRadius:10, padding:'10px 14px', marginBottom:20, display:'flex', alignItems:'center', gap:10 }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+          <span style={{ fontSize:12, color:'rgba(241,240,255,0.65)', flex:1 }}>Resuming your last quiz — <strong style={{ color:'rgba(241,240,255,0.85)' }}>{topic}</strong></span>
+          <button onClick={startFresh} style={{ fontSize:11, color:'rgba(241,240,255,0.35)', background:'none', border:'none', cursor:'pointer', fontFamily:'inherit' }}>Start fresh</button>
         </div>
       )}
 
-      {showKey && <AnswerKeyModal questions={questions} topic={topic} onClose={()=>setShowKey(false)} selected={selected} novaExplanations={novaExplanations} explanationLoading={explanationLoading} explainWrongAnswer={explainWrongAnswer}/>}
+      {/* Badge */}
+      <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(99,102,241,0.08)', border:'1px solid rgba(99,102,241,0.2)', borderRadius:20, padding:'5px 13px', fontSize:10, fontWeight:800, color:'#a5b4fc', marginBottom:16, letterSpacing:'.08em', textTransform:'uppercase' }}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a5b4fc"/></svg>
+        Quiz
+      </div>
+      <h1 style={{ fontSize:26, fontWeight:800, letterSpacing:'-.03em', marginBottom:5, color:'var(--c-t1)', lineHeight:1.15 }}>Test what you actually know</h1>
+      <p style={{ fontSize:13, color:'var(--c-t2)', marginBottom:22, lineHeight:1.65, maxWidth:520 }}>Generate a full quiz on any topic. Nova grades your answers and explains exactly why you got something wrong.</p>
 
-      {showSave && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center" style={{background:'rgba(0,0,0,0.4)'}}>
-          <div className="bg-surface border border-line rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-            <div className="text-base font-bold text-t1 mb-4">Save Quiz</div>
-            <input value={saveTitle} onChange={e=>setSaveTitle(e.target.value)} placeholder={topic||'Quiz title...'} className="w-full h-9 bg-surface2 border border-line rounded-lg px-3 text-sm text-t1 outline-none focus:border-blue-400 mb-4"/>
-            <div className="flex gap-2">
-              <button onClick={doSave} disabled={saving} className="flex-1 h-9 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 disabled:opacity-40">{saving?'Saving...':'Save to My Stuff'}</button>
-              <button onClick={()=>setShowSave(false)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm rounded-xl hover:bg-surface2">Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Quick-start chips */}
+      <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:20 }}>
+        {CHIPS.map(c => (
+          <button key={c} onClick={()=>setTopic(c)} style={{ padding:'5px 12px', borderRadius:20, fontSize:11, fontWeight:600, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', color:'rgba(255,255,255,0.4)', cursor:'pointer', fontFamily:'inherit', transition:'all .15s' }}>
+            {c}
+          </button>
+        ))}
+      </div>
 
-      {!questions.length ? (
-        <div className="bg-surface border border-line rounded-2xl p-5">
-          <textarea value={topic} onChange={e=>setTopic(e.target.value)} placeholder="Enter a topic or paste notes to generate a quiz from..." className="w-full h-28 text-sm text-t1 bg-transparent resize-none outline-none placeholder:text-t3 mb-5"/>
-          <div className="mb-5">
-            <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider mb-2">Question Type</div>
-            <div className="flex gap-2 flex-wrap">
-              {BASE_TYPES.map(t=>(
-                <button key={t.id} onClick={()=>{setTypeId(t.id);if(t.id==='mixed')setBreakdown({mcq:0,tf:0,sa:0,fitb:0,match:0})}}
-                  style={{height:38,padding:'0 12px',borderRadius:9,fontSize:12,fontWeight:600,border:'1px solid '+(typeId===t.id?'#1d4ed8':'var(--c-line)'),background:typeId===t.id?'#1d4ed8':'var(--c-surface2)',color:typeId===t.id?'#fff':'var(--c-t2)',cursor:'pointer',transition:'all 0.15s',whiteSpace:'nowrap'}}>
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          {typeId==='mixed'&&(
-            <div className="mb-5 p-4 bg-surface2 rounded-xl border border-line">
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-                <span className="text-[11px] font-semibold text-t3 uppercase tracking-wider">Breakdown</span>
-                <span style={{fontSize:13,fontWeight:700,color:breakdownTotal>0?'#3b82f6':'var(--c-t3)'}}>{breakdownTotal} {breakdownTotal===1?'question':'questions'}</span>
+      {/* Two-column layout */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, alignItems:'start' }}>
+
+        {/* Left — input */}
+        <div>
+          <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, overflow:'hidden' }}>
+            <textarea
+              value={topic}
+              onChange={e=>setTopic(e.target.value)}
+              onKeyDown={e=>{ if (e.key==='Enter'&&e.metaKey) generate() }}
+              rows={4}
+              placeholder="Enter a topic or paste your notes to generate quiz questions from…"
+              style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'#e2e8f0', fontFamily:'inherit', fontSize:13, lineHeight:1.7, padding:'14px 16px', resize:'none', display:'block' }}
+            />
+
+            {/* Question type pills */}
+            <div style={{ padding:'0 12px 8px' }}>
+              <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.06em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:7, paddingTop:2 }}>Question type</div>
+              <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                {BASE_TYPES.map(t => (
+                  <button key={t.id} onClick={()=>{ setTypeId(t.id); if (t.id==='mixed') setBreakdown({mcq:0,tf:0,sa:0,fitb:0,match:0}) }}
+                    style={{ padding:'5px 11px', borderRadius:8, fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .15s', border:'1px solid '+(typeId===t.id?'rgba(99,102,241,0.4)':'rgba(255,255,255,0.09)'), background:typeId===t.id?'rgba(99,102,241,0.13)':'rgba(255,255,255,0.03)', color:typeId===t.id?'#a5b4fc':'rgba(255,255,255,0.4)' }}>
+                    {t.label}
+                  </button>
+                ))}
               </div>
-              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            </div>
+
+            {/* Mixed breakdown */}
+            {typeId==='mixed' && (
+              <div style={{ margin:'4px 12px 8px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:'10px 12px' }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                  <span style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.25)', textTransform:'uppercase', letterSpacing:'.05em' }}>Breakdown</span>
+                  <span style={{ fontSize:13, fontWeight:700, color:breakdownTotal>0?'#a5b4fc':'rgba(255,255,255,0.25)' }}>{breakdownTotal} question{breakdownTotal!==1?'s':''}</span>
+                </div>
                 {[{k:'mcq',label:'Multiple Choice'},{k:'tf',label:'True / False'},{k:'sa',label:'Short Answer'},{k:'fitb',label:'Fill in the Blank'},{k:'match',label:'Matching'}].map(({k,label})=>{
-                  const val=breakdown[k]||0; const active=val>0
+                  const val = breakdown[k]||0; const active = val>0
                   return (
-                    <div key={k} style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:active?'rgba(37,99,235,0.07)':'var(--c-surface)',border:'1px solid '+(active?'rgba(59,130,246,0.3)':'var(--c-line)'),borderRadius:12,padding:'0 8px 0 16px',height:56,transition:'all 0.15s'}}>
-                      <span style={{fontSize:14,fontWeight:500,color:active?'#93c5fd':'var(--c-t1)',flex:1}}>{label}</span>
-                      <div style={{display:'flex',alignItems:'center',gap:2,flexShrink:0}}>
-                        <button onClick={()=>setBreakdown(b=>({...b,[k]:Math.max(0,(b[k]||0)-1)}))} style={{width:44,height:44,borderRadius:10,border:'none',background:'none',color:active?'#3b82f6':'var(--c-t3)',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:300,lineHeight:1}}>&#8722;</button>
-                        <span style={{fontSize:18,fontWeight:700,color:active?'#3b82f6':'rgba(255,255,255,0.2)',minWidth:28,textAlign:'center',transition:'color 0.15s'}}>{val}</span>
-                        <button onClick={()=>setBreakdown(b=>({...b,[k]:(b[k]||0)+1}))} style={{width:44,height:44,borderRadius:10,border:'none',background:'none',color:active?'#3b82f6':'var(--c-t3)',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:300,lineHeight:1}}>+</button>
+                    <div key={k} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:active?'rgba(99,102,241,0.07)':'rgba(255,255,255,0.02)', border:'1px solid '+(active?'rgba(99,102,241,0.25)':'rgba(255,255,255,0.06)'), borderRadius:9, padding:'0 8px 0 12px', height:44, marginBottom:5, transition:'all .15s' }}>
+                      <span style={{ fontSize:13, fontWeight:500, color:active?'#a5b4fc':'var(--c-t1)', flex:1 }}>{label}</span>
+                      <div style={{ display:'flex', alignItems:'center', gap:2, flexShrink:0 }}>
+                        <button onClick={()=>setBreakdown(b=>({...b,[k]:Math.max(0,(b[k]||0)-1)}))} style={{ width:36,height:36,borderRadius:8,border:'none',background:'none',color:active?'#6366f1':'var(--c-t3)',fontSize:20,cursor:'pointer',fontFamily:'inherit' }}>−</button>
+                        <span style={{ fontSize:16,fontWeight:700,color:active?'#6366f1':'rgba(255,255,255,0.2)',minWidth:24,textAlign:'center' }}>{val}</span>
+                        <button onClick={()=>setBreakdown(b=>({...b,[k]:(b[k]||0)+1}))} style={{ width:36,height:36,borderRadius:8,border:'none',background:'none',color:active?'#6366f1':'var(--c-t3)',fontSize:20,cursor:'pointer',fontFamily:'inherit' }}>+</button>
                       </div>
                     </div>
                   )
                 })}
               </div>
-            </div>
-          )}
-          <div className="mb-5">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-[11px] font-semibold text-t3 uppercase tracking-wider">Number of Questions</div>
-              <div className="text-[18px] font-bold text-blue-600">{typeId==='mixed'?breakdownTotal:count}</div>
-            </div>
-            {typeId!=='mixed'&&(
-              <>
-                <input type="range" min={5} max={35} step={1} value={count} onChange={e=>setCount(Number(e.target.value))} onInput={e=>setCount(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer" style={{height:4}}/>
-                <div style={{position:'relative',height:14,marginTop:6}}>
-                  <span style={{position:'absolute',left:0,fontSize:10,color:'var(--c-t3)'}}>5</span>
-                  <span style={{position:'absolute',left:'16.7%',transform:'translateX(-50%)',fontSize:10,color:'var(--c-t3)'}}>10</span>
-                  <span style={{position:'absolute',left:'50%',transform:'translateX(-50%)',fontSize:10,color:'var(--c-t3)'}}>20</span>
-                  <span style={{position:'absolute',right:0,fontSize:10,color:'var(--c-t3)'}}>35</span>
-                </div>
-              </>
             )}
+
+            {/* Count slider (non-mixed) */}
+            {typeId!=='mixed' && (
+              <div style={{ padding:'10px 14px 12px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:7 }}>
+                  <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.28)', textTransform:'uppercase', letterSpacing:'.05em' }}>Questions</span>
+                  <span style={{ fontSize:16, fontWeight:800, color:'#a5b4fc' }}>{count}</span>
+                </div>
+                <input type="range" min={5} max={35} step={1} value={count} onChange={e=>setCount(Number(e.target.value))} style={{ width:'100%', accentColor:'#6366f1', display:'block' }}/>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, color:'rgba(255,255,255,0.2)', marginTop:5 }}>
+                  <span>5</span><span>20</span><span>35</span>
+                </div>
+              </div>
+            )}
+
+            <div style={{ padding:'9px 14px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between' }}>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.18)' }}>Nova explains every wrong answer</span>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.15)' }}>⌘↵ generate</span>
+            </div>
           </div>
-          {error&&<div className="mb-3 text-sm text-red-500">{error}</div>}
-          <button onClick={generate} disabled={loading||!topic.trim()} style={{width:'100%',padding:'13px 0',borderRadius:10,border:'none',background:loading?'linear-gradient(90deg,#1e3a8a,#4c1d95)':'linear-gradient(90deg,#2563eb,#7c3aed)',color:'#fff',fontSize:14,fontWeight:700,cursor:loading?'not-allowed':'pointer',letterSpacing:'-0.01em',transition:'background 0.3s',position:'relative',overflow:'hidden',opacity:(loading||!topic.trim())?0.6:1}}>
-            {loading&&<span style={{position:'absolute',bottom:0,left:0,height:3,background:'rgba(255,255,255,0.4)',borderRadius:'0 2px 2px 0',animation:'progress 3s cubic-bezier(.4,0,.2,1) forwards'}}/>}
-            {loading?<span style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}><span style={{width:14,height:14,border:'2px solid rgba(255,255,255,0.3)',borderTopColor:'#fff',borderRadius:'50%',display:'inline-block',animation:'spin 0.7s linear infinite',flexShrink:0}}/>Generating...</span>:'Generate '+(typeId==='mixed'?breakdownTotal:count)+' Questions'}
+
+          {error && <div style={{ fontSize:12, color:'#f87171', marginTop:8 }}>{error}</div>}
+
+          <button
+            onClick={generate}
+            disabled={loading||!topic.trim()||(typeId==='mixed'&&breakdownTotal===0)}
+            style={{ width:'100%', padding:'13px', borderRadius:11, border:'none', background:'linear-gradient(135deg,#4f46e5,#7c3aed)', color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer', marginTop:11, fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:9, letterSpacing:'-.01em', boxShadow:'0 4px 18px rgba(99,102,241,0.28)', transition:'all .15s', opacity:loading||!topic.trim()||(typeId==='mixed'&&breakdownTotal===0)?0.55:1 }}>
+            {loading ? (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation:'_fcspin .7s linear infinite', flexShrink:0 }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                Generating…
+              </>
+            ) : `Generate ${typeId==='mixed'?breakdownTotal:count} question${(typeId==='mixed'?breakdownTotal:count)!==1?'s':''} →`}
           </button>
         </div>
-      ) : (
+
+        {/* Right — live preview */}
         <div>
-          {submitted&&(
-            <div className={'mb-5 p-4 rounded-xl border text-sm font-semibold '+(pct===100?'bg-emerald-500/10 border-emerald-500/20 text-emerald-600':pct>=60?'bg-blue-500/10 border-blue-500/20 text-blue-600':'bg-amber-500/10 border-amber-500/20 text-amber-600')}>
-              {score}/{questions.length} correct ({pct}%) &mdash; {pct===100?'Perfect!':pct>=60?'Good job!':'Keep practising.'}
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>Live preview</div>
+          <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:16 }}>
+            <div style={{ marginBottom:10 }}>
+              <span style={{ fontSize:9, fontWeight:800, background:'rgba(99,102,241,0.1)', color:'#a5b4fc', padding:'3px 8px', borderRadius:20, textTransform:'uppercase', letterSpacing:'.05em' }}>Multiple Choice</span>
             </div>
-          )}
-          <div className="space-y-4 mb-6">
-            {questions.map((q,i)=>{
-              const isSA=q.type==='short_answer'; const isFITB=q.type==='fill_blank'; const isMatch=q.type==='matching'
-              return (
-                <div key={i} className="bg-surface border border-line rounded-xl p-4">
-                  <div className="flex items-start gap-2 mb-3">
-                    <span className="text-[10px] font-bold bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5" style={{whiteSpace:'nowrap'}}>{prettifyType(q.type)}</span>
-                    <p className="text-sm font-semibold text-t1 flex-1">{i+1}. {q.question}</p>
-                    <SpeakerBtn text={q.question}/>
-                  </div>
-                  {isFITB&&(
-                    <div>
-                      <div className="flex items-center gap-2 text-sm text-t1 mb-2">
-                        <span>Answer:</span>
-                        <input value={fitbInputs[i]||''} onChange={e=>setFitbInputs(s=>({...s,[i]:e.target.value}))} disabled={submitted} placeholder="Fill in the blank..." className="flex-1 h-9 bg-surface2 border border-line rounded-lg px-3 text-sm text-t1 outline-none focus:border-blue-400 disabled:opacity-70"/>
-                      </div>
-                      {submitted&&<div className={'text-[12px] px-3 py-2 rounded-lg '+(checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'bg-emerald-500/10 text-emerald-600 font-semibold':'bg-red-500/10 text-red-500')}>{checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'✓ Correct!':'✗ Answer: '+q.correctAnswer}</div>}
-                    </div>
-                  )}
-                  {isMatch&&(
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-2 text-[11px] font-bold text-t3 uppercase px-1 mb-1"><span>Term</span><span>Match</span></div>
-                      {(q.pairs||[]).map((pair,j)=>(
-                        <div key={j} className="grid grid-cols-2 gap-2 items-center">
-                          <div className="px-3 py-2 bg-surface2 border border-line rounded-lg text-[13px] text-t1">{pair.left}</div>
-                          <select value={matchAnswers[i]?.[j]||''} onChange={e=>setMatchAnswers(s=>({...s,[i]:{...(s[i]||{}),[j]:e.target.value}}))} disabled={submitted} className="h-9 bg-surface2 border border-line rounded-lg px-2 text-[13px] text-t1 outline-none focus:border-blue-400 disabled:opacity-70" style={{borderColor:submitted?(matchAnswers[i]?.[j]===pair.right?'#10b981':'#ef4444'):'var(--c-line)'}}>
-                            <option value="">Select...</option>
-                            {(shuffledRights[i]||[]).map((r,ri)=><option key={ri} value={r}>{r}</option>)}
-                          </select>
-                        </div>
-                      ))}
-                      {submitted&&<div className="text-[11px] text-t3 mt-1">{(q.pairs||[]).map(p=>p.left+' → '+p.right).join(' · ')}</div>}
-                    </div>
-                  )}
-                  {isSA&&(
-                    <div>
-                      <textarea value={saInputs[i]||''} onChange={e=>setSaInputs(s=>({...s,[i]:e.target.value}))} placeholder="Type your answer here..." disabled={submitted} rows={3} className="w-full text-sm text-t1 bg-surface2 border border-line rounded-lg p-3 resize-none outline-none focus:border-blue-400 disabled:opacity-70 mb-2"/>
-                      {submitted&&(
-                        <div className="space-y-2">
-                          <div className="text-[12px] text-t2 bg-blue-500/10 px-3 py-2 rounded-lg border border-blue-300/30"><span className="font-semibold text-blue-600">Model answer: </span>{q.correctAnswer||'Open-ended'}</div>
-                          <div className="flex gap-2 items-center">
-                            <span className="text-[11px] text-t3">Self-grade:</span>
-                            {['correct','wrong'].map(g=>(
-                              <button key={g} onClick={()=>setSaGrades(s=>({...s,[i]:g}))} className={'h-7 px-3 rounded-lg text-[12px] font-medium border transition-colors '+(saGrades[i]===g?(g==='correct'?'bg-emerald-500 text-white border-emerald-500':'bg-red-500 text-white border-red-500'):'border-line text-t2 hover:bg-surface2')}>
-                                {g==='correct'?'✓ Correct':'✗ Wrong'}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {!isSA&&!isFITB&&!isMatch&&(
-                    <div className="space-y-2">
-                      {(q.options||['True','False']).map((opt,j)=>{
-                        const isSel=selected[i]===j; const isCorr=q.answerIndex===j
-                        let cls='border-line text-t2 hover:border-blue-300 hover:bg-surface2'
-                        if(submitted){if(isCorr)cls='border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400';else if(isSel)cls='border-red-400 bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400';else cls='border-line text-t3 opacity-60'}
-                        else if(isSel)cls='border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
-                        return <button key={j} onClick={()=>!submitted&&setSelected(s=>({...s,[i]:j}))} className={'w-full text-left px-3 py-2.5 rounded-lg border text-[13px] transition-all '+cls}><span className="font-semibold mr-2">{['A','B','C','D'][j]}.</span>{opt}</button>
-                      })}
-                    </div>
-                  )}
-                  {submitted&&q.explanation&&<div className="mt-3 text-[11px] text-t2 bg-surface2 px-3 py-2 rounded-lg border border-line"><span className="font-semibold text-t1">Explanation: </span>{q.explanation}</div>}
-                </div>
-              )
-            })}
+            <p style={{ fontSize:13, fontWeight:600, color:'#e2e8f0', marginBottom:12, lineHeight:1.5 }}>Which event directly triggered the start of World War I in 1914?</p>
+            {[
+              { label:'A', text:'The sinking of the Lusitania', state:'wrong'  },
+              { label:'B', text:'The Treaty of Versailles',     state:'plain'  },
+              { label:'C', text:'Assassination of Archduke Franz Ferdinand', state:'correct' },
+              { label:'D', text:'Germany invading Poland',      state:'plain'  },
+            ].map(o => (
+              <div key={o.label} style={{ padding:'7px 11px', borderRadius:7, fontSize:12, marginBottom:5, border:'1px solid '+(o.state==='correct'?'rgba(16,185,129,0.28)':o.state==='wrong'?'rgba(239,68,68,0.18)':'rgba(255,255,255,0.06)'), background:o.state==='correct'?'rgba(16,185,129,0.07)':o.state==='wrong'?'rgba(239,68,68,0.05)':'transparent', color:o.state==='correct'?'#34d399':o.state==='wrong'?'rgba(239,68,68,0.55)':'rgba(255,255,255,0.38)', display:'flex', alignItems:'center', gap:8 }}>
+                <span style={{ fontSize:9, fontWeight:800, width:16 }}>{o.label}</span>{o.text}
+              </div>
+            ))}
+            <div style={{ marginTop:10, background:'rgba(167,139,250,0.05)', border:'1px solid rgba(167,139,250,0.15)', borderRadius:8, padding:'9px 11px', fontSize:11, color:'rgba(167,139,250,0.75)', lineHeight:1.6 }}>
+              <span style={{ fontWeight:700, color:'#a78bfa' }}>Nova explains:</span> The Lusitania sinking was 1915 — WWI already underway. Franz Ferdinand's assassination on June 28, 1914 triggered the chain of alliances that started the war.
+            </div>
           </div>
-          <div className="flex flex-wrap gap-3 items-center">
-            {!submitted&&<button onClick={async()=>{
-              setSubmitted(true)
-              // Write to quiz_attempts for progress tracking & parent dashboard
-              if(user && topic) {
-                try {
-                  const totalQ = questions.length
-                  const autoC = questions.filter((q,i)=>{
-                    if(q.type==='short_answer'||q.type==='matching') return false
-                    if(q.type==='fill_blank') return checkFitbAnswer(fitbInputs[i],q.correctAnswer)
-                    return selected[i]===q.answerIndex
-                  }).length
-                  await supabase.from('quiz_attempts').insert({
-                    user_id: user.id, topic, subject: null,
-                    correct: autoC, total: totalQ,
-                  })
-                } catch(e) { /* non-critical, don't block UI */ }
-              }
-            }} disabled={Object.keys(selected).length===0&&!Object.keys(saInputs).some(k=>saInputs[k]?.trim())} className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 disabled:opacity-40">Submit Answers</button>}
-            <button onClick={()=>setShowKey(true)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 flex items-center gap-1.5"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="7"/><path d="M8 5v4m0 2.5v.5"/></svg>Answer Key</button>
-            <button onClick={()=>printQuizBlank(questions,topic)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 flex items-center gap-1.5"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>Print Quiz</button>
-            <button onClick={()=>setEditMode(true)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2">Edit / Add Questions</button>
-            {user&&<button onClick={()=>{setSaveTitle(topic);setShowSave(true)}} className="h-9 px-4 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 flex items-center gap-1.5">&#128190; {savedId?'Update Save':'Save Quiz'}</button>}
-            {saveFeedback&&<span className="text-[12px] text-emerald-500 font-medium">{saveFeedback}</span>}
-            <button onClick={startFresh} className="h-9 px-4 bg-surface border border-line text-t2 text-sm font-medium rounded-xl hover:bg-surface2 ml-auto">New Quiz</button>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:7, marginTop:10 }}>
+            <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:9, padding:'9px 11px', textAlign:'center' }}>
+              <div style={{ fontSize:12, fontWeight:800, color:'#a5b4fc', marginBottom:2 }}>Auto-graded</div>
+              <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>All 5 question types</div>
+            </div>
+            <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:9, padding:'9px 11px', textAlign:'center' }}>
+              <div style={{ fontSize:12, fontWeight:800, color:'#a5b4fc', marginBottom:2 }}>Print ready</div>
+              <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>Answer key included</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  // ── Quiz in progress / submitted ──────────────────────────────────────────
+
+  return (
+    <div style={{ padding:'24px', maxWidth:680, margin:'0 auto', width:'100%', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+
+      {/* Answer key modal */}
+      {showKey && <AnswerKeyModal questions={questions} topic={topic} onClose={()=>setShowKey(false)} selected={selected} novaExplanations={novaExplanations} explanationLoading={explanationLoading} explainWrongAnswer={explainWrongAnswer}/>}
+
+      {/* Save modal */}
+      {showSave && (
+        <div style={{ position:'fixed', inset:0, zIndex:40, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.45)' }}>
+          <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:24, width:'100%', maxWidth:360, boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
+            <div style={{ fontSize:15, fontWeight:800, color:'var(--c-t1)', marginBottom:16 }}>Save Quiz</div>
+            <input value={saveTitle} onChange={e=>setSaveTitle(e.target.value)} placeholder={topic||'Quiz title…'} style={{ width:'100%', height:36, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:9, padding:'0 12px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', marginBottom:14 }}/>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={doSave} disabled={saving} style={{ flex:1, height:36, background:'#2563eb', color:'#fff', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', opacity:saving?.6:1 }}>{saving?'Saving…':'Save to My Stuff'}</button>
+              <button onClick={()=>setShowSave(false)} style={{ height:36, padding:'0 16px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            </div>
           </div>
         </div>
       )}
+
+      {/* Score banner */}
+      {submitted && (
+        <div style={{ marginBottom:20, padding:16, borderRadius:12, border:'1px solid '+(pct===100?'rgba(16,185,129,0.25)':pct>=60?'rgba(59,130,246,0.25)':'rgba(245,158,11,0.25)'), background:pct===100?'rgba(16,185,129,0.07)':pct>=60?'rgba(59,130,246,0.07)':'rgba(245,158,11,0.07)', fontSize:14, fontWeight:700, color:pct===100?'#34d399':pct>=60?'#60a5fa':'#fbbf24' }}>
+          {score}/{questions.length} correct ({pct}%) — {pct===100?'Perfect!':pct>=60?'Good job!':'Keep practising.'}
+        </div>
+      )}
+
+      {/* Questions */}
+      <div style={{ display:'flex', flexDirection:'column', gap:14, marginBottom:20 }}>
+        {questions.map((q,i) => {
+          const isSA    = q.type==='short_answer'
+          const isFITB  = q.type==='fill_blank'
+          const isMatch = q.type==='matching'
+          return (
+            <div key={i} style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:14, padding:16 }}>
+              <div style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:12 }}>
+                <span style={{ fontSize:9, fontWeight:800, background:'rgba(59,130,246,0.1)', color:'#60a5fa', padding:'3px 8px', borderRadius:20, flexShrink:0, marginTop:1, textTransform:'uppercase', letterSpacing:'.04em', whiteSpace:'nowrap' }}>{prettifyType(q.type)}</span>
+                <p style={{ fontSize:13, fontWeight:700, color:'var(--c-t1)', flex:1, lineHeight:1.5 }}>{i+1}. {q.question}</p>
+                <SpeakerBtn text={q.question}/>
+              </div>
+
+              {isFITB && (
+                <div>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+                    <span style={{ fontSize:13, color:'var(--c-t2)' }}>Answer:</span>
+                    <input value={fitbInputs[i]||''} onChange={e=>setFitbInputs(s=>({...s,[i]:e.target.value}))} disabled={submitted} placeholder="Fill in the blank…" style={{ flex:1, height:36, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:9, padding:'0 12px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', opacity:submitted?.7:1 }}/>
+                  </div>
+                  {submitted && <div style={{ fontSize:12, padding:'8px 12px', borderRadius:8, background:checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'rgba(16,185,129,0.08)':'rgba(239,68,68,0.07)', color:checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'#34d399':'#f87171', fontWeight:600 }}>{checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'✓ Correct!':'✗ Answer: '+q.correctAnswer}</div>}
+                </div>
+              )}
+
+              {isMatch && (
+                <div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
+                    <span style={{ fontSize:10, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'.04em' }}>Term</span>
+                    <span style={{ fontSize:10, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'.04em' }}>Match</span>
+                  </div>
+                  {(q.pairs||[]).map((pair,j)=>(
+                    <div key={j} style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6, alignItems:'center' }}>
+                      <div style={{ padding:'8px 12px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, fontSize:13, color:'var(--c-t1)' }}>{pair.left}</div>
+                      <select value={matchAnswers[i]?.[j]||''} onChange={e=>setMatchAnswers(s=>({...s,[i]:{...(s[i]||{}),[j]:e.target.value}}))} disabled={submitted} style={{ height:36, background:'var(--c-surface2)', border:'1px solid '+(submitted?(matchAnswers[i]?.[j]===pair.right?'#10b981':'#ef4444'):'var(--c-line)'), borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}>
+                        <option value="">Select…</option>
+                        {(shuffledRights[i]||[]).map((r,ri)=><option key={ri} value={r}>{r}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                  {submitted && <div style={{ fontSize:11, color:'var(--c-t3)', marginTop:4 }}>{(q.pairs||[]).map(p=>p.left+' → '+p.right).join(' · ')}</div>}
+                </div>
+              )}
+
+              {isSA && (
+                <div>
+                  <textarea value={saInputs[i]||''} onChange={e=>setSaInputs(s=>({...s,[i]:e.target.value}))} placeholder="Type your answer here…" disabled={submitted} rows={3} style={{ width:'100%', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:10, padding:'10px 12px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit', marginBottom:8, opacity:submitted?.7:1 }}/>
+                  {submitted && (
+                    <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+                      <div style={{ fontSize:12, color:'var(--c-t2)', background:'rgba(59,130,246,0.08)', padding:'8px 12px', borderRadius:8, border:'1px solid rgba(59,130,246,0.2)' }}><span style={{ fontWeight:700, color:'#60a5fa' }}>Model answer: </span>{q.correctAnswer||'Open-ended'}</div>
+                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        <span style={{ fontSize:11, color:'var(--c-t3)' }}>Self-grade:</span>
+                        {['correct','wrong'].map(g=>(
+                          <button key={g} onClick={()=>setSaGrades(s=>({...s,[i]:g}))} style={{ height:28, padding:'0 12px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid '+(saGrades[i]===g?(g==='correct'?'#10b981':'#ef4444'):'var(--c-line)'), background:saGrades[i]===g?(g==='correct'?'#10b981':'#ef4444'):'transparent', color:saGrades[i]===g?'#fff':'var(--c-t2)', cursor:'pointer', fontFamily:'inherit' }}>
+                            {g==='correct'?'✓ Correct':'✗ Wrong'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!isSA&&!isFITB&&!isMatch && (
+                <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                  {(q.options||['True','False']).map((opt,j)=>{
+                    const isSel  = selected[i]===j
+                    const isCorr = q.answerIndex===j
+                    let bg='transparent', border='rgba(255,255,255,0.07)', color='rgba(255,255,255,0.5)'
+                    if (submitted) {
+                      if (isCorr)      { bg='rgba(16,185,129,0.08)'; border='rgba(16,185,129,0.3)'; color='#34d399' }
+                      else if (isSel)  { bg='rgba(239,68,68,0.07)'; border='rgba(239,68,68,0.25)'; color='rgba(239,68,68,0.7)' }
+                      else             { color='rgba(255,255,255,0.2)' }
+                    } else if (isSel)  { bg='rgba(99,102,241,0.1)'; border='rgba(99,102,241,0.4)'; color='#a5b4fc' }
+                    return (
+                      <button key={j} onClick={()=>!submitted&&setSelected(s=>({...s,[i]:j}))} style={{ width:'100%', textAlign:'left', padding:'9px 13px', borderRadius:9, border:'1px solid '+border, background:bg, color, fontSize:13, cursor:submitted?'default':'pointer', transition:'all .15s', fontFamily:'inherit', display:'flex', alignItems:'center', gap:8 }}>
+                        <span style={{ fontWeight:700, width:18 }}>{['A','B','C','D'][j]}.</span>{opt}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {submitted&&q.explanation && <div style={{ marginTop:10, fontSize:11, color:'var(--c-t2)', background:'var(--c-surface2)', padding:'8px 12px', borderRadius:8, border:'1px solid var(--c-line)', lineHeight:1.6 }}><span style={{ fontWeight:700, color:'var(--c-t1)' }}>Explanation: </span>{q.explanation}</div>}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Action bar */}
+      <div style={{ display:'flex', flexWrap:'wrap', gap:10, alignItems:'center' }}>
+        {!submitted && (
+          <button
+            onClick={async()=>{
+              setSubmitted(true)
+              if (user&&topic) {
+                try {
+                  const autoC = questions.filter((q,i)=>{ if (q.type==='short_answer'||q.type==='matching') return false; if (q.type==='fill_blank') return checkFitbAnswer(fitbInputs[i],q.correctAnswer); return selected[i]===q.answerIndex }).length
+                  await supabase.from('quiz_attempts').insert({ user_id:user.id, topic, subject:null, correct:autoC, total:questions.length })
+                } catch(e) {}
+              }
+            }}
+            disabled={Object.keys(selected).length===0&&!Object.keys(saInputs).some(k=>saInputs[k]?.trim())}
+            style={{ height:36, padding:'0 20px', background:'#4f46e5', color:'#fff', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', opacity:Object.keys(selected).length===0&&!Object.keys(saInputs).some(k=>saInputs[k]?.trim())?.45:1 }}>
+            Submit Answers
+          </button>
+        )}
+        <button onClick={()=>setShowKey(true)} style={{ height:36, padding:'0 16px', background:'var(--c-surface)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:7 }}>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="7"/><path d="M8 5v4m0 2.5v.5"/></svg>
+          Answer Key
+        </button>
+        <button onClick={()=>printQuizBlank(questions,topic)} style={{ height:36, padding:'0 16px', background:'var(--c-surface)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:7 }}>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>
+          Print
+        </button>
+        <button onClick={()=>setEditMode(true)} style={{ height:36, padding:'0 16px', background:'var(--c-surface)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
+          Edit Questions
+        </button>
+        {user && (
+          <button onClick={()=>{setSaveTitle(topic);setShowSave(true)}} style={{ height:36, padding:'0 16px', background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.25)', color:'#34d399', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {savedId?'Update Save':'Save Quiz'}
+          </button>
+        )}
+        {saveFeedback && <span style={{ fontSize:12, color:'#34d399', fontWeight:500 }}>{saveFeedback}</span>}
+        <button onClick={startFresh} style={{ height:36, padding:'0 16px', background:'var(--c-surface)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginLeft:'auto' }}>
+          New Quiz
+        </button>
+      </div>
     </div>
   )
 }
