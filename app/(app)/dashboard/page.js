@@ -151,201 +151,170 @@ export default function DashboardPage() {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
   const subjectColors = classes.map((cls, i) => ({ ...cls, color: SUBJECT_COLORS[i % SUBJECT_COLORS.length] }))
 
+
+  if (isMobile) return <MobileDashboard />
+
+  const firstName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  const nextAssignment = assignments[0]
+  const dueLabel = nextAssignment?.due_date ? `Due ${new Date(nextAssignment.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}` : 'No due date'
+  const savedCount = 0 // placeholder — fetched by My Stuff
+
+  // ── Card styles ────────────────────────────────────────────────────────────
+  const card = {
+    background:'rgba(255,255,255,0.025)',
+    border:'0.5px solid rgba(255,255,255,0.07)',
+    borderRadius:16, overflow:'hidden',
+  }
+
   return (
-    <div style={{ padding: 'clamp(14px,3vw,24px) clamp(12px,3vw,24px) 0', maxWidth: 1100, margin: '0 auto' }}>
+    <div style={{ padding:'28px 28px 80px', maxWidth:900, margin:'0 auto' }}>
+      <style>{`
+        @keyframes dash-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes fadeSlide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}
+        .dash-card{animation:dash-in 0.3s cubic-bezier(.4,0,.2,1) both}
+        .dash-card:hover .dash-card-hover{opacity:1!important}
+      `}</style>
 
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
-        <div>
-          <div style={{ fontSize: 12, color: 'var(--c-t3)', fontWeight: 500, marginBottom: 2 }}>{greeting}</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--c-t1)', letterSpacing: '-0.02em' }}>Hey, {firstName} 👋</div>
-        </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {classes.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 20, padding: '4px 12px' }}>
-              <span style={{ width: 5, height: 5, background: '#4ade80', borderRadius: '50%', display: 'inline-block', animation: 'pulse-dot 1.2s infinite' }}></span>
-              <span style={{ fontSize: 11, color: '#4ade80', fontWeight: 600 }}>{classes.length} class{classes.length !== 1 ? 'es' : ''} active</span>
-            </div>
-          )}
-          {dueToday > 0 && (
-            <a href="/flashcards" style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, padding: '4px 12px', textDecoration: 'none' }}>
-              <span style={{ fontSize: 11 }}>↻</span>
-              <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700 }}>{dueToday} card{dueToday !== 1 ? 's' : ''} due today</span>
-            </a>
-          )}
-          <Link href="/create" style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: 9, padding: '8px 16px', fontSize: 12, fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M8 1v14M1 8h14"/></svg>
-            Create
-          </Link>
-        </div>
+      {/* Greeting */}
+      <div className="dash-card" style={{ marginBottom:20 }}>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', marginBottom:3 }}>{greeting}</div>
+        <div style={{ fontSize:26, fontWeight:600, color:'rgba(255,255,255,0.88)', letterSpacing:'-0.03em' }}>{firstName}</div>
       </div>
 
-      {/* Metric cards */}
-      <div className="dash-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
-        <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 9, color: 'var(--c-t3)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700, marginBottom: 8 }}>Subjects active</div>
-          {subjectColors.length > 0 ? (
-            <>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
-                {subjectColors.slice(0, 4).map(cls => (
-                  <span key={cls.name} style={{ background: cls.color + '22', border: '1px solid ' + cls.color + '44', color: cls.color, fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6 }}>
-                    {cls.name || cls.subject || 'Class'}
-                  </span>
-                ))}
-              </div>
-              <div style={{ fontSize: 10, color: 'var(--c-t3)' }}>{subjectColors.length} class{subjectColors.length !== 1 ? 'es' : ''} connected</div>
-            </>
-          ) : (
-            <>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
-                <span style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.25)', color: '#60a5fa', fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6 }}>Join a class</span>
-              </div>
-              <div style={{ fontSize: 10, color: 'var(--c-t3)' }}>No classes yet — <Link href="/student-portal" style={{ color: '#60a5fa', textDecoration: 'none' }}>enroll now</Link></div>
-            </>
-          )}
-        </div>
-
-        <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 9, color: 'var(--c-t3)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700, marginBottom: 8 }}>Assignments due</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: assignments.length > 0 ? '#f59e0b' : 'var(--c-t2)', lineHeight: 1 }}>
-            {assignments.length}<span style={{ fontSize: 12, color: 'var(--c-t3)', fontWeight: 400 }}> pending</span>
-          </div>
-          <div style={{ height: 3, background: 'var(--c-surface2)', borderRadius: 2, marginTop: 10, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: Math.min(assignments.length * 20, 100) + '%', background: 'linear-gradient(90deg,#f59e0b,#d97706)', borderRadius: 2 }}/>
-          </div>
-        </div>
-
-        <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 9, color: 'var(--c-t3)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700, marginBottom: 8 }}>Last quiz score</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: '#60a5fa', lineHeight: 1 }}>
-            {quizScore !== null ? <>{quizScore}<span style={{ fontSize: 12, color: 'var(--c-t3)', fontWeight: 400 }}>%</span></> : <span style={{ fontSize: 13, color: 'var(--c-t3)', fontWeight: 500 }}>No quiz yet</span>}
-          </div>
-          <div style={{ height: 3, background: 'var(--c-surface2)', borderRadius: 2, marginTop: 10, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: (quizScore || 0) + '%', background: 'linear-gradient(90deg,#3b82f6,#6366f1)', borderRadius: 2 }}/>
-          </div>
-        </div>
-      </div>
-
-      {/* Tool grid */}
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 10, color: 'var(--c-t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Quick tools</div>
-        <div className="dash-tools" style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10 }}>
-          {TOOLS.map((t,i) => (
-            <a key={t.href} href={t.href} style={{ background: t.bg, border: '1px solid ' + t.border, borderRadius: 14, padding: 14, textDecoration: 'none', display: 'block', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}>
-              <div style={{ width: 30, height: 30, borderRadius: 10, background: t.bg.replace('0.12','0.2'), display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke={t.color} strokeWidth="1.5" strokeLinecap="round"><path d={t.icon}/></svg>
-              </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: t.color }}>{t.label}</div>
-              <div style={{ fontSize: 10, color: 'var(--c-t3)', marginTop: 2 }}>{t.sub}</div>
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Study Streaks ── */}
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 10, color: 'var(--c-t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Study progress</div>
-        <StreakCard />
-      </div>
-
-      {/* Nova Noticed callout */}
-      {!dataLoading && classes.length > 0 && (
-        <div style={{ background:'rgba(124,58,237,0.06)', border:'1px solid rgba(167,139,250,0.2)', borderRadius:14, padding:'12px 16px', marginBottom:14, display:'flex', alignItems:'center', gap:12 }}>
-          <div style={{ width:32, height:32, borderRadius:10, background:'rgba(167,139,250,0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 10a3 3 0 100-6 3 3 0 000 6z"/></svg>
-          </div>
+      {/* ── 1. Continue card ── */}
+      <div className="dash-card" style={{ ...card, marginBottom:12, animationDelay:'0.05s', position:'relative', minHeight:110 }}>
+        <canvas id="dash-particle-canvas" style={{ position:'absolute', inset:0, width:'100%', height:'100%', borderRadius:16 }}/>
+        <div style={{ position:'relative', zIndex:1, padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
           <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontSize:12, fontWeight:700, color:'#a78bfa', marginBottom:2 }}>Nova noticed</div>
-            <div style={{ fontSize:12, color:'var(--c-t2)', lineHeight:1.5 }}>You've been studying {classes[0]?.name || 'your class'} — want Nova to build you a comprehensive study guide to round it out?</div>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:'rgba(255,255,255,0.1)', border:'0.5px solid rgba(255,255,255,0.18)', borderRadius:20, padding:'3px 9px', marginBottom:8 }}>
+              <div style={{ width:5, height:5, borderRadius:'50%', background:'#c4b5fd', boxShadow:'0 0 5px #c4b5fd' }}/>
+              <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'rgba(255,255,255,0.8)' }}>Continue</span>
+            </div>
+            <div style={{ fontSize:16, fontWeight:600, color:'#fff', marginBottom:4, letterSpacing:'-0.02em' }}>
+              {dataLoading ? 'Loading…' : assignments.length > 0 ? assignments[0].title : 'Start something new'}
+            </div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>
+              {assignments.length > 0 ? `Assignment · ${dueLabel}` : 'Your work will appear here'}
+            </div>
           </div>
-          <a href="/ai-tutor" style={{ flexShrink:0, background:'rgba(167,139,250,0.15)', border:'1px solid rgba(167,139,250,0.3)', borderRadius:8, padding:'6px 12px', fontSize:11, fontWeight:700, color:'#a78bfa', textDecoration:'none', whiteSpace:'nowrap' }}>Ask Nova →</a>
-        </div>
-      )}
-
-      {/* What's due today */}
-      {assignments.length > 0 && (
-        <div style={{ background:'rgba(245,158,11,0.06)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:12, padding:'14px 16px', marginBottom:12 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span style={{ fontSize:11, fontWeight:700, color:'#f59e0b', letterSpacing:'0.07em' }}>DUE TODAY</span>
-          </div>
-          {assignments.filter(a => {
-            if (!a.due_date) return false
-            return new Date(a.due_date).toDateString() === new Date().toDateString()
-          }).length === 0 ? (
-            <p style={{ fontSize:13, color:'var(--c-t3)' }}>Nothing due today — you're all caught up!</p>
-          ) : (
-            assignments.filter(a => {
-              if (!a.due_date) return false
-              return new Date(a.due_date).toDateString() === new Date().toDateString()
-            }).map((a,i) => (
-              <div key={a.id||i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 0', borderTop: i>0 ? '1px solid rgba(245,158,11,0.1)' : 'none' }}>
-                <span style={{ fontSize:13, color:'var(--c-t1)', fontWeight:500 }}>{a.title}</span>
-                <a href={'/'+a.type} style={{ padding:'4px 10px', borderRadius:6, background:'#f59e0b', color:'#0d1117', fontSize:11, fontWeight:600, textDecoration:'none' }}>Start →</a>
-              </div>
-            ))
+          {assignments.length > 0 && (
+            <Link href="/assignments" style={{ flexShrink:0, height:32, padding:'0 14px', background:'rgba(99,102,241,0.25)', border:'0.5px solid rgba(99,102,241,0.4)', borderRadius:9, display:'flex', alignItems:'center', fontSize:12, fontWeight:600, color:'#c4b5fd', textDecoration:'none' }}>
+              Open →
+            </Link>
           )}
         </div>
-      )}
+      </div>
+      <ParticleInit/>
 
-      {/* Bottom row */}
-      <div className="dash-bottom" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 1fr', gap: 12, paddingBottom: 24 }}>
+      {/* ── 2. Stats row: Due for review + Class activity ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
 
-        {/* Active class */}
-        <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 10, color: 'var(--c-t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 12 }}>Active class</div>
+        {/* Due for review */}
+        <div className="dash-card" style={{ ...card, padding:'16px 20px', animationDelay:'0.1s' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+            <span style={{ fontSize:10, fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:'rgba(255,255,255,0.25)' }}>Due for review</span>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.4" strokeLinecap="round"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 4v4l3 1.5"/></svg>
+          </div>
+          <div style={{ fontSize:32, fontWeight:600, color: dueToday > 0 ? '#c4b5fd' : 'rgba(255,255,255,0.35)', letterSpacing:'-0.04em', lineHeight:1, marginBottom:6 }}>{dueToday}</div>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginBottom:12 }}>{dueToday === 1 ? 'card due today' : 'cards due today'}</div>
+          {dueToday > 0 && (
+            <Link href="/flashcards" style={{ display:'inline-flex', alignItems:'center', gap:4, height:28, padding:'0 12px', background:'rgba(99,102,241,0.15)', border:'0.5px solid rgba(99,102,241,0.3)', borderRadius:8, fontSize:11, fontWeight:600, color:'#c4b5fd', textDecoration:'none' }}>Review now →</Link>
+          )}
+        </div>
+
+        {/* Class activity */}
+        <div className="dash-card" style={{ ...card, padding:'16px 20px', animationDelay:'0.13s' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+            <span style={{ fontSize:10, fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:'rgba(255,255,255,0.25)' }}>Class activity</span>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.4" strokeLinecap="round"><path d="M8 1l7 3.5-7 3.5-7-3.5zm-5 5.5v4c0 2 2.2 3 5 3s5-1 5-3V10"/></svg>
+          </div>
           {classes.length > 0 ? (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 11, background: 'rgba(37,99,235,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#60a5fa" strokeWidth="1.5" strokeLinecap="round"><path d="M8 1a4 4 0 100 8 4 4 0 000-8zm-6 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-t1)' }}>{classes[0].name || 'My Class'}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 10, padding: '2px 8px' }}>
-                  <span style={{ width: 4, height: 4, background: '#4ade80', borderRadius: '50%', display: 'inline-block' }}></span>
-                  <span style={{ fontSize: 9, color: '#4ade80', fontWeight: 600 }}>Live</span>
-                </div>
+              <div style={{ display:'flex', gap:5, flexWrap:'wrap', marginBottom:8 }}>
+                {classes.slice(0,3).map((cls, i) => {
+                  const colors=['#c4b5fd','#34d399','#60a5fa']
+                  return <span key={i} style={{ fontSize:11, fontWeight:600, padding:'3px 8px', borderRadius:6, background:colors[i%3]+'22', border:`0.5px solid ${colors[i%3]}44`, color:colors[i%3] }}>{cls.name||cls.subject||'Class'}</span>
+                })}
               </div>
-              {assignments.slice(0,2).map(a => (
-                <div key={a.id} style={{ background: 'var(--c-surface2)', borderRadius: 8, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <div style={{ width: 4, height: 4, background: '#f59e0b', borderRadius: '50%', flexShrink: 0 }}></div>
-                  <span style={{ fontSize: 11, color: 'var(--c-t2)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</span>
-                  {a.due_date && <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 600 }}>{new Date(a.due_date).toLocaleDateString('en',{month:'short',day:'numeric'})}</span>}
-                </div>
-              ))}
+              <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{classes.length} class{classes.length!==1?'es':''} enrolled</div>
             </>
           ) : (
-            <div style={{ textAlign: 'center', padding: '16px 0' }}>
-              <div style={{ fontSize: 12, color: 'var(--c-t3)', marginBottom: 10 }}>No classes yet</div>
-              <Link href="/student-portal" style={{ background: '#2563eb', color: 'white', borderRadius: 8, padding: '7px 16px', fontSize: 11, fontWeight: 600, textDecoration: 'none', display: 'inline-block' }}>Join a class</Link>
-            </div>
+            <>
+              <div style={{ fontSize:13, color:'rgba(255,255,255,0.35)', marginBottom:8 }}>No classes yet</div>
+              <Link href="/student-portal" style={{ display:'inline-flex', alignItems:'center', gap:4, height:28, padding:'0 12px', background:'rgba(20,184,166,0.12)', border:'0.5px solid rgba(20,184,166,0.3)', borderRadius:8, fontSize:11, fontWeight:600, color:'#34d399', textDecoration:'none' }}>Join a class →</Link>
+            </>
           )}
         </div>
+      </div>
 
-        {/* Recent activity */}
-        <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 10, color: 'var(--c-t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 12 }}>Recent activity</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {[
-              { color: '#34d399', label: 'Start generating flashcards', href: '/flashcards' },
-              { color: '#a78bfa', label: 'Ask Nova your first question', href: '/ai-tutor' },
-              { color: '#60a5fa', label: 'Take a practice quiz', href: '/quiz' },
-            ].map((a, i) => (
-              <Link key={i} href={a.href} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: a.color, flexShrink: 0 }}></div>
-                <span style={{ fontSize: 11, color: 'var(--c-t2)', flex: 1 }}>{a.label}</span>
-                <span style={{ fontSize: 10, color: '#3b82f6' }}>→</span>
-              </Link>
-            ))}
-          </div>
+      {/* ── 3. Nova suggestion card ── */}
+      <div className="dash-card" style={{ ...card, padding:'16px 20px', marginBottom:12, animationDelay:'0.16s', display:'flex', alignItems:'center', gap:14 }}>
+        <div style={{ width:38, height:38, borderRadius:12, background:'rgba(139,92,246,0.18)', border:'0.5px solid rgba(139,92,246,0.3)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#c4b5fd" strokeWidth="1.4" strokeLinecap="round"><circle cx="8" cy="8" r="7"/><circle cx="8" cy="8" r="4"/><circle cx="8" cy="8" r="1.5" fill="#c4b5fd" stroke="none"/></svg>
         </div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontSize:13, fontWeight:500, color:'rgba(255,255,255,0.8)', marginBottom:2 }}>
+            {dataLoading ? 'Nova is ready…' : assignments.length > 0 ? `Continue working on "${assignments[0].title.slice(0,30)}${assignments[0].title.length>30?'…':''}"` : 'Start studying — ask Nova anything'}
+          </div>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>Your AI tutor is always available</div>
+        </div>
+        <Link href="/ai-tutor" style={{ flexShrink:0, height:32, padding:'0 14px', background:'rgba(139,92,246,0.2)', border:'0.5px solid rgba(139,92,246,0.35)', borderRadius:9, display:'flex', alignItems:'center', fontSize:12, fontWeight:600, color:'#c4b5fd', textDecoration:'none' }}>
+          Ask Nova →
+        </Link>
+      </div>
 
-        {/* This Day in History */}
-        <TodayInHistory />
+      {/* ── 4. This Day in History ── */}
+      <div className="dash-card" style={{ animationDelay:'0.19s' }}>
+        <TodayInHistory/>
       </div>
 
     </div>
   )
+}
+
+// Particle canvas init — runs after mount
+function ParticleInit() {
+  useEffect(() => {
+    const canvas = document.getElementById('dash-particle-canvas')
+    if (!canvas || canvas._init) return
+    canvas._init = true
+    const ctx = canvas.getContext('2d')
+    const W = canvas.offsetWidth, H = canvas.offsetHeight
+    canvas.width = W; canvas.height = H
+    const pts = Array.from({length:22}, () => ({
+      x:Math.random()*W, y:Math.random()*H,
+      vx:(Math.random()-.5)*.3, vy:(Math.random()-.5)*.15,
+      r:Math.random()*1.2+.4, col:`hsl(${250+Math.random()*40},70%,75%)`
+    }))
+    let raf
+    function draw() {
+      ctx.clearRect(0,0,W,H)
+      ctx.fillStyle='rgba(12,10,30,0.82)'; ctx.fillRect(0,0,W,H)
+      const g=ctx.createRadialGradient(W*.8,H*.2,0,W*.8,H*.2,110)
+      g.addColorStop(0,'rgba(99,102,241,0.35)'); g.addColorStop(1,'transparent')
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H)
+      const g2=ctx.createRadialGradient(W*.1,H*.8,0,W*.1,H*.8,80)
+      g2.addColorStop(0,'rgba(124,58,237,0.2)'); g2.addColorStop(1,'transparent')
+      ctx.fillStyle=g2; ctx.fillRect(0,0,W,H)
+      for(let i=0;i<pts.length;i++){
+        for(let j=i+1;j<pts.length;j++){
+          const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy)
+          if(d<50){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(129,140,248,${(1-d/50)*.12})`;ctx.lineWidth=.5;ctx.stroke()}
+        }
+        ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,pts[i].r,0,Math.PI*2)
+        ctx.fillStyle=pts[i].col;ctx.globalAlpha=.45;ctx.fill();ctx.globalAlpha=1
+        pts[i].x+=pts[i].vx;pts[i].y+=pts[i].vy
+        if(pts[i].x<0||pts[i].x>W)pts[i].vx*=-1
+        if(pts[i].y<0||pts[i].y>H)pts[i].vy*=-1
+      }
+      raf=requestAnimationFrame(draw)
+    }
+    draw()
+    return () => cancelAnimationFrame(raf)
+  }, [])
+  return null
 }
