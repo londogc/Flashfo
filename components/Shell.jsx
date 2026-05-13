@@ -1,6 +1,6 @@
 'use client'
 // Flashfo — Shell (Phase 3) — comprehensive bug-fix pass v3
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
@@ -249,6 +249,27 @@ export default function Shell({ children }) {
   const topbarMenuWrapRef = useRef(null)
   const sidebarAvatarRef  = useRef(null)
   const sidebarMenuRef    = useRef(null)
+  const contentRef        = useRef(null)   // scoped desktop fade — sidebar/topbar stay visible
+
+  // Fade only the content area on navigation, before the browser paints.
+  // useLayoutEffect fires synchronously before paint so the new content
+  // is never seen at full opacity mid-swap — no hard cut.
+  const firstRender = useRef(true)
+  useLayoutEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return }
+    const el = contentRef.current
+    if (!el) return
+    el.style.transition = 'none'
+    el.style.opacity    = '0'
+    el.style.transform  = 'translateY(4px)'
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.style.transition = 'opacity 0.18s ease, transform 0.18s ease'
+        el.style.opacity    = '1'
+        el.style.transform  = 'translateY(0)'
+      })
+    })
+  }, [pathname])
 
   const [navHovered,    setNavHovered]    = useState(false)
   const [navTransition, setNavTransition] = useState(true)
@@ -568,7 +589,7 @@ export default function Shell({ children }) {
         {/* Page content — overflow:hidden on /ai-tutor so Nova controls its own scroll */}
         <div style={{ flex:1, overflow: pathname === '/ai-tutor' ? 'hidden' : 'auto', overflowX:'hidden', WebkitOverflowScrolling:'touch', background:'#04030c', position:'relative' }}>
           {pathname !== '/ai-tutor' && <div style={{ position:'fixed', top:52, left:58, right:0, bottom:0, pointerEvents:'none', zIndex:0, background:`radial-gradient(ellipse 40% 30% at 80% 10%, rgba(${accent.r},0.06) 0%, transparent 70%)`, transition:'background 0.7s ease' }}/>}
-          <div style={{ position:'relative', zIndex:1, height: pathname === '/ai-tutor' ? '100%' : undefined }}>{children}</div>
+          <div ref={contentRef} style={{ position:'relative', zIndex:1, height: pathname === '/ai-tutor' ? '100%' : undefined }}>{children}</div>
         </div>
       </div>
 
