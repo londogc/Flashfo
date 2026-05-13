@@ -12,28 +12,29 @@ import StickyNotes from '@/components/StickyNotes'
 
 // ── Accent system ─────────────────────────────────────────────────────────────
 const ACCENT_MAP = {
-  '/dashboard':      { h:'#6366f1', r:'99,102,241' },
-  '/my-stuff':       { h:'#14b8a6', r:'20,184,166' },
-  '/my-progress':      { h:'#0ea5e9', r:'14,165,233'  },
-  '/review':           { h:'#f59e0b', r:'245,158,11'  },
-  '/exam-countdown':   { h:'#a78bfa', r:'167,139,250' },
-  '/ai-tutor':       { h:'#8b5cf6', r:'139,92,246' },
-  '/create':         { h:'#10b981', r:'16,185,129' },
-  '/flashcards':     { h:'#10b981', r:'16,185,129' },
-  '/quiz':           { h:'#10b981', r:'16,185,129' },
-  '/study':          { h:'#10b981', r:'16,185,129' },
-  '/study-guide':    { h:'#10b981', r:'16,185,129' },
-  '/summarize':      { h:'#10b981', r:'16,185,129' },
-  '/source-library': { h:'#ec4899', r:'236,72,153' },
-  '/teach':          { h:'#f59e0b', r:'245,158,11' },
-  '/lesson-builder': { h:'#f43f5e', r:'244,63,94' },
-  '/live-quiz':      { h:'#f97316', r:'249,115,22' },
-  '/assignments':    { h:'#06b6d4', r:'6,182,212' },
-  '/student-portal': { h:'#06b6d4', r:'6,182,212' },
-  '/profile':        { h:'#f59e0b', r:'245,158,11' },
+  '/dashboard':      { h:'#6366f1', r:'99,102,241'  },
+  '/my-stuff':       { h:'#14b8a6', r:'20,184,166'  },
+  '/my-progress':    { h:'#0ea5e9', r:'14,165,233'  },
+  '/review':         { h:'#f59e0b', r:'245,158,11'  },
+  '/exam-countdown': { h:'#a78bfa', r:'167,139,250' },
+  '/ai-tutor':       { h:'#8b5cf6', r:'139,92,246'  },
+  '/create':         { h:'#10b981', r:'16,185,129'  },
+  '/flashcards':     { h:'#3b82f6', r:'59,130,246'  },  // blue
+  '/quiz':           { h:'#6366f1', r:'99,102,241'  },  // indigo
+  '/study-guide':    { h:'#10b981', r:'16,185,129'  },  // emerald
+  '/summarize':      { h:'#f59e0b', r:'245,158,11'  },  // amber — was violet, fixed
+  '/study':          { h:'#10b981', r:'16,185,129'  },
+  '/study-modes':    { h:'#6366f1', r:'99,102,241'  },
+  '/source-library': { h:'#ec4899', r:'236,72,153'  },
+  '/teach':          { h:'#f59e0b', r:'245,158,11'  },
+  '/lesson-builder': { h:'#f43f5e', r:'244,63,94'   },
+  '/live-quiz':      { h:'#f97316', r:'249,115,22'  },
+  '/assignments':    { h:'#06b6d4', r:'6,182,212'   },
+  '/student-portal': { h:'#06b6d4', r:'6,182,212'   },
+  '/profile':        { h:'#f59e0b', r:'245,158,11'  },
   '/settings':       { h:'#6b7280', r:'107,114,128' },
-  '/curriculum':     { h:'#8b5cf6', r:'139,92,246' },
-  '/collab-decks':   { h:'#10b981', r:'16,185,129' },
+  '/curriculum':     { h:'#8b5cf6', r:'139,92,246'  },
+  '/collab-decks':   { h:'#10b981', r:'16,185,129'  },
 }
 function getAccent(pathname) {
   const base = '/' + (pathname.split('/').filter(Boolean)[0] || '')
