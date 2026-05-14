@@ -261,7 +261,7 @@ export default function ReviewPage() {
     const mastered    = dueCards.length - hardCards.length - againCards.length
     const needsWork   = [...new Map([...hardCards,...againCards].map(c=>[c.front,c])).values()]
     return (
-      <div style={{ padding:'28px 24px', maxWidth:580, margin:'0 auto', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+      <div style={{ padding:'28px 24px', maxWidth:780, margin:'0 auto', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
         <div style={{ textAlign:'center', marginBottom:24, padding:'28px 24px', background:'linear-gradient(135deg,rgba(16,185,129,0.07),rgba(52,211,153,0.03))', border:'1px solid rgba(16,185,129,0.18)', borderRadius:16 }}>
           {mastered === dueCards.length && (
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" style={{ margin:'0 auto 12px', display:'block' }}>
