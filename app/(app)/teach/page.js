@@ -11,38 +11,37 @@ function genCode() {
 }
 
 const LAUNCH_STEPS = [
-  { id:'classroom', label:'Create a classroom', desc:'Set up your first class and get a join code for students.', href:'/teach/new', cta:'Create classroom' },
-  { id:'invite', label:'Invite students', desc:'Share your class code or a direct join link with your students.', href:null, cta:'Copy link' },
-  { id:'curriculum', label:'Connect curriculum', desc:'Link a subject or standard so Nova can tailor content.', href:'/teach/curriculum', cta:'Connect now' },
-  { id:'quiz', label:'Launch your first quiz', desc:'Run a live quiz session with your class in real time.', href:'/teach/quiz', cta:'Start quiz' },
-  { id:'results', label:'Share results', desc:'Review class performance and share a summary with students.', href:'/teach/results', cta:'View results' },
+  { id:'classroom', label:'Create a classroom',    desc:'Set up your first class and get a join code for students.',  href:'/teach/new',      cta:'Create classroom' },
+  { id:'invite',    label:'Invite students',        desc:'Share your class code or a direct join link with your students.', href:null,           cta:'Copy link' },
+  { id:'curriculum',label:'Connect curriculum',    desc:'Link a subject or standard so Nova can tailor content.',     href:'/curriculum',     cta:'Connect now' },
+  { id:'quiz',      label:'Launch your first quiz', desc:'Run a live quiz session with your class in real time.',     href:'/live-quiz',      cta:'Start quiz' },
+  { id:'results',   label:'Share results',          desc:'Review class performance and share a summary with students.',href:'/assignments',    cta:'View results' },
 ]
 
+// ── Assignment Builder ────────────────────────────────────────────────────────
 
-
-// ── Assignment Builder ──────────────────────────────────────────────
 function AssignmentBuilder({ classrooms, user }) {
-  const [form, setForm] = useState({ title:'', description:'', type:'flashcards', classroom_id:'', due_date:'' })
+  const [form,   setForm]   = useState({ title:'', description:'', type:'flashcards', classroom_id:'', due_date:'' })
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
-  const types = [{id:'flashcards',label:'Flashcard Set'},{id:'quiz',label:'Quiz'},{id:'study_guide',label:'Study Guide'},{id:'reading',label:'Reading / Notes'}]
+  const [saved,  setSaved]  = useState(false)
+  const [error,  setError]  = useState('')
+
+  const types = [
+    {id:'flashcards',label:'Flashcard Set'},
+    {id:'quiz',label:'Quiz'},
+    {id:'study_guide',label:'Study Guide'},
+    {id:'reading',label:'Reading / Notes'},
+  ]
 
   const save = async () => {
     if (!form.title.trim() || !form.classroom_id) { setError('Add a title and select a class'); return }
     setSaving(true); setError('')
     const { data, error: err } = await supabase.from('homework_assignments').insert({
-      teacher_id: user.id,
-      classroom_id: form.classroom_id,
-      title: form.title,
-      description: form.description,
-      type: form.type,
-      due_date: form.due_date || null,
-      status: 'open'
+      teacher_id: user.id, classroom_id: form.classroom_id, title: form.title,
+      description: form.description, type: form.type, due_date: form.due_date || null, status: 'open'
     }).select().single()
     setSaving(false)
     if (err) { setError('Failed to save'); return }
-    // Fire notification to all students in classroom
     const { data: enrollments } = await supabase.from('student_enrollments').select('student_id').eq('classroom_id', form.classroom_id)
     if (enrollments?.length) {
       const notifs = enrollments.map(e=>({ user_id: e.student_id, type:'assignment', category: classrooms.find(c=>c.id===form.classroom_id)?.name || 'Class', title:'New assignment: '+form.title, body: form.description || '', link:'/dashboard' }))
@@ -55,26 +54,24 @@ function AssignmentBuilder({ classrooms, user }) {
   return (
     <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:12, padding:'20px 24px', marginBottom:24 }}>
       <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
-        <span style={{ fontSize:16 }}></span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--c-t2)" strokeWidth="1.8" strokeLinecap="round">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/>
+        </svg>
         <h3 style={{ margin:0, fontSize:15, fontWeight:600, color:'var(--c-t1)' }}>Assignment Builder</h3>
       </div>
       <div style={{ display:'grid', gap:12 }}>
-        <input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} placeholder="Assignment title e.g. Chapter 5 Flashcard Review"
-          style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13, boxSizing:'border-box' }}/>
-        <textarea value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder="Instructions or notes for students (optional)" rows={2}
-          style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13, resize:'vertical', boxSizing:'border-box' }}/>
+        <input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} placeholder="Assignment title e.g. Chapter 5 Flashcard Review" style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13, boxSizing:'border-box' }}/>
+        <textarea value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder="Instructions or notes for students (optional)" rows={2} style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13, resize:'vertical', boxSizing:'border-box' }}/>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
           <div>
             <label style={{ fontSize:11, color:'var(--c-t3)', display:'block', marginBottom:4 }}>TYPE</label>
-            <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value}))}
-              style={{ width:'100%', padding:'8px 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13 }}>
+            <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value}))} style={{ width:'100%', padding:'8px 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13 }}>
               {types.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}
             </select>
           </div>
           <div>
             <label style={{ fontSize:11, color:'var(--c-t3)', display:'block', marginBottom:4 }}>CLASS</label>
-            <select value={form.classroom_id} onChange={e=>setForm(f=>({...f,classroom_id:e.target.value}))}
-              style={{ width:'100%', padding:'8px 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13 }}>
+            <select value={form.classroom_id} onChange={e=>setForm(f=>({...f,classroom_id:e.target.value}))} style={{ width:'100%', padding:'8px 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13 }}>
               <option value="">Select class...</option>
               {classrooms.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
@@ -82,12 +79,10 @@ function AssignmentBuilder({ classrooms, user }) {
         </div>
         <div>
           <label style={{ fontSize:11, color:'var(--c-t3)', display:'block', marginBottom:4 }}>DUE DATE (optional)</label>
-          <input type="datetime-local" value={form.due_date} onChange={e=>setForm(f=>({...f,due_date:e.target.value}))}
-            style={{ padding:'8px 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13 }}/>
+          <input type="datetime-local" value={form.due_date} onChange={e=>setForm(f=>({...f,due_date:e.target.value}))} style={{ padding:'8px 10px', borderRadius:8, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t1)', fontSize:13 }}/>
         </div>
         {error && <p style={{ margin:0, fontSize:12, color:'#ef4444' }}>{error}</p>}
-        <button onClick={save} disabled={saving}
-          style={{ padding:'9px 20px', borderRadius:8, background: saved?'#34d399':'#2563eb', color:'#fff', border:'none', fontWeight:600, fontSize:13, cursor:'pointer', transition:'background 0.2s', alignSelf:'flex-start' }}>
+        <button onClick={save} disabled={saving} style={{ padding:'9px 20px', borderRadius:8, background: saved?'#34d399':'#2563eb', color:'#fff', border:'none', fontWeight:600, fontSize:13, cursor:'pointer', transition:'background 0.2s', alignSelf:'flex-start' }}>
           {saving ? 'Saving...' : saved ? '✓ Assigned!' : 'Assign to class'}
         </button>
       </div>
@@ -95,40 +90,52 @@ function AssignmentBuilder({ classrooms, user }) {
   )
 }
 
+// ── Main page ─────────────────────────────────────────────────────────────────
+
 export default function TeachPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [activeView, setActiveView] = useState('assignments')
-  const [classrooms, setClassrooms] = useState([])
-  const [enrollments, setEnrollments] = useState({})
-  const [fetching, setFetching]     = useState(true)
-  const [showCreate, setShowCreate] = useState(false)
-  const [form, setForm]             = useState({ name:'', subject:'' })
-  const [creating, setCreating]     = useState(false)
-  const [checklistDone, setChecklistDone] = useState(() => {
-    if (typeof window === 'undefined') return {}
-    try { return JSON.parse((typeof window!=='undefined'&&localStorage).getItem('ff-launch-checklist') || '{}') } catch { return {} }
-  })
-  const [checklistCollapsed, setChecklistCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return (typeof window!=='undefined'&&localStorage).getItem('ff-checklist-done') === '1'
-  })
+
+  const [activeView,       setActiveView]       = useState('assignments')
+  const [classrooms,       setClassrooms]       = useState([])
+  const [enrollments,      setEnrollments]      = useState({})
+  const [fetching,         setFetching]         = useState(true)
+  const [showCreate,       setShowCreate]       = useState(false)
+  const [form,             setForm]             = useState({ name:'', subject:'' })
+  const [creating,         setCreating]         = useState(false)
+  const [copied,           setCopied]           = useState(null)
+  const [err,              setErr]              = useState('')
+
+  // ── Hydration fix: load localStorage AFTER mount, not during initial render ──
+  const [mounted,            setMounted]            = useState(false)
+  const [checklistDone,      setChecklistDone]      = useState({})
+  const [checklistCollapsed, setChecklistCollapsed] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    try {
+      const done = JSON.parse(localStorage.getItem('ff-launch-checklist') || '{}')
+      setChecklistDone(done)
+      setChecklistCollapsed(localStorage.getItem('ff-checklist-done') === '1')
+    } catch {}
+  }, [])
+
   const allDone = LAUNCH_STEPS.every(s => checklistDone[s.id])
+
   const markDone = (id) => {
     const next = {...checklistDone, [id]: true}
     setChecklistDone(next)
-    if (typeof window !== 'undefined') {
-      ;(typeof window!=='undefined'&&localStorage).setItem('ff-launch-checklist', JSON.stringify(next))
-      if (LAUNCH_STEPS.every(s => next[s.id])) (typeof window!=='undefined'&&localStorage).setItem('ff-checklist-done', '1')
-    }
+    try {
+      localStorage.setItem('ff-launch-checklist', JSON.stringify(next))
+      if (LAUNCH_STEPS.every(s => next[s.id])) localStorage.setItem('ff-checklist-done', '1')
+    } catch {}
   }
 
-  const [copied, setCopied]         = useState(null)
-  const [err, setErr]               = useState('')
-
-  useEffect(()=>{
-    if (!authLoading) { if (user) load(); else setFetching(false) }
-  },[user,authLoading])
+  useEffect(() => {
+    if (!authLoading) {
+      if (user) load(); else setFetching(false)
+    }
+  }, [user, authLoading])
 
   async function load() {
     setFetching(true)
@@ -165,160 +172,188 @@ export default function TeachPage() {
     setCopied(key); setTimeout(()=>setCopied(null), 2000)
   }
 
-  if (!authLoading && !user) return (
-    <div className="p-6 max-w-4xl mx-auto text-center py-20">
-      <div className="text-5xl mb-4"></div>
-      <h1 className="text-2xl font-bold text-t1 mb-2">Live Classrooms</h1>
+  if (!mounted || authLoading) return (
+    <div className="p-6 flex items-center justify-center min-h-64">
+      <span className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/>
+    </div>
+  )
 
-      {classrooms.length > 0 && <AssignmentBuilder classrooms={classrooms} user={user} />}
+  if (!user) return (
+    <div className="p-6 max-w-4xl mx-auto text-center py-20">
+      <h1 className="text-2xl font-bold text-t1 mb-2">Live Classrooms</h1>
       <p className="text-t2 text-sm mb-6">Sign in to create and manage your classrooms.</p>
       <a href="/auth" className="inline-flex h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl items-center">Sign in →</a>
     </div>
   )
 
+  const TEACHER_TOOLS = [
+    { label:'Lesson Builder',  href:'/lesson-builder',  icon:'M4 19.5A2.5 2.5 0 016.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z' },
+    { label:'Quiz Builder',    href:'/quiz',             icon:'M9 11l3 3L22 4 M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11' },
+    { label:'My Saved Items',  href:'/my-stuff',         icon:'M1 4h5l2 2h7v8H1z' },
+    { label:'Source Library',  href:'/source-library',   icon:'M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z' },
+  ]
+
   return (
     <div className="p-6 max-w-4xl mx-auto w-full">
-      {/* ── Live Quiz tab bar ── */}
+
+      {/* Tab bar */}
       <div style={{ display:'flex', gap:8, marginBottom:24, borderBottom:'1px solid var(--c-line)', paddingBottom:16 }}>
         {[['assignments','Assignments'],['live-quiz','Live Quiz']].map(([v,l])=>(
           <button key={v} onClick={()=>setActiveView(v)}
-            style={{ height:34, padding:'0 16px', borderRadius:9, border:'1px solid '+(activeView===v?'#2563eb':'var(--c-line)'), background:activeView===v?'rgba(37,99,235,0.1)':'var(--c-surface2)', color:activeView===v?'#3b82f6':'var(--c-t2)', fontSize:13, fontWeight:activeView===v?600:400, cursor:'pointer' }}>
+            style={{ height:34, padding:'0 16px', borderRadius:9, border:'1px solid '+(activeView===v?'#2563eb':'var(--c-line)'), background:activeView===v?'rgba(37,99,235,0.1)':'var(--c-surface2)', color:activeView===v?'#3b82f6':'var(--c-t2)', fontSize:13, fontWeight:activeView===v?600:400, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+            {v==='live-quiz' && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+            )}
             {l}
           </button>
         ))}
       </div>
 
       {activeView === 'live-quiz' && <LiveQuizTeacher/>}
+
       {activeView === 'assignments' && (<>
-      {/* ── Teacher Launch Checklist ── */}
-      {!checklistCollapsed && (
-        <div style={{ background:'rgba(37,99,235,0.06)', border:'1px solid rgba(37,99,235,0.2)', borderRadius:14, padding:'20px 24px', marginBottom:28 }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
-            <div>
-              <p style={{ margin:0, fontWeight:700, fontSize:16, color:'#e6edf3' }}> Get your class ready</p>
-              <p style={{ margin:0, fontSize:13, color:'#8b949e', marginTop:4 }}>{LAUNCH_STEPS.filter(s=>checklistDone[s.id]).length} of {LAUNCH_STEPS.length} steps complete</p>
-            </div>
-            <button onClick={() => setChecklistCollapsed(true)} style={{ background:'transparent', border:'none', color:'#484f58', fontSize:12, cursor:'pointer', padding:'4px 8px' }}>Skip for now</button>
-          </div>
-          {/* Progress bar */}
-          <div style={{ height:4, background:'#21262d', borderRadius:4, marginBottom:20, overflow:'hidden' }}>
-            <div style={{ height:'100%', background:'#2563eb', borderRadius:4, width:(LAUNCH_STEPS.filter(s=>checklistDone[s.id]).length/LAUNCH_STEPS.length*100)+'%', transition:'width 0.4s' }}/>
-          </div>
-          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            {LAUNCH_STEPS.map((step, i) => {
-              const done = !!checklistDone[step.id]
-              return (
-                <div key={step.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', background: done ? 'rgba(52,211,153,0.06)' : 'rgba(255,255,255,0.03)', borderRadius:10, border:'1px solid '+(done?'rgba(52,211,153,0.2)':'rgba(255,255,255,0.06)') }}>
-                  <button onClick={() => markDone(step.id)} style={{ width:22, height:22, borderRadius:'50%', border:'2px solid '+(done?'#34d399':'#30363d'), background: done?'#34d399':'transparent', color:'#fff', fontSize:12, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>{done?'✓':i+1}</button>
-                  <div style={{ flex:1 }}>
-                    <p style={{ margin:0, fontSize:14, fontWeight:done?400:500, color:done?'#8b949e':'#e6edf3', textDecoration:done?'line-through':'none' }}>{step.label}</p>
-                    {!done && <p style={{ margin:0, fontSize:12, color:'#484f58', marginTop:2 }}>{step.desc}</p>}
-                  </div>
-                  {!done && step.href && (
-                    <a href={step.href} style={{ fontSize:12, color:'#2563eb', textDecoration:'none', fontWeight:500, whiteSpace:'nowrap' }}>{step.cta} →</a>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-      {checklistCollapsed && !allDone && (
-        <button onClick={() => setChecklistCollapsed(false)} style={{ background:'rgba(37,99,235,0.08)', border:'1px solid rgba(37,99,235,0.2)', borderRadius:8, padding:'8px 14px', fontSize:13, color:'#2563eb', cursor:'pointer', marginBottom:20, display:'block' }}>
-           {LAUNCH_STEPS.filter(s=>checklistDone[s.id]).length}/{LAUNCH_STEPS.length} setup steps — continue →
-        </button>
-      )}
-      {/* Create modal */}
-      {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{background:'rgba(0,0,0,0.5)'}}>
-          <div className="bg-surface border border-line rounded-2xl p-6 w-full max-w-md shadow-2xl mx-4">
-            <h2 className="text-lg font-bold text-t1 mb-5">New Classroom</h2>
-            <div className="space-y-3 mb-5">
-              <input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="Classroom name (e.g. Period 3 Biology)"
-                onKeyDown={e=>e.key==='Enter'&&create()}
-                className="w-full h-10 bg-surface2 border border-line rounded-xl px-3 text-sm text-t1 outline-none focus:border-blue-400 placeholder:text-t3"/>
-              <input value={form.subject} onChange={e=>setForm(f=>({...f,subject:e.target.value}))} placeholder="Subject (optional)"
-                className="w-full h-10 bg-surface2 border border-line rounded-xl px-3 text-sm text-t1 outline-none focus:border-blue-400 placeholder:text-t3"/>
-            </div>
-            {err && <p className="text-red-500 text-sm mb-3">{err}</p>}
-            <div className="flex gap-2">
-              <button onClick={create} disabled={creating||!form.name.trim()}
-                className="flex-1 h-9 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 disabled:opacity-40">{creating?'Creating...':'Create Classroom'}</button>
-              <button onClick={()=>setShowCreate(false)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm rounded-xl hover:bg-surface2">Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Teach</h1>
-          <p className="text-sm text-t2">Host live quizzes, share class codes, and track student progress.</p>
-        </div>
-        {user && <button onClick={()=>setShowCreate(true)} className="h-9 px-4 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 flex items-center gap-1.5 flex-shrink-0">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2v12M2 8h12"/></svg>New Classroom
-        </button>}
-      </div>
-
-
-      {fetching && <div className="space-y-4">{[...Array(2)].map((_,i)=><div key={i} className="h-40 bg-surface border border-line rounded-xl animate-pulse"/>)}</div>}
-
-      {!fetching && classrooms.length===0 && (
-        <div className="border-2 border-dashed border-line rounded-2xl p-12 text-center mb-8">
-          <div className="text-4xl mb-3"></div>
-          <p className="text-t1 font-semibold mb-1">No classrooms yet</p>
-          <p className="text-t2 text-sm mb-5">Create your first classroom and share the code with students to go live.</p>
-          <button onClick={()=>setShowCreate(true)} className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800">Create Classroom</button>
-        </div>
-      )}
-
-      <div className="space-y-4 mb-8">
-        {classrooms.map(cls=>(
-          <div key={cls.id} className="bg-surface border border-line rounded-xl overflow-hidden">
-            <div className="p-5">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-base font-bold text-t1">{cls.name}</h3>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {cls.subject&&<span className="text-[12px] text-t3">{cls.subject}</span>}
-                    <span className="text-[11px] text-t3">{enrollments[cls.id]||0} student{(enrollments[cls.id]||0)!==1?'s':''}</span>
-                  </div>
-                </div>
-                <button onClick={()=>del(cls.id)} className="text-t3 hover:text-red-500 text-lg w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">×</button>
+        {/* Launch checklist */}
+        {!checklistCollapsed && (
+          <div style={{ background:'rgba(37,99,235,0.06)', border:'1px solid rgba(37,99,235,0.2)', borderRadius:14, padding:'20px 24px', marginBottom:28 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+              <div>
+                <p style={{ margin:0, fontWeight:700, fontSize:16, color:'#e6edf3' }}>Get your class ready</p>
+                <p style={{ margin:0, fontSize:13, color:'#8b949e', marginTop:4 }}>{LAUNCH_STEPS.filter(s=>checklistDone[s.id]).length} of {LAUNCH_STEPS.length} steps complete</p>
               </div>
-              <div className="flex items-center gap-4 p-3 bg-surface2 rounded-xl border border-line mb-4">
-                <div>
-                  <div className="text-[10px] font-bold text-t3 uppercase tracking-widest mb-0.5">Class Code</div>
-                  <div className="text-3xl font-black tracking-widest" style={{color:'var(--c-t1)',letterSpacing:'0.15em'}}>{cls.code}</div>
-                </div>
-                <div className="ml-auto flex gap-2">
-                  <button onClick={()=>copy(cls.code, cls.id+'-code')}
-                    className={`h-8 px-3 text-[11px] font-semibold rounded-lg border transition-colors ${copied===cls.id+'-code'?'bg-emerald-500 text-white border-emerald-500':'bg-surface border-line text-t2 hover:border-blue-400'}`}>
-                    {copied===cls.id+'-code'?'✓ Copied!':'Copy Code'}</button>
-                  <button onClick={()=>copy('https://flashfo.org/join?code='+cls.code, cls.id+'-link')}
-                    className={`h-8 px-3 text-[11px] font-semibold rounded-lg border transition-colors ${copied===cls.id+'-link'?'bg-emerald-500 text-white border-emerald-500':'bg-surface border-line text-t2 hover:border-blue-400'}`}>
-                    {copied===cls.id+'-link'?'✓ Copied!':'Copy Link'}</button>
-                </div>
-              </div>
-              <button onClick={()=>router.push('/teach/'+cls.code)}
-                className="w-full h-10 bg-blue-700 text-white text-sm font-bold rounded-xl hover:bg-blue-800 transition-colors flex items-center justify-center gap-2">
-                <span></span> Go Live
-              </button>
+              <button onClick={() => setChecklistCollapsed(true)} style={{ background:'transparent', border:'none', color:'#484f58', fontSize:12, cursor:'pointer', padding:'4px 8px' }}>Skip for now</button>
+            </div>
+            <div style={{ height:4, background:'#21262d', borderRadius:4, marginBottom:20, overflow:'hidden' }}>
+              <div style={{ height:'100%', background:'#2563eb', borderRadius:4, width:(LAUNCH_STEPS.filter(s=>checklistDone[s.id]).length/LAUNCH_STEPS.length*100)+'%', transition:'width 0.4s' }}/>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {LAUNCH_STEPS.map((step, i) => {
+                const done = !!checklistDone[step.id]
+                return (
+                  <div key={step.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', background: done?'rgba(52,211,153,0.06)':'rgba(255,255,255,0.03)', borderRadius:10, border:'1px solid '+(done?'rgba(52,211,153,0.2)':'rgba(255,255,255,0.06)') }}>
+                    <button onClick={() => markDone(step.id)} style={{ width:22, height:22, borderRadius:'50%', border:'2px solid '+(done?'#34d399':'#30363d'), background:done?'#34d399':'transparent', color:'#fff', fontSize:12, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>{done?'✓':i+1}</button>
+                    <div style={{ flex:1 }}>
+                      <p style={{ margin:0, fontSize:14, fontWeight:done?400:500, color:done?'#8b949e':'#e6edf3', textDecoration:done?'line-through':'none' }}>{step.label}</p>
+                      {!done && <p style={{ margin:0, fontSize:12, color:'#484f58', marginTop:2 }}>{step.desc}</p>}
+                    </div>
+                    {!done && step.href && (
+                      <a href={step.href} style={{ fontSize:12, color:'#2563eb', textDecoration:'none', fontWeight:500, whiteSpace:'nowrap' }}>{step.cta} →</a>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
-        ))}
-      </div>
+        )}
+        {checklistCollapsed && !allDone && (
+          <button onClick={() => setChecklistCollapsed(false)} style={{ background:'rgba(37,99,235,0.08)', border:'1px solid rgba(37,99,235,0.2)', borderRadius:8, padding:'8px 14px', fontSize:13, color:'#2563eb', cursor:'pointer', marginBottom:20, display:'block' }}>
+            {LAUNCH_STEPS.filter(s=>checklistDone[s.id]).length}/{LAUNCH_STEPS.length} setup steps — continue →
+          </button>
+        )}
 
-      <h2 className="text-sm font-bold text-t3 uppercase tracking-wider mb-3">Teacher Tools</h2>
-      <div className="grid grid-cols-2 gap-3">
-        {[{label:'Lesson Builder',href:'/lesson-builder',e:''},{label:'Quiz Builder',href:'/quiz',e:'?'},{label:'My Saved Items',href:'/my-stuff',e:''},{label:'Source Library',href:'/source-library',e:''}].map(t=>(
-          <a key={t.label} href={t.href} className="bg-surface border border-line rounded-xl p-4 hover:border-blue-300/50 transition-all flex items-center gap-3 group">
-            <span className="text-xl">{t.e}</span>
-            <span className="text-sm font-semibold text-t1">{t.label}</span>
-            <span className="ml-auto text-blue-500 text-xs opacity-0 group-hover:opacity-100 transition-opacity">→</span>
-          </a>
-        ))}
-      </div>
+        {/* Create classroom modal */}
+        {showCreate && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center" style={{background:'rgba(0,0,0,0.5)'}}>
+            <div className="bg-surface border border-line rounded-2xl p-6 w-full max-w-md shadow-2xl mx-4">
+              <h2 className="text-lg font-bold text-t1 mb-5">New Classroom</h2>
+              <div className="space-y-3 mb-5">
+                <input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="Classroom name (e.g. Period 3 Biology)" onKeyDown={e=>e.key==='Enter'&&create()} className="w-full h-10 bg-surface2 border border-line rounded-xl px-3 text-sm text-t1 outline-none focus:border-blue-400 placeholder:text-t3"/>
+                <input value={form.subject} onChange={e=>setForm(f=>({...f,subject:e.target.value}))} placeholder="Subject (optional)" className="w-full h-10 bg-surface2 border border-line rounded-xl px-3 text-sm text-t1 outline-none focus:border-blue-400 placeholder:text-t3"/>
+              </div>
+              {err && <p className="text-red-500 text-sm mb-3">{err}</p>}
+              <div className="flex gap-2">
+                <button onClick={create} disabled={creating||!form.name.trim()} className="flex-1 h-9 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 disabled:opacity-40">{creating?'Creating...':'Create Classroom'}</button>
+                <button onClick={()=>setShowCreate(false)} className="h-9 px-4 bg-surface border border-line text-t2 text-sm rounded-xl hover:bg-surface2">Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-t1 tracking-tight mb-1">Teach</h1>
+            <p className="text-sm text-t2">Host live quizzes, share class codes, and track student progress.</p>
+          </div>
+          <button onClick={()=>setShowCreate(true)} className="h-9 px-4 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800 flex items-center gap-1.5 flex-shrink-0">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2v12M2 8h12"/></svg>
+            New Classroom
+          </button>
+        </div>
+
+        {/* Loading skeletons */}
+        {fetching && <div className="space-y-4">{[...Array(2)].map((_,i)=><div key={i} className="h-40 bg-surface border border-line rounded-xl animate-pulse"/>)}</div>}
+
+        {/* Empty state */}
+        {!fetching && classrooms.length===0 && (
+          <div className="border-2 border-dashed border-line rounded-2xl p-12 text-center mb-8">
+            <div style={{ display:'flex', justifyContent:'center', marginBottom:12 }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.4" strokeLinecap="round">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+              </svg>
+            </div>
+            <p className="text-t1 font-semibold mb-1">No classrooms yet</p>
+            <p className="text-t2 text-sm mb-5">Create your first classroom and share the code with students to go live.</p>
+            <button onClick={()=>setShowCreate(true)} className="h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800">Create Classroom</button>
+          </div>
+        )}
+
+        {/* Classroom cards */}
+        <div className="space-y-4 mb-8">
+          {classrooms.map(cls=>(
+            <div key={cls.id} className="bg-surface border border-line rounded-xl overflow-hidden">
+              <div className="p-5">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-base font-bold text-t1">{cls.name}</h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {cls.subject&&<span className="text-[12px] text-t3">{cls.subject}</span>}
+                      <span className="text-[11px] text-t3">{enrollments[cls.id]||0} student{(enrollments[cls.id]||0)!==1?'s':''}</span>
+                    </div>
+                  </div>
+                  <button onClick={()=>del(cls.id)} className="text-t3 hover:text-red-500 text-lg w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">×</button>
+                </div>
+                <div className="flex items-center gap-4 p-3 bg-surface2 rounded-xl border border-line mb-4">
+                  <div>
+                    <div className="text-[10px] font-bold text-t3 uppercase tracking-widest mb-0.5">Class Code</div>
+                    <div className="text-3xl font-black tracking-widest" style={{color:'var(--c-t1)',letterSpacing:'0.15em'}}>{cls.code}</div>
+                  </div>
+                  <div className="ml-auto flex gap-2">
+                    <button onClick={()=>copy(cls.code, cls.id+'-code')} className={`h-8 px-3 text-[11px] font-semibold rounded-lg border transition-colors ${copied===cls.id+'-code'?'bg-emerald-500 text-white border-emerald-500':'bg-surface border-line text-t2 hover:border-blue-400'}`}>
+                      {copied===cls.id+'-code'?'✓ Copied!':'Copy Code'}
+                    </button>
+                    <button onClick={()=>copy('https://flashfo.org/join?code='+cls.code, cls.id+'-link')} className={`h-8 px-3 text-[11px] font-semibold rounded-lg border transition-colors ${copied===cls.id+'-link'?'bg-emerald-500 text-white border-emerald-500':'bg-surface border-line text-t2 hover:border-blue-400'}`}>
+                      {copied===cls.id+'-link'?'✓ Copied!':'Copy Link'}
+                    </button>
+                  </div>
+                </div>
+                {/* Go Live — play icon (approved replacement) */}
+                <button onClick={()=>router.push('/teach/'+cls.code)} className="w-full h-10 bg-blue-700 text-white text-sm font-bold rounded-xl hover:bg-blue-800 transition-colors flex items-center justify-center gap-2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M5 3l14 9-14 9V3z"/></svg>
+                  Go Live
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Assignment builder */}
+        {classrooms.length > 0 && <AssignmentBuilder classrooms={classrooms} user={user}/>}
+
+        {/* Teacher tools grid */}
+        <h2 className="text-sm font-bold text-t3 uppercase tracking-wider mb-3">Teacher Tools</h2>
+        <div className="grid grid-cols-2 gap-3">
+          {TEACHER_TOOLS.map(t=>(
+            <a key={t.label} href={t.href} className="bg-surface border border-line rounded-xl p-4 hover:border-blue-300/50 transition-all flex items-center gap-3 group">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--c-t3)" strokeWidth="1.6" strokeLinecap="round" className="flex-shrink-0">
+                {t.icon.split(' M').map((p,i)=><path key={i} d={(i===0?'':' M')+p}/>)}
+              </svg>
+              <span className="text-sm font-semibold text-t1">{t.label}</span>
+              <span className="ml-auto text-blue-500 text-xs opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+            </a>
+          ))}
+        </div>
+
       </>)}
     </div>
   )
