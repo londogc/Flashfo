@@ -4,17 +4,6 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import { useIsMobile } from '@/hooks/useIsMobile'
-import dynamic from 'next/dynamic'
-
-// Guard the dynamic import — if MobileDashboard doesn't exist or crashes,
-// fall back to the desktop layout rather than white-screening.
-const MobileDashboard = dynamic(
-  () => import('@/components/dashboard/MobileDashboard').catch(() => {
-    // If the component doesn't exist, render null (desktop layout will show instead)
-    return { default: () => null }
-  }),
-  { ssr: false, loading: () => null }
-)
 
 function TodayInHistory() {
   const [events, setEvents] = useState([])
@@ -87,7 +76,6 @@ export default function DashboardPage() {
   const [weakCardCount,setWeakCardCount]= useState(0)
   const [weekStats,    setWeekStats]    = useState(null)  // { daysStudied, cardsStudied, minutesSpent, streak, prevCards }
   const [continueIdx,  setContinueIdx]  = useState(0)
-  const [mobileFailed, setMobileFailed] = useState(false)
 
   useEffect(() => {
     if (user) loadData()
@@ -192,13 +180,6 @@ export default function DashboardPage() {
     return () => clearInterval(t)
   }, [])
 
-  // Render mobile view — with fallback in case component doesn't exist
-  if (isMobile && !mobileFailed) {
-    return (
-      <MobileDashboard onError={() => setMobileFailed(true)}/>
-    )
-  }
-
   const firstName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
   const hour      = new Date().getHours()
   const greeting  = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
@@ -207,7 +188,7 @@ export default function DashboardPage() {
   const card = { background:'rgba(255,255,255,0.025)', border:'0.5px solid rgba(255,255,255,0.07)', borderRadius:16, overflow:'hidden' }
 
   return (
-    <div style={{ padding:'28px 28px 80px', maxWidth:900, margin:'0 auto' }}>
+    <div style={{ padding: isMobile ? '20px 16px 100px' : '28px 28px 80px', maxWidth:1100, margin:'0 auto' }}>
       <style>{`
         @keyframes dash-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
         @keyframes dash-spin{to{transform:rotate(360deg)}}
@@ -250,7 +231,7 @@ export default function DashboardPage() {
       <ParticleInit/>
 
       {/* Stats row */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:12, marginBottom:12 }}>
         <div className="dash-card" style={{ ...card, padding:'16px 20px', animationDelay:'0.1s' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
             <span style={{ fontSize:10, fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:'rgba(255,255,255,0.25)' }}>Due for review</span>
