@@ -583,7 +583,7 @@ function FlashcardsPageInner() {
   // ── Render: input (no cards yet) ────────────────────────────────────────────
 
   if (!cards.length) return (
-    <div style={{ padding:'28px 24px 48px', maxWidth:860, fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+    <div style={{ padding:'28px 24px 48px', maxWidth:1100, fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
 
       {/* Draft banner */}
       {draftBanner && (
