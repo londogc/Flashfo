@@ -143,7 +143,7 @@ export default function ImportPage() {
   const previewCount = preview?.type==='flashcards' ? preview.cards?.length : preview?.questions?.length
 
   return (
-    <div style={{ padding:'28px 24px 56px', maxWidth:720, fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+    <div style={{ padding:'28px 24px 56px', maxWidth:1000, fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
 
       {/* Header */}
       <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(59,130,246,0.08)', border:'1px solid rgba(59,130,246,0.2)', borderRadius:20, padding:'5px 13px', fontSize:10, fontWeight:800, color:'#60a5fa', marginBottom:16, letterSpacing:'.08em', textTransform:'uppercase' }}>
