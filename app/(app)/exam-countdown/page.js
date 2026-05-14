@@ -118,7 +118,7 @@ export default function ExamCountdownPage() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ padding:'28px 24px 56px', maxWidth:780, fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+    <div style={{ padding:'28px 24px 56px', maxWidth:1100, fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
 
       {/* Header */}
       <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(99,102,241,0.08)', border:'1px solid rgba(99,102,241,0.2)', borderRadius:20, padding:'5px 13px', fontSize:10, fontWeight:800, color:'#a5b4fc', marginBottom:16, letterSpacing:'.08em', textTransform:'uppercase' }}>
@@ -242,10 +242,20 @@ export default function ExamCountdownPage() {
                     </div>
                   </div>
 
-                  {/* Countdown */}
-                  <div style={{ textAlign:'right', flexShrink:0 }}>
-                    <div style={{ fontSize:32, fontWeight:900, color:u.color, lineHeight:1, letterSpacing:'-.04em' }}>{days}</div>
-                    <div style={{ fontSize:11, color:'var(--c-t3)', fontWeight:600 }}>day{days!==1?'s':''} left</div>
+                  {/* Right side — countdown + delete */}
+                  <div style={{ display:'flex', alignItems:'flex-start', gap:10, flexShrink:0 }}>
+                    {/* Countdown */}
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:32, fontWeight:900, color:u.color, lineHeight:1, letterSpacing:'-.04em' }}>{days}</div>
+                      <div style={{ fontSize:11, color:'var(--c-t3)', fontWeight:600 }}>day{days!==1?'s':''} left</div>
+                    </div>
+                    {/* Delete — inline, not absolute, no overlap */}
+                    <button
+                      onClick={()=>deleteExam(exam.id)}
+                      style={{ width:28, height:28, borderRadius:7, border:'none', background:'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.25)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .15s', marginTop:2 }}
+                      title="Remove exam">
+                      {ICONS.trash}
+                    </button>
                   </div>
                 </div>
 
@@ -291,14 +301,6 @@ export default function ExamCountdownPage() {
                     <span style={{ fontSize:13, fontWeight:600, color:'#a5b4fc' }}>Exam day — good luck! You've got this.</span>
                   </div>
                 )}
-
-                {/* Delete */}
-                <button
-                  onClick={()=>deleteExam(exam.id)}
-                  style={{ position:'absolute', top:16, right:16, width:28, height:28, borderRadius:7, border:'none', background:'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.25)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .15s' }}
-                  title="Remove exam">
-                  {ICONS.trash}
-                </button>
               </div>
             )
           })}
