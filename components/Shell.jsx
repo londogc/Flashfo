@@ -603,7 +603,7 @@ export default function Shell({ children }) {
         </div>
       </div>
 
-      {pathname !== '/ai-tutor' && <StickyNotes/>}
+      {!pathname.startsWith('/ai-tutor') && <StickyNotes/>}
     </div>
   )
 }
