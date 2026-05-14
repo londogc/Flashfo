@@ -151,8 +151,34 @@ export default function SourceLibraryPage() {
 
   const STORAGE_KEY = `ff-sources-${user?.id || 'guest'}`
 
-  // Load from localStorage on mount
-  useEffect(() => {
+  const [fetchingMeta, setFetchingMeta] = useState(false)
+
+  // Auto-populate citation fields when a URL is pasted into the URL field
+  async function fetchUrlMeta(url) {
+    if (!url || !url.startsWith('http')) return
+    setFetchingMeta(true)
+    try {
+      // Use the page's og/meta tags via a CORS proxy or Nova
+      const { rpc } = await import('@/lib/api')
+      const data = await rpc('extractUrlMetadata', [url])
+      const meta = data?.result
+      if (meta) {
+        setEditing(prev => ({
+          ...prev,
+          type:      'website',
+          title:     meta.title     || prev.title     || '',
+          authors:   meta.author    || prev.authors   || '',
+          source:    meta.siteName  || prev.source    || '',
+          year:      meta.year      || prev.year      || String(new Date().getFullYear()),
+          url,
+        }))
+      }
+    } catch {
+      // Silent fail — user can fill fields manually
+    } finally {
+      setFetchingMeta(false)
+    }
+  }
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
       setSources(saved)
@@ -348,8 +374,31 @@ export default function SourceLibraryPage() {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:16 }}>
               {fields.map(f => (
                 <div key={f.key} style={{ gridColumn: f.span === 2 ? 'span 2' : 'span 1' }}>
-                  <label style={{ fontSize:11, fontWeight:600, letterSpacing:'0.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.35)', display:'block', marginBottom:5 }}>{f.label}</label>
-                  <input value={editing[f.key] || ''} onChange={e => setEditing(ed => ({ ...ed, [f.key]: e.target.value }))}
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:5 }}>
+                    <label style={{ fontSize:11, fontWeight:600, letterSpacing:'0.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.35)' }}>{f.label}</label>
+                    {f.key === 'url' && fetchingMeta && (
+                      <span style={{ fontSize:10, color:ACCENT.h, display:'flex', alignItems:'center', gap:4 }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation:'_fcspin .7s linear infinite' }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                        Auto-filling…
+                      </span>
+                    )}
+                    {f.key === 'url' && !fetchingMeta && editing?.url?.startsWith('http') && (
+                      <button onClick={()=>fetchUrlMeta(editing.url)} style={{ fontSize:10, color:ACCENT.h, background:'none', border:'none', cursor:'pointer', fontFamily:'inherit' }}>
+                        Auto-fill ↺
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    value={editing[f.key] || ''}
+                    onChange={e => setEditing(ed => ({ ...ed, [f.key]: e.target.value }))}
+                    onPaste={f.key === 'url' ? e => {
+                      const pasted = e.clipboardData.getData('text').trim()
+                      if (pasted.startsWith('http')) {
+                        e.preventDefault()
+                        setEditing(ed => ({ ...ed, url: pasted, type:'website' }))
+                        setTimeout(() => fetchUrlMeta(pasted), 100)
+                      }
+                    } : undefined}
                     placeholder={f.placeholder} className="sl-input" style={inputStyle}/>
                 </div>
               ))}
