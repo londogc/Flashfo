@@ -197,9 +197,23 @@ export default function DashboardPage() {
       `}</style>
 
       {/* Greeting */}
-      <div className="dash-card" style={{ marginBottom:20 }}>
-        <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', marginBottom:3 }}>{greeting}</div>
-        <div style={{ fontSize:26, fontWeight:600, color:'rgba(255,255,255,0.88)', letterSpacing:'-0.03em' }}>{firstName}</div>
+      <div className="dash-card" style={{ marginBottom:20, display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
+        <div>
+          <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', marginBottom:3 }}>{greeting}</div>
+          <div style={{ fontSize:26, fontWeight:600, color:'rgba(255,255,255,0.88)', letterSpacing:'-0.03em' }}>{firstName}</div>
+        </div>
+        {/* Mobile-only avatar — links to profile/settings */}
+        {isMobile && (
+          <Link href="/profile" style={{ textDecoration:'none', flexShrink:0 }}>
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="avatar" style={{ width:42, height:42, borderRadius:'50%', objectFit:'cover', border:'2px solid rgba(99,102,241,0.4)' }}/>
+            ) : (
+              <div style={{ width:42, height:42, borderRadius:'50%', background:'linear-gradient(135deg,#6366f1,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:700, color:'#fff', border:'2px solid rgba(99,102,241,0.4)', boxShadow:'0 0 14px rgba(99,102,241,0.3)' }}>
+                {firstName[0]?.toUpperCase() || 'U'}
+              </div>
+            )}
+          </Link>
+        )}
       </div>
 
       {/* Continue card — always 3 cards, cycles every 5s */}
