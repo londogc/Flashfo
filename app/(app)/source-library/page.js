@@ -179,6 +179,9 @@ export default function SourceLibraryPage() {
       setFetchingMeta(false)
     }
   }
+
+  // Load from localStorage on mount
+  useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
       setSources(saved)
