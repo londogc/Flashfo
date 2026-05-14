@@ -373,6 +373,8 @@ export default function StickyNotes() {
   }
 
   if (!mounted) return null
+  // Never render on the Nova/ai-tutor page — the floating button covers the send bar
+  if (pathname?.startsWith('/ai-tutor')) return null
 
   return (
     <>
