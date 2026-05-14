@@ -153,7 +153,7 @@ export default function MyProgress() {
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ maxWidth:860, margin:'0 auto', padding:'28px 24px 56px', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+    <div style={{ maxWidth:1100, margin:'0 auto', padding:'28px 24px 56px', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
 
       {/* Header */}
       <div style={{ marginBottom:28 }}>
