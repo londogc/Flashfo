@@ -603,7 +603,7 @@ export default function Shell({ children }) {
         </div>
       </div>
 
-      <StickyNotes/>
+      {pathname !== '/ai-tutor' && <StickyNotes/>}
     </div>
   )
 }
