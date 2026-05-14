@@ -7,19 +7,34 @@ const SUBJECTS = ['All','Math','Science','English','History','Biology','Chemistr
 const GRADES   = ['All','K-2','3-5','6-8','9-10','11-12','College']
 const TYPES    = ['All','Quiz','Flashcards','Lesson Plan','Study Guide']
 
+// Sort button configs — SVG icons replacing emoji
+const SORT_OPTIONS = [
+  {
+    id: 'popular', label: 'Popular',
+    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+  },
+  {
+    id: 'newest', label: 'Newest',
+    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  },
+  {
+    id: 'rating', label: 'Top Rated',
+    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  },
+]
+
 export default function ResourceHubPage() {
   const { user } = useAuth()
-  const [resources, setResources]     = useState([])
-  const [loading, setLoading]         = useState(true)
-  const [search, setSearch]           = useState('')
-  const [subject, setSubject]         = useState('All')
-  const [grade, setGrade]             = useState('All')
-  const [type, setType]               = useState('All')
-  const [sort, setSort]               = useState('popular') // popular | newest | rating
-  const [preview, setPreview]         = useState(null)
-  const [importing, setImporting]     = useState(null)
-  const [importFeedback, setImportFeedback] = useState('')
-  const [myTab, setMyTab]             = useState(false) // toggle between hub and my contributions
+  const [resources,       setResources]       = useState([])
+  const [loading,         setLoading]         = useState(true)
+  const [search,          setSearch]          = useState('')
+  const [subject,         setSubject]         = useState('All')
+  const [grade,           setGrade]           = useState('All')
+  const [type,            setType]            = useState('All')
+  const [sort,            setSort]            = useState('popular')
+  const [preview,         setPreview]         = useState(null)
+  const [importing,       setImporting]       = useState(null)
+  const [importFeedback,  setImportFeedback]  = useState('')
 
   useEffect(() => { load() }, [subject, grade, type, sort])
 
@@ -29,15 +44,12 @@ export default function ResourceHubPage() {
       let q = supabase.from('resource_hub')
         .select('*, profiles(full_name, avatar_url)')
         .eq('status', 'approved')
-
       if (subject !== 'All') q = q.eq('subject', subject)
-      if (grade   !== 'All') q = q.eq('grade_level', grade)
-      if (type    !== 'All') q = q.eq('resource_type', type)
-
+      if (grade !== 'All')   q = q.eq('grade_level', grade)
+      if (type !== 'All')    q = q.eq('resource_type', type)
       if (sort === 'popular') q = q.order('download_count', { ascending: false })
       else if (sort === 'newest') q = q.order('created_at', { ascending: false })
       else if (sort === 'rating') q = q.order('avg_rating', { ascending: false })
-
       q = q.limit(40)
       const { data } = await q
       setResources(data || [])
@@ -46,14 +58,16 @@ export default function ResourceHubPage() {
   }
 
   const filtered = resources.filter(r =>
-    !search || r.title?.toLowerCase().includes(search.toLowerCase()) || r.description?.toLowerCase().includes(search.toLowerCase()) || r.tags?.some(t => t.toLowerCase().includes(search.toLowerCase()))
+    !search ||
+    r.title?.toLowerCase().includes(search.toLowerCase()) ||
+    r.description?.toLowerCase().includes(search.toLowerCase()) ||
+    r.tags?.some(t => t.toLowerCase().includes(search.toLowerCase()))
   )
 
   async function importResource(resource) {
     if (!user) { setImportFeedback('Sign in to import resources.'); return }
     setImporting(resource.id)
     try {
-      // Copy resource into user's saved_items
       const { error } = await supabase.from('saved_items').insert({
         user_id: user.id,
         type: resource.resource_type?.toLowerCase().replace(' ', '_') || 'quiz',
@@ -61,7 +75,6 @@ export default function ResourceHubPage() {
         data: resource.resource_data || {}
       })
       if (error) throw error
-      // Increment download count
       await supabase.from('resource_hub').update({ download_count: (resource.download_count || 0) + 1 }).eq('id', resource.id)
       setImportFeedback('Imported to My Stuff!')
       setTimeout(() => setImportFeedback(''), 3000)
@@ -74,7 +87,6 @@ export default function ResourceHubPage() {
   async function rateResource(resourceId, rating) {
     if (!user) return
     await supabase.from('resource_ratings').upsert({ resource_id: resourceId, user_id: user.id, rating })
-    // Recalc avg on the resource
     const { data } = await supabase.from('resource_ratings').select('rating').eq('resource_id', resourceId)
     if (data?.length) {
       const avg = data.reduce((a, r) => a + r.rating, 0) / data.length
@@ -100,6 +112,7 @@ export default function ResourceHubPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto w-full">
+
       {/* Preview modal */}
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
@@ -196,12 +209,14 @@ export default function ResourceHubPage() {
               {TYPES.map(t => <option key={t}>{t}</option>)}
             </select>
           </div>
+          {/* Sort buttons — SVG icons replacing emoji */}
           <div className="flex items-center gap-2 ml-auto">
             <span className="text-[11px] font-bold text-t3 uppercase tracking-wider">Sort</span>
-            {[['popular','🔥 Popular'],['newest','✨ Newest'],['rating','⭐ Top Rated']].map(([id, label]) => (
-              <button key={id} onClick={() => setSort(id)}
-                className={'h-7 px-3 text-[11px] font-semibold rounded-lg border transition-all ' + (sort === id ? 'bg-blue-700 text-white border-blue-700' : 'bg-surface2 text-t2 border-line hover:border-blue-300')}>
-                {label}
+            {SORT_OPTIONS.map(s => (
+              <button key={s.id} onClick={() => setSort(s.id)}
+                className={'h-7 px-3 text-[11px] font-semibold rounded-lg border transition-all flex items-center gap-1.5 ' + (sort === s.id ? 'bg-blue-700 text-white border-blue-700' : 'bg-surface2 text-t2 border-line hover:border-blue-300')}>
+                {s.icon}
+                {s.label}
               </button>
             ))}
           </div>
@@ -215,7 +230,13 @@ export default function ResourceHubPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="border-2 border-dashed border-line rounded-2xl p-16 text-center">
-          <div className="text-4xl mb-3">📚</div>
+          {/* SVG empty state — replaces 📚 emoji */}
+          <div style={{ display:'flex', justifyContent:'center', marginBottom:14 }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.3" strokeLinecap="round">
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+            </svg>
+          </div>
           <p className="text-t1 font-semibold mb-1">No resources found</p>
           <p className="text-sm text-t2 mb-5">Try different filters, or be the first to publish a resource for this topic!</p>
           <a href="/my-stuff" className="inline-block h-9 px-5 bg-blue-700 text-white text-sm font-semibold rounded-xl hover:bg-blue-800">Publish a Resource</a>
@@ -223,13 +244,14 @@ export default function ResourceHubPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filtered.map(resource => (
-            <div key={resource.id} className="bg-surface border border-line rounded-xl p-5 hover:border-blue-300 transition-colors cursor-pointer group"
+            <div key={resource.id}
+              className="bg-surface border border-line rounded-xl p-5 hover:border-blue-300 transition-colors cursor-pointer group"
               onClick={() => setPreview(resource)}>
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ' + (
-                    resource.resource_type === 'Quiz' ? 'bg-blue-500/10 text-blue-500' :
-                    resource.resource_type === 'Flashcards' ? 'bg-emerald-500/10 text-emerald-600' :
+                    resource.resource_type === 'Quiz'        ? 'bg-blue-500/10 text-blue-500' :
+                    resource.resource_type === 'Flashcards'  ? 'bg-emerald-500/10 text-emerald-600' :
                     resource.resource_type === 'Lesson Plan' ? 'bg-purple-500/10 text-purple-500' :
                     'bg-amber-500/10 text-amber-600'
                   )}>{resource.resource_type}</span>
@@ -257,7 +279,6 @@ export default function ResourceHubPage() {
         </div>
       )}
 
-      {/* Results count */}
       {!loading && filtered.length > 0 && (
         <p className="text-center text-[11px] text-t3 mt-6">{filtered.length} resource{filtered.length !== 1 ? 's' : ''} found</p>
       )}
