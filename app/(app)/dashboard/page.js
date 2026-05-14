@@ -69,21 +69,68 @@ function TodayInHistory() {
 export default function DashboardPage() {
   const isMobile        = useIsMobile()
   const { user, profile } = useAuth()
+  const isTeacher = profile?.role === 'teacher'
+
+  // ── Student state ──────────────────────────────────────────────────────────
   const [classes,      setClasses]      = useState([])
   const [assignments,  setAssignments]  = useState([])
   const [dataLoading,  setDataLoading]  = useState(true)
   const [dueToday,     setDueToday]     = useState(0)
   const [weakCardCount,setWeakCardCount]= useState(0)
-  const [weekStats,    setWeekStats]    = useState(null)  // { daysStudied, cardsStudied, minutesSpent, streak, prevCards }
+  const [weekStats,    setWeekStats]    = useState(null)
   const [continueIdx,  setContinueIdx]  = useState(0)
+
+  // ── Teacher state ──────────────────────────────────────────────────────────
+  const [classrooms,      setClassrooms]      = useState([])
+  const [studentCounts,   setStudentCounts]   = useState({})  // classroomId → count
+  const [pendingAssigns,  setPendingAssigns]  = useState([])  // upcoming due assignments
+  const [totalStudents,   setTotalStudents]   = useState(0)
 
   useEffect(() => {
     if (user) loadData()
     else setDataLoading(false)
-  }, [user])
+  }, [user, profile?.role])
 
   async function loadData() {
     setDataLoading(true)
+
+    // ── Teacher data ────────────────────────────────────────────────────────
+    if (profile?.role === 'teacher') {
+      try {
+        const { data: cls } = await supabase
+          .from('classrooms')
+          .select('*')
+          .eq('teacher_id', user.id)
+          .order('created_at', { ascending: false })
+        setClassrooms(cls || [])
+
+        if (cls?.length) {
+          const ids = cls.map(c => c.id)
+          // Student counts
+          const { data: enroll } = await supabase
+            .from('student_enrollments')
+            .select('classroom_id')
+            .in('classroom_id', ids)
+          const counts = {}
+          ;(enroll||[]).forEach(e => { counts[e.classroom_id] = (counts[e.classroom_id]||0)+1 })
+          setStudentCounts(counts)
+          setTotalStudents(Object.values(counts).reduce((a,b) => a+b, 0))
+
+          // Pending assignments — due in future, ordered soonest first
+          const { data: hw } = await supabase
+            .from('homework_assignments')
+            .select('*')
+            .in('classroom_id', ids)
+            .order('due_date', { ascending: true })
+            .limit(5)
+          setPendingAssigns(hw || [])
+        }
+      } catch {}
+      setDataLoading(false)
+      return
+    }
+
+    // ── Student data ────────────────────────────────────────────────────────
     try {
       const reviews = JSON.parse(localStorage.getItem('ff-card-reviews')||'{}')
       const now = Date.now()
@@ -186,6 +233,157 @@ export default function DashboardPage() {
 
   const cc   = continueCards[continueIdx]
   const card = { background:'rgba(255,255,255,0.025)', border:'0.5px solid rgba(255,255,255,0.07)', borderRadius:16, overflow:'hidden' }
+
+  // ── TEACHER DASHBOARD ────────────────────────────────────────────────────────
+  if (isTeacher) {
+    const QUICK_ACTIONS = [
+      { label:'New Classroom',   href:'/teach',           color:'#3b82f6', bg:'rgba(59,130,246,0.1)',  border:'rgba(59,130,246,0.25)', icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg> },
+      { label:'Lesson Builder',  href:'/lesson-builder',  color:'#34d399', bg:'rgba(52,211,153,0.1)',  border:'rgba(52,211,153,0.25)', icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> },
+      { label:'Assign Homework', href:'/assignments',     color:'#f59e0b', bg:'rgba(245,158,11,0.1)',  border:'rgba(245,158,11,0.25)', icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> },
+      { label:'Live Quiz',       href:'/live-quiz',       color:'#f87171', bg:'rgba(239,68,68,0.1)',   border:'rgba(239,68,68,0.25)',  icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg> },
+      { label:'Source Library',  href:'/source-library',  color:'#a78bfa', bg:'rgba(167,139,250,0.1)', border:'rgba(167,139,250,0.25)',icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg> },
+      { label:'Nova',            href:'/ai-tutor',        color:'#c4b5fd', bg:'rgba(196,181,253,0.1)', border:'rgba(196,181,253,0.25)',icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg> },
+    ]
+    return (
+      <div style={{ padding: isMobile ? '20px 16px 100px' : '28px 28px 80px', maxWidth:1100, margin:'0 auto' }}>
+        <style>{`
+          @keyframes dash-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+          .dash-card{animation:dash-in 0.3s cubic-bezier(.4,0,.2,1) both}
+        `}</style>
+
+        {/* Greeting */}
+        <div className="dash-card" style={{ marginBottom:24, display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
+          <div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', marginBottom:3 }}>{greeting}</div>
+            <div style={{ fontSize:26, fontWeight:600, color:'rgba(255,255,255,0.88)', letterSpacing:'-0.03em' }}>{firstName}</div>
+          </div>
+          {isMobile && (
+            <Link href="/profile" style={{ textDecoration:'none', flexShrink:0 }}>
+              {profile?.avatar_url
+                ? <img src={profile.avatar_url} alt="avatar" style={{ width:42, height:42, borderRadius:'50%', objectFit:'cover', border:'2px solid rgba(99,102,241,0.4)' }}/>
+                : <div style={{ width:42, height:42, borderRadius:'50%', background:'linear-gradient(135deg,#f59e0b,#d97706)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:700, color:'#fff', border:'2px solid rgba(245,158,11,0.4)' }}>{firstName[0]?.toUpperCase()||'T'}</div>
+              }
+            </Link>
+          )}
+        </div>
+
+        {/* Stats row */}
+        <div className="dash-card" style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)', gap:12, marginBottom:16, animationDelay:'0.05s' }}>
+          {[
+            { label:'Classrooms',     value: classrooms.length,  color:'#60a5fa', icon:'🏫' },
+            { label:'Total students', value: totalStudents,      color:'#34d399', icon:'👥' },
+            { label:'Assignments',    value: pendingAssigns.length, color:'#fbbf24', icon:'📋' },
+            { label:'Collab decks',   value: '—',                color:'#a78bfa', icon:'🃏' },
+          ].map(s => (
+            <div key={s.label} style={{ ...card, padding:'16px 18px' }}>
+              <div style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.25)', textTransform:'uppercase', letterSpacing:'.07em', marginBottom:8 }}>{s.label}</div>
+              <div style={{ fontSize:28, fontWeight:700, color:s.color, letterSpacing:'-.03em', lineHeight:1 }}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:14, marginBottom:14 }}>
+
+          {/* Classrooms */}
+          <div className="dash-card" style={{ ...card, padding:'18px 20px', animationDelay:'0.08s' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+              <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:'.07em' }}>Your classrooms</span>
+              <Link href="/teach" style={{ fontSize:12, color:'#60a5fa', textDecoration:'none', fontWeight:600 }}>Manage →</Link>
+            </div>
+            {dataLoading ? (
+              <div style={{ color:'rgba(255,255,255,0.2)', fontSize:13 }}>Loading…</div>
+            ) : classrooms.length === 0 ? (
+              <div style={{ textAlign:'center', padding:'20px 0' }}>
+                <div style={{ fontSize:13, color:'rgba(255,255,255,0.3)', marginBottom:10 }}>No classrooms yet</div>
+                <Link href="/teach" style={{ display:'inline-block', padding:'7px 16px', borderRadius:9, background:'rgba(59,130,246,0.12)', border:'1px solid rgba(59,130,246,0.3)', color:'#60a5fa', fontSize:12, fontWeight:700, textDecoration:'none' }}>Create your first classroom →</Link>
+              </div>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                {classrooms.slice(0,4).map(cls => (
+                  <Link key={cls.id} href="/teach" style={{ textDecoration:'none', display:'flex', alignItems:'center', gap:12, padding:'9px 12px', borderRadius:10, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', transition:'all .15s' }}
+                    onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(59,130,246,0.3)'}
+                    onMouseLeave={e=>e.currentTarget.style.borderColor='rgba(255,255,255,0.07)'}>
+                    <div style={{ width:32, height:32, borderRadius:8, background:'rgba(59,130,246,0.1)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.8)' }}>{cls.name}</div>
+                      <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{studentCounts[cls.id]||0} students · {cls.subject||'No subject'}</div>
+                    </div>
+                    <div style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.3)', fontFamily:'monospace', letterSpacing:'.1em' }}>{cls.code}</div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Upcoming assignments */}
+          <div className="dash-card" style={{ ...card, padding:'18px 20px', animationDelay:'0.1s' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+              <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:'.07em' }}>Assignments</span>
+              <Link href="/assignments" style={{ fontSize:12, color:'#f59e0b', textDecoration:'none', fontWeight:600 }}>View all →</Link>
+            </div>
+            {dataLoading ? (
+              <div style={{ color:'rgba(255,255,255,0.2)', fontSize:13 }}>Loading…</div>
+            ) : pendingAssigns.length === 0 ? (
+              <div style={{ textAlign:'center', padding:'20px 0' }}>
+                <div style={{ fontSize:13, color:'rgba(255,255,255,0.3)', marginBottom:10 }}>No assignments yet</div>
+                <Link href="/teach" style={{ display:'inline-block', padding:'7px 16px', borderRadius:9, background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.25)', color:'#fbbf24', fontSize:12, fontWeight:700, textDecoration:'none' }}>Create an assignment →</Link>
+              </div>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                {pendingAssigns.map((hw, i) => {
+                  const dueDate = hw.due_date ? new Date(hw.due_date) : null
+                  const overdue = dueDate && dueDate < new Date()
+                  return (
+                    <div key={hw.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 12px', borderRadius:10, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}>
+                      <div style={{ width:8, height:8, borderRadius:'50%', background: overdue ? '#f87171' : '#fbbf24', flexShrink:0 }}/>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.8)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{hw.title}</div>
+                        <div style={{ fontSize:11, color: overdue ? '#f87171' : 'rgba(255,255,255,0.3)' }}>
+                          {dueDate ? `${overdue ? 'Overdue · ' : 'Due '}${dueDate.toLocaleDateString('en-US',{month:'short',day:'numeric'})}` : 'No due date'}
+                        </div>
+                      </div>
+                      <div style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:20, background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.2)', color:'#fbbf24', textTransform:'uppercase', letterSpacing:'.05em', flexShrink:0 }}>{hw.type||'task'}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick actions */}
+        <div className="dash-card" style={{ ...card, padding:'18px 20px', animationDelay:'0.13s', marginBottom:14 }}>
+          <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:'.07em', marginBottom:14 }}>Quick actions</div>
+          <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(3,1fr)' : 'repeat(6,1fr)', gap:10 }}>
+            {QUICK_ACTIONS.map(a => (
+              <Link key={a.label} href={a.href} style={{ textDecoration:'none', display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'14px 8px', borderRadius:12, background:a.bg, border:`1px solid ${a.border}`, transition:'all .15s' }}
+                onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow=`0 4px 16px ${a.border}` }}
+                onMouseLeave={e=>{ e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow='' }}>
+                <div style={{ color:a.color }}>{a.icon}</div>
+                <div style={{ fontSize:11, fontWeight:700, color:a.color, textAlign:'center', lineHeight:1.3 }}>{a.label}</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Nova row */}
+        <div className="dash-card" style={{ ...card, padding:'16px 20px', animationDelay:'0.16s', display:'flex', alignItems:'center', gap:14 }}>
+          <div style={{ width:38, height:38, borderRadius:12, background:'rgba(139,92,246,0.18)', border:'0.5px solid rgba(139,92,246,0.3)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#c4b5fd" strokeWidth="1.4" strokeLinecap="round"><circle cx="8" cy="8" r="7"/><circle cx="8" cy="8" r="4"/><circle cx="8" cy="8" r="1.5" fill="#c4b5fd" stroke="none"/></svg>
+          </div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:13, fontWeight:500, color:'rgba(255,255,255,0.8)', marginBottom:2 }}>Ask Nova to help with lesson planning, quiz content, or student questions</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>Your AI teaching assistant is always available</div>
+          </div>
+          <Link href="/ai-tutor" style={{ flexShrink:0, height:32, padding:'0 14px', background:'rgba(139,92,246,0.2)', border:'0.5px solid rgba(139,92,246,0.35)', borderRadius:9, display:'flex', alignItems:'center', fontSize:12, fontWeight:600, color:'#c4b5fd', textDecoration:'none' }}>
+            Ask Nova →
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ padding: isMobile ? '20px 16px 100px' : '28px 28px 80px', maxWidth:1100, margin:'0 auto' }}>
