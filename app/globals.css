@@ -27,6 +27,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  /* Fade-in after HydrationReveal sets opacity back to 1.
+     The inline script in layout.js sets opacity:0 immediately on parse
+     so no raw text ever flashes. This transition makes the reveal smooth. */
+  transition: opacity 0.18s ease;
+}
+
 body, html {
   height: 100%;
   margin: 0;
