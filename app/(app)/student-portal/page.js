@@ -6,6 +6,7 @@ import Link from 'next/link'
 
 export default function StudentPortalPage() {
   const { user } = useAuth()
+  const [mounted,     setMounted]     = useState(false)
   const [classroom,   setClassroom]   = useState(null)
   const [assignments, setAssignments] = useState([])
   const [scores,      setScores]      = useState([])
@@ -15,80 +16,51 @@ export default function StudentPortalPage() {
   const [joining,     setJoining]     = useState(false)
   const [joinError,   setJoinError]   = useState('')
 
+  useEffect(() => setMounted(true), [])
+
   useEffect(() => {
+    if (!mounted) return
     if (user) loadData()
     else setLoading(false)
-  }, [user])
+  }, [user, mounted])
 
   const loadData = async () => {
     setLoading(true)
-
-    // Bug #7: run enrollment and quiz history in parallel — cuts load time roughly in half
     const [enrollmentRes, scoresRes] = await Promise.all([
-      supabase
-        .from('student_enrollments')
-        .select('*, classroom:classrooms(*)')
-        .eq('student_id', user.id)
-        .order('joined_at', { ascending: false })
-        .limit(1)
-        .single(),
-      supabase
-        .from('saved_items')
-        .select('title, metadata, created_at')
-        .eq('user_id', user.id)
-        .eq('type', 'quiz_result')
-        .order('created_at', { ascending: false })
-        .limit(5),
+      supabase.from('student_enrollments').select('*, classroom:classrooms(*)').eq('student_id', user.id).order('joined_at', { ascending: false }).limit(1).single(),
+      supabase.from('saved_items').select('title, metadata, created_at').eq('user_id', user.id).eq('type', 'quiz_result').order('created_at', { ascending: false }).limit(5),
     ])
-
-    // Set scores immediately — don't wait on classroom queries
     setScores(scoresRes.data || [])
-
     const enrollment = enrollmentRes.data
     if (enrollment?.classroom) {
       setClassroom(enrollment.classroom)
-
-      // Homework and classmates count already run in parallel
       const [hwRes, countRes] = await Promise.all([
-        supabase
-          .from('homework_assignments')
-          .select('*')
-          .eq('classroom_id', enrollment.classroom.id)
-          .order('due_date'),
-        supabase
-          .from('student_enrollments')
-          .select('id', { count: 'exact', head: true })
-          .eq('classroom_id', enrollment.classroom.id),
+        supabase.from('homework_assignments').select('*').eq('classroom_id', enrollment.classroom.id).order('due_date'),
+        supabase.from('student_enrollments').select('id', { count: 'exact', head: true }).eq('classroom_id', enrollment.classroom.id),
       ])
       setAssignments(hwRes.data || [])
       setClassmates(countRes.count || 0)
     }
-
     setLoading(false)
   }
 
   const joinClass = async () => {
     if (!joinCode.trim()) return
     setJoining(true); setJoinError('')
-    const { data: cls } = await supabase
-      .from('classrooms').select('*')
-      .eq('join_code', joinCode.trim().toUpperCase()).single()
+    const { data: cls } = await supabase.from('classrooms').select('*').eq('code', joinCode.trim().toUpperCase()).single()
     if (!cls) { setJoinError('Class not found — check the code and try again'); setJoining(false); return }
-    const { error } = await supabase
-      .from('student_enrollments').insert({ student_id: user.id, classroom_id: cls.id })
+    const { error } = await supabase.from('student_enrollments').insert({ student_id: user.id, classroom_id: cls.id })
     if (error && error.code !== '23505') { setJoinError('Could not join — try again'); setJoining(false); return }
     setJoinCode(''); await loadData(); setJoining(false)
   }
 
-  const dueToday  = assignments.filter(a => { if (!a.due_date) return false; const d=new Date(a.due_date); return d.toDateString()===new Date().toDateString() })
-  const upcoming  = assignments.filter(a => !a.due_date || new Date(a.due_date) > new Date())
-  const avgScore  = scores.length ? Math.round(scores.reduce((acc,s)=>acc+(s.metadata?.score||0),0)/scores.length) : null
+  const dueToday = assignments.filter(a => { if (!a.due_date) return false; const d=new Date(a.due_date); return d.toDateString()===new Date().toDateString() })
+  const upcoming = assignments.filter(a => !a.due_date || new Date(a.due_date) > new Date())
+  const avgScore = scores.length ? Math.round(scores.reduce((acc,s)=>acc+(s.metadata?.score||0),0)/scores.length) : null
 
-  if (loading) return (
+  if (!mounted || loading) return (
     <div style={{ maxWidth:700, margin:'0 auto', padding:'40px 16px' }}>
-      {[1,2,3].map(i => (
-        <div key={i} style={{ height:80, borderRadius:12, background:'rgba(255,255,255,0.05)', marginBottom:12, animation:'shimmer 1.6s infinite linear', backgroundImage:'linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 75%)', backgroundSize:'600px 100%' }}/>
-      ))}
+      {[1,2,3].map(i => <div key={i} style={{ height:80, borderRadius:12, background:'rgba(255,255,255,0.05)', marginBottom:12, animation:'shimmer 1.6s infinite linear' }}/>)}
     </div>
   )
 
@@ -108,29 +80,25 @@ export default function StudentPortalPage() {
       <h1 style={{ fontSize:22, fontWeight:700, color:'rgba(255,255,255,0.88)', margin:'0 0 4px' }}>Student Portal</h1>
       <p style={{ color:'rgba(255,255,255,0.45)', fontSize:14, marginBottom:24 }}>Your classes, assignments, and progress in one place.</p>
 
-      {/* Join a class */}
       {!classroom && (
         <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:24, marginBottom:20 }}>
           <h2 style={{ fontSize:16, fontWeight:600, color:'rgba(255,255,255,0.88)', marginBottom:4 }}>Join a class</h2>
           <p style={{ fontSize:13, color:'rgba(255,255,255,0.45)', marginBottom:16 }}>Enter the code your teacher gave you.</p>
           <div style={{ display:'flex', gap:8 }}>
-            <input value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase())}
-              placeholder="e.g. BIO-3X7" maxLength={10}
-              onKeyDown={e=>e.key==='Enter'&&joinClass()}
+            <input value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase())} placeholder="e.g. BIO3X7" maxLength={10} onKeyDown={e=>e.key==='Enter'&&joinClass()}
               style={{ flex:1, padding:'10px 14px', borderRadius:9, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(0,0,0,0.3)', color:'rgba(255,255,255,0.88)', fontSize:14, letterSpacing:'0.1em', fontFamily:'monospace', outline:'none' }}/>
             <button onClick={joinClass} disabled={joining||!joinCode.trim()}
               style={{ padding:'10px 20px', borderRadius:9, background:'#2563eb', color:'#fff', border:'none', fontWeight:600, fontSize:14, cursor:'pointer', opacity:joining?0.6:1 }}>
               {joining ? 'Joining…' : 'Join'}
             </button>
           </div>
-          {joinError && <p style={{ fontSize:12, color:'#ef4444', marginTop:8, margin:'8px 0 0' }}>{joinError}</p>}
+          {joinError && <p style={{ fontSize:12, color:'#ef4444', marginTop:8 }}>{joinError}</p>}
         </div>
       )}
 
-      {/* Active class card */}
       {classroom && (
         <>
-          <div style={{ background:'linear-gradient(135deg,rgba(37,99,235,0.12) 0%,rgba(37,99,235,0.04) 100%)', border:'1px solid rgba(37,99,235,0.2)', borderRadius:12, padding:20, marginBottom:20, display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:16 }}>
+          <div style={{ background:'linear-gradient(135deg,rgba(37,99,235,0.12),rgba(37,99,235,0.04))', border:'1px solid rgba(37,99,235,0.2)', borderRadius:12, padding:20, marginBottom:20, display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:16 }}>
             <div>
               <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', letterSpacing:'0.07em', marginBottom:4 }}>CLASS</div>
               <div style={{ fontSize:16, fontWeight:700, color:'rgba(255,255,255,0.88)' }}>{classroom.name}</div>
@@ -148,22 +116,20 @@ export default function StudentPortalPage() {
             </div>
           </div>
 
-          {/* Due today */}
           {dueToday.length > 0 && (
             <div style={{ background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:12, padding:16, marginBottom:16 }}>
               <div style={{ fontSize:11, color:'#f59e0b', fontWeight:600, letterSpacing:'0.07em', marginBottom:10 }}>DUE TODAY</div>
               {dueToday.map(a => (
                 <div key={a.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
                   <span style={{ fontSize:13, color:'rgba(255,255,255,0.88)' }}>{a.title}</span>
-                  <Link href={'/'+(a.type||'assignments')} style={{ padding:'4px 10px', borderRadius:6, background:'#f59e0b', color:'#0d1117', fontSize:11, fontWeight:600, textDecoration:'none' }}>Start →</Link>
+                  <Link href="/assignments" style={{ padding:'4px 10px', borderRadius:6, background:'#f59e0b', color:'#0d1117', fontSize:11, fontWeight:600, textDecoration:'none' }}>Start →</Link>
                 </div>
               ))}
             </div>
           )}
 
-          {/* All assignments */}
           <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:20, marginBottom:20 }}>
-            <div style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.88)', marginBottom:14 }}>All assignments</div>
+            <div style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.88)', marginBottom:14 }}>Assignments</div>
             {upcoming.length === 0 && <p style={{ fontSize:13, color:'rgba(255,255,255,0.3)', textAlign:'center', padding:16, margin:0 }}>No assignments yet</p>}
             {upcoming.map(a => (
               <div key={a.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
@@ -172,27 +138,12 @@ export default function StudentPortalPage() {
                 </div>
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:13, fontWeight:500, color:'rgba(255,255,255,0.88)' }}>{a.title}</div>
-                  {a.due_date && <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:2 }}>Due {new Date(a.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>}
+                  {a.due_date && <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:2 }}>Due {new Date(a.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>}
                 </div>
-                <Link href={'/'+(a.type||'assignments')} style={{ padding:'5px 12px', borderRadius:7, background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.55)', fontSize:12, textDecoration:'none', border:'1px solid rgba(255,255,255,0.1)' }}>Open</Link>
+                <Link href="/assignments" style={{ padding:'5px 12px', borderRadius:7, background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.55)', fontSize:12, textDecoration:'none', border:'1px solid rgba(255,255,255,0.1)' }}>Open</Link>
               </div>
             ))}
           </div>
-
-          {/* Recent quiz scores */}
-          {scores.length > 0 && (
-            <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:20 }}>
-              <div style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.88)', marginBottom:14 }}>Recent quiz scores</div>
-              {scores.map((s, i) => (
-                <div key={i} style={{ display:'flex', alignItems:'center', gap:12, padding:'8px 0', borderBottom:i<scores.length-1?'1px solid rgba(255,255,255,0.06)':'none' }}>
-                  <div style={{ fontSize:13, color:'rgba(255,255,255,0.75)', flex:1 }}>{s.title}</div>
-                  <div style={{ fontSize:14, fontWeight:700, color:(s.metadata?.score||0)>=80?'#34d399':(s.metadata?.score||0)>=60?'#f59e0b':'#ef4444' }}>
-                    {s.metadata?.score||'?'}%
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </>
       )}
     </div>
