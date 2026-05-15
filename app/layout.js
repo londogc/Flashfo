@@ -1,6 +1,7 @@
 import './globals.css'
 import PageTransition from '@/components/PageTransition'
 import NavigationProgress from '@/components/NavigationProgress'
+import HydrationReveal from '@/components/HydrationReveal'
 
 export const metadata = {
   // PRE-LAUNCH: Remove robots line on June 1st before deploying
@@ -24,25 +25,35 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         {/*
-          Theme detection script — runs before React hydrates to prevent dark/light flash.
-          suppressHydrationWarning silences React #425 on this element (the script tag's
-          text content is set by the server but React doesn't need to match it exactly).
+          Two jobs in one script:
+          1. Theme detection — sets bg color before paint to prevent dark/light flash
+          2. Opacity hide — sets html opacity to 0 immediately so no raw text
+             ever appears. HydrationReveal (below) sets it back to 1 once
+             React has mounted and all CSS is active, producing a clean fade-in.
 
-          The <style dangerouslySetInnerHTML> that used to be here was REMOVED because:
-          - Every rule in it is already in globals.css (ff-desktop-only, ff-mobile-only,
-            skeleton shimmer, html/body resets, etc.)
-          - Having it here AND in globals.css caused React hydration error #425
-            ("Text content does not match server-rendered HTML") on every page load,
-            which React recovered from on desktop but CRASHED on mobile iOS.
+          suppressHydrationWarning silences React #425 on this element.
         */}
-        <script
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ff-theme');var d=t!=='light';var bg=d?'#0d1117':'#f1f5f9';document.documentElement.style.background=bg;document.documentElement.style.backgroundColor=bg;if(d)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');}catch(e){document.documentElement.classList.add('dark');}})()`
-          }}
-        />
+        <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            try {
+              var t  = localStorage.getItem('ff-theme');
+              var d  = t !== 'light';
+              var bg = d ? '#0d1117' : '#f1f5f9';
+              document.documentElement.style.background      = bg;
+              document.documentElement.style.backgroundColor = bg;
+              if (d) document.documentElement.classList.add('dark');
+              else   document.documentElement.classList.remove('dark');
+            } catch(e) {
+              document.documentElement.classList.add('dark');
+            }
+            // Hide until React mounts — prevents raw text/unstyled flash
+            document.documentElement.style.opacity = '0';
+          })()
+        `}} />
       </head>
       <body suppressHydrationWarning>
+        {/* Reveals the page once hydration is complete */}
+        <HydrationReveal />
         <NavigationProgress />
         <PageTransition>
           {children}
