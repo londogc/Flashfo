@@ -94,8 +94,6 @@ async function fetchUrlText(url) {
   }
   if (!res.ok) throw new Error('Could not fetch URL.');
   const body = await res.text();
-  if (!res.ok) throw new Error('Could not fetch URL.');
-  const body = await res.text();
   if (/^\s*<!doctype html/i.test(body) || /^\s*<html/i.test(body)) return htmlToText(body);
   return body;
 }
