@@ -79,7 +79,21 @@ function htmlToText(html) {
 async function fetchUrlText(url) {
   const normalized = normalizeGoogleExportUrl(url);
   if (!isSafeUrl(normalized)) throw new Error('URL not allowed.');
-  const res = await fetch(normalized, { headers: { 'User-Agent': 'Mozilla/5.0 Flashfo/1.0' }, redirect: 'follow' });
+  const res = await fetch(normalized, {
+    headers: { 'User-Agent': 'Mozilla/5.0 Flashfo/1.0' },
+    redirect: 'manual',
+  });
+  if (res.status >= 300 && res.status < 400) {
+    const location = res.headers.get('location');
+    if (!location || !isSafeUrl(location)) throw new Error('URL not allowed (redirect target).');
+    const res2 = await fetch(location, { headers: { 'User-Agent': 'Mozilla/5.0 Flashfo/1.0' }, redirect: 'follow' });
+    if (!res2.ok) throw new Error('Could not fetch URL.');
+    const body2 = await res2.text();
+    if (/^\s*<!doctype html/i.test(body2) || /^\s*<html/i.test(body2)) return htmlToText(body2);
+    return body2;
+  }
+  if (!res.ok) throw new Error('Could not fetch URL.');
+  const body = await res.text();
   if (!res.ok) throw new Error('Could not fetch URL.');
   const body = await res.text();
   if (/^\s*<!doctype html/i.test(body) || /^\s*<html/i.test(body)) return htmlToText(body);
@@ -296,7 +310,7 @@ async function generateFromSources(sources, action, instructions, targetLanguage
   ]})).trim()
 }
 
-const handlers = { summarizeText, summarizeFromUrl, summarizeTopic, summarizeImportedFile, generateEssayOutlineFromText, generateFlashcardsFromText, generateFlashcardsFromUrl, generateFlashcardsFromImportedFile, generateQuizAdvancedFromText, generateQuizAdvancedFromUrl, generateQuizAdvancedFromImportedFile, generateLessonPlanFromItems, translateFlashfoTexts, generateStudyGuideFromText, explainSimplyFromText, generateOpenAITtsAudio, searchWebSources, exportTextToGoogleDoc, saveFlashfoJsonToDrive, readDriveTextFile, runLearningFeature, generateChatResponse, generateQuizFromTopic, fetchUrlPreview, generateFromSources };
+const handlers = { summarizeText, summarizeFromUrl, summarizeTopic, summarizeImportedFile, generateEssayOutlineFromText, generateFlashcardsFromText, generateFlashcardsFromUrl, generateFlashcardsFromImportedFile, generateQuizAdvancedFromText, generateQuizAdvancedFromUrl, generateQuizAdvancedFromImportedFile, generateLessonPlanFromItems, translateFlashfoTexts, generateStudyGuideFromText, explainSimplyFromText, generateOpenAITtsAudio, searchWebSources, runLearningFeature, generateChatResponse, generateQuizFromTopic, fetchUrlPreview, generateFromSources };
 
 export async function POST(request) {
   try {
@@ -335,7 +349,7 @@ export async function POST(request) {
           return Response.json({ error: 'free_limit_reached', message: 'You\'ve used your 5 free AI generations this month. Upgrade to Pro for unlimited access.' }, { status: 403 })
         }
         // Log this generation
-        await sbAdmin.from('generation_log').insert({ user_id: user.id, fn })
+        try { await sbAdmin.from('generation_log').insert({ user_id: user.id, fn }) } catch (_) {}
       }
     }
     // ─────────────────────────────────────────────────────────────────────────
