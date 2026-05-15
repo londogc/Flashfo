@@ -270,16 +270,18 @@ export default function DashboardPage() {
         {/* Stats row */}
         <div className="dash-card" style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)', gap:12, marginBottom:16, animationDelay:'0.05s' }}>
           {[
-            { label:'Classrooms',     value: classrooms.length,     color:'#60a5fa', d:'M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z M9 21V12h6v9' },
-            { label:'Total students', value: totalStudents,          color:'#34d399', d:'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8zm10 10v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
-            { label:'Assignments',    value: pendingAssigns.length,  color:'#fbbf24', d:'M3 4h18v18H3z M3 4a2 2 0 012-2h14a2 2 0 012 2 M16 2v4M8 2v4M3 10h18' },
-            { label:'Collab decks',   value: '—',                    color:'#a78bfa', d:'M2 5h14v12H2z M8 3h14v12H8' },
+            { label:'Classrooms',     value: classrooms.length,    color:'#60a5fa',
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg> },
+            { label:'Total students', value: totalStudents,         color:'#34d399',
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg> },
+            { label:'Assignments',    value: pendingAssigns.length, color:'#fbbf24',
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> },
+            { label:'Collab decks',   value: '—',                   color:'#a78bfa',
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="5" width="14" height="12" rx="2"/><rect x="8" y="3" width="14" height="12" rx="2"/></svg> },
           ].map(s => (
             <div key={s.label} style={{ ...card, padding:'16px 18px' }}>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={s.color} strokeWidth="1.8" strokeLinecap="round">
-                  {s.d.split(' M').map((p,i) => <path key={i} d={(i===0?'':' M')+p}/>)}
-                </svg>
+                {s.icon}
                 <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.25)', textTransform:'uppercase', letterSpacing:'.07em' }}>{s.label}</div>
               </div>
               <div style={{ fontSize:28, fontWeight:700, color:s.color, letterSpacing:'-.03em', lineHeight:1 }}>{s.value}</div>
