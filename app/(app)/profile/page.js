@@ -190,6 +190,7 @@ function CropModal({ file, dispW, dispH, outW, outH, title, onApply, onCancel })
 export default function ProfilePage() {
   const { user, profile, loading, refreshProfile } = useAuth()
   const [form, setForm] = useState({ full_name: '', username: '', bio: '' })
+  const [mounted, setMounted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [avatarUrl, setAvatarUrl] = useState(null)
@@ -208,8 +209,9 @@ export default function ProfilePage() {
   const bannerRef = useRef()
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
+  useEffect(() => setMounted(true), [])
   useEffect(() => {
-    if (!loading && !user) window.location.href = '/auth'
+    if (mounted && !loading && !user) window.location.href = '/auth'
     if (profile) {
       setForm({ full_name: profile.full_name||'', username: profile.username||'', bio: profile.bio||'' })
       setAvatarUrl(profile.avatar_url||null)
@@ -266,7 +268,7 @@ export default function ProfilePage() {
     window.location.href = '/dashboard'
   }
 
-  if (loading) return <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'50vh',color:'var(--c-t3)',fontSize:14 }}>Loading...</div>
+  if (!mounted || loading) return <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'50vh',color:'var(--c-t3)',fontSize:14 }}>Loading...</div>
 
   const inp = { width:'100%',height:44,padding:'0 14px',background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:12,fontSize:14,color:'var(--c-t1)',outline:'none',fontFamily:'inherit',transition:'border-color 0.2s',boxSizing:'border-box' }
 
