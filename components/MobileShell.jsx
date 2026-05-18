@@ -2,18 +2,20 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 
-// Per-page aurora palettes — blob colours only
+// ── Aurora palettes ────────────────────────────────────────────────────────
 const PALETTES = {
-  0: { bg:'#05030d', b1:'#4f46e5', b2:'#7c3aed', b3:'#2563eb' }, // home: indigo/violet
-  1: { bg:'#021009', b1:'#059669', b2:'#0d9488', b3:'#10b981' }, // my-stuff: emerald/teal
-  2: { bg:'#04020e', b1:'#7c3aed', b2:'#4f46e5', b3:'#6d28d9' }, // nova: deep violet
-  3: { bg:'#0e0502', b1:'#d97706', b2:'#db2777', b3:'#ea580c' }, // profile: amber/rose
+  0: { bg:'#05030d', b1:'#4f46e5', b2:'#7c3aed', b3:'#2563eb' },
+  1: { bg:'#021009', b1:'#059669', b2:'#0d9488', b3:'#10b981' },
+  2: { bg:'#04020e', b1:'#7c3aed', b2:'#4f46e5', b3:'#6d28d9' },
+  3: { bg:'#0e0502', b1:'#d97706', b2:'#db2777', b3:'#ea580c' },
 }
-const PATH_PAL = { '/dashboard':0,'/my-stuff':0,'/my-progress':0,'/ai-tutor':2,'/profile':3,'/settings':3 }
+const PATH_PAL = {
+  '/dashboard':0, '/my-stuff':0, '/my-progress':0,
+  '/ai-tutor':2, '/profile':3, '/settings':3,
+}
+function rootPath(p) { return '/' + (p.split('/').filter(Boolean)[0] || '') }
 
-function rootPath(p) { return '/'+(p.split('/').filter(Boolean)[0]||'') }
-
-// ── Icons ──────────────────────────────────────────────────────────────────
+// ── Nav icons ──────────────────────────────────────────────────────────────
 function IconHome({ size=20, color='currentColor' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -49,7 +51,9 @@ function IconSend({ size=14, color='currentColor' }) {
 }
 function IconBullseye({ active }) {
   const col  = active ? 'rgba(196,181,253,0.95)' : 'rgba(196,181,253,0.55)'
-  const glow = active ? 'drop-shadow(0 0 8px rgba(167,139,250,0.9))' : 'drop-shadow(0 0 4px rgba(167,139,250,0.4))'
+  const glow = active
+    ? 'drop-shadow(0 0 8px rgba(167,139,250,0.9))'
+    : 'drop-shadow(0 0 4px rgba(167,139,250,0.4))'
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none" style={{ display:'block', filter:glow, transition:'filter 0.3s' }}>
       <circle cx="11" cy="11" r="10"  stroke={col} strokeWidth="1.3"/>
@@ -60,90 +64,210 @@ function IconBullseye({ active }) {
   )
 }
 
-// ── Aurora background ──────────────────────────────────────────────────────
-// Transition reduced from 1.4s → 0.3s so the palette syncs with the page
-// content instead of lagging a full second behind after navigation.
+// ── Spark glyph — Flashfo's create symbol ──────────────────────────────────
+function IconSpark() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+      <path d="M10 1.5L11.5 8.5L18.5 10L11.5 11.5L10 18.5L8.5 11.5L1.5 10L8.5 8.5Z" fill="#a78bfa"/>
+    </svg>
+  )
+}
+
+// ── Create menu icon ───────────────────────────────────────────────────────
+function CreateIcon({ href }) {
+  const s = { width:13, height:13, fill:'none', strokeWidth:'1.8', strokeLinecap:'round' }
+  if (href === '/summarize') return (
+    <svg {...s} viewBox="0 0 24 24" stroke="#fbbf24">
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+      <line x1="16" y1="13" x2="8" y2="13"/>
+      <line x1="16" y1="17" x2="8" y2="17"/>
+    </svg>
+  )
+  if (href === '/study-guide') return (
+    <svg {...s} viewBox="0 0 24 24" stroke="#34d399">
+      <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+    </svg>
+  )
+  if (href === '/quiz') return (
+    <svg {...s} viewBox="0 0 24 24" stroke="#a78bfa">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/>
+    </svg>
+  )
+  return (
+    <svg {...s} viewBox="0 0 24 24" stroke="#818cf8">
+      <rect x="2" y="5" width="20" height="14" rx="2"/>
+      <path d="M2 10h20"/>
+    </svg>
+  )
+}
+
+// ── Create items — bottom to top order ────────────────────────────────────
+// i=0 (Summary) is lowest, i=3 (Flashcards) is highest
+const CREATE_ITEMS = [
+  { label:'Summary',     href:'/summarize',   color:'#fbbf24', border:'rgba(245,158,11,0.5)'  },
+  { label:'Study guide', href:'/study-guide', color:'#34d399', border:'rgba(16,185,129,0.5)'  },
+  { label:'Quiz',        href:'/quiz',        color:'#a78bfa', border:'rgba(139,92,246,0.5)'  },
+  { label:'Flashcards',  href:'/flashcards',  color:'#818cf8', border:'rgba(99,102,241,0.5)'  },
+]
+
+// ── Aurora ─────────────────────────────────────────────────────────────────
 function Aurora({ palIdx }) {
   const pal = PALETTES[palIdx] || PALETTES[0]
   return (
     <div style={{
-      position:'fixed', inset:0, zIndex:1, background:pal.bg, overflow:'hidden',
-      pointerEvents:'none',
-      transition:'background 0.3s ease',   // was 1.4s — caused background/content mismatch
+      position:'fixed', inset:0, zIndex:1,
+      background:pal.bg, overflow:'hidden', pointerEvents:'none',
+      transition:'background 0.3s ease',
     }}>
       <div style={{
         position:'absolute', width:'70vw', height:'55vw', borderRadius:'50%',
-        background:pal.b1, filter:'blur(72px)', opacity:0.55, top:'-5%', left:'-10%',
+        background:pal.b1, filter:'blur(72px)', opacity:0.55,
+        top:'-5%', left:'-10%',
         willChange:'transform', transform:'translateZ(0)',
-        transition:'background 0.3s ease',  // was 1.4s
+        transition:'background 0.3s ease',
       }}/>
       <div style={{
         position:'absolute', width:'65vw', height:'50vw', borderRadius:'50%',
-        background:pal.b2, filter:'blur(80px)', opacity:0.4, top:'25%', right:'-15%',
+        background:pal.b2, filter:'blur(80px)', opacity:0.4,
+        top:'25%', right:'-15%',
         willChange:'transform', transform:'translateZ(0)',
-        transition:'background 0.3s ease',  // was 1.4s
+        transition:'background 0.3s ease',
       }}/>
       <div style={{
         position:'absolute', width:'50vw', height:'45vw', borderRadius:'50%',
-        background:pal.b3, filter:'blur(64px)', opacity:0.3, bottom:'-10%', left:'20%',
+        background:pal.b3, filter:'blur(64px)', opacity:0.3,
+        bottom:'-10%', left:'20%',
         willChange:'transform', transform:'translateZ(0)',
-        transition:'background 0.3s ease',  // was 1.4s
+        transition:'background 0.3s ease',
       }}/>
-      <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)' }}/>
+      <div style={{
+        position:'absolute', inset:0,
+        background:'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)',
+      }}/>
     </div>
   )
 }
 
 // ── Shell ──────────────────────────────────────────────────────────────────
 export default function MobileShell({ children }) {
-  const pathname  = usePathname()
-  const router    = useRouter()
-  const [novaOpen, setNovaOpen] = useState(false)
-  const [novaInput, setNovaInput] = useState('')
-  const [palIdx, setPalIdx] = useState(0)
-  const novaRef    = useRef(null)
-  const contentRef = useRef(null)   // fades page content only — not Aurora or tab bar
-  const firstMount = useRef(true)
+  const pathname   = usePathname()
+  const router     = useRouter()
+  const [novaOpen,   setNovaOpen]   = useState(false)
+  const [novaInput,  setNovaInput]  = useState('')
+  const [palIdx,     setPalIdx]     = useState(0)
+  // Create menu state
+  const [createOpen,  setCreateOpen]  = useState(false)
+  const [isClosing,   setIsClosing]   = useState(false)
+  const novaRef       = useRef(null)
+  const contentRef    = useRef(null)
+  const firstMount    = useRef(true)
+  const closeTimerRef = useRef(null)
 
-  // Fade only the content area on navigation, not the chrome.
-  // useLayoutEffect fires before paint so content is never seen mid-swap.
+  // ── Page fade on navigation ──────────────────────────────────────────────
   useLayoutEffect(() => {
     if (firstMount.current) { firstMount.current = false; return }
     const el = contentRef.current
     if (!el) return
     el.style.transition = 'none'
-    el.style.opacity    = '0'
+    el.style.opacity = '0'
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         el.style.transition = 'opacity 0.18s ease'
-        el.style.opacity    = '1'
+        el.style.opacity = '1'
       })
     })
   }, [pathname])
 
+  // ── Aurora palette ───────────────────────────────────────────────────────
   useEffect(() => {
     if (novaOpen) { setPalIdx(2); return }
     setPalIdx(PATH_PAL[rootPath(pathname)] ?? 0)
   }, [pathname, novaOpen])
 
-  useEffect(() => { setNovaOpen(false) }, [pathname])
+  // ── Close menus on navigation ────────────────────────────────────────────
+  useEffect(() => {
+    setNovaOpen(false)
+    // Hard-close create menu on navigation — no animation needed
+    clearTimeout(closeTimerRef.current)
+    setCreateOpen(false)
+    setIsClosing(false)
+  }, [pathname])
 
+  // ── Create menu open / close ─────────────────────────────────────────────
+  function openCreate() {
+    clearTimeout(closeTimerRef.current)
+    setIsClosing(false)
+    setCreateOpen(true)
+    // Close Nova drawer if open
+    if (novaOpen) setNovaOpen(false)
+  }
+
+  function closeCreate() {
+    if (!createOpen) return
+    setIsClosing(true)
+    // Wait for all close animations to finish before unmounting
+    // Last item: index (LENGTH-1) closes first → delay 0
+    // First item: index 0 closes last → delay (LENGTH-1)*52ms = 156ms
+    // + animation duration 260ms + small buffer = ~420ms total
+    closeTimerRef.current = setTimeout(() => {
+      setCreateOpen(false)
+      setIsClosing(false)
+    }, 420)
+  }
+
+  function toggleCreate() { createOpen ? closeCreate() : openCreate() }
+
+  // Per-item animation style — controls bounce-in and float-out
+  function itemStyle(i) {
+    if (!createOpen) {
+      // Fully hidden, no animation
+      return {
+        opacity: 0,
+        pointerEvents: 'none',
+        transform: 'translateX(-50%) translateY(20px)',
+        animation: 'none',
+      }
+    }
+    if (isClosing) {
+      // Float down: top item (highest i) closes first → delay = (MAX_i - i) * 52
+      const delay = (CREATE_ITEMS.length - 1 - i) * 52
+      return {
+        animation: `ff-create-out 0.26s ease-in ${delay}ms both`,
+        pointerEvents: 'none',
+      }
+    }
+    // Bounce in: bottom item (i=0, Summary) first → delay = i * 70
+    return {
+      animation: `ff-create-in 0.38s cubic-bezier(0.34,1.56,0.64,1) ${i * 70}ms both`,
+      pointerEvents: 'auto',
+    }
+  }
+
+  // ── Tab definitions ──────────────────────────────────────────────────────
+  // { create: true } is a layout spacer — the real spark button is fixed at z:36,
+  // positioned to sit exactly over this gap in the pill.
   const TABS = [
-    { href:'/dashboard', label:'Home',    Icon:IconHome  },
-    { href:'/my-stuff',  label:'My Stuff',Icon:IconStack },
-    { href:null,         label:'Nova',    nova:true      },
-    { href:'/profile',   label:'Profile', Icon:IconUser  },
+    { href:'/dashboard', label:'Home',     Icon:IconHome  },
+    { href:'/my-stuff',  label:'My Stuff', Icon:IconStack },
+    { create: true },                         // ← invisible spacer for spark
+    { href:null,         label:'Nova',     nova:true      },
+    { href:'/profile',   label:'Profile',  Icon:IconUser  },
   ]
 
   const active = rootPath(pathname)
 
   function isActive(tab) {
-    if (tab.nova) return novaOpen
+    if (tab.create) return false
+    if (tab.nova)   return novaOpen
     return tab.href && (pathname === tab.href || active === tab.href)
   }
 
   function onTab(tab, e) {
     e.preventDefault()
+    if (tab.create) return // handled by spark button
+    if (createOpen) closeCreate()
     if (tab.nova) {
       const next = !novaOpen
       setNovaOpen(next)
@@ -157,16 +281,35 @@ export default function MobileShell({ children }) {
   function sendNova() {
     const q = novaInput.trim()
     if (!q) return
-    setNovaInput(''); setNovaOpen(false)
+    setNovaInput('')
+    setNovaOpen(false)
     try { sessionStorage.setItem('nova_prefill', q) } catch(_) {}
     router.push('/ai-tutor')
   }
 
+  const onAiTutor = pathname.startsWith('/ai-tutor')
+
   return (
     <>
+      {/* ── Keyframes for create menu ── */}
+      <style>{`
+        @keyframes ff-create-in {
+          0%   { opacity: 0; transform: translateX(-50%) translateY(22px); }
+          55%  { opacity: 1; transform: translateX(-50%) translateY(-5px); }
+          75%  {             transform: translateX(-50%) translateY(2px);  }
+          100% { opacity: 1; transform: translateX(-50%) translateY(0);   }
+        }
+        @keyframes ff-create-out {
+          0%   { opacity: 1; transform: translateX(-50%) translateY(0);    }
+          18%  {             transform: translateX(-50%) translateY(-3px); }
+          100% { opacity: 0; transform: translateX(-50%) translateY(16px); }
+        }
+      `}</style>
+
+      {/* ── Aurora ── */}
       <Aurora palIdx={palIdx} />
 
-      {/* Nova edge glow */}
+      {/* ── Nova edge glow ── */}
       <div style={{
         position:'fixed', inset:0, zIndex:8, pointerEvents:'none',
         transition:'box-shadow 0.5s',
@@ -175,44 +318,155 @@ export default function MobileShell({ children }) {
           : 'none',
       }}/>
 
-      {/* Page content */}
+      {/* ── Page content ── */}
       <div style={{
         position:'fixed', inset:0, zIndex:10,
-        overflowY:  pathname.startsWith('/ai-tutor') ? 'hidden' : 'auto',
+        overflowY: onAiTutor ? 'hidden' : 'auto',
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch',
         overscrollBehavior: 'contain',
-      }} onClick={() => { if (novaOpen) setNovaOpen(false) }}>
+      }} onClick={() => {
+        if (novaOpen)   setNovaOpen(false)
+        if (createOpen) closeCreate()
+      }}>
         <div ref={contentRef} style={{
-          minHeight: pathname.startsWith('/ai-tutor') ? '100%' : undefined,
-          height:    pathname.startsWith('/ai-tutor') ? '100%' : undefined,
-          paddingBottom: pathname.startsWith('/ai-tutor') ? 0 : 110,
+          minHeight: onAiTutor ? '100%' : undefined,
+          height:    onAiTutor ? '100%' : undefined,
+          paddingBottom: onAiTutor ? 0 : 110,
         }}>
           {children}
         </div>
       </div>
 
-      {/* Floating island — hidden on ai-tutor */}
-      {!pathname.startsWith('/ai-tutor') && (
+      {/* ── Create overlay — z:35, covers pill + content ── */}
+      {/* Spark (z:36) floats above this. Tapping overlay closes the menu. */}
+      {!onAiTutor && (
+        <div
+          onClick={closeCreate}
+          style={{
+            position:'fixed', inset:0,
+            background:'rgba(6,7,13,0.65)',
+            backdropFilter:'blur(10px)',
+            WebkitBackdropFilter:'blur(10px)',
+            opacity: createOpen ? 1 : 0,
+            pointerEvents: createOpen ? 'auto' : 'none',
+            transition:'opacity 0.26s ease',
+            zIndex:35,
+          }}
+        />
+      )}
+
+      {/* ── Create stack items — z:36, above overlay ── */}
+      {/* i=0 (Summary) sits lowest, i=3 (Flashcards) sits highest */}
+      {!onAiTutor && CREATE_ITEMS.map((item, i) => (
+        <div
+          key={item.href}
+          onClick={() => { closeCreate(); router.push(item.href) }}
+          style={{
+            position:'fixed',
+            bottom: 80 + i * 40,   // Summary:80 Guide:120 Quiz:160 Cards:200
+            left:'50%',
+            width:180,
+            background:'rgba(11,13,22,0.97)',
+            border:`0.5px solid ${item.border}`,
+            borderRadius:11,
+            padding:'8px 13px',
+            display:'flex',
+            alignItems:'center',
+            gap:9,
+            zIndex:36,
+            cursor:'pointer',
+            WebkitTapHighlightColor:'transparent',
+            touchAction:'manipulation',
+            ...itemStyle(i),
+          }}
+        >
+          <CreateIcon href={item.href}/>
+          <span style={{
+            fontSize:10.5, fontWeight:600, color:item.color,
+            fontFamily:'-apple-system,BlinkMacSystemFont,sans-serif',
+          }}>
+            {item.label}
+          </span>
+        </div>
+      ))}
+
+      {/* ── "Tap anywhere to close" hint — z:36 ── */}
+      {!onAiTutor && (
+        <div style={{
+          position:'fixed',
+          bottom:60,
+          left:'50%',
+          transform:'translateX(-50%)',
+          fontSize:11,
+          color:'rgba(255,255,255,0.2)',
+          whiteSpace:'nowrap',
+          fontFamily:'-apple-system,BlinkMacSystemFont,sans-serif',
+          zIndex:36,
+          opacity: createOpen ? 1 : 0,
+          transition:'opacity 0.3s 0.1s',
+          pointerEvents:'none',
+        }}>
+          tap anywhere to close
+        </div>
+      )}
+
+      {/* ── Spark button — z:36, sits ABOVE overlay always ── */}
+      {/* Positioned to align with the invisible .spark-gap spacer in the pill */}
+      {!onAiTutor && (
+        <div
+          onClick={toggleCreate}
+          style={{
+            position:'fixed',
+            bottom:25,        // vertically centres over the pill (pill: bottom 18 + 25px half-height ≈ 43px centre; spark: 25+18=43px centre ✓)
+            left:'50%',
+            transform:'translateX(-50%)',
+            width:36, height:36,
+            borderRadius:'50%',
+            background: createOpen ? 'rgba(99,102,241,0.35)' : 'rgba(99,102,241,0.16)',
+            border: createOpen
+              ? '0.5px solid rgba(139,92,246,0.85)'
+              : '0.5px solid rgba(139,92,246,0.5)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            zIndex:36,
+            cursor:'pointer',
+            transition:'background 0.2s, border-color 0.2s, box-shadow 0.2s',
+            boxShadow: createOpen ? '0 0 16px rgba(99,102,241,0.45)' : 'none',
+            WebkitTapHighlightColor:'transparent',
+            touchAction:'manipulation',
+          }}
+        >
+          <IconSpark />
+        </div>
+      )}
+
+      {/* ── Floating island (pill + Nova drawer) — z:30 ── */}
+      {/* The pill blurs under the create overlay (z:35) when create menu opens. */}
+      {/* The spark (z:36) sits above the overlay and appears in the pill's centre gap. */}
+      {!onAiTutor && (
         <div style={{
           position:'fixed', bottom:18, left:'50%', transform:'translateX(-50%)',
-          zIndex:30, display:'flex', flexDirection:'column', alignItems:'center',
+          zIndex:30,
+          display:'flex', flexDirection:'column', alignItems:'center',
           width:'max-content',
         }}>
+
           {/* Nova drawer */}
           <div style={{
             overflow:'hidden',
             maxHeight: novaOpen ? 60 : 0,
-            opacity:   novaOpen ? 1 : 0,
+            opacity:   novaOpen ? 1  : 0,
             marginBottom: novaOpen ? 8 : 0,
-            width: 286,
+            width:286,
             transition:'max-height 0.4s cubic-bezier(.4,0,.2,1), opacity 0.3s, margin-bottom 0.35s',
           }}>
             <div style={{
-              background:'rgba(15,10,35,0.85)', backdropFilter:'blur(40px)',
-              WebkitBackdropFilter:'blur(40px)',
-              border:'0.5px solid rgba(139,92,246,0.35)', borderRadius:20,
-              padding:'8px 8px 8px 14px', display:'flex', alignItems:'center', gap:8,
+              background:'rgba(15,10,35,0.85)',
+              backdropFilter:'blur(40px)', WebkitBackdropFilter:'blur(40px)',
+              border:'0.5px solid rgba(139,92,246,0.35)',
+              borderRadius:20,
+              padding:'8px 8px 8px 14px',
+              display:'flex', alignItems:'center', gap:8,
               boxShadow:'0 0 0 0.5px rgba(139,92,246,0.15) inset, 0 8px 32px rgba(0,0,0,0.4)',
             }}>
               <input
@@ -247,8 +501,11 @@ export default function MobileShell({ children }) {
             display:'flex', alignItems:'center', gap:0,
             background:'rgba(8,6,20,0.88)',
             backdropFilter:'blur(28px)', WebkitBackdropFilter:'blur(28px)',
-            border: novaOpen ? '0.5px solid rgba(124,58,237,0.5)' : '0.5px solid rgba(255,255,255,0.12)',
-            borderRadius:40, padding:'6px 6px',
+            border: novaOpen
+              ? '0.5px solid rgba(124,58,237,0.5)'
+              : '0.5px solid rgba(255,255,255,0.12)',
+            borderRadius:40,
+            padding:'6px 6px',
             boxShadow: novaOpen
               ? '0 8px 32px rgba(0,0,0,0.6), 0 0 28px rgba(99,102,241,0.3)'
               : '0 8px 32px rgba(0,0,0,0.6)',
@@ -259,25 +516,42 @@ export default function MobileShell({ children }) {
               return (
                 <div key={i} style={{ display:'flex', alignItems:'center' }}>
                   {i > 0 && (
-                    <div style={{ width:1, height:14, background:'rgba(255,255,255,0.1)', margin:'0 2px', flexShrink:0 }}/>
+                    <div style={{
+                      width:1, height:14,
+                      background:'rgba(255,255,255,0.1)',
+                      margin:'0 2px', flexShrink:0,
+                    }}/>
                   )}
-                  <a
-                    href={tab.href || '#'}
-                    onClick={e => onTab(tab, e)}
-                    style={{
-                      display:'flex', alignItems:'center', justifyContent:'center',
-                      borderRadius:32, padding:'9px 14px',
-                      background: on ? 'rgba(99,102,241,0.22)' : 'transparent',
-                      textDecoration:'none', cursor:'pointer',
-                      touchAction:'manipulation', WebkitTapHighlightColor:'transparent',
-                      transition:'background 0.2s', minWidth:46,
-                    }}
-                  >
-                    {tab.nova
-                      ? <IconBullseye active={on}/>
-                      : <tab.Icon size={20} color={on ? '#c4b5fd' : 'rgba(255,255,255,0.45)'}/>
-                    }
-                  </a>
+
+                  {tab.create ? (
+                    // Invisible spacer — the spark button (fixed, z:36) sits over this
+                    <div style={{
+                      width:36, height:36,
+                      borderRadius:'50%',
+                      flexShrink:0,
+                    }}/>
+                  ) : (
+                    <a
+                      href={tab.href || '#'}
+                      onClick={e => onTab(tab, e)}
+                      style={{
+                        display:'flex', alignItems:'center', justifyContent:'center',
+                        borderRadius:32,
+                        padding:'9px 14px',
+                        background: on ? 'rgba(99,102,241,0.22)' : 'transparent',
+                        textDecoration:'none', cursor:'pointer',
+                        touchAction:'manipulation',
+                        WebkitTapHighlightColor:'transparent',
+                        transition:'background 0.2s',
+                        minWidth:46,
+                      }}
+                    >
+                      {tab.nova
+                        ? <IconBullseye active={on}/>
+                        : <tab.Icon size={20} color={on ? '#c4b5fd' : 'rgba(255,255,255,0.45)'}/>
+                      }
+                    </a>
+                  )}
                 </div>
               )
             })}
