@@ -7,7 +7,7 @@ import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
 import { rpc, novaStream } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 
-// ── Print helpers ─────────────────────────────────────────────────────────────
+// ââ Print helpers âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 function printQuizBlank(questions, topic) {
   const win = window.open('', '_blank')
@@ -31,16 +31,16 @@ function printQuizKey(questions, topic) {
     let body = ''
     if (q.type==='fill_blank')    body = '<div style="padding:4px 8px;background:#d1fae5;border-radius:4px;font-size:12px;display:inline-block">Answer: '+(q.correctAnswer||'')+'</div>'
     else if (q.type==='short_answer') body = '<div style="padding:4px 8px;background:#dbeafe;border-radius:4px;font-size:12px">Model: '+(q.correctAnswer||'Open-ended')+'</div>'
-    else if (q.type==='matching') body = (q.pairs||[]).map((p,j)=>'<div style="font-size:12px;margin:2px 0"><strong>'+(j+1)+'. '+p.left+'</strong> → '+p.right+'</div>').join('')
-    else body = (q.options||(q.type==='true_false'?['True','False']:[])).map((o,j)=>{ const cor=j===q.answerIndex; return '<div style="padding:4px 8px;border:1px solid '+(cor?'#6ee7b7':'#e5e7eb')+';background:'+(cor?'#d1fae5':'transparent')+';border-radius:4px;margin:3px 0;font-size:12px;font-weight:'+(cor?'600':'normal')+'">'+labels[j]+'. '+o+(cor?' ✓':'')+'</div>' }).join('')
+    else if (q.type==='matching') body = (q.pairs||[]).map((p,j)=>'<div style="font-size:12px;margin:2px 0"><strong>'+(j+1)+'. '+p.left+'</strong> â '+p.right+'</div>').join('')
+    else body = (q.options||(q.type==='true_false'?['True','False']:[])).map((o,j)=>{ const cor=j===q.answerIndex; return '<div style="padding:4px 8px;border:1px solid '+(cor?'#6ee7b7':'#e5e7eb')+';background:'+(cor?'#d1fae5':'transparent')+';border-radius:4px;margin:3px 0;font-size:12px;font-weight:'+(cor?'600':'normal')+'">'+labels[j]+'. '+o+(cor?' â':'')+'</div>' }).join('')
     const exp = q.explanation ? '<div style="margin-top:6px;font-size:11px;color:#555;background:#f9fafb;padding:5px 8px;border-radius:4px;border-left:3px solid #3b82f6"><strong>Explanation:</strong> '+q.explanation+'</div>' : ''
     return '<div style="margin-bottom:18px;page-break-inside:avoid"><div style="font-weight:600;margin-bottom:6px">'+(i+1)+'. '+q.question+'</div>'+body+exp+'</div>'
   }).join('')
-  win.document.write('<!DOCTYPE html><html><head><title>Answer Key</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#111;font-size:13px}h1{font-size:20px}.sub{color:#666;font-size:12px;margin-bottom:24px}@media print{body{margin:20px}}</style></head><body><h1>'+(topic||'Quiz')+' — Answer Key</h1><div class="sub">'+questions.length+' questions</div>'+qHtml+'<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>')
+  win.document.write('<!DOCTYPE html><html><head><title>Answer Key</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#111;font-size:13px}h1{font-size:20px}.sub{color:#666;font-size:12px;margin-bottom:24px}@media print{body{margin:20px}}</style></head><body><h1>'+(topic||'Quiz')+' â Answer Key</h1><div class="sub">'+questions.length+' questions</div>'+qHtml+'<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>')
   win.document.close()
 }
 
-// ── Speaker button ────────────────────────────────────────────────────────────
+// ââ Speaker button ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 function SpeakerBtn({ text }) {
   const [busy, setBusy] = useState(false)
@@ -65,7 +65,7 @@ function SpeakerBtn({ text }) {
   )
 }
 
-// ── Answer key modal ──────────────────────────────────────────────────────────
+// ââ Answer key modal ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations, explanationLoading, explainWrongAnswer }) {
   return (
@@ -74,29 +74,29 @@ function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations,
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 20px', borderBottom:'1px solid var(--c-line)' }}>
           <div>
             <div style={{ fontSize:15, fontWeight:800, color:'var(--c-t1)' }}>Answer Key</div>
-            <div style={{ fontSize:12, color:'var(--c-t3)', marginTop:2 }}>{topic} · {questions.length} questions</div>
+            <div style={{ fontSize:12, color:'var(--c-t3)', marginTop:2 }}>{topic} Â· {questions.length} questions</div>
           </div>
           <div style={{ display:'flex', gap:8 }}>
             <button onClick={()=>printQuizKey(questions,topic)} style={{ height:32, padding:'0 12px', background:'#2563eb', color:'#fff', border:'none', borderRadius:8, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6 }}>
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>
               Print
             </button>
-            <button onClick={onClose} style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', color:'var(--c-t3)', background:'none', border:'none', cursor:'pointer', fontSize:18, borderRadius:8 }}>✕</button>
+            <button onClick={onClose} style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', color:'var(--c-t3)', background:'none', border:'none', cursor:'pointer', fontSize:18, borderRadius:8 }}>â</button>
           </div>
         </div>
         <div style={{ padding:20, display:'flex', flexDirection:'column', gap:14, maxHeight:'70vh', overflowY:'auto' }}>
           {questions.map((q,i) => (
             <div key={i} style={{ background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:12, padding:16 }}>
               <p style={{ fontSize:13, fontWeight:700, color:'var(--c-t1)', marginBottom:12 }}>{i+1}. {q.question}</p>
-              {q.type==='fill_blank' && <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(16,185,129,0.08)', color:'#34d399', fontSize:13, fontWeight:600 }}>✓ {q.correctAnswer||'See rubric'}</div>}
+              {q.type==='fill_blank' && <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(16,185,129,0.08)', color:'#34d399', fontSize:13, fontWeight:600 }}>â {q.correctAnswer||'See rubric'}</div>}
               {q.type==='short_answer' && <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(59,130,246,0.08)', color:'#60a5fa', fontSize:13 }}>Model: {q.correctAnswer||'Open-ended'}</div>}
-              {q.type==='matching' && <div style={{ display:'flex', flexDirection:'column', gap:4 }}>{(q.pairs||[]).map((p,j)=><div key={j} style={{ fontSize:12, color:'var(--c-t2)' }}><strong>{p.left}</strong> → {p.right}</div>)}</div>}
+              {q.type==='matching' && <div style={{ display:'flex', flexDirection:'column', gap:4 }}>{(q.pairs||[]).map((p,j)=><div key={j} style={{ fontSize:12, color:'var(--c-t2)' }}><strong>{p.left}</strong> â {p.right}</div>)}</div>}
               {(q.type==='mcq'||q.type==='true_false'||!q.type) && (
                 <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
                   {(q.options||['True','False']).map((o,j)=>(
                     <div key={j} style={{ padding:'7px 12px', borderRadius:8, fontSize:13, display:'flex', alignItems:'center', gap:8, background:j===q.answerIndex?'rgba(16,185,129,0.08)':'transparent', border:'1px solid '+(j===q.answerIndex?'rgba(16,185,129,0.25)':'transparent'), color:j===q.answerIndex?'#34d399':'var(--c-t3)' }}>
                       <span style={{ fontWeight:800, width:16 }}>{['A','B','C','D'][j]}.</span>{o}
-                      {j===q.answerIndex && <span style={{ marginLeft:'auto', fontSize:11, fontWeight:700, color:'#34d399' }}>✓ Correct</span>}
+                      {j===q.answerIndex && <span style={{ marginLeft:'auto', fontSize:11, fontWeight:700, color:'#34d399' }}>â Correct</span>}
                     </div>
                   ))}
                   {q.type==='mcq' && selected && selected[i]!==undefined && selected[i]!==q.answerIndex && (
@@ -113,7 +113,7 @@ function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations,
                         <button onClick={()=>explainWrongAnswer&&explainWrongAnswer(i,q,q.options?.[selected[i]]||'Your answer',q.options?.[q.answerIndex]||'Correct answer')} disabled={explanationLoading?.[i]}
                           style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 14px', background:'rgba(167,139,250,0.07)', border:'1px solid rgba(167,139,250,0.18)', borderRadius:8, cursor:'pointer', fontSize:13, fontWeight:600, color:'#a78bfa', fontFamily:'inherit' }}>
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
-                          {explanationLoading?.[i] ? 'Nova is thinking…' : 'Why was I wrong?'}
+                          {explanationLoading?.[i] ? 'Nova is thinkingâ¦' : 'Why was I wrong?'}
                         </button>
                       )}
                     </div>
@@ -129,7 +129,7 @@ function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations,
   )
 }
 
-// ── Edit panel ────────────────────────────────────────────────────────────────
+// ââ Edit panel ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 function EditPanel({ questions, onSave, onCancel }) {
   const [qs, setQs] = useState(questions.map(q=>({...q,options:[...(q.options||['True','False'])]})))
@@ -167,15 +167,15 @@ function EditPanel({ questions, onSave, onCancel }) {
           <div key={i} style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:12, padding:16 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
               <span style={{ fontSize:10, fontWeight:800, padding:'3px 8px', borderRadius:20, background:'rgba(59,130,246,0.1)', color:'#60a5fa', textTransform:'uppercase', letterSpacing:'.04em' }}>{(q.type||'mcq').replace(/_/g,' ')}</span>
-              <button onClick={()=>deleteQ(i)} style={{ marginLeft:'auto', fontSize:11, color:'#f87171', background:'none', border:'1px solid rgba(239,68,68,0.22)', borderRadius:7, height:26, padding:'0 10px', cursor:'pointer', fontFamily:'inherit' }}>✕ Delete</button>
+              <button onClick={()=>deleteQ(i)} style={{ marginLeft:'auto', fontSize:11, color:'#f87171', background:'none', border:'1px solid rgba(239,68,68,0.22)', borderRadius:7, height:26, padding:'0 10px', cursor:'pointer', fontFamily:'inherit' }}>â Delete</button>
             </div>
             <textarea value={q.question} onChange={e=>updateQ(i,'question',e.target.value)} rows={2} style={{ width:'100%', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, padding:'8px 10px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit', marginBottom:8 }}/>
-            {(q.type==='short_answer'||q.type==='fill_blank') && <input value={q.correctAnswer||''} onChange={e=>updateQ(i,'correctAnswer',e.target.value)} placeholder="Correct answer…" style={{ width:'100%', height:32, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}/>}
+            {(q.type==='short_answer'||q.type==='fill_blank') && <input value={q.correctAnswer||''} onChange={e=>updateQ(i,'correctAnswer',e.target.value)} placeholder="Correct answerâ¦" style={{ width:'100%', height:32, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}/>}
             {(q.type==='mcq'||q.type==='true_false'||!q.type) && (
               <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                 {(q.options||['True','False']).map((o,j)=>(
                   <div key={j} style={{ display:'flex', alignItems:'center', gap:8 }}>
-                    <button onClick={()=>updateQ(i,'answerIndex',j)} style={{ width:24, height:24, borderRadius:'50%', border:'2px solid '+(q.answerIndex===j?'#10b981':'var(--c-line)'), background:q.answerIndex===j?'#10b981':'transparent', color:q.answerIndex===j?'#fff':'var(--c-t3)', fontSize:10, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontFamily:'inherit' }}>{q.answerIndex===j?'✓':['A','B','C','D'][j]}</button>
+                    <button onClick={()=>updateQ(i,'answerIndex',j)} style={{ width:24, height:24, borderRadius:'50%', border:'2px solid '+(q.answerIndex===j?'#10b981':'var(--c-line)'), background:q.answerIndex===j?'#10b981':'transparent', color:q.answerIndex===j?'#fff':'var(--c-t3)', fontSize:10, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontFamily:'inherit' }}>{q.answerIndex===j?'â':['A','B','C','D'][j]}</button>
                     {q.type==='true_false' ? <span style={{ flex:1, fontSize:13, color:'var(--c-t1)', padding:'0 8px' }}>{o}</span> : <input value={o} onChange={e=>updateOpt(i,j,e.target.value)} style={{ flex:1, height:32, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}/>}
                   </div>
                 ))}
@@ -199,15 +199,15 @@ function EditPanel({ questions, onSave, onCancel }) {
         <div style={{ border:'1.5px solid rgba(59,130,246,0.3)', borderRadius:12, padding:16, background:'rgba(59,130,246,0.04)' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
             <span style={{ fontSize:12, fontWeight:800, color:'#60a5fa', textTransform:'uppercase', letterSpacing:'.04em' }}>New {addType.replace('_',' ')}</span>
-            <button onClick={()=>setAddType(null)} style={{ color:'var(--c-t3)', background:'none', border:'none', cursor:'pointer', fontSize:16, fontFamily:'inherit' }}>✕</button>
+            <button onClick={()=>setAddType(null)} style={{ color:'var(--c-t3)', background:'none', border:'none', cursor:'pointer', fontSize:16, fontFamily:'inherit' }}>â</button>
           </div>
-          <textarea value={newQ.question} onChange={e=>setNewQ(q=>({...q,question:e.target.value}))} placeholder="Question text…" rows={2} style={{ width:'100%', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:8, padding:'8px 10px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit', marginBottom:10 }}/>
-          {(addType==='short_answer'||addType==='fill_blank') && <input value={newQ.correctAnswer} onChange={e=>setNewQ(q=>({...q,correctAnswer:e.target.value}))} placeholder="Correct answer…" style={{ width:'100%', height:32, background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', marginBottom:10 }}/>}
+          <textarea value={newQ.question} onChange={e=>setNewQ(q=>({...q,question:e.target.value}))} placeholder="Question textâ¦" rows={2} style={{ width:'100%', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:8, padding:'8px 10px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit', marginBottom:10 }}/>
+          {(addType==='short_answer'||addType==='fill_blank') && <input value={newQ.correctAnswer} onChange={e=>setNewQ(q=>({...q,correctAnswer:e.target.value}))} placeholder="Correct answerâ¦" style={{ width:'100%', height:32, background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', marginBottom:10 }}/>}
           {addType==='mcq' && (
             <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:10 }}>
               {newQ.options.map((o,j)=>(
                 <div key={j} style={{ display:'flex', alignItems:'center', gap:8 }}>
-                  <button onClick={()=>setNewQ(q=>({...q,answerIndex:j}))} style={{ width:24, height:24, borderRadius:'50%', border:'2px solid '+(newQ.answerIndex===j?'#10b981':'var(--c-line)'), background:newQ.answerIndex===j?'#10b981':'transparent', color:newQ.answerIndex===j?'#fff':'var(--c-t3)', fontSize:10, cursor:'pointer', flexShrink:0, fontFamily:'inherit' }}>{newQ.answerIndex===j?'✓':['A','B','C','D'][j]}</button>
+                  <button onClick={()=>setNewQ(q=>({...q,answerIndex:j}))} style={{ width:24, height:24, borderRadius:'50%', border:'2px solid '+(newQ.answerIndex===j?'#10b981':'var(--c-line)'), background:newQ.answerIndex===j?'#10b981':'transparent', color:newQ.answerIndex===j?'#fff':'var(--c-t3)', fontSize:10, cursor:'pointer', flexShrink:0, fontFamily:'inherit' }}>{newQ.answerIndex===j?'â':['A','B','C','D'][j]}</button>
                   <input value={o} onChange={e=>setNewQ(q=>({...q,options:q.options.map((op,oi)=>oi===j?e.target.value:op)}))} placeholder={'Option '+['A','B','C','D'][j]} style={{ flex:1, height:32, background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}/>
                 </div>
               ))}
@@ -227,7 +227,7 @@ function EditPanel({ questions, onSave, onCancel }) {
   )
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// ââ Constants âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 const BASE_TYPES = [
   { id:'mcq',          label:'Multiple Choice' },
@@ -272,7 +272,261 @@ function checkFitbAnswer(userAns, correctAns) {
   return false
 }
 
-// ── Page component ────────────────────────────────────────────────────────────
+// ââ Page component ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
+
+// ── QuizResultsScreen ─────────────────────────────────────────────────────
+// Full post-quiz results screen: score ring, topic breakdown, missed questions,
+// streaming Nova feedback, print, and action buttons.
+function QuizResultsScreen({
+  questions, topic, score, pct,
+  selected, fitbInputs, saGrades,
+  user, isMobile,
+  savedId, saveFeedback,
+  onShowAnswerKey, onSave, onRetake, onNewQuiz,
+}) {
+  const [novaFeedback, setNovaFeedback] = useState('')
+  const [novaLoading,  setNovaLoading]  = useState(false)
+
+  const topicBreakdown = (() => {
+    const map = {}
+    questions.forEach((q, i) => {
+      const t = q.topic || prettifyType(q.type)
+      if (!map[t]) map[t] = { correct:0, total:0 }
+      map[t].total++
+      let ok = false
+      if      (q.type === 'fill_blank')   ok = checkFitbAnswer(fitbInputs[i], q.correctAnswer)
+      else if (q.type === 'short_answer') ok = saGrades[i] === 'correct'
+      else if (q.type === 'matching')     ok = false
+      else                                ok = selected[i] === q.answerIndex
+      if (ok) map[t].correct++
+    })
+    return Object.entries(map)
+      .map(([name,d]) => ({ name, pct: d.total ? Math.round(d.correct/d.total*100) : 0, correct:d.correct, total:d.total }))
+      .sort((a,b) => a.pct - b.pct)
+  })()
+
+  const missed = questions.map((q,i) => {
+    if (q.type === 'short_answer' || q.type === 'matching') return null
+    const ok = q.type === 'fill_blank'
+      ? checkFitbAnswer(fitbInputs[i], q.correctAnswer)
+      : selected[i] === q.answerIndex
+    if (ok) return null
+    return {
+      question:      q.question,
+      yourAnswer:    q.type === 'fill_blank' ? (fitbInputs[i]||'(blank)') : (q.options?.[selected[i]]||'(no answer)'),
+      correctAnswer: q.type === 'fill_blank' ? q.correctAnswer : q.options?.[q.answerIndex],
+    }
+  }).filter(Boolean)
+
+  useEffect(() => {
+    if (!questions.length) return
+    let cancelled = false
+    setNovaLoading(true)
+    setNovaFeedback('')
+    const prompt = [
+      'Student completed a quiz on "' + (topic||'this topic') + '".',
+      'Score: ' + score + '/' + questions.length + ' (' + pct + '%).',
+      topicBreakdown.length > 1
+        ? 'Topic breakdown: ' + topicBreakdown.map(t => t.name+' '+t.pct+'%').join(', ') + '.'
+        : '',
+      missed.length > 0
+        ? 'Missed: ' + missed.slice(0,3).map(m => '"'+m.question+'"').join('; ') + '.'
+        : 'All answered correctly.',
+      'Write 2-3 sentences: what they did well, where the gaps are, one specific next step.',
+      'Direct and warm. No filler. Never start with "You scored" or "Great job!".',
+    ].filter(Boolean).join(' ')
+    novaStream(
+      [{ role:'user', content:prompt }],
+      chunk => { if (!cancelled) setNovaFeedback(prev => prev + chunk) },
+      { systemOverride: 'You are Nova, a study assistant. Give concise personalised quiz feedback in 2-3 sentences. Never start with "You" or use filler. Get straight to the insight.' }
+    )
+      .catch(() => { if (!cancelled) setNovaFeedback('Unable to load feedback right now.') })
+      .finally(() => { if (!cancelled) setNovaLoading(false) })
+    return () => { cancelled = true }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function printResults() {
+    const win = window.open('', '_blank')
+    const topicRows = topicBreakdown.map(t =>
+      '<tr><td>'+t.name+'</td><td style="text-align:center">'+t.correct+'/'+t.total+'</td><td style="text-align:center;font-weight:600;color:'+(t.pct>=75?'#059669':t.pct>=50?'#d97706':'#dc2626')+'">'+t.pct+'%</td></tr>'
+    ).join('')
+    const missedItems = missed.map(m =>
+      '<li style="margin-bottom:12px"><strong>'+m.question+'</strong><br>Your answer: <span style="color:#dc2626">'+m.yourAnswer+'</span> &middot; Correct: <span style="color:#059669">'+m.correctAnswer+'</span></li>'
+    ).join('')
+    win.document.write('<!DOCTYPE html><html><head><title>'+(topic||'Quiz')+' Results<\/title><style>body{font-family:system-ui,sans-serif;max-width:680px;margin:40px auto;color:#111;font-size:13px}h1{font-size:20px}h2{font-size:15px;margin:20px 0 8px}table{width:100%;border-collapse:collapse}td,th{padding:8px 10px;border:1px solid #e5e7eb}th{background:#f9fafb}ol{padding-left:20px}@media print{body{margin:20px}}<\/style><\/head><body><h1>'+(topic||'Quiz')+' — Results<\/h1><p>Score: '+score+'/'+questions.length+' ('+pct+'%) · '+new Date().toLocaleDateString()+'<\/p>'+(topicBreakdown.length>0?'<h2>Topic Breakdown<\/h2><table><tr><th>Topic<\/th><th>Correct<\/th><th>Score<\/th><\/tr>'+topicRows+'<\/table>':'')+(missed.length>0?'<h2>Missed Questions<\/h2><ol>'+missedItems+'<\/ol>':'')+'<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script><\/body><\/html>')
+    win.document.close()
+  }
+
+  function bar(p) { return p>=75?'#10b981':p>=50?'#f59e0b':'#ef4444' }
+  const C=276.5, off=C-(pct/100)*C, rc=pct>=75?'#10b981':pct>=50?'#f59e0b':'#ef4444'
+  const verdict=pct===100?'Perfect score':pct>=80?'Strong result':pct>=60?'Good — room to grow':pct>=40?'Keep practising':"Let’s drill those gaps"
+  const weakNames=topicBreakdown.filter(t=>t.pct<70).map(t=>t.name).join(', ')
+  const card={background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:14,padding:'18px 20px'}
+  const lbl={fontSize:10,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'.07em',marginBottom:14,display:'flex',alignItems:'center',gap:6}
+  const btn={padding:'11px 0',borderRadius:9,border:'1px solid var(--c-line)',background:'var(--c-surface)',color:'var(--c-t1)',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',gap:6}
+
+  const topicPanel=(
+    <div style={card}>
+      <div style={lbl}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Topic breakdown
+      </div>
+      {topicBreakdown.length===0
+        ?<p style={{fontSize:12,color:'var(--c-t3)',margin:0}}>No topic data yet — try a new quiz to see breakdown.</p>
+        :topicBreakdown.map(t=>(
+          <div key={t.name} style={{marginBottom:13}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:5}}>
+              <span style={{fontSize:13,color:'var(--c-t1)'}}>{t.name}</span>
+              <span style={{fontSize:12,fontWeight:700,color:bar(t.pct)}}>{t.pct}%</span>
+            </div>
+            <div style={{height:5,borderRadius:3,background:'var(--c-surface2)',overflow:'hidden'}}>
+              <div style={{height:'100%',width:t.pct+'%',background:bar(t.pct),borderRadius:3,transition:'width .5s ease'}}/>
+            </div>
+            <div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>{t.correct}/{t.total} correct</div>
+          </div>
+        ))
+      }
+    </div>
+  )
+
+  const missedPanel=(
+    <div style={card}>
+      <div style={lbl}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        Missed questions
+      </div>
+      {missed.length===0?(
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'16px 0',gap:8}}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+          <span style={{fontSize:12,color:'var(--c-t3)'}}>All answered correctly!</span>
+        </div>
+      ):(
+        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+          {missed.map((m,i)=>(
+            <div key={i} style={{padding:'10px 12px',borderLeft:'2.5px solid #ef4444',borderRadius:'0 8px 8px 0',background:'rgba(239,68,68,0.04)'}}>
+              <p style={{fontSize:12,color:'var(--c-t1)',margin:'0 0 5px',lineHeight:1.45}}>{m.question}</p>
+              <p style={{fontSize:11,color:'var(--c-t3)',margin:0}}>
+                Your answer: <strong style={{color:'rgba(239,68,68,0.75)'}}>{m.yourAnswer}</strong>
+                {' · '}
+                Correct: <strong style={{color:'#10b981'}}>{m.correctAnswer}</strong>
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+
+  return (
+    <div style={{padding:'24px',maxWidth:680,margin:'0 auto',width:'100%',fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"}}>
+      <div style={{...card,display:'flex',alignItems:'center',gap:isMobile?18:28,marginBottom:14,padding:'20px 22px'}}>
+        <div style={{position:'relative',width:100,height:100,flexShrink:0}}>
+          <svg width="100" height="100" viewBox="0 0 110 110">
+            <circle cx="55" cy="55" r="44" fill="none" stroke="var(--c-surface2)" strokeWidth="9"/>
+            <circle cx="55" cy="55" r="44" fill="none" stroke={rc} strokeWidth="9"
+              strokeDasharray={C} strokeDashoffset={off}
+              strokeLinecap="round" transform="rotate(-90 55 55)"
+              style={{transition:'stroke-dashoffset .7s ease'}}/>
+          </svg>
+          <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+            <span style={{fontSize:22,fontWeight:700,color:'var(--c-t1)',lineHeight:1}}>{pct}%</span>
+            <span style={{fontSize:10,color:'var(--c-t3)',marginTop:2}}>score</span>
+          </div>
+        </div>
+        <div style={{flex:1,minWidth:0}}>
+          <p style={{fontSize:isMobile?15:17,fontWeight:700,color:'var(--c-t1)',margin:'0 0 3px',letterSpacing:'-.02em'}}>{verdict}</p>
+          <p style={{fontSize:12,color:'var(--c-t3)',margin:'0 0 12px'}}>{topic} · {questions.length} questions</p>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            {[
+              {label:'Correct',val:score,               color:'#10b981',bg:'rgba(16,185,129,0.07)', border:'rgba(16,185,129,0.2)'},
+              {label:'Wrong',  val:questions.length-score,color:'#ef4444',bg:'rgba(239,68,68,0.07)',  border:'rgba(239,68,68,0.2)'},
+            ].map(s=>(
+              <div key={s.label} style={{padding:'7px 14px',borderRadius:9,background:s.bg,border:'1px solid '+s.border,textAlign:'center'}}>
+                <div style={{fontSize:17,fontWeight:700,color:s.color,lineHeight:1}}>{s.val}</div>
+                <div style={{fontSize:10,color:'var(--c-t3)',marginTop:2}}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {isMobile?(
+        <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:12}}>
+          {missedPanel}
+          {topicPanel}
+        </div>
+      ):(
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+          {topicPanel}
+          {missedPanel}
+        </div>
+      )}
+
+      <div style={{...card,marginBottom:14}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+          <div style={{width:28,height:28,borderRadius:'50%',background:'radial-gradient(circle at 33% 33%,#c4b5fd,#7c3aed 40%,#4c1d95 70%,#08001a)',boxShadow:'0 0 10px rgba(124,58,237,0.4)',flexShrink:0}}/>
+          <div>
+            <div style={{fontSize:13,fontWeight:700,color:'#a5b4fc'}}>Nova</div>
+            <div style={{fontSize:10,color:'rgba(255,255,255,0.3)'}}>Study assistant</div>
+          </div>
+          {novaLoading&&(
+            <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:5}}>
+              <div style={{width:5,height:5,borderRadius:'50%',background:'#a78bfa',animation:'nova-pulse .9s ease-in-out infinite'}}/>
+              <span style={{fontSize:11,color:'rgba(167,139,250,0.55)'}}>Thinking…</span>
+            </div>
+          )}
+        </div>
+        {novaFeedback
+          ?<p style={{fontSize:13,color:'var(--c-t1)',lineHeight:1.7,margin:0}}>{novaFeedback}</p>
+          :novaLoading
+            ?<div style={{height:38}}/>
+            :<p style={{fontSize:13,color:'var(--c-t3)',margin:0}}>Preparing personalised feedback…</p>
+        }
+        {novaFeedback&&weakNames&&(
+          <div style={{display:'flex',gap:8,marginTop:14,flexWrap:'wrap'}}>
+            <a href={'/flashcards?q='+encodeURIComponent('Drill weak areas from '+topic+': '+weakNames)+'&autoGenerate=1'}
+              style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 13px',borderRadius:8,border:'1px solid var(--c-line)',background:'var(--c-surface2)',color:'var(--c-t2)',fontSize:12,fontWeight:600,textDecoration:'none'}}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+              Drill weak areas
+            </a>
+            <a href={'/quiz?q='+encodeURIComponent(topic+' — focused on: '+weakNames)+'&autoGenerate=1'}
+              style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 13px',borderRadius:8,border:'1px solid var(--c-line)',background:'var(--c-surface2)',color:'var(--c-t2)',fontSize:12,fontWeight:600,textDecoration:'none'}}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+              Retake on weak topics
+            </a>
+          </div>
+        )}
+      </div>
+
+      <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+        <button onClick={onRetake}        style={{...btn,flex:1,minWidth:90}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Retake
+        </button>
+        <button onClick={onNewQuiz}       style={{...btn,flex:1,minWidth:90}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New quiz
+        </button>
+        <button onClick={onShowAnswerKey} style={{...btn,flex:1,minWidth:90}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+          Answer key
+        </button>
+        {user&&(
+          <button onClick={onSave} style={{...btn,flex:1,minWidth:90,border:'1px solid rgba(16,185,129,0.3)',background:'rgba(16,185,129,0.07)',color:'#34d399'}}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {savedId?'Saved ✓':saveFeedback||'Save results'}
+          </button>
+        )}
+        <button onClick={printResults} style={{...btn,minWidth:44}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z"/></svg>
+          {isMobile?'':'Print'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 
 export default function QuizPage() {
   const { user } = useAuth()
@@ -306,7 +560,7 @@ export default function QuizPage() {
   const [explanationLoading,setExplanationLoading]= useState({})
   const [draftBanner, setDraftBanner] = useState(false)
 
-  // ── Init ──────────────────────────────────────────────────────────────────
+  // ââ Init ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
   useEffect(() => {
     const saved = sessionStorage.getItem('flashfo_load_quiz') || sessionStorage.getItem('flashfo_quiz_load')
@@ -344,7 +598,7 @@ export default function QuizPage() {
     setShuffledRights(s)
   }
 
-  // ── Generate ──────────────────────────────────────────────────────────────
+  // ââ Generate ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
   async function generate() {
     if (!topic.trim()) return
@@ -362,7 +616,7 @@ export default function QuizPage() {
     finally { setLoading(false) }
   }
 
-  // ── Save ──────────────────────────────────────────────────────────────────
+  // ââ Save ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
   async function doSave() {
     if (!user) return; setSaving(true)
@@ -388,7 +642,14 @@ export default function QuizPage() {
 
   function startFresh() { setQuestions([]); setError(''); setSavedId(null); setDraftBanner(false); clearDraft('quiz') }
 
-  // ── Scoring ───────────────────────────────────────────────────────────────
+  function resetAnswers() {
+    setSelected({}); setSaInputs({}); setFitbInputs({})
+    setMatchAnswers({}); setSaGrades({}); setSubmitted(false)
+    setNovaExplanations({}); setExplanationLoading({})
+    initMatching(questions)
+  }
+
+  // ââ Scoring âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
   const autoScore = submitted ? questions.filter((q,i) => {
     if (q.type==='short_answer'||q.type==='matching') return false
@@ -400,7 +661,7 @@ export default function QuizPage() {
   const pct       = questions.length ? Math.round(score/questions.length*100) : 0
   const breakdownTotal = (breakdown.mcq||0)+(breakdown.tf||0)+(breakdown.sa||0)+(breakdown.fitb||0)+(breakdown.match||0)
 
-  // ── Edit mode ─────────────────────────────────────────────────────────────
+  // ââ Edit mode âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
   if (editMode) return (
     <EditPanel
@@ -410,7 +671,7 @@ export default function QuizPage() {
     />
   )
 
-  // ── Input state ───────────────────────────────────────────────────────────
+  // ââ Input state âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
   if (!questions.length) return (
     <div style={{ padding:'28px 24px 48px', maxWidth:1100, fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
@@ -418,7 +679,7 @@ export default function QuizPage() {
       {draftBanner && (
         <div style={{ background:'rgba(99,102,241,0.07)', border:'1px solid rgba(99,102,241,0.2)', borderRadius:10, padding:'10px 14px', marginBottom:20, display:'flex', alignItems:'center', gap:10 }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
-          <span style={{ fontSize:12, color:'rgba(241,240,255,0.65)', flex:1 }}>Resuming your last quiz — <strong style={{ color:'rgba(241,240,255,0.85)' }}>{topic}</strong></span>
+          <span style={{ fontSize:12, color:'rgba(241,240,255,0.65)', flex:1 }}>Resuming your last quiz â <strong style={{ color:'rgba(241,240,255,0.85)' }}>{topic}</strong></span>
           <button onClick={startFresh} style={{ fontSize:11, color:'rgba(241,240,255,0.35)', background:'none', border:'none', cursor:'pointer', fontFamily:'inherit' }}>Start fresh</button>
         </div>
       )}
@@ -447,7 +708,7 @@ export default function QuizPage() {
               onChange={e=>setTopic(e.target.value)}
               onKeyDown={e=>{ if (e.key==='Enter'&&e.metaKey) generate() }}
               rows={4}
-              placeholder="Enter a topic or paste your notes to generate quiz questions from…"
+              placeholder="Enter a topic or paste your notes to generate quiz questions fromâ¦"
               style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'#e2e8f0', fontFamily:'inherit', fontSize:13, lineHeight:1.7, padding:'14px 16px', resize:'none', display:'block' }}
             />
 
@@ -475,7 +736,7 @@ export default function QuizPage() {
                     <div key={k} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:active?'rgba(99,102,241,0.07)':'rgba(255,255,255,0.02)', border:'1px solid '+(active?'rgba(99,102,241,0.25)':'rgba(255,255,255,0.06)'), borderRadius:9, padding:'0 8px 0 12px', height:44, marginBottom:5, transition:'all .15s' }}>
                       <span style={{ fontSize:13, fontWeight:500, color:active?'#a5b4fc':'var(--c-t1)', flex:1 }}>{label}</span>
                       <div style={{ display:'flex', alignItems:'center', gap:2, flexShrink:0 }}>
-                        <button onClick={()=>setBreakdown(b=>({...b,[k]:Math.max(0,(b[k]||0)-1)}))} style={{ width:36,height:36,borderRadius:8,border:'none',background:'none',color:active?'#6366f1':'var(--c-t3)',fontSize:20,cursor:'pointer',fontFamily:'inherit' }}>−</button>
+                        <button onClick={()=>setBreakdown(b=>({...b,[k]:Math.max(0,(b[k]||0)-1)}))} style={{ width:36,height:36,borderRadius:8,border:'none',background:'none',color:active?'#6366f1':'var(--c-t3)',fontSize:20,cursor:'pointer',fontFamily:'inherit' }}>â</button>
                         <span style={{ fontSize:16,fontWeight:700,color:active?'#6366f1':'rgba(255,255,255,0.2)',minWidth:24,textAlign:'center' }}>{val}</span>
                         <button onClick={()=>setBreakdown(b=>({...b,[k]:(b[k]||0)+1}))} style={{ width:36,height:36,borderRadius:8,border:'none',background:'none',color:active?'#6366f1':'var(--c-t3)',fontSize:20,cursor:'pointer',fontFamily:'inherit' }}>+</button>
                       </div>
@@ -485,7 +746,7 @@ export default function QuizPage() {
               </div>
             )}
 
-            {/* ── Slider — PERMANENT FIX: CSS-variable fill, always in sync with counter ── */}
+            {/* ââ Slider â PERMANENT FIX: CSS-variable fill, always in sync with counter ââ */}
             {typeId!=='mixed' && (
               <div style={{ padding:'10px 14px 12px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:7 }}>
@@ -516,7 +777,7 @@ export default function QuizPage() {
 
             <div style={{ padding:'9px 14px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between' }}>
               <span style={{ fontSize:11, color:'rgba(255,255,255,0.18)' }}>Nova explains every wrong answer</span>
-              <span style={{ fontSize:11, color:'rgba(255,255,255,0.15)' }}>⌘↵ generate</span>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.15)' }}>ââµ generate</span>
             </div>
           </div>
 
@@ -529,9 +790,9 @@ export default function QuizPage() {
             {loading ? (
               <>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation:'_fcspin .7s linear infinite', flexShrink:0 }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
-                Generating…
+                Generatingâ¦
               </>
-            ) : `Generate ${typeId==='mixed'?breakdownTotal:count} question${(typeId==='mixed'?breakdownTotal:count)!==1?'s':''} →`}
+            ) : `Generate ${typeId==='mixed'?breakdownTotal:count} question${(typeId==='mixed'?breakdownTotal:count)!==1?'s':''} â`}
           </button>
         </div>
 
@@ -553,7 +814,7 @@ export default function QuizPage() {
               </div>
             ))}
             <div style={{ marginTop:10, background:'rgba(167,139,250,0.05)', border:'1px solid rgba(167,139,250,0.15)', borderRadius:8, padding:'9px 11px', fontSize:11, color:'rgba(167,139,250,0.75)', lineHeight:1.6 }}>
-              <span style={{ fontWeight:700, color:'#a78bfa' }}>Nova explains:</span> The Lusitania sinking was 1915 — WWI already underway. Franz Ferdinand's assassination on June 28, 1914 triggered the chain of alliances that started the war.
+              <span style={{ fontWeight:700, color:'#a78bfa' }}>Nova explains:</span> The Lusitania sinking was 1915 â WWI already underway. Franz Ferdinand's assassination on June 28, 1914 triggered the chain of alliances that started the war.
             </div>
           </div>
 
@@ -572,7 +833,35 @@ export default function QuizPage() {
     </div>
   )
 
-  // ── Quiz in progress / submitted ──────────────────────────────────────────
+
+  if (submitted) return (
+    <>
+      {showKey && <AnswerKeyModal questions={questions} topic={topic} onClose={()=>setShowKey(false)} selected={selected} novaExplanations={novaExplanations} explanationLoading={explanationLoading} explainWrongAnswer={explainWrongAnswer}/>}
+      {showSave && (
+        <div style={{ position:'fixed', inset:0, zIndex:40, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.45)' }}>
+          <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:24, width:'100%', maxWidth:360, boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
+            <div style={{ fontSize:15, fontWeight:800, color:'var(--c-t1)', marginBottom:16 }}>Save Quiz Results</div>
+            <input value={saveTitle} onChange={e=>setSaveTitle(e.target.value)} placeholder={topic||'Quiz title…'} style={{ width:'100%', height:36, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:9, padding:'0 12px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', marginBottom:14, boxSizing:'border-box' }}/>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={doSave} disabled={saving} style={{ flex:1, height:36, background:'#2563eb', color:'#fff', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', opacity:saving?0.6:1 }}>{saving?'Saving…':'Save to My Stuff'}</button>
+              <button onClick={()=>setShowSave(false)} style={{ height:36, padding:'0 16px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <QuizResultsScreen
+        questions={questions} topic={topic} score={score} pct={pct}
+        selected={selected} fitbInputs={fitbInputs} saGrades={saGrades}
+        user={user} isMobile={isMobile} savedId={savedId} saveFeedback={saveFeedback}
+        onShowAnswerKey={() => setShowKey(true)}
+        onSave={() => { setSaveTitle(topic); setShowSave(true) }}
+        onRetake={resetAnswers}
+        onNewQuiz={startFresh}
+      />
+    </>
+  )
+
+  // ââ Quiz in progress / submitted ââââââââââââââââââââââââââââââââââââââââââ
 
   return (
     <div style={{ padding:'24px', maxWidth:680, margin:'0 auto', width:'100%', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
@@ -583,20 +872,16 @@ export default function QuizPage() {
         <div style={{ position:'fixed', inset:0, zIndex:40, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.45)' }}>
           <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:24, width:'100%', maxWidth:360, boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
             <div style={{ fontSize:15, fontWeight:800, color:'var(--c-t1)', marginBottom:16 }}>Save Quiz</div>
-            <input value={saveTitle} onChange={e=>setSaveTitle(e.target.value)} placeholder={topic||'Quiz title…'} style={{ width:'100%', height:36, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:9, padding:'0 12px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', marginBottom:14 }}/>
+            <input value={saveTitle} onChange={e=>setSaveTitle(e.target.value)} placeholder={topic||'Quiz titleâ¦'} style={{ width:'100%', height:36, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:9, padding:'0 12px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', marginBottom:14 }}/>
             <div style={{ display:'flex', gap:8 }}>
-              <button onClick={doSave} disabled={saving} style={{ flex:1, height:36, background:'#2563eb', color:'#fff', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', opacity:saving?.6:1 }}>{saving?'Saving…':'Save to My Stuff'}</button>
+              <button onClick={doSave} disabled={saving} style={{ flex:1, height:36, background:'#2563eb', color:'#fff', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', opacity:saving?.6:1 }}>{saving?'Savingâ¦':'Save to My Stuff'}</button>
               <button onClick={()=>setShowSave(false)} style={{ height:36, padding:'0 16px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
             </div>
           </div>
         </div>
       )}
 
-      {submitted && (
-        <div style={{ marginBottom:20, padding:16, borderRadius:12, border:'1px solid '+(pct===100?'rgba(16,185,129,0.25)':pct>=60?'rgba(59,130,246,0.25)':'rgba(245,158,11,0.25)'), background:pct===100?'rgba(16,185,129,0.07)':pct>=60?'rgba(59,130,246,0.07)':'rgba(245,158,11,0.07)', fontSize:14, fontWeight:700, color:pct===100?'#34d399':pct>=60?'#60a5fa':'#fbbf24' }}>
-          {score}/{questions.length} correct ({pct}%) — {pct===100?'Perfect!':pct>=60?'Good job!':'Keep practising.'}
-        </div>
-      )}
+
 
       <div style={{ display:'flex', flexDirection:'column', gap:14, marginBottom:20 }}>
         {questions.map((q,i) => {
@@ -615,9 +900,9 @@ export default function QuizPage() {
                 <div>
                   <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
                     <span style={{ fontSize:13, color:'var(--c-t2)' }}>Answer:</span>
-                    <input value={fitbInputs[i]||''} onChange={e=>setFitbInputs(s=>({...s,[i]:e.target.value}))} disabled={submitted} placeholder="Fill in the blank…" style={{ flex:1, height:36, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:9, padding:'0 12px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', opacity:submitted?.7:1 }}/>
+                    <input value={fitbInputs[i]||''} onChange={e=>setFitbInputs(s=>({...s,[i]:e.target.value}))} disabled={submitted} placeholder="Fill in the blankâ¦" style={{ flex:1, height:36, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:9, padding:'0 12px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', opacity:submitted?.7:1 }}/>
                   </div>
-                  {submitted && <div style={{ fontSize:12, padding:'8px 12px', borderRadius:8, background:checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'rgba(16,185,129,0.08)':'rgba(239,68,68,0.07)', color:checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'#34d399':'#f87171', fontWeight:600 }}>{checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'✓ Correct!':'✗ Answer: '+q.correctAnswer}</div>}
+                  {submitted && <div style={{ fontSize:12, padding:'8px 12px', borderRadius:8, background:checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'rgba(16,185,129,0.08)':'rgba(239,68,68,0.07)', color:checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'#34d399':'#f87171', fontWeight:600 }}>{checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'â Correct!':'â Answer: '+q.correctAnswer}</div>}
                 </div>
               )}
 
@@ -631,18 +916,18 @@ export default function QuizPage() {
                     <div key={j} style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6, alignItems:'center' }}>
                       <div style={{ padding:'8px 12px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, fontSize:13, color:'var(--c-t1)' }}>{pair.left}</div>
                       <select value={matchAnswers[i]?.[j]||''} onChange={e=>setMatchAnswers(s=>({...s,[i]:{...(s[i]||{}),[j]:e.target.value}}))} disabled={submitted} style={{ height:36, background:'var(--c-surface2)', border:'1px solid '+(submitted?(matchAnswers[i]?.[j]===pair.right?'#10b981':'#ef4444'):'var(--c-line)'), borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}>
-                        <option value="">Select…</option>
+                        <option value="">Selectâ¦</option>
                         {(shuffledRights[i]||[]).map((r,ri)=><option key={ri} value={r}>{r}</option>)}
                       </select>
                     </div>
                   ))}
-                  {submitted && <div style={{ fontSize:11, color:'var(--c-t3)', marginTop:4 }}>{(q.pairs||[]).map(p=>p.left+' → '+p.right).join(' · ')}</div>}
+                  {submitted && <div style={{ fontSize:11, color:'var(--c-t3)', marginTop:4 }}>{(q.pairs||[]).map(p=>p.left+' â '+p.right).join(' Â· ')}</div>}
                 </div>
               )}
 
               {isSA && (
                 <div>
-                  <textarea value={saInputs[i]||''} onChange={e=>setSaInputs(s=>({...s,[i]:e.target.value}))} placeholder="Type your answer here…" disabled={submitted} rows={3} style={{ width:'100%', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:10, padding:'10px 12px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit', marginBottom:8, opacity:submitted?.7:1 }}/>
+                  <textarea value={saInputs[i]||''} onChange={e=>setSaInputs(s=>({...s,[i]:e.target.value}))} placeholder="Type your answer hereâ¦" disabled={submitted} rows={3} style={{ width:'100%', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:10, padding:'10px 12px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit', marginBottom:8, opacity:submitted?.7:1 }}/>
                   {submitted && (
                     <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
                       <div style={{ fontSize:12, color:'var(--c-t2)', background:'rgba(59,130,246,0.08)', padding:'8px 12px', borderRadius:8, border:'1px solid rgba(59,130,246,0.2)' }}><span style={{ fontWeight:700, color:'#60a5fa' }}>Model answer: </span>{q.correctAnswer||'Open-ended'}</div>
@@ -650,7 +935,7 @@ export default function QuizPage() {
                         <span style={{ fontSize:11, color:'var(--c-t3)' }}>Self-grade:</span>
                         {['correct','wrong'].map(g=>(
                           <button key={g} onClick={()=>setSaGrades(s=>({...s,[i]:g}))} style={{ height:28, padding:'0 12px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid '+(saGrades[i]===g?(g==='correct'?'#10b981':'#ef4444'):'var(--c-line)'), background:saGrades[i]===g?(g==='correct'?'#10b981':'#ef4444'):'transparent', color:saGrades[i]===g?'#fff':'var(--c-t2)', cursor:'pointer', fontFamily:'inherit' }}>
-                            {g==='correct'?'✓ Correct':'✗ Wrong'}
+                            {g==='correct'?'â Correct':'â Wrong'}
                           </button>
                         ))}
                       </div>
