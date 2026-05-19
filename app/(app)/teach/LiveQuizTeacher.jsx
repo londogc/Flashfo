@@ -10,7 +10,7 @@ function AssignTaskModal({ participants, preSelected, questions, session, user, 
   const [selectedStudents, setSelectedStudents] = useState(
     participants.filter(p => p.status === 'struggling' || p.status === 'at_risk').map(p => p.participant.id)
   )
-  const [gradingMode, setGradingMode] = useState('completion') // 'accuracy' | 'completion'
+  const [gradingMode, setGradingMode] = useStae('completion') // 'accuracy' | 'completion'
   const [grader, setGrader] = useState('nova') // 'nova' | 'teacher'
   const [dueDate, setDueDate] = useState('')
   const [generatedContent, setGeneratedContent] = useState(null)
@@ -33,9 +33,9 @@ function AssignTaskModal({ participants, preSelected, questions, session, user, 
     setGenerating(true); setGenError('')
     try {
       // Build per-student weak area summary for Nova
-      const studentWeakAreas = selectedParticipants.map(({ participanAssign to strugglingt: p, topicScores }) => {
+      const studentWeakAreas = selectedParticipants.map(({ participant: p, topicScores }) => {
         const sorted = Object.entries(topicScores)
-          .map(([topic, d]) => ({ topic, pct: .total ? Math.round(d.correct / d.total * 100) : 0 }))
+          .map(([topic, d]) => ({ topic, pct: d.total ? Math.round(d.correct / d.total * 100) : 0 }))
           .filter(t => t.pct < 80)
           .sort((a, b) => a.pct - b.pct)
         return `${p.student_name}: ${sorted.map(t => `${t.topic} (${t.pct}%)`).join(', ') || 'general review'}`
