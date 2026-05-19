@@ -314,7 +314,7 @@ export default function ProfilePage() {
       const url = data.publicUrl + '?t=' + Date.now()
       setUrl(url)
       const field = bucket === 'avatars' ? 'avatar_url' : 'banner_url'
-      await supabase.from('profiles').update({ [field]: data.publicUrl }).eq('id', user.id)
+      await supabase.from('profiles').update({ [field]: data.publicUrl + '?t=' + Date.now() }).eq('id', user.id)
       if (bucket === 'avatars') await refreshProfile()
     } catch(e) {
       setError(e.message || 'Upload failed')
@@ -425,7 +425,7 @@ export default function ProfilePage() {
         {/* Banner */}
         <div
           style={{
-            height: 160, borderRadius:'12px 12px 0 0',
+            height: 160, borderRadius:'12px 12px 0 0', overflow:'hidden',
             background: bannerUrl ? 'none' : 'linear-gradient(135deg,rgba(37,99,235,0.3) 0%,rgba(124,58,237,0.3) 100%)',
             backgroundImage:    bannerUrl ? `url(${bannerUrl})` : undefined,
             backgroundSize:     'cover',
@@ -474,7 +474,7 @@ export default function ProfilePage() {
           <div
             onClick={() => avatarRef.current?.click()}
             style={{
-              width:80, height:80, borderRadius:'50%', flexShrink:0,
+              width:84, height:84, borderRadius:'50%', flexShrink:0, overflow:'hidden',
               background:         avatarUrl ? 'none' : '#1d4ed8',
               backgroundImage:    avatarUrl ? `url(${avatarUrl})` : undefined,
               backgroundSize:     'cover',
