@@ -290,7 +290,8 @@ export default function LiveQuizTeacher() {
   const [generating,  setGenerating]  = useState(false)
   const [session,     setSession]     = useState(null)
   const [participants,setParticipants]= useState([])
-  const [assignOpen,  setAssignOpen]  = useState(false)  const [assignStudents, setAssignStudents] = useState(null)
+  const [assignOpen,  setAssignOpen]  = useState(false)
+  const [assignStudents, setAssignStudents] = useState(null)
   // Review-mode active state
   const [qIdx,        setQIdx]        = useState(0)
   const [timeLeft,    setTimeLeft]    = useState(90)
@@ -976,7 +977,7 @@ export default function LiveQuizTeacher() {
             )
           })}
         </>)}
-        {assignOpen && <AssignTaskModal participants={studentList} preSelected={assignStudents} questions={questions} session={session} user={user} onClose={()=>setAssignOpen(false); setAssignStudents(null) }}/>}
+        {assignOpen && <AssignTaskModal participants={studentList} preSelected={assignStudents} questions={questions} session={session} user={user} onClose={()=>{ setAssignOpen(false); setAssignStudents(null) }}}/>}
       </div>
     )
   }
