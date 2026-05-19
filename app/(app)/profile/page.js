@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/useAuth'
 
@@ -22,100 +22,136 @@ function CreatureSVG({ id, size = 40 }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CropModal — CSS/img approach, no canvas display scaling issues
-// DISP_W x DISP_H = the visible crop window in CSS pixels
-// OUT_W x OUT_H   = the exported image size
+// CropModal — fully fixed for mobile
+//
+// Root cause of mobile bugs:
+// 1. dispW=600 hardcoded, but mobile container is ~343px. Coordinates computed
+//    in a 600px space don't match what the user actually sees → drag feels stuck.
+// 2. onMouseMove/onTouchMove used stale closure values for imgX/imgY.
+// 3. Separate mouse+touch handlers missed cases (e.g. touch-cancel).
+//
+// Fixes:
+// 1. containerRef + ResizeObserver measures actual rendered size → all calcs
+//    use real px, not the 600px assumption.
+// 2. Refs (posRef, scaleRef, natRef, sizeRef) replace closed-over state in
+//    all event handlers → no more stale values.
+// 3. Pointer Events API (onPointerDown/Move/Up) handles both mouse and touch
+//    with setPointerCapture for reliable capture even when pointer leaves element.
 // ─────────────────────────────────────────────────────────────────────────────
 function CropModal({ file, dispW, dispH, outW, outH, title, onApply, onCancel }) {
   const [imgSrc,  setImgSrc]  = useState(null)
-  const [nat,     setNat]     = useState({ w: 0, h: 0 })  // natural image size
-  const [imgX,    setImgX]    = useState(0)   // top-left of image in container px
-  const [imgY,    setImgY]    = useState(0)
+  const [pos,     setPos]     = useState({ x: 0, y: 0 })
   const [scale,   setScale]   = useState(1)
+  const [nat,     setNat]     = useState({ w: 0, h: 0 })
   const [preview, setPreview] = useState(null)
   const [blob,    setBlob]    = useState(null)
-  const dragging = useRef(false)
-  const last     = useRef({ x: 0, y: 0 })
 
-  // Load blob → object URL
+  // Refs — always current values used inside event handlers
+  const posRef       = useRef({ x: 0, y: 0 })
+  const scaleRef     = useRef(1)
+  const natRef       = useRef({ w: 0, h: 0 })
+  const sizeRef      = useRef({ w: dispW, h: dispH }) // actual rendered container size
+  const dragging     = useRef(false)
+  const containerRef = useRef(null)
+
+  // Helpers: update ref AND trigger re-render
+  function setPos2(p)   { posRef.current = p;   setPos({ ...p }) }
+  function setScale2(s) { scaleRef.current = s; setScale(s) }
+
+  // Measure actual container size on mount + on resize
+  useLayoutEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    function measure() {
+      const r = el.getBoundingClientRect()
+      if (r.width > 0) sizeRef.current = { w: r.width, h: r.height }
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // Load file → object URL
   useEffect(() => {
     const url = URL.createObjectURL(file)
     setImgSrc(url)
     return () => URL.revokeObjectURL(url)
   }, [file])
 
-  // Clamp so image always covers the crop window
-  const clamp = useCallback((x, y, s, nw, nh) => {
-    const iw = nw * s
-    const ih = nh * s
+  // Clamp so image always covers the container
+  function clampPos(x, y, s, nw, nh) {
+    const { w, h } = sizeRef.current
+    const iw = nw * s, ih = nh * s
     return {
-      x: Math.min(0, Math.max(dispW - iw, x)),
-      y: Math.min(0, Math.max(dispH - ih, y)),
+      x: Math.min(0, Math.max(w - iw, x)),
+      y: Math.min(0, Math.max(h - ih, y)),
     }
-  }, [dispW, dispH])
+  }
 
-  // Once image natural size is known, set initial scale + position
+  // Image loaded — compute initial scale and centred position
   function onImgLoad(e) {
     const nw = e.target.naturalWidth
     const nh = e.target.naturalHeight
+    natRef.current = { w: nw, h: nh }
     setNat({ w: nw, h: nh })
-    const s = Math.max(dispW / nw, dispH / nh)
-    setScale(s)
-    const c = clamp((dispW - nw * s) / 2, (dispH - nh * s) / 2, s, nw, nh)
-    setImgX(c.x); setImgY(c.y)
+    const { w, h } = sizeRef.current
+    const s = Math.max(w / nw, h / nh)
+    setScale2(s)
+    const p = clampPos((w - nw * s) / 2, (h - nh * s) / 2, s, nw, nh)
+    setPos2(p)
   }
 
-  // Mouse drag
-  function onMouseDown(e) { e.preventDefault(); dragging.current = true; last.current = { x: e.clientX, y: e.clientY } }
-  function onMouseMove(e) {
-    if (!dragging.current || !nat.w) return
-    const dx = e.clientX - last.current.x
-    const dy = e.clientY - last.current.y
-    last.current = { x: e.clientX, y: e.clientY }
-    setImgX(x => { const c = clamp(x + dx, imgY, scale, nat.w, nat.h); return c.x })
-    setImgY(y => { const c = clamp(imgX, y + dy, scale, nat.w, nat.h); return c.y })
-  }
-  function onMouseUp() { dragging.current = false }
-
-  // Touch drag
-  function onTouchStart(e) { e.preventDefault(); last.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }
-  function onTouchMove(e) {
+  // Pointer Events — handles mouse AND touch uniformly
+  function onPointerDown(e) {
     e.preventDefault()
-    if (!nat.w) return
-    const dx = e.touches[0].clientX - last.current.x
-    const dy = e.touches[0].clientY - last.current.y
-    last.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
-    setImgX(x => { const c = clamp(x + dx, imgY, scale, nat.w, nat.h); return c.x })
-    setImgY(y => { const c = clamp(imgX, y + dy, scale, nat.w, nat.h); return c.y })
+    dragging.current = true
+    e.currentTarget.setPointerCapture(e.pointerId) // ensures move/up fire even outside element
+    e.currentTarget._lastX = e.clientX
+    e.currentTarget._lastY = e.clientY
   }
+  function onPointerMove(e) {
+    if (!dragging.current || !natRef.current.w) return
+    const dx = e.clientX - e.currentTarget._lastX
+    const dy = e.clientY - e.currentTarget._lastY
+    e.currentTarget._lastX = e.clientX
+    e.currentTarget._lastY = e.clientY
+    const p = clampPos(posRef.current.x + dx, posRef.current.y + dy, scaleRef.current, natRef.current.w, natRef.current.h)
+    setPos2(p)
+  }
+  function onPointerUp() { dragging.current = false }
 
-  // Scroll to zoom
+  // Scroll / wheel to zoom
   function onWheel(e) {
     e.preventDefault()
-    if (!nat.w) return
-    const minS = Math.max(dispW / nat.w, dispH / nat.h)
+    if (!natRef.current.w) return
+    const { w, h } = sizeRef.current
+    const minS = Math.max(w / natRef.current.w, h / natRef.current.h)
     const factor = e.deltaY < 0 ? 1.1 : 0.9
-    const newS = Math.min(10, Math.max(minS, scale * factor))
+    const newS = Math.min(10, Math.max(minS, scaleRef.current * factor))
     const rect = e.currentTarget.getBoundingClientRect()
     const mx = e.clientX - rect.left
     const my = e.clientY - rect.top
-    const newX = mx - (mx - imgX) * (newS / scale)
-    const newY = my - (my - imgY) * (newS / scale)
-    const c = clamp(newX, newY, newS, nat.w, nat.h)
-    setScale(newS); setImgX(c.x); setImgY(c.y)
+    const newX = mx - (mx - posRef.current.x) * (newS / scaleRef.current)
+    const newY = my - (my - posRef.current.y) * (newS / scaleRef.current)
+    const p = clampPos(newX, newY, newS, natRef.current.w, natRef.current.h)
+    setScale2(newS)
+    setPos2(p)
   }
 
-  // Export crop
+  // Export crop using actual container size for correct source mapping
   function applyCrop() {
-    if (!nat.w || !imgSrc) return
-    const srcX = -imgX / scale
-    const srcY = -imgY / scale
-    const srcW = dispW / scale
-    const srcH = dispH / scale
+    if (!natRef.current.w || !imgSrc) return
+    const { w, h } = sizeRef.current
+    const s = scaleRef.current
+    const srcX = -posRef.current.x / s
+    const srcY = -posRef.current.y / s
+    const srcW = w / s
+    const srcH = h / s
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement('canvas')
-      canvas.width = outW
+      canvas.width  = outW
       canvas.height = outH
       canvas.getContext('2d').drawImage(img, srcX, srcY, srcW, srcH, 0, 0, outW, outH)
       const dataUrl = canvas.toDataURL('image/jpeg', 0.92)
@@ -125,24 +161,25 @@ function CropModal({ file, dispW, dispH, outW, outH, title, onApply, onCancel })
     img.src = imgSrc
   }
 
-  function confirmUpload() { if (blob) onApply(new File([blob], 'cropped.jpg', { type: 'image/jpeg' })) }
+  function confirmUpload() {
+    if (blob) onApply(new File([blob], 'cropped.jpg', { type: 'image/jpeg' }))
+  }
 
-  const btn = (extra) => ({ height:38, padding:'0 18px', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', ...extra })
+  const btn = (extra) => ({
+    height: 38, padding: '0 18px', border: 'none', borderRadius: 10,
+    fontSize: 13, fontWeight: 700, cursor: 'pointer', ...extra,
+  })
 
   // ── Preview / Confirm ──
   if (preview) return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
-      <div style={{ background:'var(--c-surface)', borderRadius:20, padding:24, width:'100%', maxWidth: dispW + 48 }}>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:16, touchAction:'none' }}>
+      <div style={{ background:'var(--c-surface)', borderRadius:20, padding:24, width:'100%', maxWidth:520, maxHeight:'90vh', overflowY:'auto' }}>
         <div style={{ fontSize:15, fontWeight:700, color:'var(--c-t1)', marginBottom:4 }}>Looks good?</div>
         <div style={{ fontSize:12, color:'var(--c-t3)', marginBottom:14 }}>This is exactly what will be uploaded.</div>
         <img src={preview} alt="Crop preview" style={{ width:'100%', borderRadius:12, display:'block' }}/>
         <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:16 }}>
-          <button onClick={() => { setPreview(null); setBlob(null) }} style={btn({ background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)' })}>
-            ← Edit crop
-          </button>
-          <button onClick={confirmUpload} style={btn({ background:'#1d4ed8', color:'white' })}>
-            Upload
-          </button>
+          <button onClick={() => { setPreview(null); setBlob(null) }} style={btn({ background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)' })}>← Edit crop</button>
+          <button onClick={confirmUpload} style={btn({ background:'#1d4ed8', color:'white' })}>Upload</button>
         </div>
       </div>
     </div>
@@ -150,22 +187,52 @@ function CropModal({ file, dispW, dispH, outW, outH, title, onApply, onCancel })
 
   // ── Crop ──
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
-      <div style={{ background:'var(--c-surface)', borderRadius:20, padding:24, width:'100%', maxWidth: dispW + 48 }}>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:16, touchAction:'none' }}>
+      <div style={{ background:'var(--c-surface)', borderRadius:20, padding:20, width:'100%', maxWidth:520, maxHeight:'90vh', overflowY:'auto' }}>
         <div style={{ fontSize:15, fontWeight:700, color:'var(--c-t1)', marginBottom:4 }}>{title}</div>
-        <div style={{ fontSize:12, color:'var(--c-t3)', marginBottom:14 }}>Drag to reposition · Scroll / pinch to zoom</div>
+        <div style={{ fontSize:12, color:'var(--c-t3)', marginBottom:14 }}>Drag to reposition · Pinch or scroll to zoom</div>
+
+        {/* Crop window — aspect ratio maintained via paddingBottom trick */}
+        {/* containerRef measures actual rendered px so coordinates are correct on all screen sizes */}
         <div
-          style={{ width:'100%', paddingBottom: (dispH/dispW*100)+'%', position:'relative', borderRadius:12, overflow:'hidden', cursor:'grab', userSelect:'none', touchAction:'none' }}
-          onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
-          onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onMouseUp}
+          ref={containerRef}
+          style={{
+            width: '100%',
+            paddingBottom: `${(dispH / dispW) * 100}%`,
+            position: 'relative',
+            borderRadius: 12,
+            overflow: 'hidden',
+            cursor: 'grab',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            touchAction: 'none', // let JS handle all touch
+          }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
           onWheel={onWheel}
         >
           <div style={{ position:'absolute', inset:0 }}>
             {imgSrc && (
-              <img src={imgSrc} onLoad={onImgLoad} draggable={false}
-                style={{ position:'absolute', left: imgX + 'px', top: imgY + 'px', width: nat.w ? nat.w * scale + 'px' : 'auto', height: nat.h ? nat.h * scale + 'px' : 'auto', maxWidth:'none', userSelect:'none', pointerEvents:'none' }}
+              <img
+                src={imgSrc}
+                onLoad={onImgLoad}
+                draggable={false}
+                style={{
+                  position: 'absolute',
+                  left:   pos.x + 'px',
+                  top:    pos.y + 'px',
+                  width:  nat.w ? nat.w * scale + 'px' : 'auto',
+                  height: nat.h ? nat.h * scale + 'px' : 'auto',
+                  maxWidth: 'none',
+                  userSelect: 'none',
+                  pointerEvents: 'none',
+                  WebkitUserSelect: 'none',
+                }}
               />
             )}
+            {/* Rule-of-thirds grid overlay */}
             <div style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
               <div style={{ position:'absolute', left:'33.33%', top:0, bottom:0, width:1, background:'rgba(255,255,255,0.3)' }}/>
               <div style={{ position:'absolute', left:'66.66%', top:0, bottom:0, width:1, background:'rgba(255,255,255,0.3)' }}/>
@@ -175,6 +242,7 @@ function CropModal({ file, dispW, dispH, outW, outH, title, onApply, onCancel })
             </div>
           </div>
         </div>
+
         <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:16 }}>
           <button onClick={onCancel} style={btn({ background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)' })}>Cancel</button>
           <button onClick={applyCrop} style={btn({ background:'#1d4ed8', color:'white' })}>Apply crop →</button>
@@ -189,55 +257,82 @@ function CropModal({ file, dispW, dispH, outW, outH, title, onApply, onCancel })
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const { user, profile, loading, refreshProfile } = useAuth()
-  const [form, setForm] = useState({ full_name: '', username: '', bio: '' })
+  const [form,    setForm]    = useState({ full_name: '', username: '', bio: '' })
   const [mounted, setMounted] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [avatarUrl, setAvatarUrl] = useState(null)
-  const [bannerUrl, setBannerUrl] = useState(null)
+  const [saving,  setSaving]  = useState(false)
+  const [error,   setError]   = useState('')
+
+  const [avatarUrl,       setAvatarUrl]       = useState(null)
+  const [bannerUrl,       setBannerUrl]       = useState(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [bannerUploading, setBannerUploading] = useState(false)
+
   const [cropFile, setCropFile] = useState(null)
   const [cropType, setCropType] = useState(null)
-  // Customization
-  const [avatarId, setAvatarId] = useState(null)
-  const [tagline, setTagline] = useState('')
-  const [theme, setTheme] = useState('default')
-  const [savingPrefs, setSavingPrefs] = useState(false)
+
+  // Customisation
+  const [avatarId,     setAvatarId]     = useState(null)
+  const [tagline,      setTagline]      = useState('')
+  const [theme,        setTheme]        = useState('default')
+  const [savingPrefs,  setSavingPrefs]  = useState(false)
+
+  // Role — teacher | student
+  const [role,        setRole]        = useState('student')
+  const [roleSaving,  setRoleSaving]  = useState(false)
 
   const avatarRef = useRef()
   const bannerRef = useRef()
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   useEffect(() => setMounted(true), [])
+
   useEffect(() => {
     if (mounted && !loading && !user) window.location.href = '/auth'
     if (profile) {
-      setForm({ full_name: profile.full_name||'', username: profile.username||'', bio: profile.bio||'' })
-      setAvatarUrl(profile.avatar_url||null)
-      setBannerUrl(profile.banner_url||null)
-      setAvatarId(profile.avatar_id||null)
-      setTagline(profile.tagline||'')
-      setTheme(profile.flashcard_theme||'default')
+      setForm({
+        full_name: profile.full_name || '',
+        username:  profile.username  || '',
+        bio:       profile.bio       || '',
+      })
+      setAvatarUrl(profile.avatar_url    || null)
+      setBannerUrl(profile.banner_url    || null)
+      setAvatarId(profile.avatar_id      || null)
+      setTagline(profile.tagline         || '')
+      setTheme(profile.flashcard_theme   || 'default')
+      setRole(profile.role               || 'student')
     }
-  }, [user, profile, loading])
+  }, [user, profile, loading, mounted])
 
+  // ── Upload helpers ────────────────────────────────────────────────────────
   async function uploadFile(file, bucket, setUrl, setUploading) {
     setUploading(true); setError('')
     try {
       const path = user.id + '.jpg'
-      const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, { upsert:true, contentType:'image/jpeg' })
+      const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, { upsert: true, contentType: 'image/jpeg' })
       if (upErr) throw upErr
       const { data } = supabase.storage.from(bucket).getPublicUrl(path)
-      setUrl(data.publicUrl + '?t=' + Date.now())
-      const field = bucket==='avatars' ? 'avatar_url' : 'banner_url'
+      const url = data.publicUrl + '?t=' + Date.now()
+      setUrl(url)
+      const field = bucket === 'avatars' ? 'avatar_url' : 'banner_url'
       await supabase.from('profiles').update({ [field]: data.publicUrl }).eq('id', user.id)
       if (bucket === 'avatars') await refreshProfile()
-    } catch(e) { setError(e.message||'Upload failed') } finally { setUploading(false) }
+    } catch(e) {
+      setError(e.message || 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  // Fix: Remove now clears DB too (not just local state)
+  async function removeImage(type) {
+    const field = type === 'avatar' ? 'avatar_url' : 'banner_url'
+    if (type === 'avatar') setAvatarUrl(null)
+    else setBannerUrl(null)
+    await supabase.from('profiles').update({ [field]: null }).eq('id', user.id)
   }
 
   function onFileSelected(e, type) {
-    const file = e.target.files[0]; e.target.value=''
+    const file = e.target.files[0]; e.target.value = ''
     if (!file) return
     if (!file.type.startsWith('image/')) { setError('Please select an image file'); return }
     setCropType(type); setCropFile(file)
@@ -246,8 +341,8 @@ export default function ProfilePage() {
   async function onCropApply(croppedFile) {
     const type = cropType
     setCropFile(null); setCropType(null)
-    if (type==='avatar') await uploadFile(croppedFile, 'avatars', setAvatarUrl, setAvatarUploading)
-    else await uploadFile(croppedFile, 'banners', setBannerUrl, setBannerUploading)
+    if (type === 'avatar') await uploadFile(croppedFile, 'avatars', setAvatarUrl, setAvatarUploading)
+    else                   await uploadFile(croppedFile, 'banners', setBannerUrl, setBannerUploading)
   }
 
   async function savePrefs() {
@@ -257,221 +352,322 @@ export default function ProfilePage() {
     setSavingPrefs(false)
   }
 
+  // Fix: save role to DB and refresh so MobileShell picks it up immediately
+  async function saveRole(newRole) {
+    setRoleSaving(true)
+    setRole(newRole)
+    await supabase.from('profiles').update({ role: newRole }).eq('id', user.id)
+    await refreshProfile()
+    setRoleSaving(false)
+  }
+
   async function save(e) {
     e.preventDefault(); setSaving(true); setError('')
     const { error: err } = await supabase.rpc('upsert_own_profile', {
       p_full_name: form.full_name,
-      p_username: form.username||null,
-      p_bio: form.bio||null,
+      p_username:  form.username || null,
+      p_bio:       form.bio      || null,
     })
     if (err) { setError(err.message); setSaving(false); return }
     window.location.href = '/dashboard'
   }
 
-  if (!mounted || loading) return <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'50vh',color:'var(--c-t3)',fontSize:14 }}>Loading...</div>
+  if (!mounted || loading) return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'50vh', color:'var(--c-t3)', fontSize:14 }}>
+      Loading...
+    </div>
+  )
 
-  const inp = { width:'100%',height:44,padding:'0 14px',background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:12,fontSize:14,color:'var(--c-t1)',outline:'none',fontFamily:'inherit',transition:'border-color 0.2s',boxSizing:'border-box' }
+  const inp = {
+    width: '100%', height: 44, padding: '0 14px',
+    background: 'var(--c-surface2)', border: '1px solid var(--c-line)',
+    borderRadius: 12, fontSize: 14, color: 'var(--c-t1)',
+    outline: 'none', fontFamily: 'inherit',
+    transition: 'border-color 0.2s', boxSizing: 'border-box',
+  }
+  const btn = (extra) => ({
+    height: 36, padding: '0 14px', borderRadius: 10,
+    fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', ...extra,
+  })
 
   return (
-    <div style={{ maxWidth:660, margin:'0 auto', paddingBottom:40 }}>
+    <div style={{ maxWidth: 660, margin: '0 auto', paddingBottom: 40 }}>
+
+      {/* Crop modal */}
       {cropFile && (
         <CropModal
           file={cropFile}
-          dispW={600} dispH={cropType==='avatar' ? 600 : 200}
-          outW={cropType==='avatar' ? 400 : 1200}
-          outH={cropType==='avatar' ? 400 : 400}
-          title={cropType==='avatar' ? 'Crop profile photo' : 'Crop banner photo'}
+          dispW={600}
+          dispH={cropType === 'avatar' ? 600 : 200}
+          outW={cropType === 'avatar' ? 400  : 1200}
+          outH={cropType === 'avatar' ? 400  : 400}
+          title={cropType === 'avatar' ? 'Crop profile photo' : 'Crop banner photo'}
           onApply={onCropApply}
           onCancel={() => { setCropFile(null); setCropType(null) }}
         />
       )}
 
+      {/* Hidden file inputs — outside buttons so mobile doesn't block .click() */}
+      <input ref={bannerRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e => onFileSelected(e, 'banner')}/>
+      <input ref={avatarRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e => onFileSelected(e, 'avatar')}/>
+
       {/* Header */}
-      <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'24px 20px 20px' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'24px 20px 20px' }}>
         <div>
-          <h1 style={{ fontSize:22,fontWeight:800,color:'var(--c-t1)',marginBottom:4,letterSpacing:'-0.3px' }}>Profile</h1>
-          <p style={{ fontSize:13,color:'var(--c-t2)' }}>Manage your Flashfo account.</p>
+          <h1 style={{ fontSize:22, fontWeight:800, color:'var(--c-t1)', marginBottom:4, letterSpacing:'-0.3px' }}>Profile</h1>
+          <p style={{ fontSize:13, color:'var(--c-t2)' }}>Manage your Flashfo account.</p>
         </div>
-        <a href="/dashboard" style={{ height:36,padding:'0 14px',background:'var(--c-surface2)',border:'1px solid var(--c-line)',color:'var(--c-t2)',borderRadius:10,fontSize:13,fontWeight:500,display:'inline-flex',alignItems:'center',textDecoration:'none' }}>← Dashboard</a>
+        <a href="/dashboard" style={btn({ background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', textDecoration:'none', display:'inline-flex', alignItems:'center' })}>← Dashboard</a>
       </div>
 
       {/* Banner + Avatar */}
       <div style={{ margin:'0 0 4px', position:'relative' }}>
-        <div onClick={() => bannerRef.current?.click()} title="Click to change banner"
-          style={{ height:160, borderRadius:'12px 12px 0 0', background: bannerUrl ? 'none' : 'linear-gradient(135deg,rgba(37,99,235,0.3) 0%,rgba(124,58,237,0.3) 100%)', backgroundImage: bannerUrl ? 'url('+bannerUrl+')' : undefined, backgroundSize:'cover', backgroundPosition:'center', cursor:'pointer', position:'relative', border:'1px solid var(--c-line)', borderBottom:'none', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
-          <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0)', display:'flex', alignItems:'center', justifyContent:'center', transition:'background 0.2s' }}
-            onMouseEnter={e=>e.currentTarget.style.background='rgba(0,0,0,0.35)'}
-            onMouseLeave={e=>e.currentTarget.style.background='rgba(0,0,0,0)'}>
-            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, opacity:bannerUrl?0:1, transition:'opacity 0.2s' }}
-              onMouseEnter={e=>e.currentTarget.style.opacity=1}
-              onMouseLeave={e=>e.currentTarget.style.opacity=bannerUrl?0:1}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round">
+        {/* Banner */}
+        <div
+          style={{
+            height: 160, borderRadius:'12px 12px 0 0',
+            background: bannerUrl ? 'none' : 'linear-gradient(135deg,rgba(37,99,235,0.3) 0%,rgba(124,58,237,0.3) 100%)',
+            backgroundImage:    bannerUrl ? `url(${bannerUrl})` : undefined,
+            backgroundSize:     'cover',
+            backgroundPosition: 'center',
+            position:  'relative',
+            border:    '1px solid var(--c-line)',
+            borderBottom: 'none',
+            overflow:  'hidden',
+            cursor: 'pointer',
+          }}
+          onClick={() => bannerRef.current?.click()}
+        >
+          {/* Hover overlay with upload prompt */}
+          <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, opacity: bannerUrl ? 0 : 1 }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="1.5" strokeLinecap="round">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
               </svg>
-              <span style={{ fontSize:12, color:'#fff', fontWeight:500 }}>{bannerUploading ? 'Uploading...' : 'Upload banner'}</span>
+              <span style={{ fontSize:12, color:'rgba(255,255,255,0.8)', fontWeight:500 }}>
+                {bannerUploading ? 'Uploading...' : 'Upload banner'}
+              </span>
             </div>
           </div>
+
+          {/* Change / Remove buttons — fix: Remove now updates DB */}
           {bannerUrl && (
             <div style={{ position:'absolute', bottom:10, right:10, display:'flex', gap:6 }}>
-              <button onClick={e=>{e.stopPropagation();bannerRef.current?.click()}} style={{ padding:'5px 10px', borderRadius:7, border:'1px solid rgba(255,255,255,0.3)', background:'rgba(0,0,0,0.55)', color:'#fff', fontSize:11, fontWeight:500, cursor:'pointer', backdropFilter:'blur(4px)' }}>Change</button>
-              <button onClick={e=>{e.stopPropagation();setBannerUrl(null)}} style={{ padding:'5px 10px', borderRadius:7, border:'1px solid rgba(255,255,255,0.3)', background:'rgba(0,0,0,0.55)', color:'#fff', fontSize:11, fontWeight:500, cursor:'pointer', backdropFilter:'blur(4px)' }}>Remove</button>
+              <button
+                onClick={e => { e.stopPropagation(); bannerRef.current?.click() }}
+                style={{ padding:'5px 10px', borderRadius:7, border:'1px solid rgba(255,255,255,0.3)', background:'rgba(0,0,0,0.55)', color:'#fff', fontSize:11, fontWeight:500, cursor:'pointer', backdropFilter:'blur(4px)' }}
+              >
+                Change
+              </button>
+              <button
+                onClick={async e => { e.stopPropagation(); await removeImage('banner') }}
+                style={{ padding:'5px 10px', borderRadius:7, border:'1px solid rgba(255,255,255,0.3)', background:'rgba(0,0,0,0.55)', color:'#fff', fontSize:11, fontWeight:500, cursor:'pointer', backdropFilter:'blur(4px)' }}
+              >
+                Remove
+              </button>
             </div>
           )}
         </div>
 
-        <div style={{ position:'relative', padding:'0 20px', marginTop:-40, marginBottom:12, display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
-          <div onClick={() => avatarRef.current?.click()} title="Click to change photo"
-            style={{ width:80, height:80, borderRadius:'50%', flexShrink:0, background: avatarUrl ? 'none' : '#1d4ed8', backgroundImage: avatarUrl ? 'url('+avatarUrl+')' : undefined, backgroundSize:'cover', backgroundPosition:'center', border:'3px solid var(--c-surface)', cursor:'pointer', position:'relative', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        {/* Avatar row */}
+        <div style={{ padding:'0 20px', marginTop:-40, marginBottom:12, display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
+          <div
+            onClick={() => avatarRef.current?.click()}
+            style={{
+              width:80, height:80, borderRadius:'50%', flexShrink:0,
+              background:         avatarUrl ? 'none' : '#1d4ed8',
+              backgroundImage:    avatarUrl ? `url(${avatarUrl})` : undefined,
+              backgroundSize:     'cover',
+              backgroundPosition: 'center',
+              border:    '3px solid var(--c-surface)',
+              cursor:    'pointer',
+              overflow:  'hidden',
+              display:   'flex',
+              alignItems:'center', justifyContent:'center',
+            }}
+          >
             {!avatarUrl && (
               <span style={{ fontSize:22, fontWeight:700, color:'#fff' }}>
-                {(form.full_name || user?.email || 'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+                {(form.full_name || user?.email || 'U').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase()}
               </span>
             )}
-            <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0)', display:'flex', alignItems:'center', justifyContent:'center', transition:'background 0.2s' }}
-              onMouseEnter={e=>e.currentTarget.style.background='rgba(0,0,0,0.45)'}
-              onMouseLeave={e=>e.currentTarget.style.background='rgba(0,0,0,0)'}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"
-                style={{ opacity:0, transition:'opacity 0.2s' }}
-                onMouseEnter={e=>e.currentTarget.style.opacity=1}
-                onMouseLeave={e=>e.currentTarget.style.opacity=0}>
-                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-            </div>
           </div>
+
           <div style={{ display:'flex', gap:8, paddingBottom:4 }}>
-            <button type="button" onClick={()=>avatarRef.current?.click()} disabled={avatarUploading}
-              style={{ height:32, padding:'0 14px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:8, fontSize:12, fontWeight:500, cursor:'pointer' }}>
+            <button type="button" onClick={() => avatarRef.current?.click()} disabled={avatarUploading}
+              style={btn({ background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)' })}>
               {avatarUploading ? 'Uploading...' : 'Change photo'}
             </button>
+            {/* Fix: Remove now updates DB */}
             {avatarUrl && (
-              <button type="button" onClick={()=>setAvatarUrl(null)}
-                style={{ height:32, padding:'0 14px', background:'none', border:'1px solid var(--c-line)', color:'var(--c-t3)', borderRadius:8, fontSize:12, cursor:'pointer' }}>
+              <button type="button" onClick={() => removeImage('avatar')}
+                style={btn({ background:'none', border:'1px solid var(--c-line)', color:'var(--c-t3)' })}>
                 Remove
               </button>
             )}
           </div>
         </div>
-        <input ref={bannerRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>onFileSelected(e,'banner')}/>
-        <input ref={avatarRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>onFileSelected(e,'avatar')}/>
+      </div>
+
+      {/* ── Account type (teacher / student) ── */}
+      <div style={{ margin:'0 20px 4px', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:20 }}>
+        <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:12 }}>
+          I am a…
+        </div>
+        <div style={{ display:'flex', gap:10 }}>
+          {[
+            { value:'student', label:'Student', desc:'Study tools, join classes, track progress' },
+            { value:'teacher', label:'Teacher', desc:'Create classes, run live quizzes, manage students' },
+          ].map(r => (
+            <button
+              key={r.value}
+              disabled={roleSaving}
+              onClick={() => saveRole(r.value)}
+              style={{
+                flex:1, padding:'12px 14px', borderRadius:12, cursor:'pointer', textAlign:'left',
+                border:       role === r.value ? '2px solid #7c3aed' : '1px solid var(--c-line)',
+                background:   role === r.value ? 'rgba(124,58,237,0.08)' : 'var(--c-surface2)',
+                transition:   'all 0.15s',
+                fontFamily:   'inherit',
+                opacity:      roleSaving ? 0.6 : 1,
+              }}
+            >
+              <div style={{ fontSize:13, fontWeight:700, color: role === r.value ? '#a78bfa' : 'var(--c-t1)', marginBottom:4 }}>
+                {r.label} {role === r.value && '✓'}
+              </div>
+              <div style={{ fontSize:11, color:'var(--c-t3)', lineHeight:1.4 }}>{r.desc}</div>
+            </button>
+          ))}
+        </div>
+        <p style={{ fontSize:11, color:'var(--c-t3)', marginTop:10, marginBottom:0 }}>
+          This updates your navigation and available features immediately.
+        </p>
       </div>
 
       {/* Creature, Tagline, Theme */}
-      <div style={{ margin:'0 20px 4px',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:18,padding:20 }}>
-        <div style={{ fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:12 }}>Creature Avatar</div>
-        <div style={{ display:'flex',gap:10,flexWrap:'wrap',marginBottom:8 }}>
-          {CREATURES.map(cr=>(
-            <div key={cr.id} onClick={()=>setAvatarId(avatarId===cr.id?null:cr.id)}
-              style={{ width:52,height:52,borderRadius:'50%',cursor:'pointer',border:avatarId===cr.id?'2.5px solid #7c3aed':'2.5px solid transparent',overflow:'hidden',flexShrink:0 }}>
+      <div style={{ margin:'0 20px 4px', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:20 }}>
+        <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:12 }}>Creature Avatar</div>
+        <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:8 }}>
+          {CREATURES.map(cr => (
+            <div key={cr.id} onClick={() => setAvatarId(avatarId === cr.id ? null : cr.id)}
+              style={{ width:52, height:52, borderRadius:'50%', cursor:'pointer', border: avatarId === cr.id ? '2.5px solid #7c3aed' : '2.5px solid transparent', overflow:'hidden', flexShrink:0 }}>
               <CreatureSVG id={cr.id} size={52}/>
             </div>
           ))}
           {avatarId && (
-            <div onClick={()=>setAvatarId(null)}
-              style={{ width:52,height:52,borderRadius:'50%',cursor:'pointer',border:'1px dashed var(--c-line)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'var(--c-t3)' }}>
+            <div onClick={() => setAvatarId(null)}
+              style={{ width:52, height:52, borderRadius:'50%', cursor:'pointer', border:'1px dashed var(--c-line)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, color:'var(--c-t3)' }}>
               Clear
             </div>
           )}
         </div>
-        <p style={{ fontSize:11,color:'var(--c-t3)',marginBottom:20 }}>Pick a creature. Uploading a profile photo overrides it.</p>
+        <p style={{ fontSize:11, color:'var(--c-t3)', marginBottom:20 }}>Pick a creature. Uploading a profile photo overrides it.</p>
 
-        <div style={{ fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:8 }}>Tagline</div>
-        <input value={tagline} onChange={e=>setTagline(e.target.value)} maxLength={60}
+        <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Tagline</div>
+        <input value={tagline} onChange={e => setTagline(e.target.value)} maxLength={60}
           placeholder="e.g. Pre-med 2027 · UCD"
-          style={{ width:'100%',height:40,padding:'0 14px',background:'var(--c-surface2)',border:'1px solid var(--c-line)',borderRadius:10,fontSize:14,color:'var(--c-t1)',outline:'none',fontFamily:'inherit',boxSizing:'border-box',marginBottom:20 }}/>
+          style={{ ...inp, height:40, marginBottom:20 }}/>
 
-        <div style={{ fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:8 }}>Flashcard Theme</div>
-        <div style={{ display:'flex',gap:8,flexWrap:'wrap' }}>
+        <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Flashcard Theme</div>
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
           {[
             { id:'default',  label:'Purple',   color:'#2d1b69' },
             { id:'midnight', label:'Midnight',  color:'#0f1f3d' },
             { id:'forest',   label:'Forest',    color:'#0d2b1d' },
             { id:'ember',    label:'Ember',     color:'#2b1200' },
-          ].map(t=>(
-            <div key={t.id} onClick={()=>setTheme(t.id)}
-              style={{ display:'flex',alignItems:'center',gap:8,padding:'8px 14px',borderRadius:10,border:theme===t.id?'2px solid #7c3aed':'1px solid var(--c-line)',background:'var(--c-surface2)',cursor:'pointer' }}>
-              <div style={{ width:18,height:18,borderRadius:4,background:t.color }}/>
-              <span style={{ fontSize:12,color:'var(--c-t1)' }}>{t.label}</span>
+          ].map(t => (
+            <div key={t.id} onClick={() => setTheme(t.id)}
+              style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 14px', borderRadius:10, border: theme === t.id ? '2px solid #7c3aed' : '1px solid var(--c-line)', background:'var(--c-surface2)', cursor:'pointer' }}>
+              <div style={{ width:18, height:18, borderRadius:4, background:t.color }}/>
+              <span style={{ fontSize:12, color:'var(--c-t1)' }}>{t.label}</span>
             </div>
           ))}
         </div>
         <button type="button" onClick={savePrefs} disabled={savingPrefs}
-          style={{ marginTop:16,height:36,padding:'0 18px',background:'#7c3aed',color:'#fff',border:'none',borderRadius:10,fontSize:13,fontWeight:600,cursor:'pointer',opacity:savingPrefs?0.6:1 }}>
+          style={{ marginTop:16, height:36, padding:'0 18px', background:'#7c3aed', color:'#fff', border:'none', borderRadius:10, fontSize:13, fontWeight:600, cursor:'pointer', opacity: savingPrefs ? 0.6 : 1 }}>
           {savingPrefs ? 'Saving...' : 'Save preferences'}
         </button>
       </div>
 
       {/* Form */}
-      <form onSubmit={save} style={{ margin:'0 20px 16px',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:18,padding:20 }}>
-        <div style={{ display:'flex',flexDirection:'column',gap:16 }}>
-          {[{k:'full_name',label:'Full Name',ph:'Your full name'},{k:'username',label:'Username',ph:'e.g. glen123'}].map(({k,label,ph})=>(
+      <form onSubmit={save} style={{ margin:'0 20px 4px', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:20 }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+          {[
+            { k:'full_name', label:'Full Name', ph:'Your full name' },
+            { k:'username',  label:'Username',  ph:'e.g. glen123'   },
+          ].map(({ k, label, ph }) => (
             <div key={k}>
-              <label style={{ display:'block',fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6 }}>{label}</label>
-              <input value={form[k]} onChange={e=>set(k,e.target.value)} placeholder={ph} style={inp}
-                onFocus={e=>e.target.style.borderColor='#3b82f6'}
-                onBlur={e=>e.target.style.borderColor='var(--c-line)'}/>
+              <label style={{ display:'block', fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{label}</label>
+              <input value={form[k]} onChange={e => set(k, e.target.value)} placeholder={ph} style={inp}
+                onFocus={e  => e.target.style.borderColor = '#3b82f6'}
+                onBlur={e   => e.target.style.borderColor = 'var(--c-line)'}/>
             </div>
           ))}
           <div>
-            <label style={{ display:'block',fontSize:11,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6 }}>Bio</label>
-            <textarea value={form.bio} onChange={e=>set('bio',e.target.value)} placeholder="Tell us about yourself..." rows={3}
-              style={{ ...inp,height:'auto',padding:'10px 14px',resize:'none',lineHeight:1.6 }}
-              onFocus={e=>e.target.style.borderColor='#3b82f6'}
-              onBlur={e=>e.target.style.borderColor='var(--c-line)'}/>
+            <label style={{ display:'block', fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Bio</label>
+            <textarea value={form.bio} onChange={e => set('bio', e.target.value)} placeholder="Tell us about yourself..." rows={3}
+              style={{ ...inp, height:'auto', padding:'10px 14px', resize:'none', lineHeight:1.6 }}
+              onFocus={e => e.target.style.borderColor = '#3b82f6'}
+              onBlur={e  => e.target.style.borderColor = 'var(--c-line)'}/>
           </div>
         </div>
-        {error&&<div style={{ marginTop:14,padding:'10px 14px',background:'#fef2f2',border:'1px solid #fecaca',borderRadius:10,fontSize:13,color:'#dc2626' }}>{error}</div>}
-        <div style={{ marginTop:20,display:'flex',gap:10,alignItems:'center' }}>
+        {error && <div style={{ marginTop:14, padding:'10px 14px', background:'#fef2f2', border:'1px solid #fecaca', borderRadius:10, fontSize:13, color:'#dc2626' }}>{error}</div>}
+        <div style={{ marginTop:20, display:'flex', gap:10, alignItems:'center' }}>
           <button type="submit" disabled={saving}
-            style={{ height:40,padding:'0 20px',background:'#1d4ed8',color:'white',border:'none',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer',opacity:saving?0.7:1 }}>
-            {saving?'Saving...':'Save changes'}
+            style={{ height:40, padding:'0 20px', background:'#1d4ed8', color:'white', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', opacity: saving ? 0.7 : 1 }}>
+            {saving ? 'Saving...' : 'Save changes'}
           </button>
-          <a href="/dashboard" style={{ fontSize:13,color:'var(--c-t3)',textDecoration:'none' }}>Cancel</a>
+          <a href="/dashboard" style={{ fontSize:13, color:'var(--c-t3)', textDecoration:'none' }}>Cancel</a>
         </div>
       </form>
 
       {/* Plan */}
-      <div style={{ margin:'0 20px 16px',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:18,padding:20 }}>
-        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12 }}>
+      <div style={{ margin:'0 20px 4px', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:20 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
           <div>
-            <div style={{ fontSize:13,fontWeight:700,color:'var(--c-t1)',marginBottom:2 }}>Current plan</div>
-            <div style={{ display:'inline-flex',alignItems:'center',gap:6,marginTop:4 }}>
-              {(profile?.plan==='pro'||profile?.plan==='teacher'||profile?.plan==='school') ? (
-                <span style={{ background:'linear-gradient(90deg,#6366f1,#a78bfa)',color:'#fff',fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20 }}>
-                  {profile.plan==='teacher'?'Teacher':profile.plan==='school'?'School':'Pro'} ✦
+            <div style={{ fontSize:13, fontWeight:700, color:'var(--c-t1)', marginBottom:2 }}>Current plan</div>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:6, marginTop:4 }}>
+              {(profile?.plan === 'pro' || profile?.plan === 'teacher' || profile?.plan === 'school') ? (
+                <span style={{ background:'linear-gradient(90deg,#6366f1,#a78bfa)', color:'#fff', fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20 }}>
+                  {profile.plan === 'teacher' ? 'Teacher' : profile.plan === 'school' ? 'School' : 'Pro'} ✦
                 </span>
               ) : (
-                <span style={{ background:'rgba(99,102,241,0.1)',border:'1px solid rgba(99,102,241,0.25)',color:'#818cf8',fontSize:11,fontWeight:600,padding:'3px 10px',borderRadius:20 }}>
+                <span style={{ background:'rgba(99,102,241,0.1)', border:'1px solid rgba(99,102,241,0.25)', color:'#818cf8', fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:20 }}>
                   Free
                 </span>
               )}
             </div>
           </div>
-          {(!profile?.plan || profile?.plan==='free') && (
-            <a href="/pricing" style={{ display:'inline-flex',alignItems:'center',gap:5,height:36,padding:'0 14px',background:'linear-gradient(90deg,#4f46e5,#7c3aed)',color:'#fff',border:'none',borderRadius:10,fontSize:12,fontWeight:700,textDecoration:'none' }}>
+          {(!profile?.plan || profile?.plan === 'free') && (
+            <a href="/pricing" style={{ display:'inline-flex', alignItems:'center', gap:5, height:36, padding:'0 14px', background:'linear-gradient(90deg,#4f46e5,#7c3aed)', color:'#fff', border:'none', borderRadius:10, fontSize:12, fontWeight:700, textDecoration:'none' }}>
               Upgrade →
             </a>
           )}
         </div>
-        {(!profile?.plan || profile?.plan==='free') && (
-          <div style={{ fontSize:12,color:'var(--c-t2)',lineHeight:1.5 }}>
+        {(!profile?.plan || profile?.plan === 'free') && (
+          <div style={{ fontSize:12, color:'var(--c-t2)', lineHeight:1.5 }}>
             Upgrade to Pro for unlimited AI generation, priority access, and advanced features.
           </div>
         )}
-        {(profile?.plan==='pro'||profile?.plan==='teacher'||profile?.plan==='school') && (
-          <div style={{ fontSize:12,color:'var(--c-t2)' }}>You're on the {profile.plan} plan. Thank you for supporting Flashfo! 🎉</div>
+        {(profile?.plan === 'pro' || profile?.plan === 'teacher' || profile?.plan === 'school') && (
+          <div style={{ fontSize:12, color:'var(--c-t2)' }}>
+            You're on the {profile.plan} plan. Thank you for supporting Flashfo! 🎉
+          </div>
         )}
       </div>
 
       {/* Sign out */}
-      <div style={{ margin:'0 20px',background:'var(--c-surface)',border:'1px solid #fecaca',borderRadius:18,padding:20 }}>
-        <div style={{ fontSize:13,fontWeight:700,color:'#dc2626',marginBottom:4 }}>Sign out</div>
-        <p style={{ fontSize:12,color:'var(--c-t2)',marginBottom:12 }}>You will be signed out on this device.</p>
-        <button onClick={async()=>{ await supabase.auth.signOut(); window.location.href='/auth' }}
-          style={{ height:36,padding:'0 16px',background:'#fef2f2',border:'1px solid #fecaca',color:'#dc2626',borderRadius:10,fontSize:13,fontWeight:600,cursor:'pointer' }}>
+      <div style={{ margin:'0 20px', background:'var(--c-surface)', border:'1px solid #fecaca', borderRadius:18, padding:20 }}>
+        <div style={{ fontSize:13, fontWeight:700, color:'#dc2626', marginBottom:4 }}>Sign out</div>
+        <p style={{ fontSize:12, color:'var(--c-t2)', marginBottom:12 }}>You will be signed out on this device.</p>
+        <button
+          onClick={async () => { await supabase.auth.signOut(); window.location.href = '/auth' }}
+          style={{ height:36, padding:'0 16px', background:'#fef2f2', border:'1px solid #fecaca', color:'#dc2626', borderRadius:10, fontSize:13, fontWeight:600, cursor:'pointer' }}
+        >
           Sign out
         </button>
       </div>
+
     </div>
   )
 }
