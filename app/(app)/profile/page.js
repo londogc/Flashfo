@@ -510,39 +510,71 @@ export default function ProfilePage() {
       </div>
 
       {/* ── Account type (teacher / student) ── */}
-      <div style={{ margin:'0 20px 4px', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:20 }}>
-        <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:12 }}>
-          I am a…
-        </div>
-        <div style={{ display:'flex', gap:10 }}>
-          {[
-            { value:'student', label:'Student', desc:'Study tools, join classes, track progress' },
-            { value:'teacher', label:'Teacher', desc:'Create classes, run live quizzes, manage students' },
-          ].map(r => (
-            <button
-              key={r.value}
-              disabled={roleSaving}
-              onClick={() => saveRole(r.value)}
-              style={{
-                flex:1, padding:'12px 14px', borderRadius:12, cursor:'pointer', textAlign:'left',
-                border:       role === r.value ? '2px solid #7c3aed' : '1px solid var(--c-line)',
-                background:   role === r.value ? 'rgba(124,58,237,0.08)' : 'var(--c-surface2)',
-                transition:   'all 0.15s',
-                fontFamily:   'inherit',
-                opacity:      roleSaving ? 0.6 : 1,
-              }}
-            >
-              <div style={{ fontSize:13, fontWeight:700, color: role === r.value ? '#a78bfa' : 'var(--c-t1)', marginBottom:4 }}>
-                {r.label} {role === r.value && '✓'}
+      {/* Logic:
+          - student  → default for all free users
+          - teacher  → auto-assigned when plan is 'teacher' or 'school'
+          - lifetime → can switch freely between student and teacher
+          Regular users cannot manually change this. */}
+      {(() => {
+        const plan      = profile?.plan || 'free'
+        const isLifetime = plan === 'lifetime'
+        const isTeacherPlan = plan === 'teacher' || plan === 'school'
+        // Derive effective role if user can't switch
+        const effectiveRole = isLifetime ? role : isTeacherPlan ? 'teacher' : 'student'
+
+        return (
+          <div style={{ margin:'0 20px 4px', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:20 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'0.05em' }}>
+                Account type
               </div>
-              <div style={{ fontSize:11, color:'var(--c-t3)', lineHeight:1.4 }}>{r.desc}</div>
-            </button>
-          ))}
-        </div>
-        <p style={{ fontSize:11, color:'var(--c-t3)', marginTop:10, marginBottom:0 }}>
-          This updates your navigation and available features immediately.
-        </p>
-      </div>
+              {isLifetime && (
+                <span style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:20, background:'linear-gradient(90deg,#f59e0b,#ec4899)', color:'#fff' }}>
+                  LIFETIME ✦
+                </span>
+              )}
+            </div>
+
+            <div style={{ display:'flex', gap:10 }}>
+              {[
+                { value:'student', label:'Student', desc:'Study tools, join classes, track progress' },
+                { value:'teacher', label:'Teacher', desc:'Create classes, run live quizzes, manage students' },
+              ].map(r => {
+                const isSelected = effectiveRole === r.value
+                const canClick   = isLifetime
+                return (
+                  <div
+                    key={r.value}
+                    onClick={() => canClick && saveRole(r.value)}
+                    style={{
+                      flex:1, padding:'12px 14px', borderRadius:12,
+                      cursor:     canClick ? 'pointer' : 'default',
+                      textAlign:  'left',
+                      border:     isSelected ? '2px solid #7c3aed' : '1px solid var(--c-line)',
+                      background: isSelected ? 'rgba(124,58,237,0.08)' : 'var(--c-surface2)',
+                      transition: 'all 0.15s',
+                      opacity:    roleSaving ? 0.6 : 1,
+                    }}
+                  >
+                    <div style={{ fontSize:13, fontWeight:700, color: isSelected ? '#a78bfa' : 'var(--c-t2)', marginBottom:4 }}>
+                      {r.label} {isSelected && '✓'}
+                    </div>
+                    <div style={{ fontSize:11, color:'var(--c-t3)', lineHeight:1.4 }}>{r.desc}</div>
+                  </div>
+                )
+              })}
+            </div>
+
+            <p style={{ fontSize:11, color:'var(--c-t3)', marginTop:10, marginBottom:0 }}>
+              {isLifetime
+                ? 'As a lifetime member you can switch freely between roles.'
+                : isTeacherPlan
+                ? 'Teacher role is set by your subscription plan.'
+                : 'Upgrade to a Teacher or School plan to unlock the teacher role.'}
+            </p>
+          </div>
+        )
+      })()}
 
       {/* Creature, Tagline, Theme */}
       <div style={{ margin:'0 20px 4px', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:20 }}>
