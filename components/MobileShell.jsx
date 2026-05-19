@@ -168,7 +168,13 @@ export default function MobileShell({ children }) {
   const pathname   = usePathname()
   const router     = useRouter()
   const { profile } = useAuth()
-  const isTeacher = profile?.role === 'teacher'
+  // Role is plan-driven — only teacher/school/lifetime plans get teacher tabs.
+  // Lifetime members can switch manually (stored in profile.role).
+  // Free/pro/student users always get student tabs regardless of profile.role.
+  const plan       = profile?.plan || 'free'
+  const isLifetime  = plan === 'lifetime'
+  const isTeacherPlan = plan === 'teacher' || plan === 'school'
+  const isTeacher   = isTeacherPlan || (isLifetime && profile?.role === 'teacher')
 
   const [novaOpen,   setNovaOpen]   = useState(false)
   const [novaInput,  setNovaInput]  = useState('')
