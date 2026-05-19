@@ -427,9 +427,6 @@ export default function ProfilePage() {
           style={{
             height: 160, borderRadius:'12px 12px 0 0', overflow:'hidden',
             background: bannerUrl ? 'none' : 'linear-gradient(135deg,rgba(37,99,235,0.3) 0%,rgba(124,58,237,0.3) 100%)',
-            backgroundImage:    bannerUrl ? `url(${bannerUrl})` : undefined,
-            backgroundSize:     'cover',
-            backgroundPosition: 'center',
             position:  'relative',
             border:    '1px solid var(--c-line)',
             borderBottom: 'none',
@@ -438,6 +435,12 @@ export default function ProfilePage() {
           }}
           onClick={() => bannerRef.current?.click()}
         >
+          {bannerUrl && (
+            <img src={bannerUrl} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', display:'block', pointerEvents:'none' }} />
+          )}
+          {!bannerUrl && (
+            <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,rgba(37,99,235,0.3) 0%,rgba(124,58,237,0.3) 100%)' }} />
+          )}
           {/* Hover overlay with upload prompt */}
           <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, opacity: bannerUrl ? 0 : 1 }}>
