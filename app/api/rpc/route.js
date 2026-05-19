@@ -264,6 +264,12 @@ async function generateChatResponse(messages, systemPrompt) {
   const text = await callOpenAI({ model: DEFAULT_MODEL, instructions: systemPrompt, input: apiMessages })
   return { reply: text }
 }
+
+// ── generateQuizFromTopic ─────────────────────────────────────────────────────
+// PATCHED: added "topic" field to the JSON schema and prompt instruction.
+// Each generated question now includes a 2-4 word sub-topic label (e.g. "Space Race",
+// "Berlin Wall") so the post-quiz results screen can group questions by subject area
+// instead of by question type. Questions on the same concept share the same topic label.
 async function generateQuizFromTopic(topic, config) {
   const cfg = config && typeof config === 'object' ? config : { mcq: 5 };
   const lines = [];
@@ -273,12 +279,17 @@ async function generateQuizFromTopic(topic, config) {
   if (cfg.fill_blank > 0) lines.push(cfg.fill_blank + ' fill-in-the-blank');
   if (cfg.matching > 0) lines.push(cfg.matching + ' matching');
   if (!lines.length) lines.push('5 multiple choice');
-  return callOpenAIJson('You are an expert quiz generator. Return ONLY valid JSON.', `Generate a quiz about: ${String(topic || '').trim()}\nCreate: ${lines.join(', ')}\nReturn JSON: {"questions":[{"type":"mcq","question":"...","options":["A","B","C","D"],"answerIndex":0,"explanation":"..."}]}`);
+  return callOpenAIJson(
+    'You are an expert quiz generator. Return ONLY valid JSON.',
+    `Generate a quiz about: ${String(topic || '').trim()}
+Create: ${lines.join(', ')}
+Each question must include a "topic" field: a short 2-4 word sub-topic label grouping related questions (e.g. "Space Race", "Berlin Wall", "Nuclear Arms"). Questions testing the same concept share the same topic label.
+Return JSON: {"questions":[{"type":"mcq","question":"...","options":["A","B","C","D"],"answerIndex":0,"explanation":"...","topic":"..."}]}`
+  );
 }
 
 async function fetchUrlPreview(url) {
   const text = await fetchUrlText(url)
-  // Extract a title-like first line and truncate content for preview
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
   const title = lines[0]?.slice(0, 120) || url
   return { title, content: trimForModel(text, 12000) }
@@ -337,7 +348,6 @@ export async function POST(request) {
       const plan = profile?.plan || 'free'
       const isPaid = plan === 'pro' || plan === 'teacher' || plan === 'school'
       if (!isPaid) {
-        // Count generations this calendar month
         const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0)
         const { count } = await sbAdmin.from('generation_log')
           .select('id', { count: 'exact', head: true })
@@ -346,7 +356,6 @@ export async function POST(request) {
         if ((count || 0) >= 5) {
           return Response.json({ error: 'free_limit_reached', message: 'You\'ve used your 5 free AI generations this month. Upgrade to Pro for unlimited access.' }, { status: 403 })
         }
-        // Log this generation
         try { await sbAdmin.from('generation_log').insert({ user_id: user.id, fn }) } catch (_) {}
       }
     }
