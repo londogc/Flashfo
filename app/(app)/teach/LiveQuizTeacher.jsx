@@ -977,7 +977,7 @@ export default function LiveQuizTeacher() {
             )
           })}
         </>)}
-        {assignOpen && <AssignTaskModal participants={studentList} preSelected={assignStudents} questions={questions} session={session} user={user} onClose={()=>{ setAssignOpen(false); setAssignStudents(null) }}}/>}
+        {assignOpen && <AssignTaskModal participants={studentList} preSelected={assignStudents} questions={questions} session={session} user={user} onClose={()=>{ setAssignOpen(false); setAssignStudents(null) }}/>}
       </div>
     )
   }
