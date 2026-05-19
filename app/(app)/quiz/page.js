@@ -94,7 +94,7 @@ function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations,
               {(q.type==='mcq'||q.type==='true_false'||!q.type) && (
                 <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
                   {(q.options||['True','False']).map((o,j)=>(
-                    <div key={j} style={{ padding:'7px 12px', borderRadius:8, fontSize:13, display:'flex', alignItems:'center', gap:8, background:j===q.answerIndex?'rgba(16,185,129,0.08)':'transparent', border:'1px solid '+(j===q.answerIndex?'rgba(16,185,129,0.25)':'transparent'), color:j===q.answerIndex?'#34d399':'var(--c-t3)' }}>
+                    <div key={j} style={{ padding:'7px 12px', borderRadius:8, fontSize:13, display:'flex', alignItems:'center', gap:8, background:j===(q.correct??q.answerIndex)?'rgba(16,185,129,0.08)':'transparent', border:'1px solid '+(j===q.answerIndex?'rgba(16,185,129,0.25)':'transparent'), color:j===q.answerIndex?'#34d399':'var(--c-t3)' }}>
                       <span style={{ fontWeight:800, width:16 }}>{['A','B','C','D'][j]}.</span>{o}
                       {j===q.answerIndex && <span style={{ marginLeft:'auto', fontSize:11, fontWeight:700, color:'#34d399' }}>- Correct</span>}
                     </div>
@@ -315,7 +315,7 @@ function QuizResultsScreen({
     return {
       question:      q.question,
       yourAnswer:    q.type === 'fill_blank' ? (fitbInputs[i]||'(blank)') : (q.options?.[selected[i]]||'(no answer)'),
-      correctAnswer: q.type === 'fill_blank' ? q.correctAnswer : q.options?.[q.answerIndex],
+      correctAnswer: q.type === 'fill_blank' ? q.correctAnswer : q.options?.[q.correct ?? q.answerIndex],
     }
   }).filter(Boolean)
 
@@ -654,7 +654,7 @@ export default function QuizPage() {
   const autoScore = submitted ? questions.filter((q,i) => {
     if (q.type==='short_answer'||q.type==='matching') return false
     if (q.type==='fill_blank') return checkFitbAnswer(fitbInputs[i], q.correctAnswer)
-    return selected[i]===q.answerIndex
+    return selected[i]===q.correct
   }).length : 0
   const saScore   = submitted ? Object.values(saGrades).filter(g=>g==='correct').length : 0
   const score     = autoScore + saScore
