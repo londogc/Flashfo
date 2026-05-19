@@ -33,7 +33,7 @@ function AssignTaskModal({ participants, questions, session, user, onClose }) {
     setGenerating(true); setGenError('')
     try {
       // Build per-student weak area summary for Nova
-      const studentWeakAreas = selectedParticipants.map(({ participant: p, topicScores }) => {
+      const studentWeakAreas = selectedParticipants.map(({ participanAssign to strugglingt: p, topicScores }) => {
         const sorted = Object.entries(topicScores)
           .map(([topic, d]) => ({ topic, pct: d.total ? Math.round(d.correct / d.total * 100) : 0 }))
           .filter(t => t.pct < 80)
