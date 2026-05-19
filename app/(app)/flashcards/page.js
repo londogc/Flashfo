@@ -55,7 +55,7 @@ function SpeakerBtn({ text, audioRef }) {
   )
 }
 
-// ── Session complete screen (unchanged) ──────────────────────────────────────
+// ── Session complete screen ──────────────────────────────────────────────────
 
 function SessionComplete({ cards, topic, hardCards, againCards, sessionRatings, onRestart, onNewDeck, cardTheme }) {
   const mastered = cards.length - hardCards.length - againCards.length
@@ -176,7 +176,6 @@ function NovaExplainPanel({ card, explainStyle, novaExplain, explaining, onExpla
 
   return (
     <div style={{ width:'100%', maxWidth:440 }}>
-      {/* Toggle button */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
@@ -186,10 +185,8 @@ function NovaExplainPanel({ card, explainStyle, novaExplain, explaining, onExpla
         </button>
       )}
 
-      {/* Panel */}
       {open && (
         <div style={{ background:'rgba(10,8,22,0.9)', border:'1px solid rgba(167,139,250,0.25)', borderRadius:12, padding:'14px 16px', backdropFilter:'blur(12px)' }}>
-          {/* Header */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:22, height:22, borderRadius:'50%', background:'radial-gradient(circle at 33% 33%,#c4b5fd,#7c3aed 40%,#4c1d95 70%,#08001a)', boxShadow:'0 0 8px rgba(124,58,237,0.5)', flexShrink:0 }}/>
@@ -198,7 +195,6 @@ function NovaExplainPanel({ card, explainStyle, novaExplain, explaining, onExpla
             <button onClick={() => { setOpen(false) }} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer', fontSize:14, fontFamily:'inherit', lineHeight:1 }}>✕</button>
           </div>
 
-          {/* Style selector */}
           <div style={{ display:'flex', gap:5, marginBottom:12, flexWrap:'wrap' }}>
             {EXPLAIN_STYLES.map(s => (
               <button key={s.id}
@@ -210,7 +206,6 @@ function NovaExplainPanel({ card, explainStyle, novaExplain, explaining, onExpla
             ))}
           </div>
 
-          {/* Explanation content */}
           {!explainStyle && !explaining && (
             <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', lineHeight:1.6 }}>
               Pick a style above — Nova will re-explain "<span style={{ color:'rgba(255,255,255,0.5)' }}>{card.front||card.question}</span>" in a different way.
@@ -243,7 +238,7 @@ function FlashcardsPageInner() {
   const audioRef = useRef(null)
   const sessionStartRef = useRef(null)
 
-  const [inputTab,    setInputTab]    = useState('topic') // 'topic' | 'notes' | 'import'
+  const [inputTab,    setInputTab]    = useState('topic')
   const [topic,       setTopic]       = useState('')
   const [count,       setCount]       = useState(10)
   const [cards,       setCards]       = useState([])
@@ -271,10 +266,9 @@ function FlashcardsPageInner() {
   const [sessionRatings,     setSessionRatings]     = useState({ again:0, hard:0, easy:0 })
   const [dueToday,    setDueToday]    = useState(0)
 
-  // Nova "explain differently" — inline per-card explanations
-  const [novaExplain,   setNovaExplain]   = useState('')    // streamed text
+  const [novaExplain,   setNovaExplain]   = useState('')
   const [explaining,    setExplaining]    = useState(false)
-  const [explainStyle,  setExplainStyle]  = useState(null)  // null | 'simpler' | 'analogy' | 'example' | 'eli5'
+  const [explainStyle,  setExplainStyle]  = useState(null)
 
   const currentIdx = studyQueue.length > 0 ? studyQueue[0] : 0
   const card       = cards.length > 0 ? cards[currentIdx] : null
@@ -352,9 +346,6 @@ function FlashcardsPageInner() {
 
   // ── Session actions ─────────────────────────────────────────────────────────
 
-  // ── Spaced repetition ──────────────────────────────────────────────────────
-  // Card IDs are content-based (hash of front text) not positional, so deck
-  // edits and reorders don't wipe a card's review history.
   function cardId(front) {
     const s = (front||'').toLowerCase().trim()
     let h = 0
@@ -439,52 +430,32 @@ function FlashcardsPageInner() {
   function addCard()     { const n=cards.length; setCards(cs=>[...cs,{front:'New question',back:'New answer'}]); setTimeout(()=>startEdit(n),0) }
   function deleteCard(i) { setCards(cs=>cs.filter((_,ci)=>ci!==i)); setStudyQueue(q=>q.filter(qi=>qi!==i).map(qi=>qi>i?qi-1:qi)); if (editIdx===i) setEditIdx(null) }
 
-  // ── CSV / TSV / text import ─────────────────────────────────────────────────
-  // Supports:
-  //   CSV:  front,back  or  "front","back"
-  //   TSV:  front\tback  (Quizlet / Anki export)
-  //   Simple separators:  front - back  /  front: back
-  //   Unstructured text:  fall through to Nova
-
   function parseImportText(raw) {
     const lines = raw.trim().split(/\r?\n/).filter(l => l.trim())
     if (!lines.length) return null
-
     const cards = []
-
     for (const line of lines) {
       const trimmed = line.trim()
       if (!trimmed) continue
-
-      // Tab-separated (Quizlet / Anki)
       if (trimmed.includes('\t')) {
         const [front, ...rest] = trimmed.split('\t')
         const back = rest.join('\t').trim()
         if (front.trim() && back) cards.push({ front: front.trim(), back })
         continue
       }
-
-      // CSV — handle quoted fields
       if (trimmed.includes(',')) {
-        // Simple quoted CSV: "front","back"
         const quoted = trimmed.match(/^"([^"]+)"\s*,\s*"([^"]+)"$/)
         if (quoted) { cards.push({ front: quoted[1].trim(), back: quoted[2].trim() }); continue }
-        // Plain CSV: front,back (split on first comma only)
         const comma = trimmed.indexOf(',')
         const front = trimmed.slice(0, comma).trim()
         const back  = trimmed.slice(comma + 1).trim()
         if (front && back) { cards.push({ front, back }); continue }
       }
-
-      // Dash separator: front - back (but not inside a word)
       const dash = trimmed.match(/^(.+?)\s{1,3}-{1,2}\s{1,3}(.+)$/)
       if (dash) { cards.push({ front: dash[1].trim(), back: dash[2].trim() }); continue }
-
-      // Colon separator: front: back
       const colon = trimmed.match(/^([^:]+):\s+(.+)$/)
       if (colon) { cards.push({ front: colon[1].trim(), back: colon[2].trim() }); continue }
     }
-
     return cards.length >= 2 ? cards : null
   }
 
@@ -492,8 +463,6 @@ function FlashcardsPageInner() {
     const raw = importText.trim()
     if (!raw) { setImportError('Paste some content to import.'); return }
     setImportError('')
-
-    // Try to parse as structured data first (no API cost)
     const parsed = parseImportText(raw)
     if (parsed) {
       setCards(parsed)
@@ -503,8 +472,6 @@ function FlashcardsPageInner() {
       if (user) await saveDraft('flashcards', 'Imported deck', { topic:'Imported deck', cards:parsed })
       return
     }
-
-    // Unstructured text — hand to Nova to extract cards
     setTopic(raw.slice(0, 60))
     await generate(raw)
   }
@@ -513,12 +480,8 @@ function FlashcardsPageInner() {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = ev => {
-      setImportText(ev.target.result || '')
-      setImportError('')
-    }
+    reader.onload = ev => { setImportText(ev.target.result || ''); setImportError('') }
     reader.readAsText(file)
-    // reset so same file can be re-selected
     e.target.value = ''
   }
 
@@ -585,7 +548,6 @@ function FlashcardsPageInner() {
   if (!cards.length) return (
     <div style={{ padding:'28px 24px 48px', maxWidth:1100, fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
 
-      {/* Draft banner */}
       {draftBanner && (
         <div style={{ background:'rgba(99,102,241,0.07)', border:'1px solid rgba(99,102,241,0.2)', borderRadius:10, padding:'10px 14px', marginBottom:20, display:'flex', alignItems:'center', gap:10 }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
@@ -594,7 +556,6 @@ function FlashcardsPageInner() {
         </div>
       )}
 
-      {/* Due today banner */}
       {dueToday > 0 && (
         <a href="/review" style={{ textDecoration:'none', display:'block', marginBottom:20 }}>
           <div style={{ background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.22)', borderRadius:10, padding:'11px 16px', display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}>
@@ -607,7 +568,6 @@ function FlashcardsPageInner() {
         </a>
       )}
 
-      {/* Page header */}
       <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(59,130,246,0.08)', border:'1px solid rgba(59,130,246,0.2)', borderRadius:20, padding:'5px 13px', fontSize:10, fontWeight:800, color:'#60a5fa', marginBottom:16, letterSpacing:'.08em', textTransform:'uppercase' }}>
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
         Flashcards
@@ -615,7 +575,6 @@ function FlashcardsPageInner() {
       <h1 style={{ fontSize:26, fontWeight:800, letterSpacing:'-.03em', marginBottom:5, color:'var(--c-t1)', lineHeight:1.15 }}>Turn anything into a deck</h1>
       <p style={{ fontSize:13, color:'var(--c-t2)', marginBottom:22, lineHeight:1.65, maxWidth:520 }}>Type a topic, paste your lecture notes, or import an existing set. Nova builds cards that stick using spaced repetition.</p>
 
-      {/* Quick-start chips */}
       <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:20 }}>
         {CHIPS.map(c => (
           <button key={c} onClick={()=>setTopic(c)} style={{ padding:'5px 12px', borderRadius:20, fontSize:11, fontWeight:600, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', color:'rgba(255,255,255,0.4)', cursor:'pointer', fontFamily:'inherit', transition:'all .15s' }}>
@@ -624,14 +583,11 @@ function FlashcardsPageInner() {
         ))}
       </div>
 
-      {/* Two-column layout — single column on mobile */}
       <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:20, alignItems:'start' }}>
 
-        {/* Left — input */}
         <div>
           <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, overflow:'hidden' }}>
 
-            {/* Input mode tabs */}
             <div style={{ display:'flex', gap:2, padding:'8px 10px 0', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
               {[['topic','By topic'],['notes','Paste notes'],['import','Import']].map(([id,label])=>(
                 <button key={id} onClick={()=>setInputTab(id)} style={{ padding:'5px 12px', borderRadius:'6px 6px 0 0', fontSize:11, fontWeight:700, cursor:'pointer', border:'none', background:inputTab===id?'rgba(255,255,255,0.08)':'none', color:inputTab===id?'#e2e8f0':'rgba(255,255,255,0.28)', fontFamily:'inherit', transition:'all .15s' }}>
@@ -642,7 +598,6 @@ function FlashcardsPageInner() {
 
             {inputTab === 'import' ? (
               <div>
-                {/* File upload zone */}
                 <div
                   onClick={()=>fileInputRef.current?.click()}
                   style={{ margin:'12px 14px 0', padding:'14px', border:'1.5px dashed rgba(59,130,246,0.25)', borderRadius:10, display:'flex', alignItems:'center', gap:12, cursor:'pointer', background:'rgba(59,130,246,0.04)', transition:'all .15s' }}>
@@ -657,14 +612,12 @@ function FlashcardsPageInner() {
                 </div>
                 <input ref={fileInputRef} type="file" accept=".csv,.tsv,.txt,.md" onChange={handleFileUpload} style={{ display:'none' }}/>
 
-                {/* Divider */}
                 <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px' }}>
                   <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.07)' }}/>
                   <span style={{ fontSize:10, color:'rgba(255,255,255,0.2)', fontWeight:600 }}>OR PASTE BELOW</span>
                   <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.07)' }}/>
                 </div>
 
-                {/* Paste area */}
                 <textarea
                   value={importText}
                   onChange={e=>{ setImportText(e.target.value); setImportError('') }}
@@ -673,7 +626,6 @@ function FlashcardsPageInner() {
                   style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'#e2e8f0', fontFamily:'inherit', fontSize:12, lineHeight:1.7, padding:'0 16px 12px', resize:'none', display:'block' }}
                 />
 
-                {/* Format chips */}
                 <div style={{ padding:'8px 14px 10px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', gap:6, flexWrap:'wrap' }}>
                   {[['CSV','front, back'],['Quizlet','front\\tback'],['Anki','.txt export'],['Plain text','Nova extracts']].map(([fmt,hint])=>(
                     <div key={fmt} style={{ padding:'3px 9px', borderRadius:20, fontSize:10, fontWeight:600, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.3)' }}>
@@ -695,21 +647,35 @@ function FlashcardsPageInner() {
               />
             )}
 
-            {/* Slider */}
+            {/* ── Slider — PERMANENT FIX: CSS-variable fill, always in sync with counter ── */}
             {inputTab !== 'import' && (
               <div style={{ padding:'10px 14px 12px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:7 }}>
                   <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.28)', textTransform:'uppercase', letterSpacing:'.05em' }}>Cards to generate</span>
                   <span style={{ fontSize:16, fontWeight:800, color:'#60a5fa' }}>{count}</span>
                 </div>
-                <input type="range" min={5} max={40} step={1} value={count} onChange={e=>setCount(Number(e.target.value))} style={{ width:'100%', accentColor:'#3b82f6', display:'block' }}/>
+                <>
+                  <style>{`
+                    .fc-slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;outline:none;cursor:pointer;display:block}
+                    .fc-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.5);cursor:pointer;border:none}
+                    .fc-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.5);cursor:pointer;border:none}
+                    .fc-slider::-moz-range-track{height:4px;border-radius:2px;background:transparent}
+                  `}</style>
+                  <input
+                    type="range"
+                    className="fc-slider"
+                    min={5} max={40} step={1}
+                    value={count}
+                    onChange={e => setCount(Number(e.target.value))}
+                    style={{ background:`linear-gradient(to right,#3b82f6 ${((count-5)/35*100).toFixed(1)}%,rgba(255,255,255,0.15) ${((count-5)/35*100).toFixed(1)}%)` }}
+                  />
+                </>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, color:'rgba(255,255,255,0.2)', marginTop:5 }}>
                   <span>5</span><span>20</span><span>40</span>
                 </div>
               </div>
             )}
 
-            {/* Footer */}
             <div style={{ padding:'9px 14px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
               <span style={{ fontSize:11, color:'rgba(255,255,255,0.18)' }}>Includes spaced repetition review</span>
               <span style={{ fontSize:11, color:'rgba(255,255,255,0.15)' }}>⌘↵ generate</span>
@@ -731,11 +697,9 @@ function FlashcardsPageInner() {
           </button>
         </div>
 
-        {/* Right — preview panel, hidden on mobile */}
         {!isMobile && <div>
           <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>What you'll get</div>
 
-          {/* Card stack visual */}
           <div style={{ position:'relative', height:168, margin:'0 auto 14px', width:210 }}>
             <div style={{ position:'absolute', top:14, left:8, right:-8, height:132, background:'rgba(37,99,235,0.05)', border:'1px solid rgba(59,130,246,0.1)', borderRadius:11, transform:'rotate(3.5deg)' }}/>
             <div style={{ position:'absolute', top:7, left:4, right:-4, height:140, background:'rgba(37,99,235,0.07)', border:'1px solid rgba(59,130,246,0.14)', borderRadius:11, transform:'rotate(1.5deg)' }}/>
@@ -746,7 +710,6 @@ function FlashcardsPageInner() {
             </div>
           </div>
 
-          {/* Feature tiles */}
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:7, marginBottom:10 }}>
             <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:9, padding:'9px 10px' }}>
               <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.55)', marginBottom:3 }}>
@@ -764,7 +727,6 @@ function FlashcardsPageInner() {
             </div>
           </div>
 
-          {/* Nova weak-spot callout */}
           <div style={{ background:'rgba(59,130,246,0.05)', border:'1px solid rgba(59,130,246,0.13)', borderRadius:10, padding:'11px 13px' }}>
             <div style={{ fontSize:11, color:'rgba(96,165,250,0.65)', fontWeight:700, marginBottom:4, display:'flex', alignItems:'center', gap:6 }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#60a5fa"/></svg>
@@ -859,7 +821,6 @@ function FlashcardsPageInner() {
 
   return (
     <>
-      {/* Save modal */}
       {showSave && (
         <div style={{ position:'fixed', inset:0, zIndex:40, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.45)' }}>
           <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:24, width:'100%', maxWidth:360, boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
@@ -875,7 +836,6 @@ function FlashcardsPageInner() {
 
       {/* Desktop study view */}
       <div className="fc-desktop-wrap" style={{ display:'none' }}>
-        {/* Left sidebar */}
         <div style={{ padding:'24px 20px', borderRight:'1px solid var(--c-line)', display:'flex', flexDirection:'column', gap:14 }}>
           <div>
             <div style={{ fontSize:14, fontWeight:700, color:'var(--c-t1)', marginBottom:2 }}>{topic||'Flashcards'}</div>
@@ -904,9 +864,7 @@ function FlashcardsPageInner() {
           </div>
         </div>
 
-        {/* Centre card */}
         <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'28px 36px' }}>
-          {/* Queue dots */}
           <div style={{ display:'flex', gap:4, marginBottom:16, flexWrap:'wrap', justifyContent:'center', maxWidth:320 }}>
             {studyQueue.map((qi,pos)=>{
               const isHard  = sessionHardCards.some(c=>(c.front||c.question)===(cards[qi]?.front||cards[qi]?.question))
@@ -916,7 +874,6 @@ function FlashcardsPageInner() {
             })}
           </div>
 
-          {/* Card stack */}
           <div style={{ position:'relative', width:'100%', maxWidth:440, height:230, marginBottom:22 }}>
             <div style={{ position:'absolute', top:12, left:12, right:-12, bottom:-12, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:14 }}/>
             <div style={{ position:'absolute', top:6, left:6, right:-6, bottom:-6, background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:14 }}/>
@@ -935,14 +892,12 @@ function FlashcardsPageInner() {
                   <button onClick={handleHard}  style={{ padding:'8px 18px', borderRadius:9, fontSize:11, fontWeight:700, border:'1px solid rgba(245,158,11,0.25)', background:'rgba(245,158,11,0.06)', color:'#fbbf24', cursor:'pointer', fontFamily:'inherit' }}>Hard<br/><span style={{fontSize:9,opacity:.7}}>→ later</span></button>
                   <button onClick={handleEasy}  style={{ padding:'8px 18px', borderRadius:9, fontSize:11, fontWeight:700, border:'1px solid rgba(16,185,129,0.3)', background:'rgba(16,185,129,0.07)', color:'#34d399', cursor:'pointer', fontFamily:'inherit' }}>Easy<br/><span style={{fontSize:9,opacity:.7}}>✓ done</span></button>
                 </div>
-                {/* Nova explain differently */}
                 <NovaExplainPanel card={card} explainStyle={explainStyle} novaExplain={novaExplain} explaining={explaining} onExplain={explainDifferently}/>
               </div>
             : <p style={{ fontSize:12, color:'var(--c-t3)', margin:'0 0 10px' }}>Click or press Space to flip · then rate</p>
           }
         </div>
 
-        {/* Right sidebar — shortcuts + actions */}
         <div style={{ padding:'24px 20px', borderLeft:'1px solid var(--c-line)' }}>
           <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'.07em', marginBottom:14 }}>Shortcuts</div>
           <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:24 }}>
