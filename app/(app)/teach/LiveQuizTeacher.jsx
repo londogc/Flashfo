@@ -934,7 +934,15 @@ export default function LiveQuizTeacher() {
           <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:14, padding:20 }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
               <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase', color:'var(--c-t3)' }}>Students to Watch</div>
-              <button onClick={()=>setAssignOpen(true)} style={{ height:28, padding:'0 12px', background:'rgba(99,102,241,0.12)', border:'1px solid rgba(99,102,241,0.25)', borderRadius:8, fontSize:11, fontWeight:600, color:'#818cf8', cursor:'pointer' }}>+ Assign task</button>
+              <div style={{ display:'flex', gap:6 }}>
+                {studentList.filter(s => s.status === 'struggling' || s.status === 'at_risk').length > 0 && (
+                  <button onClick={() => { setAssignStudents(studentList.filter(s => s.status === 'struggling' || s.status === 'at_risk')); setAssignOpen(true) }}
+                    style={{ height:28, padding:'0 10px', background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:8, fontSize:11, fontWeight:600, color:'#f87171', cursor:'pointer', whiteSpace:'nowrap' }}>
+                    Assign to struggling
+                  </button>
+                )}
+                <button onClick={() => { setAssignStudents(null); setAssignOpen(true) }} style={{ height:28, padding:'0 12px', background:'rgba(99,102,241,0.12)', border:'1px solid rgba(99,102,241,0.25)', borderRadius:8, fontSize:11, fontWeight:600, color:'#818cf8', cursor:'pointer' }}>+ Assign task</button>
+              </div>
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:280, overflowY:'auto' }}>
               {studentList.map(({ participant: p, topicScores, status }) => {
