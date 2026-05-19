@@ -415,7 +415,6 @@ export default function QuizPage() {
   if (!questions.length) return (
     <div style={{ padding:'28px 24px 48px', maxWidth:1100, fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
 
-      {/* Draft banner */}
       {draftBanner && (
         <div style={{ background:'rgba(99,102,241,0.07)', border:'1px solid rgba(99,102,241,0.2)', borderRadius:10, padding:'10px 14px', marginBottom:20, display:'flex', alignItems:'center', gap:10 }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
@@ -424,7 +423,6 @@ export default function QuizPage() {
         </div>
       )}
 
-      {/* Badge */}
       <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(99,102,241,0.08)', border:'1px solid rgba(99,102,241,0.2)', borderRadius:20, padding:'5px 13px', fontSize:10, fontWeight:800, color:'#a5b4fc', marginBottom:16, letterSpacing:'.08em', textTransform:'uppercase' }}>
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a5b4fc"/></svg>
         Quiz
@@ -432,7 +430,6 @@ export default function QuizPage() {
       <h1 style={{ fontSize:26, fontWeight:800, letterSpacing:'-.03em', marginBottom:5, color:'var(--c-t1)', lineHeight:1.15 }}>Test what you actually know</h1>
       <p style={{ fontSize:13, color:'var(--c-t2)', marginBottom:22, lineHeight:1.65, maxWidth:520 }}>Generate a full quiz on any topic. Nova grades your answers and explains exactly why you got something wrong.</p>
 
-      {/* Quick-start chips */}
       <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:20 }}>
         {CHIPS.map(c => (
           <button key={c} onClick={()=>setTopic(c)} style={{ padding:'5px 12px', borderRadius:20, fontSize:11, fontWeight:600, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', color:'rgba(255,255,255,0.4)', cursor:'pointer', fontFamily:'inherit', transition:'all .15s' }}>
@@ -441,10 +438,8 @@ export default function QuizPage() {
         ))}
       </div>
 
-      {/* Two-column layout — single column on mobile */}
       <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:20, alignItems:'start' }}>
 
-        {/* Left — input */}
         <div>
           <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, overflow:'hidden' }}>
             <textarea
@@ -456,7 +451,6 @@ export default function QuizPage() {
               style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'#e2e8f0', fontFamily:'inherit', fontSize:13, lineHeight:1.7, padding:'14px 16px', resize:'none', display:'block' }}
             />
 
-            {/* Question type pills */}
             <div style={{ padding:'0 12px 8px' }}>
               <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.06em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:7, paddingTop:2 }}>Question type</div>
               <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
@@ -469,7 +463,6 @@ export default function QuizPage() {
               </div>
             </div>
 
-            {/* Mixed breakdown */}
             {typeId==='mixed' && (
               <div style={{ margin:'4px 12px 8px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:'10px 12px' }}>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
@@ -492,14 +485,29 @@ export default function QuizPage() {
               </div>
             )}
 
-            {/* Count slider (non-mixed) */}
+            {/* ── Slider — PERMANENT FIX: CSS-variable fill, always in sync with counter ── */}
             {typeId!=='mixed' && (
               <div style={{ padding:'10px 14px 12px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:7 }}>
                   <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.28)', textTransform:'uppercase', letterSpacing:'.05em' }}>Questions</span>
                   <span style={{ fontSize:16, fontWeight:800, color:'#a5b4fc' }}>{count}</span>
                 </div>
-                <input type="range" min={5} max={35} step={1} value={count} onChange={e=>setCount(Number(e.target.value))} style={{ width:'100%', accentColor:'#6366f1', display:'block' }}/>
+                <>
+                  <style>{`
+                    .qz-slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;outline:none;cursor:pointer;display:block}
+                    .qz-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.5);cursor:pointer;border:none}
+                    .qz-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.5);cursor:pointer;border:none}
+                    .qz-slider::-moz-range-track{height:4px;border-radius:2px;background:transparent}
+                  `}</style>
+                  <input
+                    type="range"
+                    className="qz-slider"
+                    min={5} max={35} step={1}
+                    value={count}
+                    onChange={e=>setCount(Number(e.target.value))}
+                    style={{ background:`linear-gradient(to right,#6366f1 ${((count-5)/30*100).toFixed(1)}%,rgba(255,255,255,0.15) ${((count-5)/30*100).toFixed(1)}%)` }}
+                  />
+                </>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, color:'rgba(255,255,255,0.2)', marginTop:5 }}>
                   <span>5</span><span>20</span><span>35</span>
                 </div>
@@ -527,7 +535,6 @@ export default function QuizPage() {
           </button>
         </div>
 
-        {/* Right — live preview, hidden on mobile */}
         {!isMobile && <div>
           <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>Live preview</div>
           <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:16 }}>
@@ -570,10 +577,8 @@ export default function QuizPage() {
   return (
     <div style={{ padding:'24px', maxWidth:680, margin:'0 auto', width:'100%', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
 
-      {/* Answer key modal */}
       {showKey && <AnswerKeyModal questions={questions} topic={topic} onClose={()=>setShowKey(false)} selected={selected} novaExplanations={novaExplanations} explanationLoading={explanationLoading} explainWrongAnswer={explainWrongAnswer}/>}
 
-      {/* Save modal */}
       {showSave && (
         <div style={{ position:'fixed', inset:0, zIndex:40, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.45)' }}>
           <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:24, width:'100%', maxWidth:360, boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
@@ -587,14 +592,12 @@ export default function QuizPage() {
         </div>
       )}
 
-      {/* Score banner */}
       {submitted && (
         <div style={{ marginBottom:20, padding:16, borderRadius:12, border:'1px solid '+(pct===100?'rgba(16,185,129,0.25)':pct>=60?'rgba(59,130,246,0.25)':'rgba(245,158,11,0.25)'), background:pct===100?'rgba(16,185,129,0.07)':pct>=60?'rgba(59,130,246,0.07)':'rgba(245,158,11,0.07)', fontSize:14, fontWeight:700, color:pct===100?'#34d399':pct>=60?'#60a5fa':'#fbbf24' }}>
           {score}/{questions.length} correct ({pct}%) — {pct===100?'Perfect!':pct>=60?'Good job!':'Keep practising.'}
         </div>
       )}
 
-      {/* Questions */}
       <div style={{ display:'flex', flexDirection:'column', gap:14, marginBottom:20 }}>
         {questions.map((q,i) => {
           const isSA    = q.type==='short_answer'
@@ -682,7 +685,6 @@ export default function QuizPage() {
         })}
       </div>
 
-      {/* Action bar */}
       <div style={{ display:'flex', flexWrap:'wrap', gap:10, alignItems:'center' }}>
         {!submitted && (
           <button
