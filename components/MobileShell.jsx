@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/useAuth'
 
 // ── Aurora palettes ────────────────────────────────────────────────────────
 const PALETTES = {
@@ -60,6 +61,18 @@ function IconBullseye({ active }) {
       <circle cx="11" cy="11" r="6.5" stroke={col} strokeWidth="1.3"/>
       <circle cx="11" cy="11" r="3"   stroke={col} strokeWidth="1.3"/>
       <circle cx="11" cy="11" r="1.3" fill={col}/>
+    </svg>
+  )
+}
+
+
+// ── Teach icon (for teacher tab) ──────────────────────────────────────────
+function IconTeach({ size=20, color='currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2"/>
+      <path d="M8 21h8"/>
+      <path d="M12 17v4"/>
     </svg>
   )
 }
@@ -154,6 +167,9 @@ function Aurora({ palIdx }) {
 export default function MobileShell({ children }) {
   const pathname   = usePathname()
   const router     = useRouter()
+  const { profile } = useAuth()
+  const isTeacher = profile?.role === 'teacher'
+
   const [novaOpen,   setNovaOpen]   = useState(false)
   const [novaInput,  setNovaInput]  = useState('')
   const [palIdx,     setPalIdx]     = useState(0)
@@ -248,12 +264,17 @@ export default function MobileShell({ children }) {
   // ── Tab definitions ──────────────────────────────────────────────────────
   // { create: true } is a layout spacer — the real spark button is fixed at z:36,
   // positioned to sit exactly over this gap in the pill.
+  // Tabs vary by role:
+  // - Teachers: Home | Teach → /teach | ✦ | Nova | Profile
+  // - Students: Home | My Stuff → /my-stuff | ✦ | Nova | Profile
   const TABS = [
-    { href:'/dashboard', label:'Home',     Icon:IconHome  },
-    { href:'/my-stuff',  label:'My Stuff', Icon:IconStack },
-    { create: true },                         // ← invisible spacer for spark
-    { href:null,         label:'Nova',     nova:true      },
-    { href:'/profile',   label:'Profile',  Icon:IconUser  },
+    { href:'/dashboard',          label:'Home',     Icon:IconHome                          },
+    isTeacher
+      ? { href:'/teach',          label:'Teach',    Icon:IconTeach }
+      : { href:'/my-stuff',       label:'My Stuff', Icon:IconStack },
+    { create: true },
+    { href:null,                  label:'Nova',     nova:true                              },
+    { href:'/profile',            label:'Profile',  Icon:IconUser                          },
   ]
 
   const active = rootPath(pathname)
