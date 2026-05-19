@@ -79,6 +79,7 @@ export default function DashboardPage() {
   const [weakCardCount,setWeakCardCount]= useState(0)
   const [weekStats,    setWeekStats]    = useState(null)
   const [continueIdx,  setContinueIdx]  = useState(0)
+  const touchStartX = useRef(0)
 
   // ── Teacher state ──────────────────────────────────────────────────────────
   const [classrooms,      setClassrooms]      = useState([])
@@ -360,21 +361,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Quick actions */}
-        <div className="dash-card" style={{ ...card, padding:'18px 20px', animationDelay:'0.13s', marginBottom:14 }}>
-          <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:'.07em', marginBottom:14 }}>Quick actions</div>
-          <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(3,1fr)' : 'repeat(6,1fr)', gap:10 }}>
-            {QUICK_ACTIONS.map(a => (
-              <Link key={a.label} href={a.href} style={{ textDecoration:'none', display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'14px 8px', borderRadius:12, background:a.bg, border:`1px solid ${a.border}`, transition:'all .15s' }}
-                onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow=`0 4px 16px ${a.border}` }}
-                onMouseLeave={e=>{ e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow='' }}>
-                <div style={{ color:a.color }}>{a.icon}</div>
-                <div style={{ fontSize:11, fontWeight:700, color:a.color, textAlign:'center', lineHeight:1.3 }}>{a.label}</div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
         {/* Nova row */}
         <div className="dash-card" style={{ ...card, padding:'16px 20px', animationDelay:'0.16s', display:'flex', alignItems:'center', gap:14 }}>
           <div style={{ width:38, height:38, borderRadius:12, background:'rgba(139,92,246,0.18)', border:'0.5px solid rgba(139,92,246,0.3)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -422,7 +408,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Continue card — always 3 cards, cycles every 5s */}
-      <div className="dash-card" style={{ ...card, marginBottom:12, animationDelay:'0.05s', position:'relative', minHeight:110 }}>
+      <div className="dash-card"
+              onTouchStart={e => { touchStartX.current = e.touches[0].clientX }}
+              onTouchEnd={e => {
+                const dx = e.changedTouches[0].clientX - touchStartX.current
+                if (dx < -40) setContinueIdx(i => (i+1) % continueCards.length)
+                else if (dx > 40) setContinueIdx(i => (i - 1 + continueCards.length) % continueCards.length)
+              }}
+              style={{ ...card, marginBottom:12, animationDelay:'0.05s', position:'relative', minHeight:110, cursor:'grab' }}>
         <canvas id="dash-particle-canvas" style={{ position:'absolute', inset:0, width:'100%', height:'100%', borderRadius:16 }}/>
         <div style={{ position:'relative', zIndex:1, padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
           <div style={{ flex:1, minWidth:0 }}>
