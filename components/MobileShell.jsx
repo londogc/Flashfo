@@ -112,11 +112,18 @@ function CreateIcon({ href }) {
 }
 
 // ── Create items — bottom to top order ────────────────────────────────────
-const CREATE_ITEMS = [
+const STUDENT_CREATE_ITEMS = [
   { label:'Summary',     href:'/summarize',   color:'#fbbf24', border:'rgba(245,158,11,0.5)' },
   { label:'Study guide', href:'/study-guide', color:'#34d399', border:'rgba(16,185,129,0.5)' },
   { label:'Quiz',        href:'/quiz',        color:'#a78bfa', border:'rgba(139,92,246,0.5)' },
   { label:'Flashcards',  href:'/flashcards',  color:'#818cf8', border:'rgba(99,102,241,0.5)' },
+]
+const TEACHER_CREATE_ITEMS = [
+  { label:'Source Library',  href:'/source-library', color:'#a78bfa', border:'rgba(139,92,246,0.5)' },
+  { label:'Live Quiz',       href:'/live-quiz',      color:'#ef4444', border:'rgba(239,68,68,0.5)'  },
+  { label:'Assign Homework', href:'/assignments',    color:'#fbbf24', border:'rgba(245,158,11,0.5)' },
+  { label:'Lesson Builder',  href:'/lesson-builder', color:'#34d399', border:'rgba(16,185,129,0.5)' },
+  { label:'New Classroom',   href:'/teach',          color:'#3b82f6', border:'rgba(59,130,246,0.5)' },
 ]
 
 // ── Aurora ─────────────────────────────────────────────────────────────────
@@ -355,7 +362,7 @@ export default function MobileShell({ children }) {
 
       {/* ── Create stack items — z:36 ── */}
       {/* FIX: width is now screen-relative so items fill the screen properly */}
-      {!onAiTutor && CREATE_ITEMS.map((item, i) => (
+      {!onAiTutor && (isTeacher ? TEACHER_CREATE_ITEMS : STUDENT_CREATE_ITEMS).map((item, i) => (
         <div
           key={item.href}
           onClick={() => { closeCreate(); router.push(item.href) }}
@@ -397,12 +404,15 @@ export default function MobileShell({ children }) {
       {!onAiTutor && (
         <div style={{
           position:'fixed',
-          bottom:62,
+          bottom:70,
           left:'50%',
           transform:'translateX(-50%)',
-          fontSize:11,
-          color:'rgba(255,255,255,0.25)',
+          fontSize:12,
+          color:'rgba(255,255,255,0.4)',
           whiteSpace:'nowrap',
+          background:'rgba(0,0,0,0.25)',
+          padding:'5px 16px',
+          borderRadius:20,
           fontFamily:'-apple-system,BlinkMacSystemFont,sans-serif',
           zIndex:36,
           opacity: createOpen ? 1 : 0,
