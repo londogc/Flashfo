@@ -330,7 +330,8 @@ export default function MobileShell({ children }) {
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch',
         overscrollBehavior: 'contain',
-      }} onClick={() => {
+      }} onClick={e => {
+        if (e.target.closest('a, button, [role="button"]')) return
         if (novaOpen)   setNovaOpen(false)
         if (createOpen) closeCreate()
       }}>
@@ -404,7 +405,7 @@ export default function MobileShell({ children }) {
       {!onAiTutor && (
         <div style={{
           position:'fixed',
-          bottom:70,
+          bottom:82,
           left:'50%',
           transform:'translateX(-50%)',
           fontSize:12,
