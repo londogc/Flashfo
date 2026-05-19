@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { rpc } from '@/lib/api'
 
 // ── Assign Task Modal ─────────────────────────────────────────────────────────
-function AssignTaskModal({ participants, questions, session, user, onClose }) {
+function AssignTaskModal({ participants, preSelected, questions, session, user, onClose }) {
   const [step, setStep] = useState('config') // config | preview | sending | done
   const [selectedStudents, setSelectedStudents] = useState(
     participants.filter(p => p.status === 'struggling' || p.status === 'at_risk').map(p => p.participant.id)
@@ -35,7 +35,7 @@ function AssignTaskModal({ participants, questions, session, user, onClose }) {
       // Build per-student weak area summary for Nova
       const studentWeakAreas = selectedParticipants.map(({ participanAssign to strugglingt: p, topicScores }) => {
         const sorted = Object.entries(topicScores)
-          .map(([topic, d]) => ({ topic, pct: d.total ? Math.round(d.correct / d.total * 100) : 0 }))
+          .map(([topic, d]) => ({ topic, pct: .total ? Math.round(d.correct / d.total * 100) : 0 }))
           .filter(t => t.pct < 80)
           .sort((a, b) => a.pct - b.pct)
         return `${p.student_name}: ${sorted.map(t => `${t.topic} (${t.pct}%)`).join(', ') || 'general review'}`
@@ -290,7 +290,7 @@ export default function LiveQuizTeacher() {
   const [generating,  setGenerating]  = useState(false)
   const [session,     setSession]     = useState(null)
   const [participants,setParticipants]= useState([])
-  const [assignOpen,  setAssignOpen]  = useState(false)
+  const [assignOpen,  setAssignOpen]  = useState(false)  const [assignStudents, setAssignStudents] = useState(null)
   // Review-mode active state
   const [qIdx,        setQIdx]        = useState(0)
   const [timeLeft,    setTimeLeft]    = useState(90)
@@ -976,7 +976,7 @@ export default function LiveQuizTeacher() {
             )
           })}
         </>)}
-        {assignOpen && <AssignTaskModal participants={studentList} questions={questions} session={session} user={user} onClose={()=>setAssignOpen(false)}/>}
+        {assignOpen && <AssignTaskModal participants={studentList} preSelected={assignStudents} questions={questions} session={session} user={user} onClose={()=>setAssignOpen(false); setAssignStudents(null) }}/>}
       </div>
     )
   }
