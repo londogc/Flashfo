@@ -1,579 +1,695 @@
 'use client'
-import { useState, useEffect, useRef, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { useIsMobile } from '@/hooks/useIsMobile'
-import { supabase } from '@/lib/supabase'
 import { saveItem, updateSavedItem } from '@/lib/savedItems'
-import { logStudySession } from '@/lib/logStudySession'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/saveDraft'
 import { rpc, novaStream } from '@/lib/api'
+import { supabase } from '@/lib/supabase'
 
-// ── Utilities ────────────────────────────────────────────────────────────────
+// - Print helpers -
 
-function printDeck(cards, topic) {
+function printQuizBlank(questions, topic) {
   const win = window.open('', '_blank')
-  const rows = cards.map((c,i) =>
-    '<tr><td style="padding:8px 10px;border:1px solid #e5e7eb;font-weight:600;width:50%">'+(i+1)+'. '+(c.front||c.question||'')+'</td><td style="padding:8px 10px;border:1px solid #e5e7eb">'+(c.back||c.answer||'')+'</td></tr>'
-  ).join('')
-  win.document.write('<!DOCTYPE html><html><head><title>Flashcards</title><style>body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;color:#111}h1{font-size:22px;margin-bottom:4px}.sub{color:#666;font-size:12px;margin-bottom:20px}table{width:100%;border-collapse:collapse}th{background:#f3f4f6;padding:8px 10px;border:1px solid #e5e7eb;text-align:left}@media print{body{margin:20px}}</style></head><body><h1>'+(topic||'Flashcards')+'</h1><div class="sub">'+cards.length+' cards</div><table><tr><th>Question</th><th>Answer</th></tr>'+rows+'</table><script>window.onload=function(){setTimeout(function(){window.print()},400)}<\/script></body></html>')
+  const labels = ['A','B','C','D']
+  const qHtml = questions.map((q,i) => {
+    let body = ''
+    if (q.type==='fill_blank')    body = '<div style="margin:8px 0;border-bottom:1px solid #999;width:200px;display:inline-block"></div>'
+    else if (q.type==='short_answer') body = '<div style="border:1px solid #ddd;border-radius:6px;height:60px;margin-top:6px"></div>'
+    else if (q.type==='matching') body = (q.pairs||[]).map((p,j)=>'<div style="display:fhlex;gap:16px;margin:4px 0"><div style="flex:1;padding:4px 8px;border:1px solid #ddd;border-radius:4px">'+(j+1)+'. '+p.left+'</div><div style="flex:1;padding:4px 8px;border:1px solid #ddd;border-radius:4px">___________</div></div>').join('')
+    else body = (q.options||(q.type==='true_false'?['True','False']:[])).map((o,j)=>'<div style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;margin:3px 0;font-size:12px">'+labels[j]+'. '+o+'</div>').join('')
+    return '<div style="margin-bottom:18px;page-break-inside:avoid"><div style="font-weight:600;margin-bottom:6px">'+(i+1)+'. '+q.question+'</div>'+body+'</div>'
+  }).join('')
+  win.document.write('<!DOCTYPE html><html><head><title>Quiz</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#111;font-size:13px}h1{font-size:20px}.sub{color:#666;font-size:12px;margin-bottom:24px}@media print{body{margin:20px}}</style></head><body><h1>'+(topic||'Quiz')+'</h1><div class="sub">'+questions.length+' questions</div>'+qHtml+'<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>')
   win.document.close()
 }
 
-function shareLink(cards, topic) {
-  const payload = btoa(JSON.stringify({ topic, cards }))
-  const url = window.location.origin + '/flashcards?share=' + payload
-  navigator.clipboard.writeText(url).catch(() => {})
-  return url
+function printQuizKey(questions, topic) {
+  const win = window.open('', '_blank')
+  const labels = ['A','B','C','D']
+  const qHtml = questions.map((q,i) => {
+    let body = ''
+    if (q.type==='fill_blank')    body = '<div style="padding:4px 8px;background:#d1fae5;border-radius:4px;font-size:12px;display:inline-block">Answer: '+(q.correctAnswer||'')+'</div>'
+    else if (q.type==='short_answer') body = '<div style="padding:4px 8px;background:#dbeafe;border-radius:4px;font-size:12px">Model: '+(q.correctAnswer||'Open-ended')+'</div>'
+    else if (q.type==='matching') body = (q.pairs||[]).map((p,j)=>'<div style="font-size:12px;margin:2px 0"><strong>'+(j+1)+'. '+p.left+'</strong> - '+p.right+'</div>').join('')
+    else body = (q.options||(q.type==='true_false'?['True','False']:[])).map((o,j)=>{ const cor=j===q.answerIndex; return '<div style="padding:4px 8px;border:1px solid '+(cor?'#6ee7b7':'#e5e7eb')+';background:'+(cor?'#d1fae5':'transparent')+';border-radius:4px;margin:3px 0;font-size:12px;font-weight:'+(cor?'600':'normal')+'">'+labels[j]+'. '+o+(cor?' -':'')+'</div>' }).join('')
+    const exp = q.explanation ? '<div style="margin-top:6px;font-size:11px;color:#555;background:#f9fafb;padding:5px 8px;border-radius:4px;border-left:3px solid #3b82f6"><strong>Explanation:</strong> '+q.explanation+'</div>' : ''
+    return '<div style="margin-bottom:18px;page-break-inside:avoid"><div style="font-weight:600;margin-bottom:6px">'+(i+1)+'. '+q.question+'</div>'+body+exp+'</div>'
+  }).join('')
+  win.document.write('<!DOCTYPE html><html><head><title>Answer Key</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#111;font-size:13px}h1{font-size:20px}.sub{color:#666;font-size:12px;margin-bottom:24px}@media print{body{margin:20px}}</style></head><body><h1>'+(topic||'Quiz')+' - Answer Key</h1><div class="sub">'+questions.length+' questions</div>'+qHtml+'<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>')
+  win.document.close()
 }
 
-// ── Speaker button ────────────────────────────────────────────────────────────
+// - Speaker button -
 
-function SpeakerBtn({ text, audioRef }) {
+function SpeakerBtn({ text }) {
   const [busy, setBusy] = useState(false)
   async function speak() {
-    if (!text) return
-    if (audioRef?.current) { audioRef.current.pause(); audioRef.current = null }
-    if (busy) { setBusy(false); return }
+    if (busy||!text) return
     setBusy(true)
     try {
       const d = await rpc('generateOpenAITtsAudio', [text, 'nova', 1])
       const audio = new Audio('data:'+d.result.mimeType+';base64,'+d.result.base64)
-      if (audioRef) audioRef.current = audio
-      audio.onended = () => { setBusy(false); if (audioRef) audioRef.current = null }
+      audio.onended = () => setBusy(false)
       audio.play()
     } catch { setBusy(false) }
   }
   return (
     <button onClick={e=>{e.stopPropagation();speak()}} title="Listen"
-      style={{display:'flex',alignItems:'center',justifyContent:'center',width:30,height:30,borderRadius:'50%',border:'none',background:'none',cursor:'pointer',color:busy?'#93c5fd':'#3b82f6',opacity:busy?0.6:1,transition:'all .15s'}}>
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      style={{ flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', width:28, height:28, borderRadius:'50%', border:'none', background:'none', cursor:'pointer', color:busy?'#93c5fd':'#60a5fa', opacity:busy?.6:1, transition:'all .15s' }}>
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M3 6h2.5L8 4v8L5.5 10H3V6z"/>
-        {busy ? <path d="M10 6.5a2 2 0 010 3"/> : <><path d="M10 5a4 4 0 010 6"/><path d="M12 3a7 7 0 010 10"/></>}
+        {busy ? <path d="M10 6.5a2 2 0 010 3"/> : <><path d="M10 5a4 4 0 010 6"/><path d="M12.5 3a7 7 0 010 10"/></>}
       </svg>
     </button>
   )
 }
 
-// ── Session complete screen ──────────────────────────────────────────────────
+// - Answer key modal -
 
-function SessionComplete({ cards, topic, hardCards, againCards, sessionRatings, onRestart, onNewDeck, cardTheme }) {
-  const mastered = cards.length - hardCards.length - againCards.length
-  const needsWork = [...new Map([...hardCards,...againCards].map(c=>[c.front||c.question,c])).values()]
-  const hasTrouble = needsWork.length > 0
+function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations, explanationLoading, explainWrongAnswer }) {
   return (
-    <div style={{padding:'28px 24px',maxWidth:620,margin:'0 auto',width:'100%'}}>
-      <div style={{textAlign:'center',marginBottom:24,padding:'28px 24px',background:'linear-gradient(135deg,rgba(16,185,129,0.07),rgba(52,211,153,0.03))',border:'1px solid rgba(16,185,129,0.18)',borderRadius:16}}>
-        {mastered===cards.length && <div style={{marginBottom:10}}>
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" style={{margin:'0 auto',display:'block'}}>
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/>
-          </svg>
-        </div>}
-        <h2 style={{fontSize:21,fontWeight:900,color:'var(--c-t1)',marginBottom:5,letterSpacing:'-.03em'}}>{mastered===cards.length?'Perfect session!':'Session complete'}</h2>
-        <p style={{fontSize:13,color:'var(--c-t2)',margin:0}}>You studied all {cards.length} cards in <em>{topic}</em></p>
+    <div style={{ position:'fixed', inset:0, zIndex:50, display:'flex', alignItems:'flex-start', justifyContent:'center', background:'rgba(0,0,0,0.5)', padding:'24px 16px', overflowY:'auto' }}>
+      <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, width:'100%', maxWidth:620, boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 20px', borderBottom:'1px solid var(--c-line)' }}>
+          <div>
+            <div style={{ fontSize:15, fontWeight:800, color:'var(--c-t1)' }}>Answer Key</div>
+            <div style={{ fontSize:12, color:'var(--c-t3)', marginTop:2 }}>{topic} - {questions.length} questions</div>
+          </div>
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={()=>printQuizKey(questions,topic)} style={{ height:32, padding:'0 12px', background:'#2563eb', color:'#fff', border:'none', borderRadius:8, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6 }}>
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>
+              Print
+            </button>
+            <button onClick={onClose} style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', color:'var(--c-t3)', background:'none', border:'none', cursor:'pointer', fontSize:18, borderRadius:8 }}>-</button>
+          </div>
+        </div>
+        <div style={{ padding:20, display:'flex', flexDirection:'column', gap:14, maxHeight:'70vh', overflowY:'auto' }}>
+          {questions.map((q,i) => (
+            <div key={i} style={{ background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:12, padding:16 }}>
+              <p style={{ fontSize:13, fontWeight:700, color:'var(--c-t1)', marginBottom:12 }}>{i+1}. {q.question}</p>
+              {q.type==='fill_blank' && <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(16,185,129,0.08)', color:'#34d399', fontSize:13, fontWeight:600 }}>- {q.correctAnswer||'See rubric'}</div>}
+              {q.type==='short_answer' && <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(59,130,246,0.08)', color:'#60a5fa', fontSize:13 }}>Model: {q.correctAnswer||'Open-ended'}</div>}
+              {q.type==='matching' && <div style={{ display:'flex', flexDirection:'column', gap:4 }}>{(q.pairs||[]).map((p,j)=><div key={j} style={{ fontSize:12, color:'var(--c-t2)' }}><strong>{p.left}</strong> - {p.right}</div>)}</div>}
+              {(q.type==='mcq'||q.type==='true_false'||!q.type) && (
+                <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+                  {(q.options||['True','False']).map((o,j)=>(
+                    <div key={j} style={{ padding:'7px 12px', borderRadius:8, fontSize:13, display:'flex', alignItems:'center', gap:8, background:j===(q.correct??q.answerIndex)?'rgba(16,185,129,0.08)':'transparent', border:'1px solid '+(j===q.answerIndex?'rgba(16,185,129,0.25)':'transparent'), color:j===q.answerIndex?'#34d399':'var(--c-t3)' }}>
+                      <span style={{ fontWeight:800, width:16 }}>{['A','B','C','D'][j]}.</span>{o}
+                      {j===q.answerIndex && <span style={{ marginLeft:'auto', fontSize:11, fontWeight:700, color:'#34d399' }}>- Correct</span>}
+                    </div>
+                  ))}
+                  {q.type==='mcq' && selected && selected[i]!==undefined && selected[i]!==q.answerIndex && (
+                    <div style={{ marginTop:10 }}>
+                      {novaExplanations?.[i] ? (
+                        <div style={{ background:'rgba(167,139,250,0.06)', border:'1px solid rgba(167,139,250,0.18)', borderRadius:10, padding:'12px 14px', marginTop:6 }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:8 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
+                            <span style={{ fontSize:11, fontWeight:700, color:'#a78bfa', letterSpacing:'.05em', textTransform:'uppercase' }}>Nova explains</span>
+                          </div>
+                          <p style={{ fontSize:13, color:'var(--c-t1)', lineHeight:1.6, margin:0 }}>{novaExplanations[i]}</p>
+                        </div>
+                      ) : (
+                        <button onClick={()=>explainWrongAnswer&&explainWrongAnswer(i,q,q.options?.[selected[i]]||'Your answer',q.options?.[q.answerIndex]||'Correct answer')} disabled={explanationLoading?.[i]}
+                          style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 14px', background:'rgba(167,139,250,0.07)', border:'1px solid rgba(167,139,250,0.18)', borderRadius:8, cursor:'pointer', fontSize:13, fontWeight:600, color:'#a78bfa', fontFamily:'inherit' }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a78bfa"/></svg>
+                          {explanationLoading?.[i] ? 'Nova is thinking-' : 'Why was I wrong?'}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              {q.explanation && <div style={{ marginTop:10, fontSize:11, color:'var(--c-t2)', background:'var(--c-surface)', padding:'8px 12px', borderRadius:8, border:'1px solid var(--c-line)', lineHeight:1.6 }}><span style={{ fontWeight:700, color:'var(--c-t1)' }}>Explanation: </span>{q.explanation}</div>}
+            </div>
+          ))}
+        </div>
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,marginBottom:22}}>
-        {[{label:'Mastered',value:mastered,color:'#34d399',bg:'rgba(16,185,129,0.07)',border:'rgba(16,185,129,0.18)'},
-          {label:'Hard',value:hardCards.length,color:'#fbbf24',bg:'rgba(245,158,11,0.07)',border:'rgba(245,158,11,0.18)'},
-          {label:'Again',value:againCards.length,color:'#f87171',bg:'rgba(239,68,68,0.07)',border:'rgba(239,68,68,0.18)'}
-        ].map(s=>(
-          <div key={s.label} style={{padding:'14px 10px',borderRadius:12,textAlign:'center',background:s.bg,border:'1px solid '+s.border}}>
-            <div style={{fontSize:26,fontWeight:800,color:s.color,lineHeight:1}}>{s.value}</div>
-            <div style={{fontSize:11,color:'var(--c-t3)',marginTop:4,fontWeight:600}}>{s.label}</div>
+    </div>
+  )
+}
+
+// - Edit panel -
+
+function EditPanel({ questions, onSave, onCancel }) {
+  const [qs, setQs] = useState(questions.map(q=>({...q,options:[...(q.options||['True','False'])]})))
+  const [addType, setAddType] = useState(null)
+  const [newQ, setNewQ] = useState({ question:'', options:['','','',''], answerIndex:0, correctAnswer:'', pairs:[{left:'',right:''},{left:'',right:''}] })
+
+  function updateQ(i,f,v) { setQs(d=>d.map((q,idx)=>idx===i?{...q,[f]:v}:q)) }
+  function updateOpt(i,j,v) { setQs(d=>d.map((q,idx)=>idx===i?{...q,options:q.options.map((o,oi)=>oi===j?v:o)}:q)) }
+  function deleteQ(i) { setQs(d=>d.filter((_,idx)=>idx!==i)) }
+
+  function commitAdd() {
+    if (!newQ.question.trim()) return
+    let q
+    if (addType==='mcq')          q={type:'mcq',question:newQ.question,options:newQ.options.filter(o=>o.trim()),answerIndex:newQ.answerIndex,explanation:''}
+    else if (addType==='true_false') q={type:'true_false',question:newQ.question,options:['True','False'],answerIndex:newQ.answerIndex,explanation:''}
+    else if (addType==='short_answer') q={type:'short_answer',question:newQ.question,correctAnswer:newQ.correctAnswer}
+    else if (addType==='fill_blank')   q={type:'fill_blank',question:newQ.question,correctAnswer:newQ.correctAnswer}
+    else q={type:'matching',question:newQ.question,pairs:newQ.pairs.filter(p=>p.left.trim())}
+    setQs(d=>[...d,q])
+    setAddType(null)
+    setNewQ({question:'',options:['','','',''],answerIndex:0,correctAnswer:'',pairs:[{left:'',right:''},{left:'',right:''}]})
+  }
+
+  return (
+    <div style={{ padding:24, maxWidth:680, margin:'0 auto', width:'100%' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+        <h2 style={{ fontSize:18, fontWeight:800, color:'var(--c-t1)' }}>Edit Questions <span style={{ fontSize:13, fontWeight:400, color:'var(--c-t3)' }}>({qs.length})</span></h2>
+        <div style={{ display:'flex', gap:8 }}>
+          <button onClick={()=>onSave(qs)} style={{ height:32, padding:'0 14px', background:'#2563eb', color:'#fff', border:'none', borderRadius:8, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Save Changes</button>
+          <button onClick={onCancel}       style={{ height:32, padding:'0 14px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:8, fontSize:12, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+        </div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:16 }}>
+        {qs.map((q,i)=>(
+          <div key={i} style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:12, padding:16 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+              <span style={{ fontSize:10, fontWeight:800, padding:'3px 8px', borderRadius:20, background:'rgba(59,130,246,0.1)', color:'#60a5fa', textTransform:'uppercase', letterSpacing:'.04em' }}>{(q.type||'mcq').replace(/_/g,' ')}</span>
+              <button onClick={()=>deleteQ(i)} style={{ marginLeft:'auto', fontSize:11, color:'#f87171', background:'none', border:'1px solid rgba(239,68,68,0.22)', borderRadius:7, height:26, padding:'0 10px', cursor:'pointer', fontFamily:'inherit' }}>- Delete</button>
+            </div>
+            <textarea value={q.question} onChange={e=>updateQ(i,'question',e.target.value)} rows={2} style={{ width:'100%', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, padding:'8px 10px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit', marginBottom:8 }}/>
+            {(q.type==='short_answer'||q.type==='fill_blank') && <input value={q.correctAnswer||''} onChange={e=>updateQ(i,'correctAnswer',e.target.value)} placeholder="Correct answer-" style={{ width:'100%', height:32, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}/>}
+            {(q.type==='mcq'||q.type==='true_false'||!q.type) && (
+              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                {(q.options||['True','False']).map((o,j)=>(
+                  <div key={j} style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <button onClick={()=>updateQ(i,'answerIndex',j)} style={{ width:24, height:24, borderRadius:'50%', border:'2px solid '+(q.answerIndex===j?'#10b981':'var(--c-line)'), background:q.answerIndex===j?'#10b981':'transparent', color:q.answerIndex===j?'#fff':'var(--c-t3)', fontSize:10, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontFamily:'inherit' }}>{q.answerIndex===j?'-':['A','B','C','D'][j]}</button>
+                    {q.type==='true_false' ? <span style={{ flex:1, fontSize:13, color:'var(--c-t1)', padding:'0 8px' }}>{o}</span> : <input value={o} onChange={e=>updateOpt(i,j,e.target.value)} style={{ flex:1, height:32, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}/>}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
-      {hasTrouble && (
-        <div style={{padding:'18px 20px',borderRadius:14,marginBottom:18,background:'rgba(99,102,241,0.06)',border:'1px solid rgba(99,102,241,0.2)'}}>
-          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-            <div style={{width:30,height:30,borderRadius:'50%',flexShrink:0,background:'radial-gradient(circle at 33% 33%,#c4b5fd,#7c3aed 40%,#4c1d95 70%,#08001a)',boxShadow:'0 0 12px rgba(124,58,237,0.5)'}}/>
-            <div><div style={{fontSize:13,fontWeight:800,color:'#a5b4fc'}}>Nova</div><div style={{fontSize:11,color:'rgba(255,255,255,0.35)'}}>Study assistant</div></div>
-          </div>
-          <p style={{fontSize:13,color:'var(--c-t1)',lineHeight:1.6,margin:'0 0 14px'}}>You marked <strong style={{color:'#f87171'}}>{needsWork.length} card{needsWork.length>1?'s':''}</strong> as hard or again. Want me to generate a focused deck targeting exactly those weak spots?</p>
-          <div style={{marginBottom:14,display:'flex',flexDirection:'column',gap:5}}>
-            {needsWork.slice(0,4).map((c,i)=>(
-              <div key={i} style={{fontSize:12,color:'var(--c-t2)',padding:'6px 10px',borderRadius:8,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)'}}>{c.front||c.question}</div>
-            ))}
-            {needsWork.length>4&&<div style={{fontSize:11,color:'var(--c-t3)',padding:'4px 10px'}}>+ {needsWork.length-4} more</div>}
-          </div>
-          <button onClick={onNewDeck} style={{width:'100%',padding:'12px 0',borderRadius:10,border:'none',background:'linear-gradient(135deg,#4f46e5,#7c3aed)',color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 16px rgba(99,102,241,0.35)'}}>
-            Generate focused deck on weak areas
-          </button>
-        </div>
-      )}
-      <div style={{display:'flex',gap:10}}>
-        <button onClick={onRestart} style={{flex:1,padding:'12px 0',borderRadius:10,border:'1px solid var(--c-line)',background:'var(--c-surface2)',color:'var(--c-t1)',fontSize:13,fontWeight:700,cursor:'pointer'}}>↺ Study again</button>
-      </div>
-    </div>
-  )
-}
-
-// ── Card themes ───────────────────────────────────────────────────────────────
-
-const CARD_THEMES = {
-  default:  { accent:'#6366f1', glow:'rgba(99,102,241,0.12)',  tint:'rgba(99,102,241,0.03)'  },
-  midnight: { accent:'#3b82f6', glow:'rgba(37,99,235,0.12)',   tint:'rgba(37,99,235,0.03)'   },
-  forest:   { accent:'#10b981', glow:'rgba(16,185,129,0.12)',  tint:'rgba(16,185,129,0.03)'  },
-  ember:    { accent:'#f97316', glow:'rgba(249,115,22,0.12)',  tint:'rgba(249,115,22,0.03)'  },
-}
-
-// ── Quick-start chips ─────────────────────────────────────────────────────────
-
-const CHIPS = [
-  'The French Revolution','Calculus derivatives','Python data structures',
-  'Cardiovascular anatomy','Spanish irregular verbs','The Cold War',
-]
-
-// ── Publish toggle ────────────────────────────────────────────────────────────
-
-function PublishToggle({ deckId }) {
-  const [isPublic, setIsPublic] = useState(null)
-  const [saving,   setSaving]   = useState(false)
-
-  useEffect(() => {
-    if (!deckId) return
-    supabase.from('saved_items').select('is_public').eq('id', deckId).single()
-      .then(({ data }) => setIsPublic(data?.is_public || false))
-      .catch(() => {})
-  }, [deckId])
-
-  async function toggle() {
-    setSaving(true)
-    const next = !isPublic
-    try {
-      await supabase.from('saved_items').update({ is_public: next }).eq('id', deckId)
-      setIsPublic(next)
-    } catch {}
-    setSaving(false)
-  }
-
-  if (isPublic === null) return null
-
-  return (
-    <button onClick={toggle} disabled={saving}
-      style={{ padding:'7px 10px', borderRadius:7, fontSize:11, fontWeight:600, border:`1px solid ${isPublic?'rgba(99,102,241,0.35)':'rgba(255,255,255,0.09)'}`, background:isPublic?'rgba(99,102,241,0.1)':'rgba(255,255,255,0.03)', color:isPublic?'#a5b4fc':'var(--c-t3)', cursor:'pointer', textAlign:'left', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6, opacity:saving?.6:1, transition:'all .15s' }}>
-      <div style={{ width:14, height:14, borderRadius:3, border:`1.5px solid ${isPublic?'#6366f1':'rgba(255,255,255,0.2)'}`, background:isPublic?'#6366f1':'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-        {isPublic && <svg width="9" height="9" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" fill="none" strokeLinecap="round"/></svg>}
-      </div>
-      {isPublic ? 'Public — in Shared Decks' : 'Share publicly'}
-    </button>
-  )
-}
-
-// ── Nova Explain Differently ──────────────────────────────────────────────────
-
-const EXPLAIN_STYLES = [
-  { id:'simpler',  label:'Simpler',  desc:'Plain language' },
-  { id:'analogy',  label:'Analogy',  desc:'Compare to something familiar' },
-  { id:'example',  label:'Example',  desc:'Real-world scenario' },
-  { id:'eli5',     label:'ELI5',     desc:"Like I'm 5" },
-]
-
-function NovaExplainPanel({ card, explainStyle, novaExplain, explaining, onExplain }) {
-  const [open, setOpen] = useState(false)
-
-  if (!card) return null
-
-  return (
-    <div style={{ width:'100%', maxWidth:440 }}>
-      {!open && (
-        <button
-          onClick={() => setOpen(true)}
-          style={{ width:'100%', padding:'7px 0', borderRadius:9, border:'1px solid rgba(167,139,250,0.2)', background:'rgba(167,139,250,0.06)', color:'rgba(167,139,250,0.7)', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:6, transition:'all .15s' }}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
-          Explain differently
-        </button>
-      )}
-
-      {open && (
-        <div style={{ background:'rgba(10,8,22,0.9)', border:'1px solid rgba(167,139,250,0.25)', borderRadius:12, padding:'14px 16px', backdropFilter:'blur(12px)' }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ width:22, height:22, borderRadius:'50%', background:'radial-gradient(circle at 33% 33%,#c4b5fd,#7c3aed 40%,#4c1d95 70%,#08001a)', boxShadow:'0 0 8px rgba(124,58,237,0.5)', flexShrink:0 }}/>
-              <span style={{ fontSize:12, fontWeight:700, color:'#a78bfa' }}>Nova</span>
-            </div>
-            <button onClick={() => { setOpen(false) }} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer', fontSize:14, fontFamily:'inherit', lineHeight:1 }}>✕</button>
-          </div>
-
-          <div style={{ display:'flex', gap:5, marginBottom:12, flexWrap:'wrap' }}>
-            {EXPLAIN_STYLES.map(s => (
-              <button key={s.id}
-                onClick={() => onExplain(s.id)}
-                disabled={explaining}
-                style={{ padding:'4px 11px', borderRadius:20, fontSize:11, fontWeight:700, cursor:explaining?'not-allowed':'pointer', fontFamily:'inherit', transition:'all .15s', border:'1px solid '+(explainStyle===s.id?'rgba(167,139,250,0.5)':'rgba(255,255,255,0.1)'), background:explainStyle===s.id?'rgba(167,139,250,0.15)':'rgba(255,255,255,0.04)', color:explainStyle===s.id?'#c4b5fd':'rgba(255,255,255,0.4)', opacity:explaining&&explainStyle!==s.id?.4:1 }}>
-                {s.label}
+      {!addType ? (
+        <div style={{ border:'2px dashed rgba(255,255,255,0.09)', borderRadius:12, padding:16 }}>
+          <p style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:10 }}>Add Question</p>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            {['mcq','true_false','short_answer','fill_blank','matching'].map(t=>(
+              <button key={t} onClick={()=>setAddType(t)} style={{ height:32, padding:'0 12px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', fontSize:12, fontWeight:600, borderRadius:8, cursor:'pointer', fontFamily:'inherit' }}>
+                + {t==='mcq'?'MCQ':t==='true_false'?'True/False':t==='short_answer'?'Short Answer':t==='fill_blank'?'Fill Blank':'Matching'}
               </button>
             ))}
           </div>
-
-          {!explainStyle && !explaining && (
-            <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', lineHeight:1.6 }}>
-              Pick a style above — Nova will re-explain "<span style={{ color:'rgba(255,255,255,0.5)' }}>{card.front||card.question}</span>" in a different way.
+        </div>
+      ) : (
+        <div style={{ border:'1.5px solid rgba(59,130,246,0.3)', borderRadius:12, padding:16, background:'rgba(59,130,246,0.04)' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+            <span style={{ fontSize:12, fontWeight:800, color:'#60a5fa', textTransform:'uppercase', letterSpacing:'.04em' }}>New {addType.replace('_',' ')}</span>
+            <button onClick={()=>setAddType(null)} style={{ color:'var(--c-t3)', background:'none', border:'none', cursor:'pointer', fontSize:16, fontFamily:'inherit' }}>-</button>
+          </div>
+          <textarea value={newQ.question} onChange={e=>setNewQ(q=>({...q,question:e.target.value}))} placeholder="Question text-" rows={2} style={{ width:'100%', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:8, padding:'8px 10px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit', marginBottom:10 }}/>
+          {(addType==='short_answer'||addType==='fill_blank') && <input value={newQ.correctAnswer} onChange={e=>setNewQ(q=>({...q,correctAnswer:e.target.value}))} placeholder="Correct answer-" style={{ width:'100%', height:32, background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', marginBottom:10 }}/>}
+          {addType==='mcq' && (
+            <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:10 }}>
+              {newQ.options.map((o,j)=>(
+                <div key={j} style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <button onClick={()=>setNewQ(q=>({...q,answerIndex:j}))} style={{ width:24, height:24, borderRadius:'50%', border:'2px solid '+(newQ.answerIndex===j?'#10b981':'var(--c-line)'), background:newQ.answerIndex===j?'#10b981':'transparent', color:newQ.answerIndex===j?'#fff':'var(--c-t3)', fontSize:10, cursor:'pointer', flexShrink:0, fontFamily:'inherit' }}>{newQ.answerIndex===j?'-':['A','B','C','D'][j]}</button>
+                  <input value={o} onChange={e=>setNewQ(q=>({...q,options:q.options.map((op,oi)=>oi===j?e.target.value:op)}))} placeholder={'Option '+['A','B','C','D'][j]} style={{ flex:1, height:32, background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}/>
+                </div>
+              ))}
             </div>
           )}
-
-          {explaining && (
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ width:6, height:6, borderRadius:'50%', background:'#a78bfa', animation:'nova-pulse .9s ease-in-out infinite', flexShrink:0 }}/>
-              <span style={{ fontSize:12, color:'rgba(167,139,250,0.6)' }}>Nova is thinking…</span>
+          {addType==='true_false' && (
+            <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+              {['True','False'].map((o,j)=>(
+                <button key={j} onClick={()=>setNewQ(q=>({...q,answerIndex:j}))} style={{ flex:1, height:36, borderRadius:8, border:'1px solid '+(newQ.answerIndex===j?'#10b981':'var(--c-line)'), background:newQ.answerIndex===j?'#10b981':'var(--c-surface)', color:newQ.answerIndex===j?'#fff':'var(--c-t2)', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>{o}</button>
+              ))}
             </div>
           )}
-
-          {novaExplain && (
-            <div style={{ fontSize:13, color:'rgba(255,255,255,0.85)', lineHeight:1.7 }}>{novaExplain}</div>
-          )}
+          <button onClick={commitAdd} disabled={!newQ.question.trim()} style={{ height:32, padding:'0 16px', background:'#2563eb', color:'#fff', border:'none', borderRadius:8, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit', opacity:newQ.question.trim()?1:.4 }}>Add Question</button>
         </div>
       )}
     </div>
   )
 }
 
-// ── Main inner component ──────────────────────────────────────────────────────
+// - Constants -
 
-function FlashcardsPageInner() {
-  const { user, profile } = useAuth()
-  const isMobile  = useIsMobile()
-  const cardTheme = CARD_THEMES[profile?.flashcard_theme] || CARD_THEMES.default
-  const searchParams = useSearchParams()
-  const audioRef = useRef(null)
-  const sessionStartRef = useRef(null)
+const BASE_TYPES = [
+  { id:'mcq',          label:'Multiple Choice' },
+  { id:'true_false',   label:'True / False'    },
+  { id:'short_answer', label:'Short Answer'    },
+  { id:'fill_blank',   label:'Fill in the Blank' },
+  { id:'matching',     label:'Matching'        },
+  { id:'mixed',        label:'Mixed'           },
+]
 
-  const [inputTab,    setInputTab]    = useState('topic')
-  const [topic,       setTopic]       = useState('')
-  const [count,       setCount]       = useState(10)
-  const [cards,       setCards]       = useState([])
-  const [loading,     setLoading]     = useState(false)
-  const [flipped,     setFlipped]     = useState(false)
-  const [error,       setError]       = useState('')
-  const [showEdit,    setShowEdit]    = useState(false)
-  const [editIdx,     setEditIdx]     = useState(null)
-  const [editVals,    setEditVals]    = useState({ front:'', back:'' })
-  const [savedId,     setSavedId]     = useState(null)
-  const [saving,      setSaving]      = useState(false)
-  const [saveFeedback,setSaveFeedback]= useState('')
-  const [showSave,    setShowSave]    = useState(false)
-  const [saveTitle,   setSaveTitle]   = useState('')
-  const [copied,      setCopied]      = useState(false)
-  const [autoGen,     setAutoGen]     = useState(false)
-  const [draftBanner, setDraftBanner] = useState(false)
-  const [importText,  setImportText]  = useState('')
-  const [importError, setImportError] = useState('')
-  const fileInputRef = useRef(null)
-  const [studyQueue,  setStudyQueue]  = useState([])
-  const [sessionComplete,    setSessionComplete]    = useState(false)
-  const [sessionHardCards,   setSessionHardCards]   = useState([])
-  const [sessionAgainCards,  setSessionAgainCards]  = useState([])
-  const [sessionRatings,     setSessionRatings]     = useState({ again:0, hard:0, easy:0 })
-  const [dueToday,    setDueToday]    = useState(0)
+const CHIPS = [
+  'The Cold War','Cell biology','The US Constitution',
+  'Shakespeare tragedies','Macroeconomics','The French Revolution',
+]
 
-  const [novaExplain,   setNovaExplain]   = useState('')
-  const [explaining,    setExplaining]    = useState(false)
-  const [explainStyle,  setExplainStyle]  = useState(null)
+const TYPE_LABELS = { mcq:'Multiple Choice', true_false:'True / False', short_answer:'Short Answer', fill_blank:'Fill in the Blank', matching:'Matching' }
+function prettifyType(t) { return TYPE_LABELS[t]||(t||'mcq').replace(/_/g,' ') }
 
-  const currentIdx = studyQueue.length > 0 ? studyQueue[0] : 0
-  const card       = cards.length > 0 ? cards[currentIdx] : null
-  const done       = cards.length - studyQueue.length
+function buildConfig(typeId, count, breakdown) {
+  if (typeId==='mcq')          return { mcq:count }
+  if (typeId==='true_false')   return { true_false:count }
+  if (typeId==='short_answer') return { short_answer:count }
+  if (typeId==='fill_blank')   return { fill_blank:count }
+  if (typeId==='matching')     return { matching:count }
+  const cfg = {}
+  if ((breakdown.mcq||0)>0)   cfg.mcq         = breakdown.mcq
+  if ((breakdown.tf||0)>0)    cfg.true_false   = breakdown.tf
+  if ((breakdown.sa||0)>0)    cfg.short_answer = breakdown.sa
+  if ((breakdown.fitb||0)>0)  cfg.fill_blank   = breakdown.fitb
+  if ((breakdown.match||0)>0) cfg.matching     = breakdown.match
+  return cfg
+}
 
-  // ── Initialisation ──────────────────────────────────────────────────────────
+function checkFitbAnswer(userAns, correctAns) {
+  if (!userAns||!correctAns) return false
+  const u = userAns.toLowerCase().trim()
+  const correct = correctAns.toLowerCase().trim()
+  if (u===correct) return true
+  const variants = correct.split(/[|/,]/).map(v=>v.trim()).filter(Boolean)
+  if (variants.some(v=>u===v)) return true
+  if (variants.some(v=>v.includes(u)||u.includes(v))) return true
+  return false
+}
+
+// - Page component -
+
+
+// - QuizResultsScreen -
+// Full post-quiz results screen: score ring, topic breakdown, missed questions,
+// streaming Nova feedback, print, and action buttons.
+function QuizResultsScreen({
+  questions, topic, score, pct,
+  selected, fitbInputs, saGrades,
+  user, isMobile,
+  savedId, saveFeedback,
+  onShowAnswerKey, onSave, onRetake, onNewQuiz,
+}) {
+  const [novaFeedback, setNovaFeedback] = useState('')
+  const [novaLoading,  setNovaLoading]  = useState(false)
+
+  const topicBreakdown = (() => {
+    const map = {}
+    questions.forEach((q, i) => {
+      const t = q.topic || prettifyType(q.type)
+      if (!map[t]) map[t] = { correct:0, total:0 }
+      map[t].total++
+      let ok = false
+      if      (q.type === 'fill_blank')   ok = checkFitbAnswer(fitbInputs[i], q.correctAnswer)
+      else if (q.type === 'short_answer') ok = saGrades[i] === 'correct'
+      else if (q.type === 'matching')     ok = false
+      else                                ok = selected[i] === q.answerIndex
+      if (ok) map[t].correct++
+    })
+    return Object.entries(map)
+      .map(([name,d]) => ({ name, pct: d.total ? Math.round(d.correct/d.total*100) : 0, correct:d.correct, total:d.total }))
+      .sort((a,b) => a.pct - b.pct)
+  })()
+
+  const missed = questions.map((q,i) => {
+    if (q.type === 'short_answer' || q.type === 'matching') return null
+    const ok = q.type === 'fill_blank'
+      ? checkFitbAnswer(fitbInputs[i], q.correctAnswer)
+      : selected[i] === q.answerIndex
+    if (ok) return null
+    return {
+      question:      q.question,
+      yourAnswer:    q.type === 'fill_blank' ? (fitbInputs[i]||'(blank)') : (q.options?.[selected[i]]||'(no answer)'),
+      correctAnswer: q.type === 'fill_blank' ? q.correctAnswer : q.options?.[q.correct ?? q.answerIndex],
+    }
+  }).filter(Boolean)
 
   useEffect(() => {
-    const saved = sessionStorage.getItem('flashfo_load_flashcards') || sessionStorage.getItem('flashfo_fc_load')
+    if (!questions.length) return
+    let cancelled = false
+    setNovaLoading(true)
+    setNovaFeedback('')
+    const prompt = [
+      'Student completed a quiz on "' + (topic||'this topic') + '".',
+      'Score: ' + score + '/' + questions.length + ' (' + pct + '%).',
+      topicBreakdown.length > 1
+        ? 'Topic breakdown: ' + topicBreakdown.map(t => t.name+' '+t.pct+'%').join(', ') + '.'
+        : '',
+      missed.length > 0
+        ? 'Missed: ' + missed.slice(0,3).map(m => '"'+m.question+'"').join('; ') + '.'
+        : 'All answered correctly.',
+      'Write 2-3 sentences: what they did well, where the gaps are, one specific next step.',
+      'Direct and warm. No filler. Never start with "You scored" or "Great job!".',
+    ].filter(Boolean).join(' ')
+    novaStream(
+      [{ role:'user', content:prompt }],
+      chunk => { if (!cancelled) setNovaFeedback(prev => prev + chunk) },
+      { systemOverride: 'You are Nova, a study assistant. Give concise personalised quiz feedback in 2-3 sentences. Never start with "You" or use filler. Get straight to the insight.' }
+    )
+      .catch(() => { if (!cancelled) setNovaFeedback('Unable to load feedback right now.') })
+      .finally(() => { if (!cancelled) setNovaLoading(false) })
+    return () => { cancelled = true }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function printResults() {
+    const win = window.open('', '_blank')
+    const topicRows = topicBreakdown.map(t =>
+      '<tr><td>'+t.name+'</td><td style="text-align:center">'+t.correct+'/'+t.total+'</td><td style="text-align:center;font-weight:600;color:'+(t.pct>=75?'#059669':t.pct>=50?'#d97706':'#dc2626')+'">'+t.pct+'%</td></tr>'
+    ).join('')
+    const missedItems = missed.map(m =>
+      '<li style="margin-bottom:12px"><strong>'+m.question+'</strong><br>Your answer: <span style="color:#dc2626">'+m.yourAnswer+'</span> &middot; Correct: <span style="color:#059669">'+m.correctAnswer+'</span></li>'
+    ).join('')
+    win.document.write('<!DOCTYPE html><html><head><title>'+(topic||'Quiz')+' Results<\/title><style>body{font-family:system-ui,sans-serif;max-width:680px;margin:40px auto;color:#111;font-size:13px}h1{font-size:20px}h2{font-size:15px;margin:20px 0 8px}table{width:100%;border-collapse:collapse}td,th{padding:8px 10px;border:1px solid #e5e7eb}th{background:#f9fafb}ol{padding-left:20px}@media print{body{margin:20px}}<\/style><\/head><body><h1>'+(topic||'Quiz')+' - Results<\/h1><p>Score: '+score+'/'+questions.length+' ('+pct+'%) - '+new Date().toLocaleDateString()+'<\/p>'+(topicBreakdown.length>0?'<h2>Topic Breakdown<\/h2><table><tr><th>Topic<\/th><th>Correct<\/th><th>Score<\/th><\/tr>'+topicRows+'<\/table>':'')+(missed.length>0?'<h2>Missed Questions<\/h2><ol>'+missedItems+'<\/ol>':'')+'<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script><\/body><\/html>')
+    win.document.close()
+  }
+
+  function bar(p) { return p>=75?'#10b981':p>=50?'#f59e0b':'#ef4444' }
+  const C=276.5, off=C-(pct/100)*C, rc=pct>=75?'#10b981':pct>=50?'#f59e0b':'#ef4444'
+  const verdict=pct===100?'Perfect score':pct>=80?'Strong result':pct>=60?'Good - room to grow':pct>=40?'Keep practising':"Let-s drill those gaps"
+  const weakNames=topicBreakdown.filter(t=>t.pct<70).map(t=>t.name).join(', ')
+  const card={background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:14,padding:'18px 20px'}
+  const lbl={fontSize:10,fontWeight:700,color:'var(--c-t3)',textTransform:'uppercase',letterSpacing:'.07em',marginBottom:14,display:'flex',alignItems:'center',gap:6}
+  const btn={padding:'11px 0',borderRadius:9,border:'1px solid var(--c-line)',background:'var(--c-surface)',color:'var(--c-t1)',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',gap:6}
+
+  const topicPanel=(
+    <div style={card}>
+      <div style={lbl}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Topic breakdown
+      </div>
+      {topicBreakdown.length===0
+        ?<p style={{fontSize:12,color:'var(--c-t3)',margin:0}}>No topic data yet - try a new quiz to see breakdown.</p>
+        :topicBreakdown.map(t=>(
+          <div key={t.name} style={{marginBottom:13}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:5}}>
+              <span style={{fontSize:13,color:'var(--c-t1)'}}>{t.name}</span>
+              <span style={{fontSize:12,fontWeight:700,color:bar(t.pct)}}>{t.pct}%</span>
+            </div>
+            <div style={{height:5,borderRadius:3,background:'var(--c-surface2)',overflow:'hidden'}}>
+              <div style={{height:'100%',width:t.pct+'%',background:bar(t.pct),borderRadius:3,transition:'width .5s ease'}}/>
+            </div>
+            <div style={{fontSize:10,color:'var(--c-t3)',marginTop:3}}>{t.correct}/{t.total} correct</div>
+          </div>
+        ))
+      }
+    </div>
+  )
+
+  const missedPanel=(
+    <div style={card}>
+      <div style={lbl}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        Missed questions
+      </div>
+      {missed.length===0?(
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'16px 0',gap:8}}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+          <span style={{fontSize:12,color:'var(--c-t3)'}}>All answered correctly!</span>
+        </div>
+      ):(
+        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+          {missed.map((m,i)=>(
+            <div key={i} style={{padding:'10px 12px',borderLeft:'2.5px solid #ef4444',borderRadius:'0 8px 8px 0',background:'rgba(239,68,68,0.04)'}}>
+              <p style={{fontSize:12,color:'var(--c-t1)',margin:'0 0 5px',lineHeight:1.45}}>{m.question}</p>
+              <p style={{fontSize:11,color:'var(--c-t3)',margin:0}}>
+                Your answer: <strong style={{color:'rgba(239,68,68,0.75)'}}>{m.yourAnswer}</strong>
+                {' - '}
+                Correct: <strong style={{color:'#10b981'}}>{m.correctAnswer}</strong>
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+
+  return (
+    <div style={{padding:'24px',maxWidth:680,margin:'0 auto',width:'100%',fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"}}>
+      <div style={{...card,display:'flex',alignItems:'center',gap:isMobile?18:28,marginBottom:14,padding:'20px 22px'}}>
+        <div style={{position:'relative',width:100,height:100,flexShrink:0}}>
+          <svg width="100" height="100" viewBox="0 0 110 110">
+            <circle cx="55" cy="55" r="44" fill="none" stroke="var(--c-surface2)" strokeWidth="9"/>
+            <circle cx="55" cy="55" r="44" fill="none" stroke={rc} strokeWidth="9"
+              strokeDasharray={C} strokeDashoffset={off}
+              strokeLinecap="round" transform="rotate(-90 55 55)"
+              style={{transition:'stroke-dashoffset .7s ease'}}/>
+          </svg>
+          <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+            <span style={{fontSize:22,fontWeight:700,color:'var(--c-t1)',lineHeight:1}}>{pct}%</span>
+            <span style={{fontSize:10,color:'var(--c-t3)',marginTop:2}}>score</span>
+          </div>
+        </div>
+        <div style={{flex:1,minWidth:0}}>
+          <p style={{fontSize:isMobile?15:17,fontWeight:700,color:'var(--c-t1)',margin:'0 0 3px',letterSpacing:'-.02em'}}>{verdict}</p>
+          <p style={{fontSize:12,color:'var(--c-t3)',margin:'0 0 12px'}}>{topic} - {questions.length} questions</p>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            {[
+              {label:'Correct',val:score,               color:'#10b981',bg:'rgba(16,185,129,0.07)', border:'rgba(16,185,129,0.2)'},
+              {label:'Wrong',  val:questions.length-score,color:'#ef4444',bg:'rgba(239,68,68,0.07)',  border:'rgba(239,68,68,0.2)'},
+            ].map(s=>(
+              <div key={s.label} style={{padding:'7px 14px',borderRadius:9,background:s.bg,border:'1px solid '+s.border,textAlign:'center'}}>
+                <div style={{fontSize:17,fontWeight:700,color:s.color,lineHeight:1}}>{s.val}</div>
+                <div style={{fontSize:10,color:'var(--c-t3)',marginTop:2}}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {isMobile?(
+        <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:12}}>
+          {missedPanel}
+          {topicPanel}
+        </div>
+      ):(
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+          {topicPanel}
+          {missedPanel}
+        </div>
+      )}
+
+      <div style={{...card,marginBottom:14}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+          <div style={{width:28,height:28,borderRadius:'50%',background:'radial-gradient(circle at 33% 33%,#c4b5fd,#7c3aed 40%,#4c1d95 70%,#08001a)',boxShadow:'0 0 10px rgba(124,58,237,0.4)',flexShrink:0}}/>
+          <div>
+            <div style={{fontSize:13,fontWeight:700,color:'#a5b4fc'}}>Nova</div>
+            <div style={{fontSize:10,color:'rgba(255,255,255,0.3)'}}>Study assistant</div>
+          </div>
+          {novaLoading&&(
+            <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:5}}>
+              <div style={{width:5,height:5,borderRadius:'50%',background:'#a78bfa',animation:'nova-pulse .9s ease-in-out infinite'}}/>
+              <span style={{fontSize:11,color:'rgba(167,139,250,0.55)'}}>Thinking-</span>
+            </div>
+          )}
+        </div>
+        {novaFeedback
+          ?<p style={{fontSize:13,color:'var(--c-t1)',lineHeight:1.7,margin:0}}>{novaFeedback}</p>
+          :novaLoading
+            ?<div style={{height:38}}/>
+            :<p style={{fontSize:13,color:'var(--c-t3)',margin:0}}>Preparing personalised feedback-</p>
+        }
+        {novaFeedback&&weakNames&&(
+          <div style={{display:'flex',gap:8,marginTop:14,flexWrap:'wrap'}}>
+            <a href={'/flashcards?q='+encodeURIComponent('Drill weak areas from '+topic+': '+weakNames)+'&autoGenerate=1'}
+              style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 13px',borderRadius:8,border:'1px solid var(--c-line)',background:'var(--c-surface2)',color:'var(--c-t2)',fontSize:12,fontWeight:600,textDecoration:'none'}}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+              Drill weak areas
+            </a>
+            <a href={'/quiz?q='+encodeURIComponent(topic+' - focused on: '+weakNames)+'&autoGenerate=1'}
+              style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 13px',borderRadius:8,border:'1px solid var(--c-line)',background:'var(--c-surface2)',color:'var(--c-t2)',fontSize:12,fontWeight:600,textDecoration:'none'}}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+              Retake on weak topics
+            </a>
+          </div>
+        )}
+      </div>
+
+      <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+        <button onClick={onRetake}        style={{...btn,flex:1,minWidth:90}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Retake
+        </button>
+        <button onClick={onNewQuiz}       style={{...btn,flex:1,minWidth:90}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New quiz
+        </button>
+        <button onClick={onShowAnswerKey} style={{...btn,flex:1,minWidth:90}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+          Answer key
+        </button>
+        {user&&(
+          <button onClick={onSave} style={{...btn,flex:1,minWidth:90,border:'1px solid rgba(16,185,129,0.3)',background:'rgba(16,185,129,0.07)',color:'#34d399'}}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {savedId?'Saved -':saveFeedback||'Save results'}
+          </button>
+        )}
+        <button onClick={printResults} style={{...btn,minWidth:44}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z"/></svg>
+          {isMobile?'':'Print'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+
+export default function QuizPage() {
+  const { user } = useAuth()
+  const isMobile  = useIsMobile()
+
+  const [typeId,    setTypeId]    = useState('mcq')
+  const [count,     setCount]     = useState(10)
+  const [breakdown, setBreakdown] = useState({ mcq:0, tf:0, sa:0, fitb:0, match:0 })
+  const [topic,     setTopic]     = useState('')
+  const [autoGenTopic, setAutoGenTopic] = useState('')
+  const [questions, setQuestions] = useState([])
+  const [loading,   setLoading]   = useState(false)
+
+  const [selected,      setSelected]      = useState({})
+  const [saInputs,      setSaInputs]      = useState({})
+  const [fitbInputs,    setFitbInputs]    = useState({})
+  const [matchAnswers,  setMatchAnswers]  = useState({})
+  const [shuffledRights,setShuffledRights]= useState({})
+  const [saGrades,      setSaGrades]      = useState({})
+  const [submitted,     setSubmitted]     = useState(false)
+  const [error,         setError]         = useState('')
+
+  const [showKey,   setShowKey]   = useState(false)
+  const [editMode,  setEditMode]  = useState(false)
+  const [savedId,   setSavedId]   = useState(null)
+  const [saving,    setSaving]    = useState(false)
+  const [saveFeedback, setSaveFeedback] = useState('')
+  const [showSave,  setShowSave]  = useState(false)
+  const [saveTitle, setSaveTitle] = useState('')
+  const [novaExplanations,  setNovaExplanations]  = useState({})
+  const [explanationLoading,setExplanationLoading]= useState({})
+  const [draftBanner, setDraftBanner] = useState(false)
+
+  // - Init -
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('flashfo_load_quiz') || sessionStorage.getItem('flashfo_quiz_load')
     if (saved) {
       try {
-        const { cards: sc, topic: st, id: si } = JSON.parse(saved)
-        sessionStorage.removeItem('flashfo_load_flashcards')
-        sessionStorage.removeItem('flashfo_fc_load')
-        if (sc?.length) {
-          setCards(sc); setTopic(st||''); setSavedId(si||null)
-          setStudyQueue(sc.map((_,i)=>i)); sessionStartRef.current=Date.now(); return
-        }
+        const { questions:sq, topic:st, type:stype, id:si } = JSON.parse(saved)
+        sessionStorage.removeItem('flashfo_load_quiz'); sessionStorage.removeItem('flashfo_quiz_load')
+        if (sq?.length) { setQuestions(sq); setTopic(st||''); if (stype) setTypeId(stype); setSavedId(si||null); initMatching(sq); return }
       } catch(e) {}
     }
-    const q = searchParams.get('q')
-    if (q) {
-      setTopic(decodeURIComponent(q))
-      if (searchParams.get('autoGenerate')==='1') setAutoGen(true)
+    const params = new URLSearchParams(window.location.search)
+    const q = params.get('q')
+    if (q && !topic) {
+      const decoded = decodeURIComponent(q)
+      setTopic(decoded)
+      if (params.get('autoGenerate')==='1') setAutoGenTopic(decoded)
       return
     }
-    loadDraft('flashcards').then(draft => {
-      if (draft?.data?.cards?.length) {
-        setTopic(draft.data.topic||''); setCards(draft.data.cards)
-        setStudyQueue(draft.data.cards.map((_,i)=>i)); setDraftBanner(true)
+    loadDraft('quiz').then(draft => {
+      if (draft?.data?.questions?.length) {
+        setTopic(draft.data.topic||''); setTypeId(draft.data.typeId||'mcq')
+        setCount(draft.data.count||10); setQuestions(draft.data.questions)
+        initMatching(draft.data.questions); setDraftBanner(true)
       }
     })
   }, [])
 
   useEffect(() => {
-    if (autoGen && topic.trim() && !loading && !cards.length) { setAutoGen(false); generate() }
-  }, [autoGen, topic])
+    if (autoGenTopic.trim() && topic===autoGenTopic && !loading && !questions.length) { generate(); setAutoGenTopic('') }
+  }, [autoGenTopic, topic])
 
-  useEffect(() => {
-    if (card && !sessionComplete) {
-      window._flashfoCurrentCard = { front:card.front||card.question||'', back:flipped?(card.back||card.answer||''):null, topic:topic||'' }
-    } else { window._flashfoCurrentCard = null }
-    return () => { window._flashfoCurrentCard = null }
-  }, [card, flipped, topic, sessionComplete])
-
-  useEffect(() => {
-    if (typeof window==='undefined') return
-    const reviews = JSON.parse(localStorage.getItem('ff-card-reviews')||'{}')
-    const due = Object.entries(reviews).filter(([,v])=>v.nextReview&&v.nextReview<=Date.now()).length
-    setDueToday(due)
-  }, [])
-
-  useEffect(() => {
-    if (studyQueue.length===0 && cards.length>0 && !sessionComplete) {
-      setSessionComplete(true)
-      const totalRated = sessionRatings.again+sessionRatings.hard+sessionRatings.easy
-      const minutesSpent = sessionStartRef.current ? Math.round((Date.now()-sessionStartRef.current)/60000) : 0
-      logStudySession({ cardsStudied:totalRated, minutesSpent, source:'flashcards' })
-      clearDraft('flashcards')
-    }
-  }, [studyQueue.length, cards.length])
-
-  useEffect(() => {
-    function handler(e) {
-      if (!cards.length||showEdit||sessionComplete) return
-      if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return
-      if (e.key===' '||e.code==='Space') { e.preventDefault(); stopAudio(); setFlipped(f=>!f) }
-      else if (e.key==='1') { stopAudio(); handleAgain() }
-      else if (e.key==='2') { stopAudio(); handleHard() }
-      else if (e.key==='3') { stopAudio(); handleEasy() }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [cards.length, studyQueue, showEdit, sessionComplete, flipped])
-
-  // ── Session actions ─────────────────────────────────────────────────────────
-
-  function cardId(front) {
-    const s = (front||'').toLowerCase().trim()
-    let h = 0
-    for (let i = 0; i < s.length; i++) { h = Math.imul(31, h) + s.charCodeAt(i) | 0 }
-    return 'fc-' + Math.abs(h).toString(36)
+  function initMatching(qs) {
+    const s = {}
+    qs.forEach((q,i) => { if (q.type==='matching'&&q.pairs) s[i]=[...q.pairs.map(p=>p.right)].sort(()=>Math.random()-.5) })
+    setShuffledRights(s)
   }
 
-  function stopAudio() { if (audioRef?.current) { audioRef.current.pause(); audioRef.current=null } }
+  // - Generate -
 
-  function recordSM2(cardId, quality) {
-    if (typeof window==='undefined') return
-    const reviews = JSON.parse(localStorage.getItem('ff-card-reviews')||'{}')
-    const prev = reviews[cardId]||{ easeFactor:2.5, interval:1, repetitions:0 }
-    let { easeFactor, interval, repetitions } = prev
-    if (quality>=3) { if (repetitions===0) interval=1; else if (repetitions===1) interval=6; else interval=Math.round(interval*easeFactor); repetitions++ }
-    else { repetitions=0; interval=1 }
-    easeFactor = Math.max(1.3, easeFactor+0.1-(5-quality)*(0.08+(5-quality)*0.02))
-    reviews[cardId] = { easeFactor, interval, repetitions, nextReview:Date.now()+interval*86400000 }
-    localStorage.setItem('ff-card-reviews', JSON.stringify(reviews))
-  }
-
-  function handleAgain() {
-    if (!card||studyQueue.length===0) return
-    stopAudio(); setFlipped(false); setNovaExplain(''); setExplainStyle(null)
-    recordSM2(cardId(card.front||card.question), 1)
-    setSessionRatings(r=>({...r,again:r.again+1}))
-    setSessionAgainCards(prev=>{ const key=card.front||card.question; if (prev.find(c=>(c.front||c.question)===key)) return prev; return [...prev,card] })
-    setStudyQueue(q=>{ if (q.length<=1) return []; return [...q.slice(1),q[0]] })
-  }
-
-  function handleHard() {
-    if (!card||studyQueue.length===0) return
-    stopAudio(); setFlipped(false); setNovaExplain(''); setExplainStyle(null)
-    recordSM2(cardId(card.front||card.question), 3)
-    setSessionRatings(r=>({...r,hard:r.hard+1}))
-    setSessionHardCards(prev=>{ const key=card.front||card.question; if (prev.find(c=>(c.front||c.question)===key)) return prev; return [...prev,card] })
-    setStudyQueue(q=>{ if (q.length<=1) return []; const curr=q[0]; const rem=q.slice(1); const at=Math.max(1,Math.ceil(rem.length/2)); return [...rem.slice(0,at),curr,...rem.slice(at)] })
-  }
-
-  function handleEasy() {
-    if (!card||studyQueue.length===0) return
-    stopAudio(); setFlipped(false); setNovaExplain(''); setExplainStyle(null)
-    recordSM2(cardId(card.front||card.question), 5)
-    setSessionRatings(r=>({...r,easy:r.easy+1}))
-    setStudyQueue(q=>q.slice(1))
-    setSessionHardCards(prev=>prev.filter(c=>(c.front||c.question)!==(card.front||card.question)))
-    setSessionAgainCards(prev=>prev.filter(c=>(c.front||c.question)!==(card.front||card.question)))
-  }
-
-  // ── Nova "explain differently" ──────────────────────────────────────────────
-
-  async function explainDifferently(style) {
-    if (!card || explaining) return
-    setExplainStyle(style)
-    setExplaining(true)
-    setNovaExplain('')
-    const front = card.front || card.question || ''
-    const back  = card.back  || card.answer  || ''
-    const stylePrompts = {
-      simpler:  'Explain this concept in the simplest possible terms, as if teaching it to someone with no background. Avoid jargon.',
-      analogy:  'Explain this concept using a creative, memorable analogy or comparison to something from everyday life.',
-      example:  'Explain this concept through a concrete, real-world example or scenario that makes it stick.',
-      eli5:     'Explain this concept as if the student is 5 years old — extremely simple language, short sentences, maybe a story.',
-    }
+  async function generate() {
+    if (!topic.trim()) return
+    setLoading(true); setQuestions([]); setSelected({}); setSaInputs({}); setFitbInputs({})
+    setMatchAnswers({}); setSaGrades({}); setSubmitted(false); setError(''); setSavedId(null); setDraftBanner(false)
     try {
-      await novaStream(
-        [{ role:'user', content:`Concept: "${front}"\nStandard explanation: "${back}"\n\nTask: ${stylePrompts[style]}\n\nKeep it under 4 sentences. Be engaging and memorable.` }],
-        chunk => setNovaExplain(prev => prev + chunk),
-        { systemOverride:'You are Nova, a friendly and creative study assistant. Give alternative explanations that are vivid and memorable. Never say "Sure!" or "Of course!". Get straight to the explanation.' }
-      )
-    } catch {
-      setNovaExplain('Unable to load explanation right now.')
-    } finally {
-      setExplaining(false)
-    }
+      const cfg  = buildConfig(typeId, count, breakdown)
+      const data = await rpc('generateQuizFromTopic', [topic.trim(), cfg])
+      if (data.error) throw new Error(data.error)
+      const qs = data.result?.questions||[]
+      if (!qs.length) { setError('Could not generate quiz. Try a more specific topic.'); return }
+      setQuestions(qs); initMatching(qs)
+      if (user) await saveDraft('quiz', topic.trim(), { topic:topic.trim(), typeId, count, questions:qs })
+    } catch(e) { setError(e?.message||'Something went wrong. Please try again.') }
+    finally { setLoading(false) }
   }
 
-  // ── Edit ────────────────────────────────────────────────────────────────────
-
-  function startEdit(i)  { setEditIdx(i); setEditVals({ front:cards[i].front||cards[i].question||'', back:cards[i].back||cards[i].answer||'' }) }
-  function saveEdit()    { if (editIdx===null) return; setCards(cs=>cs.map((c,i)=>i===editIdx?{front:editVals.front,back:editVals.back}:c)); setEditIdx(null) }
-  function addCard()     { const n=cards.length; setCards(cs=>[...cs,{front:'New question',back:'New answer'}]); setTimeout(()=>startEdit(n),0) }
-  function deleteCard(i) { setCards(cs=>cs.filter((_,ci)=>ci!==i)); setStudyQueue(q=>q.filter(qi=>qi!==i).map(qi=>qi>i?qi-1:qi)); if (editIdx===i) setEditIdx(null) }
-
-  function parseImportText(raw) {
-    const lines = raw.trim().split(/\r?\n/).filter(l => l.trim())
-    if (!lines.length) return null
-    const cards = []
-    for (const line of lines) {
-      const trimmed = line.trim()
-      if (!trimmed) continue
-      if (trimmed.includes('\t')) {
-        const [front, ...rest] = trimmed.split('\t')
-        const back = rest.join('\t').trim()
-        if (front.trim() && back) cards.push({ front: front.trim(), back })
-        continue
-      }
-      if (trimmed.includes(',')) {
-        const quoted = trimmed.match(/^"([^"]+)"\s*,\s*"([^"]+)"$/)
-        if (quoted) { cards.push({ front: quoted[1].trim(), back: quoted[2].trim() }); continue }
-        const comma = trimmed.indexOf(',')
-        const front = trimmed.slice(0, comma).trim()
-        const back  = trimmed.slice(comma + 1).trim()
-        if (front && back) { cards.push({ front, back }); continue }
-      }
-      const dash = trimmed.match(/^(.+?)\s{1,3}-{1,2}\s{1,3}(.+)$/)
-      if (dash) { cards.push({ front: dash[1].trim(), back: dash[2].trim() }); continue }
-      const colon = trimmed.match(/^([^:]+):\s+(.+)$/)
-      if (colon) { cards.push({ front: colon[1].trim(), back: colon[2].trim() }); continue }
-    }
-    return cards.length >= 2 ? cards : null
-  }
-
-  async function handleImport() {
-    const raw = importText.trim()
-    if (!raw) { setImportError('Paste some content to import.'); return }
-    setImportError('')
-    const parsed = parseImportText(raw)
-    if (parsed) {
-      setCards(parsed)
-      setStudyQueue(parsed.map((_,i) => i))
-      sessionStartRef.current = Date.now()
-      setTopic(parsed[0]?.front?.slice(0,40) || 'Imported deck')
-      if (user) await saveDraft('flashcards', 'Imported deck', { topic:'Imported deck', cards:parsed })
-      return
-    }
-    setTopic(raw.slice(0, 60))
-    await generate(raw)
-  }
-
-  function handleFileUpload(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => { setImportText(ev.target.result || ''); setImportError('') }
-    reader.readAsText(file)
-    e.target.value = ''
-  }
-
-  // ── Generate ────────────────────────────────────────────────────────────────
-
-  async function generate(overrideTopic) {
-    const t = (overrideTopic||topic).trim()
-    if (!t) return
-    if (overrideTopic) setTopic(overrideTopic)
-    setLoading(true); setCards([]); setFlipped(false); setError(''); setSavedId(null)
-    setStudyQueue([]); setSessionComplete(false); setSessionHardCards([]); setSessionAgainCards([])
-    setSessionRatings({again:0,hard:0,easy:0}); setDraftBanner(false)
-    try {
-      const data  = await rpc('generateFlashcardsFromText', [t, count, 'English'])
-      const raw   = data.result
-      let parsed  = []
-      if (raw?.cards) parsed = raw.cards
-      else if (Array.isArray(raw)) parsed = raw
-      if (!parsed.length) setError('Could not generate cards. Try adding more detail.')
-      else {
-        setCards(parsed)
-        setStudyQueue(parsed.map((_,i)=>i))
-        sessionStartRef.current = Date.now()
-        if (user) await saveDraft('flashcards', t, { topic:t, cards:parsed })
-      }
-    } catch { setError('Something went wrong. Please try again.') }
-    finally  { setLoading(false) }
-  }
-
-  // ── Save ────────────────────────────────────────────────────────────────────
+  // - Save -
 
   async function doSave() {
     if (!user) return; setSaving(true)
     try {
-      const payload = { cards, topic }
+      const payload = { questions, topic, type:typeId }
       if (savedId) { await updateSavedItem(savedId,{title:saveTitle||topic,data:payload}); setSaveFeedback('Updated!') }
-      else { const r=await saveItem(user.id,'flashcards',saveTitle||topic,payload); setSavedId(r.id); setSaveFeedback('Saved!') }
-      setShowSave(false); await clearDraft('flashcards')
+      else { const r=await saveItem(user.id,'quiz',saveTitle||topic,payload); setSavedId(r.id); setSaveFeedback('Saved!') }
+      setShowSave(false); await clearDraft('quiz')
       setTimeout(()=>setSaveFeedback(''), 3000)
     } catch { setSaveFeedback('Save failed') }
     finally { setSaving(false) }
   }
 
-  function restartSession() {
-    setStudyQueue(cards.map((_,i)=>i)); setSessionComplete(false)
-    setSessionHardCards([]); setSessionAgainCards([])
-    setSessionRatings({again:0,hard:0,easy:0}); setFlipped(false)
-    sessionStartRef.current = Date.now()
+  async function explainWrongAnswer(questionIndex, question, studentAnswerText, correctAnswerText) {
+    setExplanationLoading(prev=>({...prev,[questionIndex]:true}))
+    try {
+      const res  = await fetch('/api/nova/explain-answer', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ question:question.question, studentAnswer:studentAnswerText, correctAnswer:correctAnswerText, topic:topic||'' }) })
+      const data = await res.json()
+      setNovaExplanations(prev=>({...prev,[questionIndex]:data.explanation}))
+    } catch { setNovaExplanations(prev=>({...prev,[questionIndex]:'Unable to load explanation right now.'})) }
+    finally { setExplanationLoading(prev=>({...prev,[questionIndex]:false})) }
   }
 
-  function generateFocusedDeck() {
-    const weak  = [...new Map([...sessionHardCards,...sessionAgainCards].map(c=>[c.front||c.question,c])).values()]
-    const terms = weak.map(c=>c.front||c.question).slice(0,8).join('; ')
-    const ft    = `Create flashcards to help me master these specific concepts from "${topic}": ${terms}`
-    setSessionComplete(false); setSessionHardCards([]); setSessionAgainCards([])
-    setSessionRatings({again:0,hard:0,easy:0}); setFlipped(false); setSavedId(null)
-    generate(ft)
+  function startFresh() { setQuestions([]); setError(''); setSavedId(null); setDraftBanner(false); clearDraft('quiz') }
+
+  function resetAnswers() {
+    setSelected({}); setSaInputs({}); setFitbInputs({})
+    setMatchAnswers({}); setSaGrades({}); setSubmitted(false)
+    setNovaExplanations({}); setExplanationLoading({})
+    initMatching(questions)
   }
 
-  function startFresh() { setCards([]); setStudyQueue([]); setSessionComplete(false); setDraftBanner(false); clearDraft('flashcards') }
+  // - Scoring -
 
-  // ── Render: input (no cards yet) ────────────────────────────────────────────
+  const autoScore = submitted ? questions.filter((q,i) => {
+    if (q.type==='short_answer'||q.type==='matching') return false
+    if (q.type==='fill_blank') return checkFitbAnswer(fitbInputs[i], q.correctAnswer)
+    return selected[i]===q.correct
+  }).length : 0
+  const saScore   = submitted ? Object.values(saGrades).filter(g=>g==='correct').length : 0
+  const score     = autoScore + saScore
+  const pct       = questions.length ? Math.round(score/questions.length*100) : 0
+  const breakdownTotal = (breakdown.mcq||0)+(breakdown.tf||0)+(breakdown.sa||0)+(breakdown.fitb||0)+(breakdown.match||0)
 
-  if (!cards.length) return (
+  // - Edit mode -
+
+  if (editMode) return (
+    <EditPanel
+      questions={questions}
+      onSave={qs=>{ setQuestions(qs); setEditMode(false); setSelected({}); setSaInputs({}); setFitbInputs({}); setMatchAnswers({}); setSaGrades({}); setSubmitted(false); initMatching(qs) }}
+      onCancel={()=>setEditMode(false)}
+    />
+  )
+
+  // - Input state -
+
+  if (!questions.length) return (
     <div style={{ padding:'28px 24px 48px', maxWidth:1100, fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
 
       {draftBanner && (
         <div style={{ background:'rgba(99,102,241,0.07)', border:'1px solid rgba(99,102,241,0.2)', borderRadius:10, padding:'10px 14px', marginBottom:20, display:'flex', alignItems:'center', gap:10 }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
-          <span style={{ fontSize:12, color:'rgba(241,240,255,0.65)', flex:1 }}>Resuming your last deck — <strong style={{ color:'rgba(241,240,255,0.85)' }}>{topic}</strong></span>
+          <span style={{ fontSize:12, color:'rgba(241,240,255,0.65)', flex:1 }}>Resuming your last quiz - <strong style={{ color:'rgba(241,240,255,0.85)' }}>{topic}</strong></span>
           <button onClick={startFresh} style={{ fontSize:11, color:'rgba(241,240,255,0.35)', background:'none', border:'none', cursor:'pointer', fontFamily:'inherit' }}>Start fresh</button>
         </div>
       )}
 
-      {dueToday > 0 && (
-        <a href="/review" style={{ textDecoration:'none', display:'block', marginBottom:20 }}>
-          <div style={{ background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.22)', borderRadius:10, padding:'11px 16px', display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-            <div style={{ flex:1 }}>
-              <p style={{ margin:0, fontWeight:700, fontSize:13, color:'#f59e0b' }}>{dueToday} card{dueToday>1?'s':''} ready to review</p>
-              <p style={{ margin:0, fontSize:11, color:'rgba(255,255,255,0.3)' }}>Tap to start your review session →</p>
-            </div>
-          </div>
-        </a>
-      )}
-
-      <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(59,130,246,0.08)', border:'1px solid rgba(59,130,246,0.2)', borderRadius:20, padding:'5px 13px', fontSize:10, fontWeight:800, color:'#60a5fa', marginBottom:16, letterSpacing:'.08em', textTransform:'uppercase' }}>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-        Flashcards
+      <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(99,102,241,0.08)', border:'1px solid rgba(99,102,241,0.2)', borderRadius:20, padding:'5px 13px', fontSize:10, fontWeight:800, color:'#a5b4fc', marginBottom:16, letterSpacing:'.08em', textTransform:'uppercase' }}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#a5b4fc"/></svg>
+        Quiz
       </div>
-      <h1 style={{ fontSize:26, fontWeight:800, letterSpacing:'-.03em', marginBottom:5, color:'var(--c-t1)', lineHeight:1.15 }}>Turn anything into a deck</h1>
-      <p style={{ fontSize:13, color:'var(--c-t2)', marginBottom:22, lineHeight:1.65, maxWidth:520 }}>Type a topic, paste your lecture notes, or import an existing set. Nova builds cards that stick using spaced repetition.</p>
+      <h1 style={{ fontSize:26, fontWeight:800, letterSpacing:'-.03em', marginBottom:5, color:'var(--c-t1)', lineHeight:1.15 }}>Test what you actually know</h1>
+      <p style={{ fontSize:13, color:'var(--c-t2)', marginBottom:22, lineHeight:1.65, maxWidth:520 }}>Generate a full quiz on any topic. Nova grades your answers and explains exactly why you got something wrong.</p>
 
       <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:20 }}>
         {CHIPS.map(c => (
@@ -587,396 +703,312 @@ function FlashcardsPageInner() {
 
         <div>
           <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, overflow:'hidden' }}>
+            <textarea
+              value={topic}
+              onChange={e=>setTopic(e.target.value)}
+              onKeyDown={e=>{ if (e.key==='Enter'&&e.metaKey) generate() }}
+              rows={4}
+              placeholder="Enter a topic or paste your notes to generate quiz questions from-"
+              style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'#e2e8f0', fontFamily:'inherit', fontSize:13, lineHeight:1.7, padding:'14px 16px', resize:'none', display:'block' }}
+            />
 
-            <div style={{ display:'flex', gap:2, padding:'8px 10px 0', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
-              {[['topic','By topic'],['notes','Paste notes'],['import','Import']].map(([id,label])=>(
-                <button key={id} onClick={()=>setInputTab(id)} style={{ padding:'5px 12px', borderRadius:'6px 6px 0 0', fontSize:11, fontWeight:700, cursor:'pointer', border:'none', background:inputTab===id?'rgba(255,255,255,0.08)':'none', color:inputTab===id?'#e2e8f0':'rgba(255,255,255,0.28)', fontFamily:'inherit', transition:'all .15s' }}>
-                  {label}
-                </button>
-              ))}
+            <div style={{ padding:'0 12px 8px' }}>
+              <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.06em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:7, paddingTop:2 }}>Question type</div>
+              <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                {BASE_TYPES.map(t => (
+                  <button key={t.id} onClick={()=>{ setTypeId(t.id); if (t.id==='mixed') setBreakdown({mcq:0,tf:0,sa:0,fitb:0,match:0}) }}
+                    style={{ padding:'5px 11px', borderRadius:8, fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .15s', border:'1px solid '+(typeId===t.id?'rgba(99,102,241,0.4)':'rgba(255,255,255,0.09)'), background:typeId===t.id?'rgba(99,102,241,0.13)':'rgba(255,255,255,0.03)', color:typeId===t.id?'#a5b4fc':'rgba(255,255,255,0.4)' }}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {inputTab === 'import' ? (
-              <div>
-                <div
-                  onClick={()=>fileInputRef.current?.click()}
-                  style={{ margin:'12px 14px 0', padding:'14px', border:'1.5px dashed rgba(59,130,246,0.25)', borderRadius:10, display:'flex', alignItems:'center', gap:12, cursor:'pointer', background:'rgba(59,130,246,0.04)', transition:'all .15s' }}>
-                  <div style={{ width:32, height:32, borderRadius:8, background:'rgba(59,130,246,0.1)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  </div>
-                  <div>
-                    <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.65)' }}>Upload a file</div>
-                    <div style={{ fontSize:10, color:'rgba(255,255,255,0.28)', marginTop:1 }}>.csv · .tsv · .txt · .md</div>
-                  </div>
-                  <div style={{ marginLeft:'auto', fontSize:11, fontWeight:600, color:'rgba(96,165,250,0.6)', padding:'4px 10px', border:'1px solid rgba(59,130,246,0.25)', borderRadius:6 }}>Browse</div>
+            {typeId==='mixed' && (
+              <div style={{ margin:'4px 12px 8px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:'10px 12px' }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                  <span style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.25)', textTransform:'uppercase', letterSpacing:'.05em' }}>Breakdown</span>
+                  <span style={{ fontSize:13, fontWeight:700, color:breakdownTotal>0?'#a5b4fc':'rgba(255,255,255,0.25)' }}>{breakdownTotal} question{breakdownTotal!==1?'s':''}</span>
                 </div>
-                <input ref={fileInputRef} type="file" accept=".csv,.tsv,.txt,.md" onChange={handleFileUpload} style={{ display:'none' }}/>
-
-                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px' }}>
-                  <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.07)' }}/>
-                  <span style={{ fontSize:10, color:'rgba(255,255,255,0.2)', fontWeight:600 }}>OR PASTE BELOW</span>
-                  <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.07)' }}/>
-                </div>
-
-                <textarea
-                  value={importText}
-                  onChange={e=>{ setImportText(e.target.value); setImportError('') }}
-                  rows={5}
-                  placeholder={'front term, back definition\nphotosynthesis, process plants use to make food\nmitosis, cell division producing two identical cells\n\nAlso supports tab-separated (Quizlet export) and plain text.'}
-                  style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'#e2e8f0', fontFamily:'inherit', fontSize:12, lineHeight:1.7, padding:'0 16px 12px', resize:'none', display:'block' }}
-                />
-
-                <div style={{ padding:'8px 14px 10px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', gap:6, flexWrap:'wrap' }}>
-                  {[['CSV','front, back'],['Quizlet','front\\tback'],['Anki','.txt export'],['Plain text','Nova extracts']].map(([fmt,hint])=>(
-                    <div key={fmt} style={{ padding:'3px 9px', borderRadius:20, fontSize:10, fontWeight:600, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.3)' }}>
-                      <span style={{ color:'rgba(255,255,255,0.5)' }}>{fmt}</span> · {hint}
+                {[{k:'mcq',label:'Multiple Choice'},{k:'tf',label:'True / False'},{k:'sa',label:'Short Answer'},{k:'fitb',label:'Fill in the Blank'},{k:'match',label:'Matching'}].map(({k,label})=>{
+                  const val = breakdown[k]||0; const active = val>0
+                  return (
+                    <div key={k} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:active?'rgba(99,102,241,0.07)':'rgba(255,255,255,0.02)', border:'1px solid '+(active?'rgba(99,102,241,0.25)':'rgba(255,255,255,0.06)'), borderRadius:9, padding:'0 8px 0 12px', height:44, marginBottom:5, transition:'all .15s' }}>
+                      <span style={{ fontSize:13, fontWeight:500, color:active?'#a5b4fc':'var(--c-t1)', flex:1 }}>{label}</span>
+                      <div style={{ display:'flex', alignItems:'center', gap:2, flexShrink:0 }}>
+                        <button onClick={()=>setBreakdown(b=>({...b,[k]:Math.max(0,(b[k]||0)-1)}))} style={{ width:36,height:36,borderRadius:8,border:'none',background:'none',color:active?'#6366f1':'var(--c-t3)',fontSize:20,cursor:'pointer',fontFamily:'inherit' }}>-</button>
+                        <span style={{ fontSize:16,fontWeight:700,color:active?'#6366f1':'rgba(255,255,255,0.2)',minWidth:24,textAlign:'center' }}>{val}</span>
+                        <button onClick={()=>setBreakdown(b=>({...b,[k]:(b[k]||0)+1}))} style={{ width:36,height:36,borderRadius:8,border:'none',background:'none',color:active?'#6366f1':'var(--c-t3)',fontSize:20,cursor:'pointer',fontFamily:'inherit' }}>+</button>
+                      </div>
                     </div>
-                  ))}
-                </div>
-
-                {importError && <div style={{ padding:'6px 14px 8px', fontSize:11, color:'#f87171' }}>{importError}</div>}
+                  )
+                })}
               </div>
-            ) : (
-              <textarea
-                value={topic}
-                onChange={e=>setTopic(e.target.value)}
-                onKeyDown={e=>{ if (e.key==='Enter'&&e.metaKey) generate() }}
-                rows={5}
-                placeholder={inputTab==='notes' ? 'Paste your lecture notes, textbook excerpt, or any text here — Nova will extract the key concepts...' : 'e.g. The causes and key events of World War I...'}
-                style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'#e2e8f0', fontFamily:'inherit', fontSize:13, lineHeight:1.7, padding:'14px 16px', resize:'none', display:'block' }}
-              />
             )}
 
-            {/* ── Slider — PERMANENT FIX: CSS-variable fill, always in sync with counter ── */}
-            {inputTab !== 'import' && (
+            {/* - Slider - PERMANENT FIX: CSS-variable fill, always in sync with counter - */}
+            {typeId!=='mixed' && (
               <div style={{ padding:'10px 14px 12px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:7 }}>
-                  <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.28)', textTransform:'uppercase', letterSpacing:'.05em' }}>Cards to generate</span>
-                  <span style={{ fontSize:16, fontWeight:800, color:'#60a5fa' }}>{count}</span>
+                  <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.28)', textTransform:'uppercase', letterSpacing:'.05em' }}>Questions</span>
+                  <span style={{ fontSize:16, fontWeight:800, color:'#a5b4fc' }}>{count}</span>
                 </div>
                 <>
                   <style>{`
-                    .fc-slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;outline:none;cursor:pointer;display:block}
-                    .fc-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.5);cursor:pointer;border:none}
-                    .fc-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.5);cursor:pointer;border:none}
-                    .fc-slider::-moz-range-track{height:4px;border-radius:2px;background:transparent}
+                    .qz-slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;outline:none;cursor:pointer;display:block}
+                    .qz-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.5);cursor:pointer;border:none}
+                    .qz-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.5);cursor:pointer;border:none}
+                    .qz-slider::-moz-range-track{height:4px;border-radius:2px;background:transparent}
                   `}</style>
                   <input
                     type="range"
-                    className="fc-slider"
-                    min={5} max={40} step={1}
+                    className="qz-slider"
+                    min={5} max={35} step={1}
                     value={count}
-                    onChange={e => setCount(Number(e.target.value))}
-                    style={{ background:`linear-gradient(to right,#3b82f6 ${((count-5)/35*100).toFixed(1)}%,rgba(255,255,255,0.15) ${((count-5)/35*100).toFixed(1)}%)` }}
+                    onChange={e=>setCount(Number(e.target.value))}
+                    style={{ background:`linear-gradient(to right,#6366f1 ${((count-5)/30*100).toFixed(1)}%,rgba(255,255,255,0.15) ${((count-5)/30*100).toFixed(1)}%)` }}
                   />
                 </>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, color:'rgba(255,255,255,0.2)', marginTop:5 }}>
-                  <span>5</span><span>20</span><span>40</span>
+                  <span>5</span><span>20</span><span>35</span>
                 </div>
               </div>
             )}
 
-            <div style={{ padding:'9px 14px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-              <span style={{ fontSize:11, color:'rgba(255,255,255,0.18)' }}>Includes spaced repetition review</span>
-              <span style={{ fontSize:11, color:'rgba(255,255,255,0.15)' }}>⌘↵ generate</span>
+            <div style={{ padding:'9px 14px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between' }}>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.18)' }}>Nova explains every wrong answer</span>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.15)' }}>- generate</span>
             </div>
           </div>
 
           {error && <div style={{ fontSize:12, color:'#f87171', marginTop:8 }}>{error}</div>}
 
           <button
-            onClick={()=> inputTab==='import' ? handleImport() : generate()}
-            disabled={loading||(inputTab==='import' ? !importText.trim() : !topic.trim())}
-            style={{ width:'100%', padding:'13px', borderRadius:11, border:'none', background:'linear-gradient(135deg,#2563eb,#4f46e5)', color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer', opacity:loading||(inputTab==='import'?!importText.trim():!topic.trim())?0.55:1, marginTop:11, fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:9, letterSpacing:'-.01em', boxShadow:'0 4px 18px rgba(37,99,235,0.28)', transition:'all .15s' }}>
+            onClick={generate}
+            disabled={loading||!topic.trim()||(typeId==='mixed'&&breakdownTotal===0)}
+            style={{ width:'100%', padding:'13px', borderRadius:11, border:'none', background:'linear-gradient(135deg,#4f46e5,#7c3aed)', color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer', marginTop:11, fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:9, letterSpacing:'-.01em', boxShadow:'0 4px 18px rgba(99,102,241,0.28)', transition:'all .15s', opacity:loading||!topic.trim()||(typeId==='mixed'&&breakdownTotal===0)?0.55:1 }}>
             {loading ? (
               <>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation:'_fcspin .7s linear infinite', flexShrink:0 }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
-                {inputTab==='import' ? 'Importing…' : 'Generating…'}
+                Generating-
               </>
-            ) : inputTab==='import' ? 'Import cards →' : 'Generate flashcards →'}
+            ) : `Generate ${typeId==='mixed'?breakdownTotal:count} question${(typeId==='mixed'?breakdownTotal:count)!==1?'s':''} -`}
           </button>
         </div>
 
         {!isMobile && <div>
-          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>What you'll get</div>
-
-          <div style={{ position:'relative', height:168, margin:'0 auto 14px', width:210 }}>
-            <div style={{ position:'absolute', top:14, left:8, right:-8, height:132, background:'rgba(37,99,235,0.05)', border:'1px solid rgba(59,130,246,0.1)', borderRadius:11, transform:'rotate(3.5deg)' }}/>
-            <div style={{ position:'absolute', top:7, left:4, right:-4, height:140, background:'rgba(37,99,235,0.07)', border:'1px solid rgba(59,130,246,0.14)', borderRadius:11, transform:'rotate(1.5deg)' }}/>
-            <div style={{ position:'absolute', top:0, left:0, right:0, height:150, background:'rgba(8,16,42,0.9)', border:'1.5px solid rgba(59,130,246,0.36)', borderRadius:11, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:18, gap:9, boxShadow:'0 6px 28px rgba(37,99,235,0.16)' }}>
-              <div style={{ fontSize:9, fontWeight:800, letterSpacing:'.09em', textTransform:'uppercase', padding:'3px 9px', borderRadius:20, background:'rgba(59,130,246,0.1)', color:'#60a5fa', border:'1px solid rgba(59,130,246,0.18)' }}>Question</div>
-              <div style={{ fontSize:12, fontWeight:600, color:'#e2e8f0', textAlign:'center', lineHeight:1.5 }}>What was the primary cause of the First World War?</div>
-              <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>click to reveal answer</div>
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>Live preview</div>
+          <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:16 }}>
+            <div style={{ marginBottom:10 }}>
+              <span style={{ fontSize:9, fontWeight:800, background:'rgba(99,102,241,0.1)', color:'#a5b4fc', padding:'3px 8px', borderRadius:20, textTransform:'uppercase', letterSpacing:'.05em' }}>Multiple Choice</span>
+            </div>
+            <p style={{ fontSize:13, fontWeight:600, color:'#e2e8f0', marginBottom:12, lineHeight:1.5 }}>Which event directly triggered the start of World War I in 1914?</p>
+            {[
+              { label:'A', text:'The sinking of the Lusitania', state:'wrong'  },
+              { label:'B', text:'The Treaty of Versailles',     state:'plain'  },
+              { label:'C', text:'Assassination of Archduke Franz Ferdinand', state:'correct' },
+              { label:'D', text:'Germany invading Poland',      state:'plain'  },
+            ].map(o => (
+              <div key={o.label} style={{ padding:'7px 11px', borderRadius:7, fontSize:12, marginBottom:5, border:'1px solid '+(o.state==='correct'?'rgba(16,185,129,0.28)':o.state==='wrong'?'rgba(239,68,68,0.18)':'rgba(255,255,255,0.06)'), background:o.state==='correct'?'rgba(16,185,129,0.07)':o.state==='wrong'?'rgba(239,68,68,0.05)':'transparent', color:o.state==='correct'?'#34d399':o.state==='wrong'?'rgba(239,68,68,0.55)':'rgba(255,255,255,0.38)', display:'flex', alignItems:'center', gap:8 }}>
+                <span style={{ fontSize:9, fontWeight:800, width:16 }}>{o.label}</span>{o.text}
+              </div>
+            ))}
+            <div style={{ marginTop:10, background:'rgba(167,139,250,0.05)', border:'1px solid rgba(167,139,250,0.15)', borderRadius:8, padding:'9px 11px', fontSize:11, color:'rgba(167,139,250,0.75)', lineHeight:1.6 }}>
+              <span style={{ fontWeight:700, color:'#a78bfa' }}>Nova explains:</span> The Lusitania sinking was 1915 - WWI already underway. Franz Ferdinand's assassination on June 28, 1914 triggered the chain of alliances that started the war.
             </div>
           </div>
 
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:7, marginBottom:10 }}>
-            <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:9, padding:'9px 10px' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.55)', marginBottom:3 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                Review queue
-              </div>
-              <div style={{ fontSize:10, color:'rgba(255,255,255,0.25)', lineHeight:1.5 }}>Cards resurface based on how well you know them</div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:7, marginTop:10 }}>
+            <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:9, padding:'9px 11px', textAlign:'center' }}>
+              <div style={{ fontSize:12, fontWeight:800, color:'#a5b4fc', marginBottom:2 }}>Auto-graded</div>
+              <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>All 5 question types</div>
             </div>
-            <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:9, padding:'9px 10px' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.55)', marginBottom:3 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Edit deck
-              </div>
-              <div style={{ fontSize:10, color:'rgba(255,255,255,0.25)', lineHeight:1.5 }}>Add, remove or reword any card after generating</div>
+            <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:9, padding:'9px 11px', textAlign:'center' }}>
+              <div style={{ fontSize:12, fontWeight:800, color:'#a5b4fc', marginBottom:2 }}>Print ready</div>
+              <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>Answer key included</div>
             </div>
-          </div>
-
-          <div style={{ background:'rgba(59,130,246,0.05)', border:'1px solid rgba(59,130,246,0.13)', borderRadius:10, padding:'11px 13px' }}>
-            <div style={{ fontSize:11, color:'rgba(96,165,250,0.65)', fontWeight:700, marginBottom:4, display:'flex', alignItems:'center', gap:6 }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#60a5fa"/></svg>
-              Nova weak-spot detection
-            </div>
-            <div style={{ fontSize:11, color:'rgba(255,255,255,0.27)', lineHeight:1.6 }}>After your session, Nova identifies which cards you struggled with and offers to drill just those concepts.</div>
           </div>
         </div>}
       </div>
     </div>
   )
 
-  // ── Render: session complete ────────────────────────────────────────────────
 
-  if (sessionComplete) return (
-    <SessionComplete
-      cards={cards} topic={topic} hardCards={sessionHardCards} againCards={sessionAgainCards}
-      sessionRatings={sessionRatings} onRestart={restartSession} onNewDeck={generateFocusedDeck}
-      cardTheme={cardTheme}
-    />
-  )
-
-  // ── Render: edit mode ───────────────────────────────────────────────────────
-
-  if (showEdit) return (
-    <div style={{ padding:'24px', maxWidth:640, margin:'0 auto', width:'100%' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
-        <h2 style={{ fontSize:18, fontWeight:800, color:'var(--c-t1)' }}>Edit Deck <span style={{ fontSize:13, fontWeight:400, color:'var(--c-t3)' }}>({cards.length} cards)</span></h2>
-        <div style={{ display:'flex', gap:8 }}>
-          <button onClick={addCard} style={{ height:32, padding:'0 12px', background:'#2563eb', color:'#fff', border:'none', borderRadius:8, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>+ Add Card</button>
-          <button onClick={()=>{setShowEdit(false);setEditIdx(null)}} style={{ height:32, padding:'0 12px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:8, fontSize:12, cursor:'pointer', fontFamily:'inherit' }}>Done</button>
-        </div>
-      </div>
-      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-        {cards.map((c,i)=>(
-          <div key={i} style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:12, padding:16 }}>
-            {editIdx===i ? (
-              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                <div style={{ fontSize:10, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'.05em' }}>Question</div>
-                <textarea value={editVals.front} onChange={e=>setEditVals(v=>({...v,front:e.target.value}))} rows={2} style={{ width:'100%', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, padding:'8px 10px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit' }}/>
-                <div style={{ fontSize:10, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'.05em' }}>Answer</div>
-                <textarea value={editVals.back} onChange={e=>setEditVals(v=>({...v,back:e.target.value}))} rows={2} style={{ width:'100%', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, padding:'8px 10px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit' }}/>
-                <div style={{ display:'flex', gap:8 }}>
-                  <button onClick={saveEdit} style={{ height:28, padding:'0 12px', background:'#2563eb', color:'#fff', border:'none', borderRadius:7, fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Save</button>
-                  <button onClick={()=>setEditIdx(null)} style={{ height:28, padding:'0 12px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:7, fontSize:11, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-                </div>
-              </div>
-            ) : (
-              <div style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
-                <span style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', marginTop:2, width:20, flexShrink:0 }}>{i+1}.</span>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <p style={{ fontSize:13, fontWeight:600, color:'var(--c-t1)', marginBottom:3 }}>{c.front||c.question}</p>
-                  <p style={{ fontSize:12, color:'var(--c-t2)' }}>{c.back||c.answer}</p>
-                </div>
-                <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                  <button onClick={()=>startEdit(i)} style={{ height:28, padding:'0 10px', fontSize:11, color:'var(--c-t2)', border:'1px solid var(--c-line)', borderRadius:7, background:'none', cursor:'pointer', fontFamily:'inherit' }}>Edit</button>
-                  <button onClick={()=>deleteCard(i)} style={{ height:28, padding:'0 10px', fontSize:11, color:'#f87171', border:'1px solid rgba(239,68,68,0.25)', borderRadius:7, background:'none', cursor:'pointer', fontFamily:'inherit' }}>✕</button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-
-  if (!card) return null
-
-  // ── Render: study session ───────────────────────────────────────────────────
-
-  const progress      = Math.round((done/cards.length)*100)
-  const cardFace      = flipped ? (card.back||card.answer) : (card.front||card.question)
-  const cardBorder    = flipped ? 'rgba(99,102,241,0.45)' : 'rgba(59,130,246,0.35)'
-  const badgeBg       = flipped ? 'rgba(99,102,241,0.1)'  : 'rgba(59,130,246,0.1)'
-  const badgeColor    = flipped ? '#818cf8' : '#60a5fa'
-  const badgeBorder   = flipped ? 'rgba(99,102,241,0.2)'  : 'rgba(59,130,246,0.18)'
-  const remaining     = studyQueue.length
-
-  const ratingBtns = (
-    <div style={{ display:'flex', gap:8, marginTop:12, justifyContent:'center' }}>
-      <button onClick={handleAgain} style={{ flex:1, maxWidth:110, padding:'10px 4px', borderRadius:10, border:'1px solid rgba(239,68,68,0.25)', background:'rgba(239,68,68,0.06)', color:'#f87171', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
-        <div>Again</div><div style={{ fontSize:9, opacity:.7, marginTop:1 }}>→ end</div>
-      </button>
-      <button onClick={handleHard} style={{ flex:1, maxWidth:110, padding:'10px 4px', borderRadius:10, border:'1px solid rgba(245,158,11,0.25)', background:'rgba(245,158,11,0.06)', color:'#fbbf24', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
-        <div>Hard</div><div style={{ fontSize:9, opacity:.7, marginTop:1 }}>→ later</div>
-      </button>
-      <button onClick={handleEasy} style={{ flex:1, maxWidth:110, padding:'10px 4px', borderRadius:10, border:'1px solid rgba(16,185,129,0.3)', background:'rgba(16,185,129,0.07)', color:'#34d399', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
-        <div>Easy</div><div style={{ fontSize:9, opacity:.7, marginTop:1 }}>✓ done</div>
-      </button>
-    </div>
-  )
-
-  return (
+  if (submitted) return (
     <>
+      {showKey && <AnswerKeyModal questions={questions} topic={topic} onClose={()=>setShowKey(false)} selected={selected} novaExplanations={novaExplanations} explanationLoading={explanationLoading} explainWrongAnswer={explainWrongAnswer}/>}
       {showSave && (
         <div style={{ position:'fixed', inset:0, zIndex:40, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.45)' }}>
           <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:24, width:'100%', maxWidth:360, boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
-            <div style={{ fontSize:15, fontWeight:800, color:'var(--c-t1)', marginBottom:16 }}>Save Deck</div>
-            <input value={saveTitle} onChange={e=>setSaveTitle(e.target.value)} placeholder={topic||'Deck title…'} style={{ width:'100%', height:36, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:9, padding:'0 12px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', marginBottom:14 }}/>
+            <div style={{ fontSize:15, fontWeight:800, color:'var(--c-t1)', marginBottom:16 }}>Save Quiz Results</div>
+            <input value={saveTitle} onChange={e=>setSaveTitle(e.target.value)} placeholder={topic||'Quiz title-'} style={{ width:'100%', height:36, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:9, padding:'0 12px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', marginBottom:14, boxSizing:'border-box' }}/>
             <div style={{ display:'flex', gap:8 }}>
-              <button onClick={doSave} disabled={saving} style={{ flex:1, height:36, background:'#2563eb', color:'#fff', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', opacity:saving?.6:1 }}>{saving?'Saving…':'Save to My Stuff'}</button>
+              <button onClick={doSave} disabled={saving} style={{ flex:1, height:36, background:'#2563eb', color:'#fff', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', opacity:saving?0.6:1 }}>{saving?'Saving-':'Save to My Stuff'}</button>
+              <button onClick={()=>setShowSave(false)} style={{ height:36, padding:'0 16px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <QuizResultsScreen
+        questions={questions} topic={topic} score={score} pct={pct}
+        selected={selected} fitbInputs={fitbInputs} saGrades={saGrades}
+        user={user} isMobile={isMobile} savedId={savedId} saveFeedback={saveFeedback}
+        onShowAnswerKey={() => setShowKey(true)}
+        onSave={() => { setSaveTitle(topic); setShowSave(true) }}
+        onRetake={resetAnswers}
+        onNewQuiz={startFresh}
+      />
+    </>
+  )
+
+  // - Quiz in progress / submitted -
+
+  return (
+    <div style={{ padding:'24px', maxWidth:680, margin:'0 auto', width:'100%', fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+
+      {showKey && <AnswerKeyModal questions={questions} topic={topic} onClose={()=>setShowKey(false)} selected={selected} novaExplanations={novaExplanations} explanationLoading={explanationLoading} explainWrongAnswer={explainWrongAnswer}/>}
+
+      {showSave && (
+        <div style={{ position:'fixed', inset:0, zIndex:40, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.45)' }}>
+          <div style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:18, padding:24, width:'100%', maxWidth:360, boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
+            <div style={{ fontSize:15, fontWeight:800, color:'var(--c-t1)', marginBottom:16 }}>Save Quiz</div>
+            <input value={saveTitle} onChange={e=>setSaveTitle(e.target.value)} placeholder={topic||'Quiz title-'} style={{ width:'100%', height:36, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:9, padding:'0 12px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', marginBottom:14 }}/>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={doSave} disabled={saving} style={{ flex:1, height:36, background:'#2563eb', color:'#fff', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', opacity:saving?.6:1 }}>{saving?'Saving-':'Save to My Stuff'}</button>
               <button onClick={()=>setShowSave(false)} style={{ height:36, padding:'0 16px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Desktop study view */}
-      <div className="fc-desktop-wrap" style={{ display:'none' }}>
-        <div style={{ padding:'24px 20px', borderRight:'1px solid var(--c-line)', display:'flex', flexDirection:'column', gap:14 }}>
-          <div>
-            <div style={{ fontSize:14, fontWeight:700, color:'var(--c-t1)', marginBottom:2 }}>{topic||'Flashcards'}</div>
-            <div style={{ fontSize:11, color:'var(--c-t3)' }}>{remaining} cards remaining</div>
-          </div>
-          <div>
-            <div style={{ height:3, background:'var(--c-line)', borderRadius:2, overflow:'hidden', marginBottom:5 }}>
-              <div style={{ height:'100%', width:progress+'%', background:'#3b82f6', borderRadius:2, transition:'width .3s' }}/>
-            </div>
-            <div style={{ fontSize:10, color:'var(--c-t3)' }}>{done} of {cards.length} done</div>
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:7 }}>
-            {[{label:'Done',val:done,color:'#34d399'},{label:'Left',val:remaining,color:'#60a5fa'},{label:'Again',val:sessionRatings.again,color:'#f87171'},{label:'Hard',val:sessionRatings.hard,color:'#fbbf24'}].map(s=>(
-              <div key={s.label} style={{ background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, padding:'10px 11px' }}>
-                <div style={{ fontSize:20, fontWeight:700, color:s.color, lineHeight:1 }}>{s.val}</div>
-                <div style={{ fontSize:10, color:'var(--c-t3)', marginTop:3 }}>{s.label}</div>
+
+
+      <div style={{ display:'flex', flexDirection:'column', gap:14, marginBottom:20 }}>
+        {questions.map((q,i) => {
+          const isSA    = q.type==='short_answer'
+          const isFITB  = q.type==='fill_blank'
+          const isMatch = q.type==='matching'
+          return (
+            <div key={i} style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:14, padding:16 }}>
+              <div style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:12 }}>
+                <span style={{ fontSize:9, fontWeight:800, background:'rgba(59,130,246,0.1)', color:'#60a5fa', padding:'3px 8px', borderRadius:20, flexShrink:0, marginTop:1, textTransform:'uppercase', letterSpacing:'.04em', whiteSpace:'nowrap' }}>{prettifyType(q.type)}</span>
+                <p style={{ fontSize:13, fontWeight:700, color:'var(--c-t1)', flex:1, lineHeight:1.5 }}>{i+1}. {q.question}</p>
+                <SpeakerBtn text={q.question}/>
               </div>
-            ))}
-          </div>
-          {!savedId && <div style={{ padding:'8px 10px', background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.18)', borderRadius:8, fontSize:10, color:'#f59e0b', lineHeight:1.4 }}>Deck not saved yet</div>}
-          <div style={{ marginTop:'auto', display:'flex', flexDirection:'column', gap:6 }}>
-            <button onClick={()=>{setShowEdit(true);setEditIdx(null)}} style={{ width:'100%', padding:'6px 0', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t2)', cursor:'pointer', fontFamily:'inherit' }}>Edit Deck</button>
-            <button onClick={()=>printDeck(cards,topic)} style={{ width:'100%', padding:'6px 0', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t2)', cursor:'pointer', fontFamily:'inherit' }}>Print</button>
-            <button onClick={()=>{ sessionStorage.setItem('flashfo_study_modes', JSON.stringify({cards,topic})); window.location.href='/study-modes' }} style={{ width:'100%', padding:'6px 0', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid rgba(99,102,241,0.3)', background:'rgba(99,102,241,0.08)', color:'#a5b4fc', cursor:'pointer', fontFamily:'inherit' }}>Study Modes</button>
-            <button onClick={startFresh} style={{ width:'100%', padding:'6px 0', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t2)', cursor:'pointer', fontFamily:'inherit' }}>New Deck</button>
-          </div>
-        </div>
 
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'28px 36px' }}>
-          <div style={{ display:'flex', gap:4, marginBottom:16, flexWrap:'wrap', justifyContent:'center', maxWidth:320 }}>
-            {studyQueue.map((qi,pos)=>{
-              const isHard  = sessionHardCards.some(c=>(c.front||c.question)===(cards[qi]?.front||cards[qi]?.question))
-              const isAgain = sessionAgainCards.some(c=>(c.front||c.question)===(cards[qi]?.front||cards[qi]?.question))
-              const color   = pos===0?'#3b82f6':isAgain?'#f87171':isHard?'#fbbf24':'rgba(255,255,255,0.14)'
-              return <div key={pos} style={{ width:8, height:8, borderRadius:'50%', background:color, transform:pos===0?'scale(1.5)':'scale(1)', transition:'all .2s' }}/>
-            })}
-          </div>
-
-          <div style={{ position:'relative', width:'100%', maxWidth:440, height:230, marginBottom:22 }}>
-            <div style={{ position:'absolute', top:12, left:12, right:-12, bottom:-12, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:14 }}/>
-            <div style={{ position:'absolute', top:6, left:6, right:-6, bottom:-6, background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:14 }}/>
-            <div onClick={()=>{stopAudio();setFlipped(f=>!f)}} style={{ position:'absolute', inset:0, background:'var(--c-surface)', border:'1.5px solid '+cardBorder, borderRadius:14, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:28, cursor:'pointer', transition:'border-color .2s' }}>
-              <div style={{ fontSize:9, fontWeight:700, letterSpacing:'.08em', textTransform:'uppercase', padding:'3px 10px', borderRadius:20, background:badgeBg, color:badgeColor, border:'1px solid '+badgeBorder, marginBottom:14 }}>{flipped?'Answer':'Question'}</div>
-              <div style={{ fontSize:17, fontWeight:600, color:'var(--c-t1)', textAlign:'center', lineHeight:1.45 }}>{cardFace}</div>
-              {!flipped && <div style={{ fontSize:11, color:'var(--c-t3)', marginTop:10 }}>Click or press Space to flip</div>}
-              <div style={{ position:'absolute', bottom:12, right:14 }} onClick={e=>e.stopPropagation()}><SpeakerBtn text={cardFace} audioRef={audioRef}/></div>
-            </div>
-          </div>
-
-          {flipped
-            ? <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10, width:'100%', maxWidth:440 }}>
-                <div style={{ display:'flex', gap:10, alignItems:'center' }}>
-                  <button onClick={handleAgain} style={{ padding:'8px 18px', borderRadius:9, fontSize:11, fontWeight:700, border:'1px solid rgba(239,68,68,0.25)', background:'rgba(239,68,68,0.06)', color:'#f87171', cursor:'pointer', fontFamily:'inherit' }}>Again<br/><span style={{fontSize:9,opacity:.7}}>→ end</span></button>
-                  <button onClick={handleHard}  style={{ padding:'8px 18px', borderRadius:9, fontSize:11, fontWeight:700, border:'1px solid rgba(245,158,11,0.25)', background:'rgba(245,158,11,0.06)', color:'#fbbf24', cursor:'pointer', fontFamily:'inherit' }}>Hard<br/><span style={{fontSize:9,opacity:.7}}>→ later</span></button>
-                  <button onClick={handleEasy}  style={{ padding:'8px 18px', borderRadius:9, fontSize:11, fontWeight:700, border:'1px solid rgba(16,185,129,0.3)', background:'rgba(16,185,129,0.07)', color:'#34d399', cursor:'pointer', fontFamily:'inherit' }}>Easy<br/><span style={{fontSize:9,opacity:.7}}>✓ done</span></button>
+              {isFITB && (
+                <div>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+                    <span style={{ fontSize:13, color:'var(--c-t2)' }}>Answer:</span>
+                    <input value={fitbInputs[i]||''} onChange={e=>setFitbInputs(s=>({...s,[i]:e.target.value}))} disabled={submitted} placeholder="Fill in the blank-" style={{ flex:1, height:36, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:9, padding:'0 12px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', opacity:submitted?.7:1 }}/>
+                  </div>
+                  {submitted && <div style={{ fontSize:12, padding:'8px 12px', borderRadius:8, background:checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'rgba(16,185,129,0.08)':'rgba(239,68,68,0.07)', color:checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'#34d399':'#f87171', fontWeight:600 }}>{checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'- Correct!':'- Answer: '+q.correctAnswer}</div>}
                 </div>
-                <NovaExplainPanel card={card} explainStyle={explainStyle} novaExplain={novaExplain} explaining={explaining} onExplain={explainDifferently}/>
-              </div>
-            : <p style={{ fontSize:12, color:'var(--c-t3)', margin:'0 0 10px' }}>Click or press Space to flip · then rate</p>
-          }
-        </div>
+              )}
 
-        <div style={{ padding:'24px 20px', borderLeft:'1px solid var(--c-line)' }}>
-          <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'.07em', marginBottom:14 }}>Shortcuts</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:24 }}>
-            {[['Space','Flip card'],['1','Again → end'],['2','Hard → later'],['3','Easy → done']].map(([k,v])=>(
-              <div key={k}>
-                <span style={{ background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:5, padding:'2px 8px', fontSize:11, fontWeight:600, color:'var(--c-t2)', display:'inline-block', fontFamily:'monospace' }}>{k}</span>
-                <span style={{ fontSize:10, color:'var(--c-t3)', display:'block', marginTop:3 }}>{v}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ fontSize:11, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'.07em', marginBottom:12 }}>Actions</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-            {user && <button onClick={()=>{setSaveTitle(topic);setShowSave(true)}} style={{ padding:'7px 10px', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid rgba(52,211,153,0.22)', background:'rgba(16,185,129,0.06)', color:'#34d399', cursor:'pointer', textAlign:'left', fontFamily:'inherit' }}>{savedId?'Update save':'Save to My Stuff'}</button>}
-            {saveFeedback && <span style={{ fontSize:10, color:'#34d399', fontWeight:500 }}>{saveFeedback}</span>}
-            {savedId && user && <PublishToggle deckId={savedId}/>}
-            <button onClick={()=>{shareLink(cards,topic);setCopied(true);setTimeout(()=>setCopied(false),2000)}} style={{ padding:'7px 10px', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:copied?'#34d399':'var(--c-t2)', cursor:'pointer', textAlign:'left', fontFamily:'inherit' }}>{copied?'Link copied!':'Share deck'}</button>
-            <button onClick={restartSession} style={{ padding:'7px 10px', borderRadius:7, fontSize:11, fontWeight:600, border:'1px solid var(--c-line)', background:'var(--c-surface2)', color:'var(--c-t2)', cursor:'pointer', textAlign:'left', fontFamily:'inherit' }}>↺ Restart session</button>
-          </div>
-        </div>
+              {isMatch && (
+                <div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
+                    <span style={{ fontSize:10, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'.04em' }}>Term</span>
+                    <span style={{ fontSize:10, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'.04em' }}>Match</span>
+                  </div>
+                  {(q.pairs||[]).map((pair,j)=>(
+                    <div key={j} style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6, alignItems:'center' }}>
+                      <div style={{ padding:'8px 12px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, fontSize:13, color:'var(--c-t1)' }}>{pair.left}</div>
+                      <select value={matchAnswers[i]?.[j]||''} onChange={e=>setMatchAnswers(s=>({...s,[i]:{...(s[i]||{}),[j]:e.target.value}}))} disabled={submitted} style={{ height:36, background:'var(--c-surface2)', border:'1px solid '+(submitted?(matchAnswers[i]?.[j]===pair.right?'#10b981':'#ef4444'):'var(--c-line)'), borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}>
+                        <option value="">Select-</option>
+                        {(shuffledRights[i]||[]).map((r,ri)=><option key={ri} value={r}>{r}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                  {submitted && <div style={{ fontSize:11, color:'var(--c-t3)', marginTop:4 }}>{(q.pairs||[]).map(p=>p.left+' - '+p.right).join(' - ')}</div>}
+                </div>
+              )}
+
+              {isSA && (
+                <div>
+                  <textarea value={saInputs[i]||''} onChange={e=>setSaInputs(s=>({...s,[i]:e.target.value}))} placeholder="Type your answer here-" disabled={submitted} rows={3} style={{ width:'100%', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:10, padding:'10px 12px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit', marginBottom:8, opacity:submitted?.7:1 }}/>
+                  {submitted && (
+                    <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+                      <div style={{ fontSize:12, color:'var(--c-t2)', background:'rgba(59,130,246,0.08)', padding:'8px 12px', borderRadius:8, border:'1px solid rgba(59,130,246,0.2)' }}><span style={{ fontWeight:700, color:'#60a5fa' }}>Model answer: </span>{q.correctAnswer||'Open-ended'}</div>
+                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        <span style={{ fontSize:11, color:'var(--c-t3)' }}>Self-grade:</span>
+                        {['correct','wrong'].map(g=>(
+                          <button key={g} onClick={()=>setSaGrades(s=>({...s,[i]:g}))} style={{ height:28, padding:'0 12px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid '+(saGrades[i]===g?(g==='correct'?'#10b981':'#ef4444'):'var(--c-line)'), background:saGrades[i]===g?(g==='correct'?'#10b981':'#ef4444'):'transparent', color:saGrades[i]===g?'#fff':'var(--c-t2)', cursor:'pointer', fontFamily:'inherit' }}>
+                            {g==='correct'?'- Correct':'- Wrong'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!isSA&&!isFITB&&!isMatch && (
+                <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                  {(q.options||['True','False']).map((opt,j)=>{
+                    const isSel  = selected[i]===j
+                    const isCorr = q.answerIndex===j
+                    let bg='transparent', border='rgba(255,255,255,0.07)', color='rgba(255,255,255,0.5)'
+                    if (submitted) {
+                      if (isCorr)      { bg='rgba(16,185,129,0.08)'; border='rgba(16,185,129,0.3)'; color='#34d399' }
+                      else if (isSel)  { bg='rgba(239,68,68,0.07)'; border='rgba(239,68,68,0.25)'; color='rgba(239,68,68,0.7)' }
+                      else             { color='rgba(255,255,255,0.2)' }
+                    } else if (isSel)  { bg='rgba(99,102,241,0.1)'; border='rgba(99,102,241,0.4)'; color='#a5b4fc' }
+                    return (
+                      <button key={j} onClick={()=>!submitted&&setSelected(s=>({...s,[i]:j}))} style={{ width:'100%', textAlign:'left', padding:'9px 13px', borderRadius:9, border:'1px solid '+border, background:bg, color, fontSize:13, cursor:submitted?'default':'pointer', transition:'all .15s', fontFamily:'inherit', display:'flex', alignItems:'center', gap:8 }}>
+                        <span style={{ fontWeight:700, width:18 }}>{['A','B','C','D'][j]}.</span>{opt}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {submitted&&q.explanation && <div style={{ marginTop:10, fontSize:11, color:'var(--c-t2)', background:'var(--c-surface2)', padding:'8px 12px', borderRadius:8, border:'1px solid var(--c-line)', lineHeight:1.6 }}><span style={{ fontWeight:700, color:'var(--c-t1)' }}>Explanation: </span>{q.explanation}</div>}
+            </div>
+          )
+        })}
       </div>
 
-      {/* Mobile study view */}
-      <div className="fc-mobile-wrap" style={{ padding:'20px', maxWidth:560, margin:'0 auto' }}>
-        {draftBanner && (
-          <div style={{ background:'rgba(99,102,241,0.07)', border:'1px solid rgba(99,102,241,0.2)', borderRadius:10, padding:'8px 14px', marginBottom:14, display:'flex', alignItems:'center', gap:10 }}>
-            <span style={{ fontSize:11, color:'rgba(241,240,255,0.55)', flex:1 }}>Resuming your last deck</span>
-            <button onClick={startFresh} style={{ fontSize:10, color:'rgba(241,240,255,0.3)', background:'none', border:'none', cursor:'pointer', fontFamily:'inherit' }}>Start fresh</button>
-          </div>
+      <div style={{ display:'flex', flexWrap:'wrap', gap:10, alignItems:'center' }}>
+        {!submitted && (
+          <button
+            onClick={async()=>{
+              setSubmitted(true)
+              if (user&&topic) {
+                try {
+                  const autoC = questions.filter((q,i)=>{ if (q.type==='short_answer'||q.type==='matching') return false; if (q.type==='fill_blank') return checkFitbAnswer(fitbInputs[i],q.correctAnswer); return selected[i]===q.answerIndex }).length
+                  await supabase.from('quiz_attempts').insert({ user_id:user.id, topic, subject:null, correct:autoC, total:questions.length })
+                } catch(e) {}
+              }
+            }}
+            disabled={Object.keys(selected).length===0&&!Object.keys(saInputs).some(k=>saInputs[k]?.trim())}
+            style={{ height:36, padding:'0 20px', background:'#4f46e5', color:'#fff', border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', opacity:Object.keys(selected).length===0&&!Object.keys(saInputs).some(k=>saInputs[k]?.trim())?.45:1 }}>
+            Submit Answers
+          </button>
         )}
-        {!savedId && (
-          <div style={{ marginBottom:14, padding:'10px 14px', background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.22)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-            <span style={{ fontSize:12, color:'#f59e0b', fontWeight:600 }}>Deck not saved yet</span>
-            <button onClick={()=>{setSaveTitle(topic);setShowSave(true)}} style={{ height:28, padding:'0 12px', background:'#d97706', color:'#fff', border:'none', borderRadius:7, fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>Save</button>
-          </div>
+        <button onClick={()=>setShowKey(true)} style={{ height:36, padding:'0 16px', background:'var(--c-surface)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:7 }}>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="7"/><path d="M8 5v4m0 2.5v.5"/></svg>
+          Answer Key
+        </button>
+        <button onClick={()=>printQuizBlank(questions,topic)} style={{ height:36, padding:'0 16px', background:'var(--c-surface)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:7 }}>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6V2h8v4M4 11H2V6h12v5h-2M4 9h8v5H4V9z"/></svg>
+          Print
+        </button>
+        <button onClick={()=>setEditMode(true)} style={{ height:36, padding:'0 16px', background:'var(--c-surface)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
+          Edit Questions
+        </button>
+        {user && (
+          <button onClick={()=>{setSaveTitle(topic);setShowSave(true)}} style={{ height:36, padding:'0 16px', background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.25)', color:'#34d399', borderRadius:10, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {savedId?'Update Save':'Save Quiz'}
+          </button>
         )}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
-          <div>
-            <h1 style={{ fontSize:18, fontWeight:800, color:'var(--c-t1)', letterSpacing:'-.02em' }}>Flashcards</h1>
-            <p style={{ fontSize:12, color:'var(--c-t2)' }}>{cards.length} cards · {done} done · {remaining} left</p>
-          </div>
-          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-            {user && <button onClick={()=>{setSaveTitle(topic);setShowSave(true)}} style={{ height:30, padding:'0 10px', background:'#059669', color:'#fff', border:'none', borderRadius:7, fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>{savedId?'Update':'Save'}</button>}
-            <button onClick={()=>printDeck(cards,topic)} style={{ height:30, padding:'0 10px', fontSize:11, color:'var(--c-t2)', border:'1px solid var(--c-line)', borderRadius:7, background:'none', cursor:'pointer', fontFamily:'inherit' }}>Print</button>
-            <button onClick={()=>{setShowEdit(true);setEditIdx(null)}} style={{ height:30, padding:'0 10px', fontSize:11, color:'var(--c-t2)', border:'1px solid var(--c-line)', borderRadius:7, background:'none', cursor:'pointer', fontFamily:'inherit' }}>Edit</button>
-            <button onClick={startFresh} style={{ fontSize:12, color:'#60a5fa', fontWeight:600, background:'none', border:'none', cursor:'pointer', fontFamily:'inherit' }}>New</button>
-          </div>
-        </div>
-        <div style={{ width:'100%', height:3, background:'var(--c-line)', borderRadius:2, marginBottom:14, overflow:'hidden' }}>
-          <div style={{ height:'100%', width:progress+'%', background:'#3b82f6', borderRadius:2, transition:'width .3s' }}/>
-        </div>
-        <div style={{ display:'flex', gap:4, marginBottom:14, flexWrap:'wrap' }}>
-          {studyQueue.map((qi,pos)=>{
-            const isHard  = sessionHardCards.some(c=>(c.front||c.question)===(cards[qi]?.front||cards[qi]?.question))
-            const isAgain = sessionAgainCards.some(c=>(c.front||c.question)===(cards[qi]?.front||cards[qi]?.question))
-            const col     = pos===0?'#3b82f6':isAgain?'#f87171':isHard?'#fbbf24':'rgba(255,255,255,0.14)'
-            return <div key={pos} style={{ width:8, height:8, borderRadius:'50%', background:col, transform:pos===0?'scale(1.4)':'scale(1)', transition:'all .2s' }}/>
-          })}
-        </div>
-        <div onClick={()=>{stopAudio();setFlipped(f=>!f)}} style={{ background:'var(--c-surface)', border:'1.5px solid '+cardBorder, borderRadius:16, padding:32, textAlign:'center', cursor:'pointer', minHeight:200, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:12, position:'relative', transition:'border-color .2s' }}>
-          <div style={{ fontSize:9, fontWeight:700, letterSpacing:'.08em', textTransform:'uppercase', padding:'3px 10px', borderRadius:20, background:badgeBg, color:badgeColor, border:'1px solid '+badgeBorder }}>{flipped?'Answer':'Question'}</div>
-          <div style={{ fontSize:16, fontWeight:600, color:'var(--c-t1)', lineHeight:1.5, maxWidth:320 }}>{cardFace}</div>
-          {!flipped && <div style={{ fontSize:11, color:'var(--c-t3)' }}>Tap to reveal answer</div>}
-          <div style={{ position:'absolute', bottom:12, right:14 }} onClick={e=>e.stopPropagation()}><SpeakerBtn text={cardFace} audioRef={audioRef}/></div>
-        </div>
-        {flipped ? (
-          <>
-            {ratingBtns}
-            <NovaExplainPanel card={card} explainStyle={explainStyle} novaExplain={novaExplain} explaining={explaining} onExplain={explainDifferently}/>
-          </>
-        ) : <div style={{ textAlign:'center', padding:'12px 0', fontSize:12, color:'var(--c-t3)' }}>Rate this card after revealing the answer</div>}
+        {saveFeedback && <span style={{ fontSize:12, color:'#34d399', fontWeight:500 }}>{saveFeedback}</span>}
+        <button onClick={startFresh} style={{ height:36, padding:'0 16px', background:'var(--c-surface)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginLeft:'auto' }}>
+          New Quiz
+        </button>
       </div>
-    </>
-  )
-}
-
-export default function FlashcardsPage() {
-  return (
-    <Suspense fallback={<div style={{ minHeight:'100vh' }}/>}>
-      <FlashcardsPageInner/>
-    </Suspense>
+    </div>
   )
 }
