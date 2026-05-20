@@ -405,7 +405,7 @@ export default function MobileShell({ children }) {
       {!onAiTutor && (
         <div style={{
           position:'fixed',
-          bottom:100,
+          top:180,
           left:'50%',
           transform:'translateX(-50%)',
           fontSize:13,
