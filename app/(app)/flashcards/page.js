@@ -840,7 +840,6 @@ function FlashcardsPageInner() {
   // ── Render: study session ────────────────────────────────────────────────
 
   const totalCards = cards.length
-  const done       = totalCards - studyQueue.length
   const easyCount  = sessionRatings.easy
   const hardCount  = sessionRatings.hard
   const againCount = sessionRatings.again
