@@ -1011,7 +1011,8 @@ export default function QuizPage() {
       </div>
     </div>
   )
-}  // ── Keyboard shortcuts (flashcard study) ─────────────────────────────────
+}
+  // ── Keyboard shortcuts ─────────────────────────────────────────────────────
   useEffect(() => {
     const onKey = (e) => {
       if (!card || sessionComplete) return
@@ -1025,27 +1026,32 @@ export default function QuizPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [card, flipped, sessionComplete])
 
-  // ── Swipe / drag to rate ─────────────────────────────────────────────────
+  // ── Swipe / drag to rate ─────────────────────────────────────────────────────
   useEffect(() => {
     const el = cardDragRef.current
     if (!el) return
     let ds = { active:false, sx:0, sy:0, dx:0, dy:0 }
+    const reset = () => { el.style.transform = ''; el.style.opacity = '1' }
     const onStart = (x,y) => { if(!flipped) return; ds={active:true,sx:x,sy:y,dx:0,dy:0}; el.style.transition='none' }
-    const onMove  = (x,y) => { if(!ds.active) return; ds.dx=x-ds.sx; ds.dy=y-ds.sy; el.style.transform=`translateX(${ds.dx}px) translateY(${Math.min(ds.dy,0)*.35}px) rotate(${ds.dx*.07}deg)` }
-    const onEnd   = ()    => {
-      if(!ds.active) return; ds.active=false
-      el.style.transition='transform .3s ease'
-      const ax=Math.abs(ds.dx), ay=-ds.dy
-      const reset = () => { el.style.transform=''; el.style.opacity='1' }
-      if(ds.dx<-85){ el.style.transform='translateX(-150%) rotate(-14deg)'; el.style.opacity='0'; setTimeout(()=>{ reset(); handleAgain() },300); return }
-      if(ds.dx>85) { el.style.transform='translateX(150%) rotate(14deg)';  el.style.opacity='0'; setTimeout(()=>{ reset(); handleEasy()  },300); return }
-      if(ay>75&&ax<65){ el.style.transform='translateY(-130%) rotate(-5deg)'; el.style.opacity='0'; setTimeout(()=>{ reset(); handleHard() },300); return }
-      el.style.transform=''
+    const onMove  = (x,y) => {
+      if(!ds.active) return
+      ds.dx = x-ds.sx; ds.dy = y-ds.sy
+      el.style.transform = `translateX(${ds.dx}px) translateY(${Math.min(ds.dy,0)*.35}px) rotate(${ds.dx*.07}deg)`
     }
-    const mDown=(e)=>{ e.preventDefault(); onStart(e.clientX,e.clientY) }
-    const mMove=(e)=>{ if(ds.active) onMove(e.clientX,e.clientY) }
-    const tStart=(e)=>{ const t=e.touches[0]; onStart(t.clientX,t.clientY) }
-    const tMove =(e)=>{ if(ds.active){ const t=e.touches[0]; onMove(t.clientX,t.clientY) } }
+    const onEnd = () => {
+      if(!ds.active) return
+      ds.active = false
+      el.style.transition = 'transform .3s ease'
+      const ax = Math.abs(ds.dx), ay = -ds.dy
+      if(ds.dx < -85){ el.style.transform='translateX(-150%) rotate(-14deg)'; el.style.opacity='0'; setTimeout(() => { reset(); handleAgain() }, 300); return }
+      if(ds.dx >  85){ el.style.transform='translateX(150%) rotate(14deg)';  el.style.opacity='0'; setTimeout(() => { reset(); handleEasy()  }, 300); return }
+      if(ay > 75 && ax < 65){ el.style.transform='translateY(-130%) rotate(-5deg)'; el.style.opacity='0'; setTimeout(() => { reset(); handleHard() }, 300); return }
+      el.style.transform = ''
+    }
+    const mDown  = (e) => { e.preventDefault(); onStart(e.clientX, e.clientY) }
+    const mMove  = (e) => { if(ds.active) onMove(e.clientX, e.clientY) }
+    const tStart = (e) => { const t=e.touches[0]; onStart(t.clientX, t.clientY) }
+    const tMove  = (e) => { if(ds.active){ const t=e.touches[0]; onMove(t.clientX, t.clientY) } }
     el.addEventListener('mousedown', mDown)
     window.addEventListener('mousemove', mMove)
     window.addEventListener('mouseup', onEnd)
@@ -1058,22 +1064,22 @@ export default function QuizPage() {
     }
   }, [flipped, card])
 
-  // ── Render: study session ──────────────────────────────────────────────────
+  if (!card) return null
+
+  // ── Render: study session ────────────────────────────────────────────────────
 
   const totalCards   = cards.length
   const done         = totalCards - studyQueue.length
-  const ratingCounts = sessionRatings
+  const easyCount    = sessionRatings.easy
+  const hardCount    = sessionRatings.hard
+  const againCount   = sessionRatings.again
+  const doneCount    = easyCount + hardCount + againCount
 
-  // Colour-coded dots — completed cards get colour based on cumulative ratings
-  const easyCount  = sessionRatings.easy
-  const hardCount  = sessionRatings.hard
-  const againCount = sessionRatings.again
-  const doneCount  = easyCount + hardCount + againCount
-
-  const dots = cards.map((_, i) => {
+  const dots = cards.map((_,i) => {
     if (i >= doneCount) return null
+    const rank = i - (i < easyCount ? 0 : i < easyCount+hardCount ? easyCount : easyCount+hardCount)
     if (i < easyCount) return '#34d399'
-    if (i < easyCount + hardCount) return '#f59e0b'
+    if (i < easyCount+hardCount) return '#f59e0b'
     return '#ef4444'
   })
 
@@ -1151,13 +1157,11 @@ export default function QuizPage() {
         <div style={{position:'absolute',inset:0,borderRadius:16,border:'1px solid rgba(255,255,255,0.08)',background:'rgba(255,255,255,0.05)',transform:'rotate(1.2deg) translateY(3.5px)',pointerEvents:'none'}}/>
         <div ref={cardDragRef} style={{position:'absolute',inset:0,cursor:flipped?'grab':'pointer',willChange:'transform'}}>
           <div style={{width:'100%',height:'100%',transformStyle:'preserve-3d',transition:'transform .52s cubic-bezier(.4,0,.2,1)',transform:flipped?'rotateY(180deg)':'none'}}>
-            {/* Question face */}
             <div onClick={()=>{ if(!flipped) setFlipped(true) }} style={{position:'absolute',inset:0,borderRadius:16,border:`1.5px solid ${cardTheme.border}`,background:cardTheme.cardBg,backfaceVisibility:'hidden',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,padding:28}}>
               <span style={{fontSize:11,fontWeight:600,letterSpacing:'.08em',textTransform:'uppercase',color:'rgba(99,102,241,0.75)'}}>Question</span>
               <p style={{fontSize:isMobile?15:17,color:'var(--c-t1)',textAlign:'center',lineHeight:1.55,margin:0}}>{card.front||card.question}</p>
               <p style={{fontSize:12,color:'var(--c-t3)',margin:0}}>Tap to reveal · {isMobile?'or swipe':'or press Space'}</p>
             </div>
-            {/* Answer face */}
             <div style={{position:'absolute',inset:0,borderRadius:16,border:'1.5px solid rgba(52,211,153,0.3)',background:cardTheme.cardBg,backfaceVisibility:'hidden',transform:'rotateY(180deg)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,padding:28}}>
               <span style={{fontSize:11,fontWeight:600,letterSpacing:'.08em',textTransform:'uppercase',color:'rgba(52,211,153,0.75)'}}>Answer</span>
               <p style={{fontSize:isMobile?14:16,color:'var(--c-t1)',textAlign:'center',lineHeight:1.55,margin:0}}>{card.back||card.answer}</p>
@@ -1171,9 +1175,9 @@ export default function QuizPage() {
       {/* Rating buttons */}
       <div style={{display:'flex',gap:10,width:'100%',maxWidth:560,margin:'14px auto 0',opacity:flipped?1:0,transform:flipped?'translateY(0)':'translateY(6px)',transition:'opacity .25s,transform .25s',pointerEvents:flipped?'all':'none'}}>
         {[
-          {fn:handleAgain,label:'Again',sub:'→ end', bg:'rgba(239,68,68,0.1)', color:'#f87171',border:'rgba(239,68,68,0.2)'},
-          {fn:handleHard, label:'Hard', sub:'→ later',bg:'rgba(245,158,11,0.1)',color:'#fbbf24',border:'rgba(245,158,11,0.2)'},
-          {fn:handleEasy, label:'Easy', sub:'✓ done', bg:'rgba(52,211,153,0.1)',color:'#34d399',border:'rgba(52,211,153,0.2)'},
+          {fn:handleAgain, label:'Again', sub:'→ end',  bg:'rgba(239,68,68,0.1)',  color:'#f87171', border:'rgba(239,68,68,0.2)'},
+          {fn:handleHard,  label:'Hard',  sub:'→ later',bg:'rgba(245,158,11,0.1)', color:'#fbbf24', border:'rgba(245,158,11,0.2)'},
+          {fn:handleEasy,  label:'Easy',  sub:'✓ done', bg:'rgba(52,211,153,0.1)', color:'#34d399', border:'rgba(52,211,153,0.2)'},
         ].map(({fn,label,sub,bg,color,border}) => (
           <button key={label} onClick={fn} style={{flex:1,padding:'11px 8px',borderRadius:12,border:`1px solid ${border}`,background:bg,color,fontSize:13,fontWeight:500,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
             {label}<span style={{fontSize:10,opacity:.55,fontWeight:400}}>{sub}</span>
