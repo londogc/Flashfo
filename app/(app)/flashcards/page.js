@@ -1011,4 +1011,185 @@ export default function QuizPage() {
       </div>
     </div>
   )
+}  // ── Keyboard shortcuts (flashcard study) ─────────────────────────────────
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!card || sessionComplete) return
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      if (e.code === 'Space') { e.preventDefault(); setFlipped(f => !f) }
+      if (e.key === '1' && flipped) handleAgain()
+      if (e.key === '2' && flipped) handleHard()
+      if (e.key === '3' && flipped) handleEasy()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [card, flipped, sessionComplete])
+
+  // ── Swipe / drag to rate ─────────────────────────────────────────────────
+  useEffect(() => {
+    const el = cardDragRef.current
+    if (!el) return
+    let ds = { active:false, sx:0, sy:0, dx:0, dy:0 }
+    const onStart = (x,y) => { if(!flipped) return; ds={active:true,sx:x,sy:y,dx:0,dy:0}; el.style.transition='none' }
+    const onMove  = (x,y) => { if(!ds.active) return; ds.dx=x-ds.sx; ds.dy=y-ds.sy; el.style.transform=`translateX(${ds.dx}px) translateY(${Math.min(ds.dy,0)*.35}px) rotate(${ds.dx*.07}deg)` }
+    const onEnd   = ()    => {
+      if(!ds.active) return; ds.active=false
+      el.style.transition='transform .3s ease'
+      const ax=Math.abs(ds.dx), ay=-ds.dy
+      const reset = () => { el.style.transform=''; el.style.opacity='1' }
+      if(ds.dx<-85){ el.style.transform='translateX(-150%) rotate(-14deg)'; el.style.opacity='0'; setTimeout(()=>{ reset(); handleAgain() },300); return }
+      if(ds.dx>85) { el.style.transform='translateX(150%) rotate(14deg)';  el.style.opacity='0'; setTimeout(()=>{ reset(); handleEasy()  },300); return }
+      if(ay>75&&ax<65){ el.style.transform='translateY(-130%) rotate(-5deg)'; el.style.opacity='0'; setTimeout(()=>{ reset(); handleHard() },300); return }
+      el.style.transform=''
+    }
+    const mDown=(e)=>{ e.preventDefault(); onStart(e.clientX,e.clientY) }
+    const mMove=(e)=>{ if(ds.active) onMove(e.clientX,e.clientY) }
+    const tStart=(e)=>{ const t=e.touches[0]; onStart(t.clientX,t.clientY) }
+    const tMove =(e)=>{ if(ds.active){ const t=e.touches[0]; onMove(t.clientX,t.clientY) } }
+    el.addEventListener('mousedown', mDown)
+    window.addEventListener('mousemove', mMove)
+    window.addEventListener('mouseup', onEnd)
+    el.addEventListener('touchstart', tStart, {passive:true})
+    window.addEventListener('touchmove', tMove, {passive:true})
+    window.addEventListener('touchend', onEnd)
+    return () => {
+      el.removeEventListener('mousedown', mDown); window.removeEventListener('mousemove', mMove); window.removeEventListener('mouseup', onEnd)
+      el.removeEventListener('touchstart', tStart); window.removeEventListener('touchmove', tMove); window.removeEventListener('touchend', onEnd)
+    }
+  }, [flipped, card])
+
+  // ── Render: study session ──────────────────────────────────────────────────
+
+  const totalCards   = cards.length
+  const done         = totalCards - studyQueue.length
+  const ratingCounts = sessionRatings
+
+  // Colour-coded dots — completed cards get colour based on cumulative ratings
+  const easyCount  = sessionRatings.easy
+  const hardCount  = sessionRatings.hard
+  const againCount = sessionRatings.again
+  const doneCount  = easyCount + hardCount + againCount
+
+  const dots = cards.map((_, i) => {
+    if (i >= doneCount) return null
+    if (i < easyCount) return '#34d399'
+    if (i < easyCount + hardCount) return '#f59e0b'
+    return '#ef4444'
+  })
+
+  if (sessionComplete) return (
+    <SessionComplete
+      cards={cards}
+      topic={topic}
+      hardCards={sessionHardCards}
+      againCards={sessionAgainCards}
+      sessionRatings={sessionRatings}
+      onRestart={()=>{ setStudyQueue(cards.map((_,i)=>i)); setSessionRatings({again:0,hard:0,easy:0}); setSessionHardCards([]); setSessionAgainCards([]); setFlipped(false); setSessionComplete(false) }}
+      onNewDeck={()=>{ setCards([]); setStudyQueue([]); setFlipped(false); setSessionComplete(false); setTopic('') }}
+      cardTheme={cardTheme}
+    />
+  )
+
+  return (
+    <>
+      {showSave && (
+        <div style={{position:'fixed',inset:0,zIndex:40,background:'rgba(0,0,0,0.55)',display:'flex',alignItems:'center',justifyContent:'center'}} onClick={()=>setShowSave(false)}>
+          <div style={{background:'var(--c-b2)',borderRadius:16,padding:28,width:340}} onClick={e=>e.stopPropagation()}>
+            <p style={{fontWeight:500,marginBottom:12}}>Save deck</p>
+            <input value={saveName} onChange={e=>setSaveName(e.target.value)} placeholder="Deck name…"
+              style={{width:'100%',padding:'9px 13px',borderRadius:9,border:'1px solid var(--c-b4)',background:'var(--c-b1)',color:'var(--c-t1)',fontSize:14,marginBottom:12}}/>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>setShowSave(false)} style={{flex:1,padding:'9px 0',borderRadius:9,border:'1px solid var(--c-b4)',background:'transparent',color:'var(--c-t2)',cursor:'pointer'}}>Cancel</button>
+              <button onClick={doSave} style={{flex:1,padding:'9px 0',borderRadius:9,border:'none',background:cardTheme.accent,color:'#fff',fontWeight:500,cursor:'pointer'}}>{saveLoading?'Saving…':'Save'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Top bar */}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap',gap:8}}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <span style={{background:'rgba(99,102,241,0.15)',color:'#818cf8',fontSize:11,fontWeight:500,padding:'3px 10px',borderRadius:20,letterSpacing:'.04em'}}>FLASHCARDS</span>
+          <span style={{color:'var(--c-t1)',fontSize:14,fontWeight:500}}>{topic}</span>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <button onClick={()=>printDeck(cards,topic)} style={{background:'var(--c-b2)',border:'1px solid var(--c-b4)',color:'var(--c-t2)',fontSize:12,padding:'5px 12px',borderRadius:8,cursor:'pointer'}}>Print</button>
+          <button onClick={()=>{ setCards([]); setStudyQueue([]); setFlipped(false) }} style={{background:'var(--c-b2)',border:'1px solid var(--c-b4)',color:'var(--c-t2)',fontSize:12,padding:'5px 12px',borderRadius:8,cursor:'pointer'}}>New</button>
+          <button onClick={()=>{ setShowSave(true); setSaveName(topic) }} style={{background:cardTheme.accent,border:'none',color:'#fff',fontSize:12,padding:'5px 12px',borderRadius:8,cursor:'pointer',fontWeight:500}}>Save</button>
+        </div>
+      </div>
+
+      {/* Progress dots */}
+      <div style={{display:'flex',gap:5,marginBottom:16,flexWrap:'wrap'}}>
+        {cards.map((_,i) => (
+          <div key={i} style={{
+            width:20, height:6, borderRadius:3,
+            background: dots[i] || (i===currentIdx ? 'rgba(99,102,241,0.7)' : 'rgba(255,255,255,0.1)'),
+            transform: i===currentIdx && !dots[i] ? 'scaleX(1.2)' : 'none',
+            transition: 'background .35s, transform .2s'
+          }}/>
+        ))}
+      </div>
+
+      {/* Counter + keyboard hints */}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+        <span style={{fontSize:12,color:'var(--c-t3)'}}>Card {done+1} of {totalCards}</span>
+        {!isMobile && (
+          <div style={{display:'flex',gap:10}}>
+            {[['Space','flip'],['1','again'],['2','hard'],['3','easy']].map(([k,l]) => (
+              <span key={k} style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:'var(--c-t3)'}}>
+                <span style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',color:'rgba(255,255,255,0.38)',fontSize:10,padding:'1px 5px',borderRadius:3,fontFamily:'monospace'}}>{k}</span>{l}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Card stack */}
+      <div style={{position:'relative',width:'100%',maxWidth:560,margin:'0 auto',height:isMobile?220:250}}>
+        <div style={{position:'absolute',inset:0,borderRadius:16,border:'1px solid rgba(255,255,255,0.06)',background:'rgba(255,255,255,0.03)',transform:'rotate(2.5deg) translateY(7px)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',inset:0,borderRadius:16,border:'1px solid rgba(255,255,255,0.08)',background:'rgba(255,255,255,0.05)',transform:'rotate(1.2deg) translateY(3.5px)',pointerEvents:'none'}}/>
+        <div ref={cardDragRef} style={{position:'absolute',inset:0,cursor:flipped?'grab':'pointer',willChange:'transform'}}>
+          <div style={{width:'100%',height:'100%',transformStyle:'preserve-3d',transition:'transform .52s cubic-bezier(.4,0,.2,1)',transform:flipped?'rotateY(180deg)':'none'}}>
+            {/* Question face */}
+            <div onClick={()=>{ if(!flipped) setFlipped(true) }} style={{position:'absolute',inset:0,borderRadius:16,border:`1.5px solid ${cardTheme.border}`,background:cardTheme.cardBg,backfaceVisibility:'hidden',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,padding:28}}>
+              <span style={{fontSize:11,fontWeight:600,letterSpacing:'.08em',textTransform:'uppercase',color:'rgba(99,102,241,0.75)'}}>Question</span>
+              <p style={{fontSize:isMobile?15:17,color:'var(--c-t1)',textAlign:'center',lineHeight:1.55,margin:0}}>{card.front||card.question}</p>
+              <p style={{fontSize:12,color:'var(--c-t3)',margin:0}}>Tap to reveal · {isMobile?'or swipe':'or press Space'}</p>
+            </div>
+            {/* Answer face */}
+            <div style={{position:'absolute',inset:0,borderRadius:16,border:'1.5px solid rgba(52,211,153,0.3)',background:cardTheme.cardBg,backfaceVisibility:'hidden',transform:'rotateY(180deg)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,padding:28}}>
+              <span style={{fontSize:11,fontWeight:600,letterSpacing:'.08em',textTransform:'uppercase',color:'rgba(52,211,153,0.75)'}}>Answer</span>
+              <p style={{fontSize:isMobile?14:16,color:'var(--c-t1)',textAlign:'center',lineHeight:1.55,margin:0}}>{card.back||card.answer}</p>
+              <p onClick={()=>setFlipped(false)} style={{fontSize:12,color:'var(--c-t3)',cursor:'pointer',margin:0}}>↩ Back to question</p>
+              <div style={{position:'absolute',bottom:14,right:14}} onClick={e=>e.stopPropagation()}><SpeakerBtn text={card.back||card.answer} audioRef={audioRef}/></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Rating buttons */}
+      <div style={{display:'flex',gap:10,width:'100%',maxWidth:560,margin:'14px auto 0',opacity:flipped?1:0,transform:flipped?'translateY(0)':'translateY(6px)',transition:'opacity .25s,transform .25s',pointerEvents:flipped?'all':'none'}}>
+        {[
+          {fn:handleAgain,label:'Again',sub:'→ end', bg:'rgba(239,68,68,0.1)', color:'#f87171',border:'rgba(239,68,68,0.2)'},
+          {fn:handleHard, label:'Hard', sub:'→ later',bg:'rgba(245,158,11,0.1)',color:'#fbbf24',border:'rgba(245,158,11,0.2)'},
+          {fn:handleEasy, label:'Easy', sub:'✓ done', bg:'rgba(52,211,153,0.1)',color:'#34d399',border:'rgba(52,211,153,0.2)'},
+        ].map(({fn,label,sub,bg,color,border}) => (
+          <button key={label} onClick={fn} style={{flex:1,padding:'11px 8px',borderRadius:12,border:`1px solid ${border}`,background:bg,color,fontSize:13,fontWeight:500,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
+            {label}<span style={{fontSize:10,opacity:.55,fontWeight:400}}>{sub}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Stats row */}
+      <div style={{display:'flex',gap:14,marginTop:12,width:'100%',maxWidth:560,margin:'12px auto 0'}}>
+        {[{color:'#ef4444',label:'again',count:againCount},{color:'#f59e0b',label:'hard',count:hardCount},{color:'#34d399',label:'easy',count:easyCount}].map(({color,label,count}) => (
+          <div key={label} style={{display:'flex',alignItems:'center',gap:5,fontSize:12,color:'var(--c-t3)'}}>
+            <div style={{width:6,height:6,borderRadius:'50%',background:color}}/>{count} {label}
+          </div>
+        ))}
+      </div>
+    </>
+  )
 }
+
