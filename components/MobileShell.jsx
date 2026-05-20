@@ -366,7 +366,7 @@ export default function MobileShell({ children }) {
       {!onAiTutor && (isTeacher ? TEACHER_CREATE_ITEMS : STUDENT_CREATE_ITEMS).map((item, i) => (
         <div
           key={item.href}
-          onClick={e => { e.stopPropagation(); closeCreate(); router.push(item.href) }}
+          onClick={e => { e.stopPropagation(); router.push(item.href) }}
           style={{
             position:'fixed',
             // Spacing: pill top ≈ 18+56=74px from bottom. Item 0 starts at 82px.
@@ -405,7 +405,7 @@ export default function MobileShell({ children }) {
       {!onAiTutor && (
         <div style={{
           position:'fixed',
-          bottom:82,
+          bottom:100,
           left:'50%',
           transform:'translateX(-50%)',
           fontSize:13,
