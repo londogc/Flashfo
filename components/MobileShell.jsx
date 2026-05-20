@@ -346,7 +346,7 @@ export default function MobileShell({ children }) {
       {/* ── Create overlay — z:35 ── */}
       {!onAiTutor && (
         <div
-          onClick={closeCreate}
+          onClick={e => { e.stopPropagation(); closeCreate() }}
           style={{
             position:'fixed', inset:0,
             background:'rgba(6,7,13,0.65)',
