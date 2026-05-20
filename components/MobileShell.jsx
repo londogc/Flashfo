@@ -224,11 +224,9 @@ export default function MobileShell({ children }) {
   }
   function closeCreate() {
     if (!createOpen) return
-    setIsClosing(true)
-    closeTimerRef.current = setTimeout(() => {
-      setCreateOpen(false)
-      setIsClosing(false)
-    }, 420)
+    clearTimeout(closeTimerRef.current)
+    setCreateOpen(false)
+    setIsClosing(false)
   }
   function toggleCreate() { createOpen ? closeCreate() : openCreate() }
 
