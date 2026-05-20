@@ -264,7 +264,6 @@ export default function MobileShell({ children }) {
   function onTab(tab, e) {
     e.preventDefault()
     if (tab.create) return
-    if (createOpen) closeCreate()
     if (tab.nova) {
       const next = !novaOpen
       setNovaOpen(next)
