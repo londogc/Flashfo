@@ -124,7 +124,7 @@ function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations,
             </div>
           ))}
         </div>
-      </div>
+      </div>)}
     </div>
   )
 }
@@ -559,6 +559,23 @@ export default function QuizPage() {
   const [novaExplanations,  setNovaExplanations]  = useState({})
   const [explanationLoading,setExplanationLoading]= useState({})
   const [draftBanner, setDraftBanner] = useState(false)
+  const [currentIdx,   setCurrentIdx]   = useState(0)
+  const [autoAdvance,  setAutoAdvance]   = useState(false)
+  const [quizRevealed, setQuizRevealed]  = useState(false)
+  const [matchSel,     setMatchSel]      = useState(null)
+
+  // reset quiz when questions change
+  useEffect(() => { setCurrentIdx(0); setQuizRevealed(false); setMatchSel(null) }, [questions.length])
+
+  function wasCorrect(i) {
+    const q = questions[i]; if (!q) return false
+    if (q.type==='short_answer') return !!saGrades[i]?.correct
+    if (q.type==='fill_blank')   return checkFitbAnswer(fitbInputs[i]||'', q.correctAnswer||q.answer||'')
+    if (q.type==='matching')     return (q.pairs||[]).length>0 && Object.keys(matchAnswers[i]||{}).length>=(q.pairs||[]).length
+    return selected[i] === (q.correct ?? q.answerIndex)
+  }
+  function advanceQ() { setCurrentIdx(c=>c+1); setQuizRevealed(false); setMatchSel(null) }
+  function handleReveal(doAuto) { setQuizRevealed(true); if(doAuto&&autoAdvance) setTimeout(advanceQ, 2200) }
 
   // - Init -
 
@@ -883,96 +900,155 @@ export default function QuizPage() {
 
 
 
-      <div style={{ display:'flex', flexDirection:'column', gap:14, marginBottom:20 }}>
-        {questions.map((q,i) => {
-          const isSA    = q.type==='short_answer'
-          const isFITB  = q.type==='fill_blank'
-          const isMatch = q.type==='matching'
-          return (
-            <div key={i} style={{ background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:14, padding:16 }}>
-              <div style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:12 }}>
-                <span style={{ fontSize:9, fontWeight:800, background:'rgba(59,130,246,0.1)', color:'#60a5fa', padding:'3px 8px', borderRadius:20, flexShrink:0, marginTop:1, textTransform:'uppercase', letterSpacing:'.04em', whiteSpace:'nowrap' }}>{prettifyType(q.type)}</span>
-                <p style={{ fontSize:13, fontWeight:700, color:'var(--c-t1)', flex:1, lineHeight:1.5 }}>{i+1}. {q.question}</p>
-                <SpeakerBtn text={q.question}/>
-              </div>
+      {/* ── Progress bar ── */}
+      {questions.length > 0 && (
+        <div style={{ display:'flex', gap:5, marginBottom:16 }}>
+          {questions.map((_,i) => (
+            <div key={i} style={{ flex:1, height:4, borderRadius:2, transition:'background .3s',
+              background: i===currentIdx ? '#6366f1' : i<currentIdx ? (wasCorrect(i)?'#10b981':'#ef4444') : 'rgba(255,255,255,0.08)' }} />
+          ))}
+        </div>
+      )}
 
-              {isFITB && (
-                <div>
-                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
-                    <span style={{ fontSize:13, color:'var(--c-t2)' }}>Answer:</span>
-                    <input value={fitbInputs[i]||''} onChange={e=>setFitbInputs(s=>({...s,[i]:e.target.value}))} disabled={submitted} placeholder="Fill in the blank-" style={{ flex:1, height:36, background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:9, padding:'0 12px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit', opacity:submitted?.7:1 }}/>
-                  </div>
-                  {submitted && <div style={{ fontSize:12, padding:'8px 12px', borderRadius:8, background:checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'rgba(16,185,129,0.08)':'rgba(239,68,68,0.07)', color:checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'#34d399':'#f87171', fontWeight:600 }}>{checkFitbAnswer(fitbInputs[i],q.correctAnswer)?'- Correct!':'- Answer: '+q.correctAnswer}</div>}
+      {/* ── One-at-a-time question ── */}
+      {currentIdx < questions.length && (() => {
+        const q = questions[currentIdx]
+        const isTF    = q.type==='true_false'
+        const isSA    = q.type==='short_answer'
+        const isFITB  = q.type==='fill_blank'
+        const isMatch = q.type==='matching'
+        const opts    = q.options||q.choices||[]
+        const correctAns = q.correct??q.answerIndex
+        const myAns   = selected[currentIdx]
+        const matched = matchAnswers[currentIdx]||{}
+        const rights  = shuffledRights[currentIdx]||(q.pairs||[]).map(p=>p.right)
+        const isAnswered = isSA ? !!saGrades[currentIdx]&&!saGrades[currentIdx].grading
+                         : isFITB ? quizRevealed
+                         : isMatch ? (q.pairs||[]).length>0&&Object.keys(matched).length>=(q.pairs||[]).length
+                         : myAns!==undefined
+        const qExplain = novaExplanations[currentIdx]||q.explanation||''
+        function pickAns(val) {
+          if (myAns!==undefined) return
+          setSelected(s=>({...s,[currentIdx]:val}))
+          setQuizRevealed(true)
+          if (autoAdvance) setTimeout(advanceQ, 2200)
+        }
+        return (
+          <div key={currentIdx} style={{ marginBottom:16 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+              <span style={{ fontSize:10, letterSpacing:'.08em', textTransform:'uppercase', color:'#818cf8', fontWeight:600 }}>
+                {prettifyType(q.type)} &#xb7; {currentIdx+1} / {questions.length}
+              </span>
+              <label style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer' }}>
+                <span style={{ fontSize:11, color:'var(--c-t3)' }}>Auto</span>
+                <div onClick={()=>setAutoAdvance(a=>!a)} style={{ width:34,height:18,borderRadius:9,background:autoAdvance?'#6366f1':'rgba(255,255,255,0.12)',position:'relative',cursor:'pointer',transition:'background .2s' }}>
+                  <div style={{ width:12,height:12,borderRadius:'50%',background:'#fff',position:'absolute',top:3,left:autoAdvance?19:3,transition:'left .2s' }} />
                 </div>
-              )}
-
-              {isMatch && (
-                <div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
-                    <span style={{ fontSize:10, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'.04em' }}>Term</span>
-                    <span style={{ fontSize:10, fontWeight:700, color:'var(--c-t3)', textTransform:'uppercase', letterSpacing:'.04em' }}>Match</span>
-                  </div>
-                  {(q.pairs||[]).map((pair,j)=>(
-                    <div key={j} style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6, alignItems:'center' }}>
-                      <div style={{ padding:'8px 12px', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:8, fontSize:13, color:'var(--c-t1)' }}>{pair.left}</div>
-                      <select value={matchAnswers[i]?.[j]||''} onChange={e=>setMatchAnswers(s=>({...s,[i]:{...(s[i]||{}),[j]:e.target.value}}))} disabled={submitted} style={{ height:36, background:'var(--c-surface2)', border:'1px solid '+(submitted?(matchAnswers[i]?.[j]===pair.right?'#10b981':'#ef4444'):'var(--c-line)'), borderRadius:8, padding:'0 10px', fontSize:13, color:'var(--c-t1)', outline:'none', fontFamily:'inherit' }}>
-                        <option value="">Select-</option>
-                        {(shuffledRights[i]||[]).map((r,ri)=><option key={ri} value={r}>{r}</option>)}
-                      </select>
-                    </div>
-                  ))}
-                  {submitted && <div style={{ fontSize:11, color:'var(--c-t3)', marginTop:4 }}>{(q.pairs||[]).map(p=>p.left+' - '+p.right).join(' - ')}</div>}
-                </div>
-              )}
-
-              {isSA && (
-                <div>
-                  <textarea value={saInputs[i]||''} onChange={e=>setSaInputs(s=>({...s,[i]:e.target.value}))} placeholder="Type your answer here-" disabled={submitted} rows={3} style={{ width:'100%', background:'var(--c-surface2)', border:'1px solid var(--c-line)', borderRadius:10, padding:'10px 12px', fontSize:13, color:'var(--c-t1)', outline:'none', resize:'none', fontFamily:'inherit', marginBottom:8, opacity:submitted?.7:1 }}/>
-                  {submitted && (
-                    <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-                      <div style={{ fontSize:12, color:'var(--c-t2)', background:'rgba(59,130,246,0.08)', padding:'8px 12px', borderRadius:8, border:'1px solid rgba(59,130,246,0.2)' }}><span style={{ fontWeight:700, color:'#60a5fa' }}>Model answer: </span>{q.correctAnswer||'Open-ended'}</div>
-                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                        <span style={{ fontSize:11, color:'var(--c-t3)' }}>Self-grade:</span>
-                        {['correct','wrong'].map(g=>(
-                          <button key={g} onClick={()=>setSaGrades(s=>({...s,[i]:g}))} style={{ height:28, padding:'0 12px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid '+(saGrades[i]===g?(g==='correct'?'#10b981':'#ef4444'):'var(--c-line)'), background:saGrades[i]===g?(g==='correct'?'#10b981':'#ef4444'):'transparent', color:saGrades[i]===g?'#fff':'var(--c-t2)', cursor:'pointer', fontFamily:'inherit' }}>
-                            {g==='correct'?'- Correct':'- Wrong'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {!isSA&&!isFITB&&!isMatch && (
-                <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                  {(q.options||['True','False']).map((opt,j)=>{
-                    const isSel  = selected[i]===j
-                    const isCorr = q.answerIndex===j
-                    let bg='transparent', border='rgba(255,255,255,0.07)', color='rgba(255,255,255,0.5)'
-                    if (submitted) {
-                      if (isCorr)      { bg='rgba(16,185,129,0.08)'; border='rgba(16,185,129,0.3)'; color='#34d399' }
-                      else if (isSel)  { bg='rgba(239,68,68,0.07)'; border='rgba(239,68,68,0.25)'; color='rgba(239,68,68,0.7)' }
-                      else             { color='rgba(255,255,255,0.2)' }
-                    } else if (isSel)  { bg='rgba(99,102,241,0.1)'; border='rgba(99,102,241,0.4)'; color='#a5b4fc' }
-                    return (
-                      <button key={j} onClick={()=>!submitted&&setSelected(s=>({...s,[i]:j}))} style={{ width:'100%', textAlign:'left', padding:'9px 13px', borderRadius:9, border:'1px solid '+border, background:bg, color, fontSize:13, cursor:submitted?'default':'pointer', transition:'all .15s', fontFamily:'inherit', display:'flex', alignItems:'center', gap:8 }}>
-                        <span style={{ fontWeight:700, width:18 }}>{['A','B','C','D'][j]}.</span>{opt}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-
-              {submitted&&q.explanation && <div style={{ marginTop:10, fontSize:11, color:'var(--c-t2)', background:'var(--c-surface2)', padding:'8px 12px', borderRadius:8, border:'1px solid var(--c-line)', lineHeight:1.6 }}><span style={{ fontWeight:700, color:'var(--c-t1)' }}>Explanation: </span>{q.explanation}</div>}
+              </label>
             </div>
-          )
-        })}
-      </div>
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', background:'var(--c-surface)', border:'1px solid var(--c-line)', borderRadius:isAnswered?'14px 14px 0 0':14, overflow:'hidden' }}>
+              <div style={{ padding:isMobile?'18px 16px':'26px 26px', borderRight:isMobile?'none':'1px solid var(--c-line)', borderBottom:isMobile?'1px solid var(--c-line)':'none', display:'flex', flexDirection:'column', justifyContent:'center' }}>
+                <div style={{ fontSize:isMobile?15:17, fontWeight:500, lineHeight:1.55, color:'var(--c-t1)' }}>
+                  {q.question}
+                </div>
+              </div>
+              <div style={{ padding:isMobile?16:'18px 22px', display:'flex', flexDirection:'column', gap:isTF?0:8, justifyContent:'center' }}>
+                {!isTF&&!isSA&&!isFITB&&!isMatch && opts.map((opt,j) => {
+                  const isC=j===correctAns, isSel=myAns===j, rev=myAns!==undefined
+                  return (<button key={j} disabled={rev} onClick={()=>pickAns(j)} style={{ display:'flex',alignItems:'center',gap:10,padding:'11px 13px',background:!rev?'rgba(255,255,255,.03)':isSel&&isC?'rgba(16,185,129,.1)':isSel&&!isC?'rgba(239,68,68,.08)':isC?'rgba(16,185,129,.07)':'transparent',border:'0.5px solid '+(!rev?'var(--c-line)':isSel&&isC?'rgba(16,185,129,.4)':isSel&&!isC?'rgba(239,68,68,.35)':isC?'rgba(16,185,129,.28)':'rgba(255,255,255,.06)'),borderRadius:10,cursor:rev?'default':'pointer',color:'var(--c-t1)',fontSize:13,textAlign:'left',width:'100%',transition:'all .15s' }}>
+                    <span style={{ width:22,height:22,borderRadius:6,background:'rgba(255,255,255,.06)',border:'0.5px solid rgba(255,255,255,.12)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'rgba(255,255,255,.4)',flexShrink:0 }}>{String.fromCharCode(65+j)}</span>
+                    {opt}
+                  </button>)
+                })}
+                {isTF && (
+                  <div style={{ display:'flex', gap:10 }}>
+                    {[true,false].map((val,j) => {
+                      const isC=val===(q.correct??q.answer), isSel=myAns===val, rev=myAns!==undefined
+                      return (<button key={j} disabled={rev} onClick={()=>pickAns(val)} style={{ flex:1,padding:'22px 8px',background:!rev?'rgba(255,255,255,.03)':isSel&&isC?'rgba(16,185,129,.12)':isSel&&!isC?'rgba(239,68,68,.1)':isC?'rgba(16,185,129,.07)':'transparent',border:'0.5px solid '+(!rev?'var(--c-line)':isSel&&isC?'rgba(16,185,129,.4)':isSel&&!isC?'rgba(239,68,68,.35)':isC?'rgba(16,185,129,.28)':'rgba(255,255,255,.05)'),borderRadius:12,cursor:rev?'default':'pointer',color:'var(--c-t1)',fontSize:14,fontWeight:500,display:'flex',flexDirection:'column',alignItems:'center',gap:7,transition:'all .15s' }}>
+                        <span style={{ fontSize:20 }}>{val?'✓':'✗'}</span>{val?'True':'False'}
+                      </button>)
+                    })}
+                  </div>
+                )}
+                {isSA && (
+                  <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
+                    <textarea rows={3} disabled={!!saGrades[currentIdx]&&!saGrades[currentIdx].grading} value={saInputs[currentIdx]||''} onChange={e=>setSaInputs(s=>({...s,[currentIdx]:e.target.value}))} placeholder="Type your answer here…"
+                      style={{ width:'100%',padding:'10px 12px',background:'rgba(255,255,255,.04)',border:'0.5px solid rgba(255,255,255,.15)',borderRadius:9,color:'var(--c-t1)',fontSize:13,fontFamily:'inherit',resize:'none',outline:'none' }} />
+                    {!saGrades[currentIdx] && (
+                      <button onClick={async()=>{
+                        const val=(saInputs[currentIdx]||'').trim(); if(!val) return
+                        setSaGrades(g=>({...g,[currentIdx]:{grading:true}}))
+                        try {
+                          const resp=await fetch('/api/grade-sa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q.question,answer:val,correctAnswer:q.correctAnswer||q.answer||''})})
+                          const data=await resp.json()
+                          setSaGrades(g=>({...g,[currentIdx]:data}))
+                          if(data.explanation) setNovaExplanations(e=>({...e,[currentIdx]:data.explanation}))
+                          setQuizRevealed(true)
+                          if(autoAdvance) setTimeout(advanceQ,2500)
+                        } catch(err){ setSaGrades(g=>({...g,[currentIdx]:{correct:false,explanation:'Unable to grade'}})); setQuizRevealed(true) }
+                      }} style={{ padding:'9px 18px',background:'#6366f1',border:'none',borderRadius:8,color:'#fff',fontSize:13,fontWeight:500,cursor:'pointer',alignSelf:'flex-end' }}>Submit answer</button>
+                    )}
+                    {saGrades[currentIdx]&&!saGrades[currentIdx].grading && (
+                      <div style={{ padding:'9px 12px',borderRadius:8,background:saGrades[currentIdx].correct?'rgba(16,185,129,.1)':'rgba(239,68,68,.08)',border:'0.5px solid '+(saGrades[currentIdx].correct?'rgba(16,185,129,.3)':'rgba(239,68,68,.25)') }}>
+                        <span style={{ fontWeight:600,fontSize:12,color:saGrades[currentIdx].correct?'#34d399':'#f87171' }}>{saGrades[currentIdx].correct?'✓ Correct':'✗ Needs review'}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {isFITB && (
+                  <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
+                    <div style={{ fontSize:15,lineHeight:2.3,color:'var(--c-t1)' }}>
+                      {(q.question||'').split('___').reduce((acc,part,pi,arr)=>{
+                        acc.push(<span key={'p'+pi}>{part}</span>)
+                        if(pi<arr.length-1){const fc=checkFitbAnswer(fitbInputs[currentIdx]||'',q.correctAnswer||q.answer||'');acc.push(<input key={'i'+pi} disabled={quizRevealed} value={fitbInputs[currentIdx]||''} onChange={e=>setFitbInputs(f=>({...f,[currentIdx]:e.target.value}))} style={{ display:'inline-block',minWidth:90,padding:'2px 8px',background:!quizRevealed?'rgba(99,102,241,.1)':fc?'rgba(16,185,129,.15)':'rgba(239,68,68,.12)',border:'none',borderBottom:'1.5px solid '+(quizRevealed?fc?'#34d399':'#f87171':'#6366f1'),color:quizRevealed?fc?'#34d399':'#f87171':'#a5b4fc',fontSize:14,fontFamily:'inherit',outline:'none',borderRadius:'3px 3px 0 0',textAlign:'center' }} />)}
+                        return acc
+                      },[])}
+                    </div>
+                    {!quizRevealed && (<button onClick={()=>{ setQuizRevealed(true); if(autoAdvance) setTimeout(advanceQ,2200) }} style={{ padding:'9px 18px',background:'#6366f1',border:'none',borderRadius:8,color:'#fff',fontSize:13,fontWeight:500,cursor:'pointer',alignSelf:'flex-end' }}>Check</button>)}
+                  </div>
+                )}
+                {isMatch && (
+                  <div>
+                    <div style={{ fontSize:10,color:'rgba(255,255,255,.25)',marginBottom:8 }}>Tap a term, then tap its match</div>
+                    <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:6 }}>
+                      {(q.pairs||[]).map((pair,pi)=>{
+                        const left=pair.left,rightShuf=rights[pi]||pair.right
+                        const isLM=matched[left]!==undefined,isRM=Object.values(matched).includes(rightShuf),lSel=matchSel===left
+                        return (<React.Fragment key={pi}>
+                          <div onClick={()=>{ if(!isLM) setMatchSel(s=>s===left?null:left) }} style={{ padding:'9px 10px',borderRadius:8,border:'0.5px solid '+(isLM?'rgba(16,185,129,.4)':lSel?'#6366f1':'rgba(255,255,255,.12)'),background:isLM?'rgba(16,185,129,.1)':lSel?'rgba(99,102,241,.15)':'rgba(255,255,255,.03)',cursor:isLM?'default':'pointer',fontSize:11,color:isLM?'#34d399':'var(--c-t1)',textAlign:'center',transition:'all .15s',userSelect:'none' }}>{left}</div>
+                          <div onClick={()=>{
+                            if(!matchSel||isRM) return
+                            const nm={...matched,[matchSel]:rightShuf}
+                            setMatchAnswers(a=>({...a,[currentIdx]:nm}))
+                            setMatchSel(null)
+                            if(Object.keys(nm).length>=(q.pairs||[]).length){ setQuizRevealed(true); if(autoAdvance) setTimeout(advanceQ,2200) }
+                          }} style={{ padding:'9px 10px',borderRadius:8,border:'0.5px solid '+(isRM?'rgba(16,185,129,.4)':matchSel?'rgba(99,102,241,.3)':'rgba(255,255,255,.12)'),background:isRM?'rgba(16,185,129,.1)':matchSel?'rgba(99,102,241,.06)':'rgba(255,255,255,.03)',cursor:isRM||!matchSel?'default':'pointer',fontSize:11,color:isRM?'#34d399':'var(--c-t1)',textAlign:'center',transition:'all .15s',userSelect:'none' }}>{rightShuf}</div>
+                        </React.Fragment>)
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            {isAnswered && (
+              <div style={{ padding:'13px 20px',background:'var(--c-surface)',border:'1px solid var(--c-line)',borderRadius:'0 0 14px 14px',borderTop:'none',display:'flex',alignItems:'flex-start',gap:12 }}>
+                {!isMatch && (<div style={{ width:26,height:26,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,flexShrink:0,marginTop:1,background:wasCorrect(currentIdx)?'rgba(16,185,129,.15)':'rgba(239,68,68,.12)',color:wasCorrect(currentIdx)?'#34d399':'#f87171' }}>{wasCorrect(currentIdx)?'✓':'✗'}</div>)}
+                <div style={{ flex:1 }}>
+                  {!isMatch && <div style={{ fontSize:9,color:'#818cf8',fontWeight:600,letterSpacing:'.05em',marginBottom:3 }}>NOVA EXPLAINS</div>}
+                  <div style={{ fontSize:12,color:'rgba(255,255,255,.5)',lineHeight:1.55 }}>{isMatch?'All pairs matched!':(qExplain||(wasCorrect(currentIdx)?'Correct!':'Check the highlighted answer.'))}</div>
+                </div>
+                <button onClick={()=>{ if(currentIdx>=questions.length-1){document.getElementById('quiz-submit-btn')?.click()} else advanceQ() }} style={{ padding:'8px 16px',background:'#6366f1',border:'none',borderRadius:8,color:'#fff',fontSize:12,fontWeight:500,cursor:'pointer',flexShrink:0,whiteSpace:'nowrap' }}>
+                  {currentIdx>=questions.length-1?'Finish →':'Next →'}
+                </button>
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
-      <div style={{ display:'flex', flexWrap:'wrap', gap:10, alignItems:'center' }}>
+      {currentIdx >= questions.length && (<div style={{ display:'flex', flexWrap:'wrap', gap:10, alignItems:'center' }}>
         {!submitted && (
-          <button
+          <button id="quiz-submit-btn"
             onClick={async()=>{
               setSubmitted(true)
               if (user&&topic) {
