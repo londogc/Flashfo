@@ -124,7 +124,7 @@ function AnswerKeyModal({ questions, topic, onClose, selected, novaExplanations,
             </div>
           ))}
         </div>
-      </div>)}
+      </div>)
     </div>
   )
 }
@@ -1084,7 +1084,8 @@ export default function QuizPage() {
         <button onClick={startFresh} style={{ height:36, padding:'0 16px', background:'var(--c-surface)', border:'1px solid var(--c-line)', color:'var(--c-t2)', borderRadius:10, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginLeft:'auto' }}>
           New Quiz
         </button>
-      </div>
+      </div>)}
+
     </div>
   )
 }
