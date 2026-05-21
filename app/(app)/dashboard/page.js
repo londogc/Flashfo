@@ -68,7 +68,7 @@ function TodayInHistory() {
 
 export default function DashboardPage() {
   const isMobile        = useIsMobile()
-  const { user, profile } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const isTeacher = profile?.role === 'teacher'
 
   // ── Student state ──────────────────────────────────────────────────────────
@@ -228,7 +228,7 @@ export default function DashboardPage() {
     return () => clearInterval(t)
   }, [])
 
-  const firstName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
+  const firstName = authLoading ? '' : (profile?.full_name?.split(' ')[0] || profile?.first_name || 'there')
   const hour      = new Date().getHours()
   const greeting  = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
