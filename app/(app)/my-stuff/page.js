@@ -4,12 +4,18 @@ import { useAuth } from '@/lib/useAuth'
 import { getUserItems, deleteItem } from '@/lib/savedItems'
 
 const TYPE_META = {
-  quiz:         { label:'Quizzes',        color:'bg-blue-500/10 text-blue-500',    btn:'Take Quiz',    key:'flashfo_load_quiz',        href:'/quiz' },
-  flashcards:   { label:'Flashcard Decks',color:'bg-violet-500/10 text-violet-500',btn:'Study',        key:'flashfo_load_flashcards',  href:'/flashcards' },
-  lesson_plan:  { label:'Lesson Plans',   color:'bg-amber-500/10 text-amber-500',  btn:'Open',         key:'flashfo_load_lesson_plan', href:'/lesson-builder' },
-  study_guide:  { label:'Study Guides',   color:'bg-emerald-500/10 text-emerald-400',btn:'Open',       key:'flashfo_load_study_guide', href:'/study-guide' },
-  summary:      { label:'Summaries',      color:'bg-teal-500/10 text-teal-500',    btn:'Open',         key:'flashfo_load_summary',     href:'/summarize' },
-  conversation: { label:'Nova Chats',     color:'bg-purple-500/10 text-purple-400',btn:'Open in Nova', key:'flashfo_nova_history',     href:'/ai-tutor' },
+  quiz:           { label:'Quizzes',        color:'bg-blue-500/10 text-blue-500',    btn:'Take Quiz',    key:'flashfo_load_quiz',        href:'/quiz' },
+  flashcards:     { label:'Flashcard Decks',color:'bg-violet-500/10 text-violet-500',btn:'Study',        key:'flashfo_load_flashcards',  href:'/flashcards' },
+  lesson_plan:    { label:'Lesson Plans',   color:'bg-amber-500/10 text-amber-500',  btn:'Open',         key:'flashfo_load_lesson_plan', href:'/lesson-builder' },
+  study_guide:    { label:'Study Guides',   color:'bg-emerald-500/10 text-emerald-400',btn:'Open',       key:'flashfo_load_study_guide', href:'/study-guide' },
+  summary:        { label:'Summaries',      color:'bg-teal-500/10 text-teal-500',    btn:'Open',         key:'flashfo_load_summary',     href:'/summarize' },
+  conversation:   { label:'Nova Chats',     color:'bg-purple-500/10 text-purple-400',btn:'Open in Nova', key:'flashfo_nova_history',     href:'/ai-tutor' },
+  exam_countdown: { label:'Exam Countdown', color:'bg-orange-500/10 text-orange-400',btn:'View',         key:'flashfo_load_exam',        href:'/exam-countdown' },
+}
+
+// Converts any unknown snake_case DB type to a readable label as a safety net
+function formatType(type) {
+  return (type || 'Unknown').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 }
 
 const TYPE_ICONS = {
@@ -153,7 +159,7 @@ export default function MyStuffPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map(item => {
-            const meta   = TYPE_META[item.type] || { label: item.type, color: 'bg-surface2 text-t2' }
+            const meta   = TYPE_META[item.type] || { label: formatType(item.type), color: 'bg-surface2 text-t2' }
             const isOpen = expanded === item.id
             return (
               <div key={item.id} className="bg-surface border border-line rounded-xl overflow-hidden transition-all">
