@@ -40,13 +40,20 @@ function StudentAssignments({ user }) {
 
   async function loadSubmissions() {
     setLoading(true)
-    const { data } = await supabase
-      .from('assignment_submissions')
-      .select('*, assignment:homework_assignments(*)')
-      .eq('student_id', user.id)
-      .order('created_at', { ascending: false })
-    setSubmissions(data || [])
-    setLoading(false)
+    try {
+      const { data, error } = await supabase
+        .from('assignment_submissions')
+        .select('*, assignment:homework_assignments(*)')
+        .eq('student_id', user.id)
+        .order('created_at', { ascending: false })
+      if (error) console.warn('[Assignments] loadSubmissions error:', error)
+      setSubmissions(data || [])
+    } catch(e) {
+      console.warn('[Assignments] loadSubmissions threw:', e)
+      setSubmissions([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function openAssignment(sub) {
@@ -245,13 +252,20 @@ function TeacherAssignments({ user }) {
 
   async function loadAssignments() {
     setLoading(true)
-    const { data } = await supabase
-      .from('homework_assignments')
-      .select('*')
-      .eq('teacher_id', user.id)
-      .order('created_at', { ascending: false })
-    setAssignments(data || [])
-    setLoading(false)
+    try {
+      const { data, error } = await supabase
+        .from('homework_assignments')
+        .select('*')
+        .eq('teacher_id', user.id)
+        .order('created_at', { ascending: false })
+      if (error) console.warn('[Assignments] loadAssignments error:', error)
+      setAssignments(data || [])
+    } catch(e) {
+      console.warn('[Assignments] loadAssignments threw:', e)
+      setAssignments([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function openAssignment(a) {
