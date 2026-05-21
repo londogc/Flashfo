@@ -278,7 +278,8 @@ export default function Shell({ children }) {
   const topbarMenuWrapRef = useRef(null)
   const sidebarAvatarRef  = useRef(null)
   const sidebarMenuRef    = useRef(null)
-  const contentRef        = useRef(null)   // scoped desktop fade — sidebar/topbar stay visible
+  const contentRef        = useRef(null)   // scoped desktop fade — sidebar/topbar stays visible
+  const hoverIgnoreRef    = useRef(false)  // blocks mouseenter for 120ms after focus restore
 
   // Fade only the content area on navigation, before the browser paints.
   // useLayoutEffect fires synchronously before paint so the new content
@@ -318,14 +319,20 @@ export default function Shell({ children }) {
     return () => window.removeEventListener('focus', onFocus)
   }, [])
 
-  // ── Nav lag fix: reset BOTH navHovered and navTransition on window focus ──
-  // The spring cubic-bezier was replaced with ease-out, and navHovered is forced
-  // to false so the nav collapses cleanly instead of "catching up" with stale state.
+  // ── Nav lag fix: block hover events briefly after focus restore ──────────────
+  // Race condition: on focus return the browser fires a synthetic mouseenter on
+  // whatever element the cursor is over, which races against the reset and leaves
+  // navTransition=false when the next real hover fires. hoverIgnoreRef blocks
+  // onMouseEnter for 120ms — long enough for React to flush and browser to settle.
   useEffect(() => {
     const reset = () => {
+      hoverIgnoreRef.current = true
       setNavHovered(false)
       setNavTransition(false)
-      requestAnimationFrame(() => requestAnimationFrame(() => setNavTransition(true)))
+      setTimeout(() => {
+        hoverIgnoreRef.current = false
+        setNavTransition(true)
+      }, 120)
     }
     const onVis = () => { if (document.visibilityState === 'visible') reset() }
     document.addEventListener('visibilitychange', onVis)
@@ -483,7 +490,7 @@ export default function Shell({ children }) {
 
       {/* ── Hover-expand nav ── */}
       <nav
-        onMouseEnter={()=>setNavHovered(true)}
+        onMouseEnter={()=>{ if(!hoverIgnoreRef.current) setNavHovered(true) }}
         onMouseLeave={()=>setNavHovered(false)}
         style={{
           position:'relative', zIndex:10, flexShrink:0,
