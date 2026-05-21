@@ -11,6 +11,31 @@ import { rpc, novaStream } from '@/lib/api'
 
 // ── Utilities ────────────────────────────────────────────────────────────────
 
+// Preview card question — updates as user types their topic
+const PREVIEW_QS = [
+  { keys:['math','calculus','algebra','geometry','trigonometry','integral','derivative'], q:'What is the derivative of sin(x)?' },
+  { keys:['biology','cell','dna','genetics','evolution','photosynthesis','mitosis','protein'], q:'What organelle is responsible for producing ATP?' },
+  { keys:['chemistry','element','periodic','molecule','reaction','bond','atom','compound'], q:'What is the chemical formula for water?' },
+  { keys:['history','war','revolution','empire','ancient','medieval','civil','dynasty'], q:'What were the main causes of the French Revolution?' },
+  { keys:['spanish','french','italian','language','verb','conjugate','grammar','vocab'], q:'How do you conjugate "hablar" in the present tense?' },
+  { keys:['physics','force','motion','energy','newton','quantum','velocity','momentum'], q:"What does Newton's second law of motion state?" },
+  { keys:['python','javascript','code','programming','algorithm','function','syntax','data'], q:'What is the difference between a list and a tuple?' },
+  { keys:['economics','economy','supply','demand','inflation','market','fiscal','gdp'], q:'What happens to price when supply decreases?' },
+  { keys:['anatomy','body','muscle','bone','organ','cardiovascular','nervous','immune'], q:'What is the primary function of red blood cells?' },
+  { keys:['literature','shakespeare','novel','poem','character','theme','author','fiction'], q:'What are the central themes in Romeo and Juliet?' },
+  { keys:['geography','country','continent','capital','climate','population','map','region'], q:'What is the longest river in the world?' },
+  { keys:['psychology','behavior','cognitive','mental','theory','memory','emotion','brain'], q:'What is the difference between classical and operant conditioning?' },
+]
+function getPreviewQuestion(topic) {
+  if (!topic?.trim()) return 'Your question will look like this'
+  const lower = topic.toLowerCase()
+  for (const p of PREVIEW_QS) {
+    if (p.keys.some(k => lower.includes(k))) return p.q
+  }
+  const clean = topic.trim().replace(/[.!?]+$/, '')
+  return `What is the most important concept in ${clean}?`
+}
+
 function printDeck(cards, topic) {
   const win = window.open('', '_blank')
   const rows = cards.map((c,i) =>
@@ -733,7 +758,7 @@ function FlashcardsPageInner() {
             <div style={{ position:'absolute', top:7, left:4, right:-4, height:140, background:'rgba(37,99,235,0.07)', border:'1px solid rgba(59,130,246,0.14)', borderRadius:11, transform:'rotate(1.5deg)' }}/>
             <div style={{ position:'absolute', top:0, left:0, right:0, height:150, background:'rgba(8,16,42,0.9)', border:'1.5px solid rgba(59,130,246,0.36)', borderRadius:11, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:18, gap:9, boxShadow:'0 6px 28px rgba(37,99,235,0.16)' }}>
               <div style={{ fontSize:9, fontWeight:800, letterSpacing:'.09em', textTransform:'uppercase', padding:'3px 9px', borderRadius:20, background:'rgba(59,130,246,0.1)', color:'#60a5fa', border:'1px solid rgba(59,130,246,0.18)' }}>Question</div>
-              <div style={{ fontSize:12, fontWeight:600, color:'#e2e8f0', textAlign:'center', lineHeight:1.5 }}>What was the primary cause of the First World War?</div>
+              <div style={{ fontSize:12, fontWeight:600, color:'#e2e8f0', textAlign:'center', lineHeight:1.5 }}>{getPreviewQuestion(topic)}</div>
               <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>click to reveal answer</div>
             </div>
           </div>
