@@ -5,7 +5,6 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const THEMES = [
-  { id:'light',  label:'Light',  icon:'M8 1v1M8 14v1M1 8h1M14 8h1M3 3l.7.7M12.3 12.3l.7.7M3 13l.7-.7M12.3 3.7l.7-.7M11 8a3 3 0 11-6 0 3 3 0 016 0z' },
   { id:'dark',   label:'Dark',   icon:'M13 8.5A5.5 5.5 0 016 2a6 6 0 100 12 5.5 5.5 0 007-5.5z' },
   { id:'system', label:'System', icon:'M2 3h12v10H2zm0 10h12M8 13v2' },
 ]
@@ -16,7 +15,7 @@ export default function SettingsPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
 
-  const [profile,    setProfile]    = useState({ full_name:'', grade_level:'', role:'student' })
+  const [profile,    setProfile]    = useState({ full_name:'', grade_level:'', role:'student', plan:'free' })
   const [theme,      setTheme]      = useState('system')
   const [saving,     setSaving]     = useState(false)
   const [saved,      setSaved]      = useState(false)
@@ -47,7 +46,7 @@ export default function SettingsPage() {
     setLoading(true)
     const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (data) {
-      setProfile({ full_name: data.full_name || '', grade_level: data.grade_level || '', role: data.role || 'student' })
+      setProfile({ full_name: data.full_name || '', grade_level: data.grade_level || '', role: data.role || 'student', plan: data.plan || 'free' })
       setAvatarUrl(data.avatar_url || null)
       setBannerUrl(data.banner_url || null)
       if (data.link_code) setLinkCodeVal(data.link_code)
@@ -286,17 +285,55 @@ export default function SettingsPage() {
       {/* Subscription */}
       <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
         <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-4">Subscription</h2>
-        <div className="flex items-center justify-between p-3 bg-surface2 rounded-xl mb-3">
-          <div>
-            <p className="text-sm font-semibold text-t1">Free Plan</p>
-            <p className="text-[12px] text-t3 mt-0.5">Basic access to all study tools</p>
-          </div>
-          <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-surface text-t3 border border-line">Free</span>
-        </div>
-        <button onClick={() => router.push('/pricing')} style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 18px', borderRadius:9, border:'none', background:'linear-gradient(90deg,#4f46e5,#7c3aed)', color:'white', fontSize:13, fontWeight:700, cursor:'pointer' }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
-          Upgrade to Pro →
-        </button>
+        {(() => {
+          const plan = profile.plan || 'free'
+          const isLifetime = plan === 'lifetime'
+          const isPro      = plan === 'pro' || plan === 'student_pro'
+          const isTeacher  = plan === 'teacher' || plan === 'school'
+          if (isLifetime) return (
+            <div className="flex items-center justify-between p-3 bg-surface2 rounded-xl mb-3" style={{ background:'rgba(251,191,36,0.06)', border:'1px solid rgba(251,191,36,0.2)' }}>
+              <div>
+                <p className="text-sm font-semibold" style={{ color:'#fbbf24' }}>Lifetime ✦</p>
+                <p className="text-[12px] text-t3 mt-0.5">Unlimited access to everything, forever</p>
+              </div>
+              <span className="text-[11px] font-bold px-3 py-1 rounded-full" style={{ background:'rgba(251,191,36,0.12)', color:'#fbbf24', border:'1px solid rgba(251,191,36,0.25)' }}>Lifetime</span>
+            </div>
+          )
+          if (isPro) return (
+            <div className="flex items-center justify-between p-3 bg-surface2 rounded-xl mb-3" style={{ background:'rgba(99,102,241,0.07)', border:'1px solid rgba(99,102,241,0.2)' }}>
+              <div>
+                <p className="text-sm font-semibold" style={{ color:'#818cf8' }}>Student Pro ✦</p>
+                <p className="text-[12px] text-t3 mt-0.5">Unlimited flashcards, quizzes, and Nova sessions</p>
+              </div>
+              <span className="text-[11px] font-bold px-3 py-1 rounded-full" style={{ background:'rgba(99,102,241,0.12)', color:'#818cf8', border:'1px solid rgba(99,102,241,0.25)' }}>Pro</span>
+            </div>
+          )
+          if (isTeacher) return (
+            <div className="flex items-center justify-between p-3 bg-surface2 rounded-xl mb-3" style={{ background:'rgba(245,158,11,0.06)', border:'1px solid rgba(245,158,11,0.2)' }}>
+              <div>
+                <p className="text-sm font-semibold" style={{ color:'#f59e0b' }}>Teacher Pro ★</p>
+                <p className="text-[12px] text-t3 mt-0.5">Live classroom tools, assignments, and analytics</p>
+              </div>
+              <span className="text-[11px] font-bold px-3 py-1 rounded-full" style={{ background:'rgba(245,158,11,0.1)', color:'#f59e0b', border:'1px solid rgba(245,158,11,0.25)' }}>Teacher</span>
+            </div>
+          )
+          // Free plan
+          return (
+            <>
+              <div className="flex items-center justify-between p-3 bg-surface2 rounded-xl mb-3">
+                <div>
+                  <p className="text-sm font-semibold text-t1">Free Plan</p>
+                  <p className="text-[12px] text-t3 mt-0.5">Basic access to all study tools</p>
+                </div>
+                <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-surface text-t3 border border-line">Free</span>
+              </div>
+              <button onClick={() => router.push('/pricing')} style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 18px', borderRadius:9, border:'none', background:'linear-gradient(90deg,#4f46e5,#7c3aed)', color:'white', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><polygon points="7 1 2 8 7 8 6 13 12 6 7 6"/></svg>
+                Upgrade to Pro →
+              </button>
+            </>
+          )
+        })()}
       </div>
 
       {/* Share with Parent */}
