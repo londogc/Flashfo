@@ -332,6 +332,7 @@ function FlashcardsPageInner() {
     }
   }, [studyQueue.length, cards.length])
 
+  // ── Keyboard shortcuts (must be here, not after conditional returns) ─────────
   useEffect(() => {
     function handler(e) {
       if (!cards.length||showEdit||sessionComplete) return
@@ -344,6 +345,32 @@ function FlashcardsPageInner() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [cards.length, studyQueue, showEdit, sessionComplete, flipped])
+
+  // ── Drag to rate (must be here, not after conditional returns) ───────────────
+  useEffect(() => {
+    const el = cardDragRef.current
+    if (!el) return
+    let ds = { active:false, sx:0, sy:0, dx:0, dy:0 }
+    const rst = () => { el.style.transform=''; el.style.opacity='1' }
+    const onS = (x,y) => { if(!flipped) return; ds={active:true,sx:x,sy:y,dx:0,dy:0}; el.style.transition='none' }
+    const onM = (x,y) => { if(!ds.active) return; ds.dx=x-ds.sx; ds.dy=y-ds.sy; el.style.transform=`translateX(${ds.dx}px) translateY(${Math.min(ds.dy,0)*.3}px) rotate(${ds.dx*.06}deg)` }
+    const onE = () => {
+      if(!ds.active) return; ds.active=false
+      el.style.transition='transform .3s ease'
+      const ax=Math.abs(ds.dx),ay=-ds.dy
+      if(ds.dx<-85){el.style.transform='translateX(-150%) rotate(-14deg)';el.style.opacity='0';setTimeout(()=>{rst();handleAgain()},300);return}
+      if(ds.dx>85) {el.style.transform='translateX(150%) rotate(14deg)'; el.style.opacity='0';setTimeout(()=>{rst();handleEasy() },300);return}
+      if(ay>75&&ax<65){el.style.transform='translateY(-130%)';el.style.opacity='0';setTimeout(()=>{rst();handleHard()},300);return}
+      el.style.transform=''
+    }
+    const mD=(e)=>{e.preventDefault();onS(e.clientX,e.clientY)}
+    const mM=(e)=>{if(ds.active)onM(e.clientX,e.clientY)}
+    const tS=(e)=>{const t=e.touches[0];onS(t.clientX,t.clientY)}
+    const tM=(e)=>{if(ds.active){const t=e.touches[0];onM(t.clientX,t.clientY)}}
+    el.addEventListener('mousedown',mD); window.addEventListener('mousemove',mM); window.addEventListener('mouseup',onE)
+    el.addEventListener('touchstart',tS,{passive:true}); window.addEventListener('touchmove',tM,{passive:true}); window.addEventListener('touchend',onE)
+    return()=>{el.removeEventListener('mousedown',mD);window.removeEventListener('mousemove',mM);window.removeEventListener('mouseup',onE);el.removeEventListener('touchstart',tS);window.removeEventListener('touchmove',tM);window.removeEventListener('touchend',onE)}
+  }, [flipped, card])
 
   // ── Session actions ─────────────────────────────────────────────────────────
 
@@ -795,46 +822,6 @@ function FlashcardsPageInner() {
   )
 
   
-  // ── Keyboard shortcuts ──────────────────────────────────────────────────
-  useEffect(() => {
-    const h = (e) => {
-      if (!card || sessionComplete) return
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
-      if (e.code === 'Space') { e.preventDefault(); setFlipped(f => !f) }
-      if (e.key === '1' && flipped) handleAgain()
-      if (e.key === '2' && flipped) handleHard()
-      if (e.key === '3' && flipped) handleEasy()
-    }
-    window.addEventListener('keydown', h)
-    return () => window.removeEventListener('keydown', h)
-  }, [card, flipped, sessionComplete])
-
-  // ── Drag to rate ──────────────────────────────────────────────────────────
-  useEffect(() => {
-    const el = cardDragRef.current
-    if (!el) return
-    let ds = { active:false, sx:0, sy:0, dx:0, dy:0 }
-    const rst = () => { el.style.transform=''; el.style.opacity='1' }
-    const onS = (x,y) => { if(!flipped) return; ds={active:true,sx:x,sy:y,dx:0,dy:0}; el.style.transition='none' }
-    const onM = (x,y) => { if(!ds.active) return; ds.dx=x-ds.sx; ds.dy=y-ds.sy; el.style.transform=`translateX(${ds.dx}px) translateY(${Math.min(ds.dy,0)*.3}px) rotate(${ds.dx*.06}deg)` }
-    const onE = () => {
-      if(!ds.active) return; ds.active=false
-      el.style.transition='transform .3s ease'
-      const ax=Math.abs(ds.dx),ay=-ds.dy
-      if(ds.dx<-85){el.style.transform='translateX(-150%) rotate(-14deg)';el.style.opacity='0';setTimeout(()=>{rst();handleAgain()},300);return}
-      if(ds.dx>85) {el.style.transform='translateX(150%) rotate(14deg)'; el.style.opacity='0';setTimeout(()=>{rst();handleEasy() },300);return}
-      if(ay>75&&ax<65){el.style.transform='translateY(-130%)';el.style.opacity='0';setTimeout(()=>{rst();handleHard()},300);return}
-      el.style.transform=''
-    }
-    const mD=(e)=>{e.preventDefault();onS(e.clientX,e.clientY)}
-    const mM=(e)=>{if(ds.active)onM(e.clientX,e.clientY)}
-    const tS=(e)=>{const t=e.touches[0];onS(t.clientX,t.clientY)}
-    const tM=(e)=>{if(ds.active){const t=e.touches[0];onM(t.clientX,t.clientY)}}
-    el.addEventListener('mousedown',mD); window.addEventListener('mousemove',mM); window.addEventListener('mouseup',onE)
-    el.addEventListener('touchstart',tS,{passive:true}); window.addEventListener('touchmove',tM,{passive:true}); window.addEventListener('touchend',onE)
-    return()=>{el.removeEventListener('mousedown',mD);window.removeEventListener('mousemove',mM);window.removeEventListener('mouseup',onE);el.removeEventListener('touchstart',tS);window.removeEventListener('touchmove',tM);window.removeEventListener('touchend',onE)}
-  }, [flipped, card])
-
   if (!card) return null
 
   // ── Render: study session ────────────────────────────────────────────────
