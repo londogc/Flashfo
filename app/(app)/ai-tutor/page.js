@@ -33,32 +33,148 @@ const ORB_CSS = `
 .nv-ta::placeholder{color:rgba(255,255,255,.22)!important}
 `
 
-function initBg(canvas) {
-  if (!canvas || canvas._init) return
-  canvas._init = true
-  const gl = canvas.getContext('webgl')
-  if (!gl) return
-  const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; gl.viewport(0,0,canvas.width,canvas.height) }
-  resize()
-  const ro = new ResizeObserver(resize); ro.observe(canvas)
-  const VS = `attribute vec2 aP;varying vec2 vU;void main(){vU=aP*.5+.5;gl_Position=vec4(aP,.999,1.);}`
-  const FS = `precision highp float;uniform float uT;uniform vec2 uR;varying vec2 vU;vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.545);}float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}float fbm(vec2 p){float v=0.,a=.5;mat2 r=mat2(.8,-.6,.6,.8);for(int i=0;i<6;i++){v+=a*n(p);p=r*p*2.01;a*=.52;}return v;}void main(){vec2 uv=vU;float ar=uR.x/uR.y;uv.x*=ar;float t=uT*.06;vec2 q=vec2(fbm(uv*1.7+t),fbm(uv*1.7+vec2(5.2,1.3)+t*.8));vec2 r2=vec2(fbm(uv*1.7+3.4*q+t*.6),fbm(uv*1.7+3.4*q+vec2(8.3,2.8)+t*.45));float f=fbm(uv*1.7+3.4*r2+t*.3);f=clamp(f,0.,1.);vec3 col=mix(vec3(.010,.018,.10),vec3(.12,.022,.28),smoothstep(0.,.47,f));col=mix(col,vec3(.30,.06,.60),smoothstep(.27,.67,f));col=mix(col,vec3(.68,.12,.88),smoothstep(.51,.83,f));vec2 vig=vU-.5;col*=clamp(1.-dot(vig,vig)*1.8,.0,1.);col+=.01;gl_FragColor=vec4(col,1.);}`
-  function mkS(t,s){const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh}
-  const prog=gl.createProgram()
-  gl.attachShader(prog,mkS(gl.VERTEX_SHADER,VS));gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog)
-  const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf)
-  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW)
-  const uT=gl.getUniformLocation(prog,'uT'),uR=gl.getUniformLocation(prog,'uR'),aP=gl.getAttribLocation(prog,'aP')
-  let t=0,running=true
-  canvas._stop=()=>{running=false;ro.disconnect()}
-  ;(function draw(){
-    if(!running)return requestAnimationFrame(draw)
-    t+=.009
-    gl.clearColor(.02,.03,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(prog)
-    gl.uniform1f(uT,t);gl.uniform2f(uR,canvas.width,canvas.height)
-    gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(aP)
-    gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLE_STRIP,0,4)
-  })()
+// ── Constellation background (replaces WebGL nebula) ─────────────────────────
+function initConstellationBg(canvas) {
+  if (!canvas || canvas._sInit) return
+  canvas._sInit = true
+  requestAnimationFrame(() => {
+    const W = canvas.offsetWidth, H = canvas.offsetHeight
+    if (!W || !H) return
+    canvas.width = W; canvas.height = H
+    const ctx = canvas.getContext('2d')
+    const ro = new ResizeObserver(() => {
+      const nW = canvas.offsetWidth, nH = canvas.offsetHeight
+      if (!nW || !nH) return
+      canvas.width = nW; canvas.height = nH
+    })
+    ro.observe(canvas)
+    const N = 55
+    const dots = Array.from({length: N}, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - .5) * .18, vy: (Math.random() - .5) * .15,
+      r: Math.random() < .15 ? 1.8 : 1.1,
+      bright: .25 + Math.random() * .4, phase: Math.random() * Math.PI * 2,
+    }))
+    let t = 0, running = true
+    canvas._stop = () => { running = false; ro.disconnect() }
+    function draw() {
+      if (!running) return
+      t += .007
+      const cW = canvas.width, cH = canvas.height
+      ctx.clearRect(0, 0, cW, cH)
+      dots.forEach(d => {
+        d.x += d.vx; d.y += d.vy
+        if (d.x < 0 || d.x > cW) d.vx *= -1
+        if (d.y < 0 || d.y > cH) d.vy *= -1
+      })
+      for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+        const dx = dots[i].x - dots[j].x, dy = dots[i].y - dots[j].y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist < 110) {
+          ctx.beginPath(); ctx.moveTo(dots[i].x, dots[i].y); ctx.lineTo(dots[j].x, dots[j].y)
+          ctx.strokeStyle = `rgba(196,181,253,${((1 - dist / 110) * .2).toFixed(2)})`
+          ctx.lineWidth = .5; ctx.stroke()
+        }
+      }
+      dots.forEach(d => {
+        const tw = d.bright + Math.sin(t + d.phase) * .1
+        ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(216,180,254,${tw.toFixed(2)})`; ctx.fill()
+      })
+      requestAnimationFrame(draw)
+    }
+    draw()
+  })
+}
+
+// ── 3D constellation sphere (raw WebGL, no dependencies) ──────────────────────
+function initSphere(canvas) {
+  if (!canvas || canvas._sphInit) return
+  canvas._sphInit = true
+  requestAnimationFrame(() => {
+    const S = canvas.offsetWidth || 140
+    canvas.width = S; canvas.height = S
+    const gl = canvas.getContext('webgl', { alpha: true, antialias: true, premultipliedAlpha: false })
+    if (!gl) return
+    gl.viewport(0, 0, S, S)
+    gl.enable(gl.BLEND)
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+    function mkSh(type, src) {
+      const sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh)
+      return gl.getShaderParameter(sh, gl.COMPILE_STATUS) ? sh : null
+    }
+    function mkProg(vs, fs) {
+      const v = mkSh(gl.VERTEX_SHADER, vs), f = mkSh(gl.FRAGMENT_SHADER, fs)
+      if (!v || !f) return null
+      const p = gl.createProgram(); gl.attachShader(p, v); gl.attachShader(p, f); gl.linkProgram(p)
+      return gl.getProgramParameter(p, gl.LINK_STATUS) ? p : null
+    }
+    const ptVS = `attribute vec3 aPos;uniform mat4 uMVP;uniform float uSz;void main(){vec4 p=uMVP*vec4(aPos,1.);gl_Position=p;gl_PointSize=clamp(uSz/max(p.w,.3),1.,8.);}`
+    const ptFS = `precision mediump float;uniform vec4 uCol;void main(){vec2 c=gl_PointCoord-.5;float d=length(c)*2.;if(d>1.)discard;gl_FragColor=vec4(uCol.rgb,uCol.a*(1.-d));}`
+    const lnVS = `attribute vec3 aPos;uniform mat4 uMVP;void main(){gl_Position=uMVP*vec4(aPos,1.);}`
+    const lnFS = `precision mediump float;uniform vec4 uCol;void main(){gl_FragColor=uCol;}`
+    const ptProg = mkProg(ptVS, ptFS), lnProg = mkProg(lnVS, lnFS)
+    if (!ptProg || !lnProg) return
+    const N = 110, phi = Math.PI * (3 - Math.sqrt(5))
+    const verts = []
+    for (let i = 0; i < N; i++) {
+      const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), th = phi * i
+      verts.push(r * Math.cos(th), y, r * Math.sin(th))
+    }
+    const ptBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, ptBuf)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW)
+    const lnData = []
+    for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+      const dx = verts[i*3]-verts[j*3], dy = verts[i*3+1]-verts[j*3+1], dz = verts[i*3+2]-verts[j*3+2]
+      if (Math.sqrt(dx*dx+dy*dy+dz*dz) < .44) {
+        lnData.push(verts[i*3], verts[i*3+1], verts[i*3+2], verts[j*3], verts[j*3+1], verts[j*3+2])
+      }
+    }
+    const lnCount = lnData.length / 3
+    const lnBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, lnBuf)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(lnData), gl.STATIC_DRAW)
+    const ptAPos = gl.getAttribLocation(ptProg, 'aPos'), ptMVP = gl.getUniformLocation(ptProg, 'uMVP')
+    const ptSz = gl.getUniformLocation(ptProg, 'uSz'), ptCol = gl.getUniformLocation(ptProg, 'uCol')
+    const lnAPos = gl.getAttribLocation(lnProg, 'aPos'), lnMVP = gl.getUniformLocation(lnProg, 'uMVP')
+    const lnCol = gl.getUniformLocation(lnProg, 'uCol')
+    function mul4(a, b) {
+      const o = new Float32Array(16)
+      for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) {
+        let s = 0; for (let k = 0; k < 4; k++) s += a[k*4+r] * b[c*4+k]; o[c*4+r] = s
+      }
+      return o
+    }
+    function mkRotY(a) { const c=Math.cos(a),s=Math.sin(a); return new Float32Array([c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1]) }
+    function mkRotX(a) { const c=Math.cos(a),s=Math.sin(a); return new Float32Array([1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]) }
+    const t2 = 1 / Math.tan(0.45), nf = 1 / (0.1 - 100)
+    const proj = new Float32Array([t2,0,0,0, 0,t2,0,0, 0,0,(100+0.1)*nf,-1, 0,0,2*100*0.1*nf,0])
+    const view = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,-2.6,1])
+    const pv = mul4(proj, view)
+    let t = 0, running = true
+    canvas._stop = () => { running = false }
+    function draw() {
+      if (!running) return
+      t += .008
+      gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT)
+      const model = mul4(mkRotY(t * .35), mkRotX(Math.sin(t * .18) * .22))
+      const mvp = mul4(pv, model)
+      gl.useProgram(lnProg)
+      gl.bindBuffer(gl.ARRAY_BUFFER, lnBuf); gl.enableVertexAttribArray(lnAPos)
+      gl.vertexAttribPointer(lnAPos, 3, gl.FLOAT, false, 0, 0)
+      gl.uniformMatrix4fv(lnMVP, false, mvp); gl.uniform4fv(lnCol, [.655, .545, .984, .2])
+      gl.drawArrays(gl.LINES, 0, lnCount)
+      gl.useProgram(ptProg)
+      gl.bindBuffer(gl.ARRAY_BUFFER, ptBuf); gl.enableVertexAttribArray(ptAPos)
+      gl.vertexAttribPointer(ptAPos, 3, gl.FLOAT, false, 0, 0)
+      gl.uniformMatrix4fv(ptMVP, false, mvp)
+      gl.uniform4fv(ptCol, [.486, .227, .929, .18]); gl.uniform1f(ptSz, 9.)
+      gl.drawArrays(gl.POINTS, 0, N)
+      gl.uniform4fv(ptCol, [.847, .706, .996, .9]); gl.uniform1f(ptSz, 4.)
+      gl.drawArrays(gl.POINTS, 0, N)
+      requestAnimationFrame(draw)
+    }
+    draw()
+  })
 }
 
 function Orb({ size=34, state='idle', rings=false }) {
@@ -146,6 +262,7 @@ export default function NovaPage() {
   const inputBarRef=useRef(null)
   const inputRef=useRef(null)
   const bgRef=useRef(null)
+  const sphereRef=useRef(null)
   const imageInputRef=useRef(null)
 
   useEffect(()=>{
@@ -156,8 +273,13 @@ export default function NovaPage() {
   },[])
 
   useEffect(()=>{
-    if(bgRef.current)initBg(bgRef.current)
+    if(bgRef.current)initConstellationBg(bgRef.current)
     return()=>bgRef.current?._stop?.()
+  },[])
+
+  useEffect(()=>{
+    if(sphereRef.current)initSphere(sphereRef.current)
+    return()=>sphereRef.current?._stop?.()
   },[])
 
   // Restore persisted chat
@@ -326,6 +448,7 @@ export default function NovaPage() {
       <div ref={msgsRef} className="nv-msgs" style={{ flex:1,overflowY:'auto',overflowX:'hidden',WebkitOverflowScrolling:'touch',padding:'12px 16px 8px',display:'flex',flexDirection:'column',gap:12,position:'relative',zIndex:1 }}>
         {greeting&&(
           <div style={{ textAlign:'center',padding:'20px 16px 12px',flexShrink:0 }}>
+            <canvas ref={sphereRef} style={{ width:140,height:140,display:'block',margin:'0 auto 16px' }}/>
             <div style={{ fontSize:22,fontWeight:900,letterSpacing:'-.04em',marginBottom:8,background:'linear-gradient(135deg,#fff,#a5b4fc)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text' }}>What are we working on?</div>
             <div style={{ fontSize:13,color:'rgba(255,255,255,.35)',lineHeight:1.6 }}>Ask me anything — I'll explain, write code, debug errors, or build flashcards.</div>
             <div style={{ display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap',marginTop:16 }}>
