@@ -109,7 +109,7 @@ function initSphere(canvas) {
       const p = gl.createProgram(); gl.attachShader(p, v); gl.attachShader(p, f); gl.linkProgram(p)
       return gl.getProgramParameter(p, gl.LINK_STATUS) ? p : null
     }
-    const ptVS = `attribute vec3 aPos;uniform mat4 uMVP;uniform float uSz;void main(){vec4 p=uMVP*vec4(aPos,1.);gl_Position=p;gl_PointSize=clamp(uSz/max(p.w,.3),1.,8.);}`
+    const ptVS = `attribute vec3 aPos;uniform mat4 uMVP;uniform float uSz;void main(){vec4 p=uMVP*vec4(aPos,1.);gl_Position=p;gl_PointSize=clamp(uSz/max(p.w,.3),1.,28.);}`
     const ptFS = `precision mediump float;uniform vec4 uCol;void main(){vec2 c=gl_PointCoord-.5;float d=length(c)*2.;if(d>1.)discard;gl_FragColor=vec4(uCol.rgb,uCol.a*(1.-d));}`
     const lnVS = `attribute vec3 aPos;uniform mat4 uMVP;void main(){gl_Position=uMVP*vec4(aPos,1.);}`
     const lnFS = `precision mediump float;uniform vec4 uCol;void main(){gl_FragColor=uCol;}`
@@ -161,15 +161,15 @@ function initSphere(canvas) {
       gl.useProgram(lnProg)
       gl.bindBuffer(gl.ARRAY_BUFFER, lnBuf); gl.enableVertexAttribArray(lnAPos)
       gl.vertexAttribPointer(lnAPos, 3, gl.FLOAT, false, 0, 0)
-      gl.uniformMatrix4fv(lnMVP, false, mvp); gl.uniform4fv(lnCol, [.655, .545, .984, .2])
+      gl.uniformMatrix4fv(lnMVP, false, mvp); gl.uniform4fv(lnCol, [.655, .545, .984, .45])
       gl.drawArrays(gl.LINES, 0, lnCount)
       gl.useProgram(ptProg)
       gl.bindBuffer(gl.ARRAY_BUFFER, ptBuf); gl.enableVertexAttribArray(ptAPos)
       gl.vertexAttribPointer(ptAPos, 3, gl.FLOAT, false, 0, 0)
       gl.uniformMatrix4fv(ptMVP, false, mvp)
-      gl.uniform4fv(ptCol, [.486, .227, .929, .18]); gl.uniform1f(ptSz, 9.)
+      gl.uniform4fv(ptCol, [.486, .227, .929, .42]); gl.uniform1f(ptSz, 22.)
       gl.drawArrays(gl.POINTS, 0, N)
-      gl.uniform4fv(ptCol, [.847, .706, .996, .9]); gl.uniform1f(ptSz, 4.)
+      gl.uniform4fv(ptCol, [.847, .706, .996, .95]); gl.uniform1f(ptSz, 9.)
       gl.drawArrays(gl.POINTS, 0, N)
       requestAnimationFrame(draw)
     }
@@ -448,7 +448,7 @@ export default function NovaPage() {
       <div ref={msgsRef} className="nv-msgs" style={{ flex:1,overflowY:'auto',overflowX:'hidden',WebkitOverflowScrolling:'touch',padding:'12px 16px 8px',display:'flex',flexDirection:'column',gap:12,position:'relative',zIndex:1 }}>
         {greeting&&(
           <div style={{ textAlign:'center',padding:'20px 16px 12px',flexShrink:0 }}>
-            <canvas ref={sphereRef} style={{ width:140,height:140,display:'block',margin:'0 auto 16px' }}/>
+            <canvas ref={sphereRef} style={{ width:200,height:200,display:'block',margin:'0 auto 14px',borderRadius:'50%',boxShadow:'0 0 60px rgba(109,40,217,.3), 0 0 120px rgba(109,40,217,.12)' }}/>
             <div style={{ fontSize:22,fontWeight:900,letterSpacing:'-.04em',marginBottom:8,background:'linear-gradient(135deg,#fff,#a5b4fc)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text' }}>What are we working on?</div>
             <div style={{ fontSize:13,color:'rgba(255,255,255,.35)',lineHeight:1.6 }}>Ask me anything — I'll explain, write code, debug errors, or build flashcards.</div>
             <div style={{ display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap',marginTop:16 }}>
