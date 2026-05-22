@@ -662,7 +662,11 @@ export default function ProfilePage() {
           <div>
             <div style={{ fontSize:13, fontWeight:700, color:'var(--c-t1)', marginBottom:2 }}>Current plan</div>
             <div style={{ display:'inline-flex', alignItems:'center', gap:6, marginTop:4 }}>
-              {(profile?.plan === 'pro' || profile?.plan === 'teacher' || profile?.plan === 'school') ? (
+              {profile?.plan === 'lifetime' ? (
+                <span style={{ background:'linear-gradient(90deg,#f59e0b,#f97316)', color:'#fff', fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20 }}>
+                  Lifetime ✦
+                </span>
+              ) : (profile?.plan === 'pro' || profile?.plan === 'teacher' || profile?.plan === 'school') ? (
                 <span style={{ background:'linear-gradient(90deg,#6366f1,#a78bfa)', color:'#fff', fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20 }}>
                   {profile.plan === 'teacher' ? 'Teacher' : profile.plan === 'school' ? 'School' : 'Pro'} ✦
                 </span>
@@ -682,6 +686,11 @@ export default function ProfilePage() {
         {(!profile?.plan || profile?.plan === 'free') && (
           <div style={{ fontSize:12, color:'var(--c-t2)', lineHeight:1.5 }}>
             Upgrade to Pro for unlimited AI generation, priority access, and advanced features.
+          </div>
+        )}
+        {(profile?.plan === 'lifetime') && (
+          <div style={{ fontSize:12, color:'var(--c-t2)' }}>
+            Unlimited access to everything, forever. Thank you for your support! 🎉
           </div>
         )}
         {(profile?.plan === 'pro' || profile?.plan === 'teacher' || profile?.plan === 'school') && (
