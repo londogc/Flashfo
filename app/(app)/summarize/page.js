@@ -132,34 +132,68 @@ export default function SummarizePage() {
 
         {/* Left col — input */}
         <div>
-          <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, overflow:'hidden' }}>
-            <textarea
-              value={input}
-              onChange={e=>setInput(e.target.value)}
-              onKeyDown={e=>{ if (e.key==='Enter'&&e.metaKey&&input.trim()) run() }}
-              rows={8}
-              placeholder={`Paste your text, article, or notes here…\n\nNova will extract the key points, main arguments, and anything worth remembering.`}
-              style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'#e2e8f0', fontFamily:'inherit', fontSize:13, lineHeight:1.7, padding:'14px 16px', resize:'none', display:'block' }}
-            />
-            <div style={{ padding:'9px 14px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-              <span style={{ fontSize:11, color:'rgba(255,255,255,0.2)' }}>
-                {wordCount > 0 ? `${wordCount.toLocaleString()} words · ~${readTime} min read` : 'Paste anything up to ~50,000 words'}
-              </span>
-              <span style={{ fontSize:11, color:'rgba(255,255,255,0.15)' }}>⌘↵ summarise</span>
+          <div style={{ position:'relative' }}>
+
+            {/* Animated orb layer — amber palette */}
+            <div style={{ position:'absolute', inset:-50, pointerEvents:'none', zIndex:0, overflow:'hidden', borderRadius:60, filter:'blur(35px)', opacity:0.4 }}>
+              <div style={{ position:'absolute', width:230, height:230, borderRadius:'50%', background:'radial-gradient(circle,#d97706,transparent 70%)', top:-30, left:-30, animation:'smOrb1 13s ease-in-out infinite' }}/>
+              <div style={{ position:'absolute', width:180, height:180, borderRadius:'50%', background:'radial-gradient(circle,#b45309,transparent 70%)', bottom:-10, right:-10, animation:'smOrb2 16s ease-in-out infinite' }}/>
+              <div style={{ position:'absolute', width:150, height:150, borderRadius:'50%', background:'radial-gradient(circle,#f59e0b,transparent 70%)', top:'50%', left:'50%', transform:'translate(-50%,-50%)', animation:'smOrb3 11s ease-in-out infinite' }}/>
+            </div>
+
+            <style>{`
+              @keyframes smOrb1{0%,100%{transform:translate(0,0) scale(1)}40%{transform:translate(26px,18px) scale(1.1)}70%{transform:translate(-12px,28px) scale(0.94)}}
+              @keyframes smOrb2{0%,100%{transform:translate(0,0) scale(1)}35%{transform:translate(-22px,-16px) scale(1.08)}65%{transform:translate(18px,-26px) scale(0.93)}}
+              @keyframes smOrb3{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.2)}}
+              @keyframes smBtnGrad{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+              @keyframes smShine{0%,100%{left:-60%}50%{left:120%}}
+              .sm-genbtn{width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(110deg,#92400e 0%,#d97706 35%,#fbbf24 50%,#d97706 65%,#78350f 100%);background-size:200% 100%;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:-.3px;box-shadow:0 4px 24px rgba(217,119,6,0.35),0 1px 0 rgba(255,255,255,0.15) inset;transition:all .2s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden;animation:smBtnGrad 4s linear infinite;display:flex;align-items:center;justify-content:center;gap:9;}
+              .sm-genbtn::after{content:'';position:absolute;top:-50%;left:-60%;width:40%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transform:skewX(-20deg);animation:smShine 3.5s ease-in-out infinite;}
+              .sm-genbtn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(217,119,6,0.5),0 1px 0 rgba(255,255,255,0.2) inset;}
+              .sm-genbtn:active{transform:translateY(1px);}
+              .sm-genbtn:disabled{opacity:0.45;cursor:not-allowed;transform:none;animation:none;}
+            `}</style>
+
+            {/* Card */}
+            <div style={{ position:'relative', zIndex:1, borderRadius:24, background:'rgba(12,10,22,0.88)', backdropFilter:'blur(40px) saturate(1.5)', WebkitBackdropFilter:'blur(40px) saturate(1.5)', border:'1px solid rgba(255,255,255,0.09)', boxShadow:'0 0 0 1px rgba(255,255,255,0.04) inset, 0 40px 80px rgba(0,0,0,0.6)', overflow:'hidden' }}>
+
+              {/* Top shimmer */}
+              <div style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.08) 20%,rgba(255,255,255,0.2) 50%,rgba(255,255,255,0.08) 80%,transparent)', zIndex:10, pointerEvents:'none' }}/>
+
+              {/* Textarea */}
+              <div style={{ padding:'24px 24px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                <textarea
+                  value={input}
+                  onChange={e=>setInput(e.target.value)}
+                  onKeyDown={e=>{ if (e.key==='Enter'&&e.metaKey&&input.trim()) run() }}
+                  rows={7}
+                  placeholder={`Paste your text, article, or notes here…\n\nNova will extract the key points, main arguments, and anything worth remembering.`}
+                  style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'rgba(255,255,255,0.78)', fontFamily:'inherit', fontSize:15, lineHeight:1.65, resize:'none', display:'block', caretColor:'rgba(255,255,255,0.5)' }}
+                />
+              </div>
+
+              {/* Word count footer */}
+              <div style={{ padding:'10px 24px 16px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.2)' }}>
+                  {wordCount > 0 ? `${wordCount.toLocaleString()} words · ~${readTime} min read` : 'Paste anything up to ~50,000 words'}
+                </span>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.13)' }}>⌘↵ summarise</span>
+              </div>
             </div>
           </div>
 
           {/* Word count bar */}
-          <div style={{ height:2, background:'rgba(255,255,255,0.07)', borderRadius:2, margin:'8px 0', overflow:'hidden' }}>
+          <div style={{ height:2, background:'rgba(255,255,255,0.06)', borderRadius:2, margin:'10px 0 8px', overflow:'hidden' }}>
             <div style={{ height:'100%', width:barWidth+'%', background:'linear-gradient(90deg,#d97706,#f59e0b)', borderRadius:2, transition:'width .4s ease' }}/>
           </div>
 
           {error && <div style={{ fontSize:12, color:'#f87171', marginBottom:8 }}>{error}</div>}
 
           <button
+            className="sm-genbtn"
             onClick={run}
             disabled={loading||!input.trim()}
-            style={{ width:'100%', padding:'13px', borderRadius:11, border:'none', background:'linear-gradient(135deg,#d97706,#b45309)', color:'#fff', fontSize:13, fontWeight:800, cursor:loading||!input.trim()?'not-allowed':'pointer', marginTop:4, fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:9, letterSpacing:'-.01em', boxShadow:'0 4px 18px rgba(217,119,6,0.25)', transition:'all .15s', opacity:loading||!input.trim()?.55:1 }}>
+          >
             {loading ? (
               <>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation:'_fcspin .7s linear infinite', flexShrink:0 }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
