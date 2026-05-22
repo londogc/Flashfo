@@ -205,8 +205,38 @@ export default function SummarizePage() {
 
         {/* Right col — before/after preview, hidden on mobile */}
         {!isMobile && <div>
-          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>Before & after</div>
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>{loading ? 'Condensing your text…' : 'Before & after'}</div>
 
+          {/* Skeleton during loading */}
+          {loading && (
+            <div>
+              <style>{`.sm-skel{background:linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.09) 50%,rgba(255,255,255,0.04) 75%);background-size:1200px 100%;animation:smSkelShimmer 1.8s ease-in-out infinite;border-radius:6px;}@keyframes smSkelShimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}`}</style>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 24px 1fr', gap:8, alignItems:'start', marginBottom:14 }}>
+                <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:12 }}>
+                  <div className="sm-skel" style={{ height:7, width:'55%', marginBottom:10 }}/>
+                  {[90,75,85,65,80,70,60].map((w,i) => (
+                    <div key={i} className="sm-skel" style={{ height:8, width:`${w}%`, marginBottom:6, animationDelay:`${i*0.06}s` }}/>
+                  ))}
+                </div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'center', paddingTop:28 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </div>
+                <div style={{ background:'rgba(245,158,11,0.04)', border:'1px solid rgba(245,158,11,0.15)', borderRadius:10, padding:12 }}>
+                  <div className="sm-skel" style={{ height:7, width:'45%', marginBottom:10, opacity:0.7 }}/>
+                  {[85,70,60].map((w,i) => (
+                    <div key={i} className="sm-skel" style={{ height:8, width:`${w}%`, marginBottom:6, animationDelay:`${(i+4)*0.06}s`, opacity:0.7 }}/>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:'rgba(245,158,11,0.05)', border:'1px solid rgba(245,158,11,0.14)', borderRadius:10 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0, animation:'_fcspin .9s linear infinite' }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.32)', lineHeight:1.5 }}>Nova is reading and condensing your text…</span>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 24px 1fr', gap:8, alignItems:'start', marginBottom:14 }}>
+          {!loading && <div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 24px 1fr', gap:8, alignItems:'start', marginBottom:14 }}>
             <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:12 }}>
               <div style={{ fontSize:9, fontWeight:800, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:7 }}>Original · 680 words</div>
@@ -229,6 +259,7 @@ export default function SummarizePage() {
               </div>
             ))}
           </div>
+          </div>}
         </div>}
       </div>
 
