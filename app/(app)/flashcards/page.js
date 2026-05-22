@@ -1007,8 +1007,8 @@ function FlashcardsPageInner() {
       </div>
 
       <div style={{position:'relative',width:'100%',maxWidth:560,margin:'0 auto',height:isMobile?220:250}}>
-        <div style={{position:'absolute',top:0,left:20,right:-22,bottom:-16,borderRadius:16,border:'1px solid rgba(255,255,255,0.07)',background:'rgba(255,255,255,0.03)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',top:0,left:10,right:-11,bottom:-8,borderRadius:16,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.045)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',top:0,left:20,right:-22,bottom:-16,borderRadius:16,border:'1px solid rgba(255,255,255,0.18)',background:'rgba(255,255,255,0.08)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',top:0,left:10,right:-11,bottom:-8,borderRadius:16,border:'1px solid rgba(255,255,255,0.14)',background:'rgba(255,255,255,0.06)',pointerEvents:'none'}}/>
         <div ref={cardDragRef} style={{position:'absolute',inset:0,cursor:flipped?'grab':'pointer',willChange:'transform'}}>
           <div style={{width:'100%',height:'100%',transformStyle:'preserve-3d',transition:'transform .52s cubic-bezier(.4,0,.2,1)',transform:flipped?'rotateY(180deg)':'none'}}>
             <div onClick={()=>{if(!flipped)setFlipped(true)}} style={{position:'absolute',inset:0,borderRadius:16,border:`1.5px solid ${cardTheme.border}`,background:cardTheme.cardBg,backfaceVisibility:'hidden',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,padding:28}}>
