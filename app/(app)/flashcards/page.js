@@ -639,114 +639,158 @@ function FlashcardsPageInner() {
       <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:20, alignItems:'start' }}>
 
         <div>
-          <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, overflow:'hidden' }}>
+          {/* ── Premium flashcards input card ── */}
+          <div style={{ position:'relative' }}>
 
-            <div style={{ display:'flex', gap:2, padding:'8px 10px 0', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
-              {[['topic','By topic'],['notes','Paste notes'],['import','Import']].map(([id,label])=>(
-                <button key={id} onClick={()=>setInputTab(id)} style={{ padding:'5px 12px', borderRadius:'6px 6px 0 0', fontSize:11, fontWeight:700, cursor:'pointer', border:'none', background:inputTab===id?'rgba(255,255,255,0.08)':'none', color:inputTab===id?'#e2e8f0':'rgba(255,255,255,0.28)', fontFamily:'inherit', transition:'all .15s' }}>
-                  {label}
-                </button>
-              ))}
+            {/* Animated orb layer */}
+            <div style={{ position:'absolute', inset:-50, pointerEvents:'none', zIndex:0, overflow:'hidden', borderRadius:60, filter:'blur(35px)', opacity:0.45 }}>
+              <div style={{ position:'absolute', width:240, height:240, borderRadius:'50%', background:'radial-gradient(circle,#2563eb,transparent 70%)', top:-30, left:-30, animation:'fcOrb1 13s ease-in-out infinite' }}/>
+              <div style={{ position:'absolute', width:190, height:190, borderRadius:'50%', background:'radial-gradient(circle,#4f46e5,transparent 70%)', bottom:-10, right:-10, animation:'fcOrb2 16s ease-in-out infinite' }}/>
+              <div style={{ position:'absolute', width:150, height:150, borderRadius:'50%', background:'radial-gradient(circle,#3b82f6,transparent 70%)', top:'50%', left:'50%', transform:'translate(-50%,-50%)', animation:'fcOrb3 11s ease-in-out infinite' }}/>
             </div>
 
-            {inputTab === 'import' ? (
-              <div>
-                <div
-                  onClick={()=>fileInputRef.current?.click()}
-                  style={{ margin:'12px 14px 0', padding:'14px', border:'1.5px dashed rgba(59,130,246,0.25)', borderRadius:10, display:'flex', alignItems:'center', gap:12, cursor:'pointer', background:'rgba(59,130,246,0.04)', transition:'all .15s' }}>
-                  <div style={{ width:32, height:32, borderRadius:8, background:'rgba(59,130,246,0.1)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  </div>
-                  <div>
-                    <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.65)' }}>Upload a file</div>
-                    <div style={{ fontSize:10, color:'rgba(255,255,255,0.28)', marginTop:1 }}>.csv · .tsv · .txt · .md</div>
-                  </div>
-                  <div style={{ marginLeft:'auto', fontSize:11, fontWeight:600, color:'rgba(96,165,250,0.6)', padding:'4px 10px', border:'1px solid rgba(59,130,246,0.25)', borderRadius:6 }}>Browse</div>
-                </div>
-                <input ref={fileInputRef} type="file" accept=".csv,.tsv,.txt,.md" onChange={handleFileUpload} style={{ display:'none' }}/>
+            <style>{`
+              @keyframes fcOrb1{0%,100%{transform:translate(0,0) scale(1)}40%{transform:translate(26px,18px) scale(1.1)}70%{transform:translate(-12px,28px) scale(0.94)}}
+              @keyframes fcOrb2{0%,100%{transform:translate(0,0) scale(1)}35%{transform:translate(-22px,-16px) scale(1.08)}65%{transform:translate(18px,-26px) scale(0.93)}}
+              @keyframes fcOrb3{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.2)}}
+              @keyframes fcBtnGrad{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+              @keyframes fcShine{0%,100%{left:-60%}50%{left:120%}}
+              .fc-tab{font-size:12px;font-weight:600;color:rgba(255,255,255,0.28);background:none;border:none;border-bottom:2px solid transparent;padding:8px 14px;cursor:pointer;font-family:inherit;transition:all .15s;}
+              .fc-tab:hover{color:rgba(255,255,255,0.6);}
+              .fc-tab.fc-tab-on{color:#fff;border-bottom-color:#fff;}
+              .fc-arrow{width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);color:rgba(255,255,255,0.35);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.2,.8,.2,1);box-shadow:0 2px 6px rgba(0,0,0,0.4);}
+              .fc-arrow:hover{background:rgba(255,255,255,0.09);color:#fff;border-color:rgba(255,255,255,0.16);transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,0.5);}
+              .fc-arrow:active{transform:translateY(1px);}
+              .fc-pre{font-size:12px;font-weight:600;color:rgba(255,255,255,0.2);background:none;border:none;border-bottom:1px solid transparent;padding:2px 0;cursor:pointer;font-family:inherit;transition:all .12s;}
+              .fc-pre:hover{color:rgba(255,255,255,0.55);}
+              .fc-pre.fc-pre-on{color:rgba(255,255,255,0.85);border-bottom-color:rgba(255,255,255,0.4);}
+              .fc-genbtn{width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(110deg,#1d4ed8 0%,#2563eb 35%,#60a5fa 50%,#2563eb 65%,#1e40af 100%);background-size:200% 100%;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:-.3px;box-shadow:0 4px 24px rgba(37,99,235,0.4),0 1px 0 rgba(255,255,255,0.15) inset;transition:all .2s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden;animation:fcBtnGrad 4s linear infinite;display:flex;align-items:center;justify-content:center;gap:9;}
+              .fc-genbtn::after{content:'';position:absolute;top:-50%;left:-60%;width:40%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transform:skewX(-20deg);animation:fcShine 3.5s ease-in-out infinite;}
+              .fc-genbtn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(37,99,235,0.55),0 1px 0 rgba(255,255,255,0.2) inset;}
+              .fc-genbtn:active{transform:translateY(1px);}
+              .fc-genbtn:disabled{opacity:0.45;cursor:not-allowed;transform:none;animation:none;}
+            `}</style>
 
-                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px' }}>
-                  <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.07)' }}/>
-                  <span style={{ fontSize:10, color:'rgba(255,255,255,0.2)', fontWeight:600 }}>OR PASTE BELOW</span>
-                  <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.07)' }}/>
-                </div>
+            {/* Card */}
+            <div style={{ position:'relative', zIndex:1, borderRadius:24, background:'rgba(12,10,22,0.88)', backdropFilter:'blur(40px) saturate(1.5)', WebkitBackdropFilter:'blur(40px) saturate(1.5)', border:'1px solid rgba(255,255,255,0.09)', boxShadow:'0 0 0 1px rgba(255,255,255,0.04) inset, 0 40px 80px rgba(0,0,0,0.6)', overflow:'hidden' }}>
 
-                <textarea
-                  value={importText}
-                  onChange={e=>{ setImportText(e.target.value); setImportError('') }}
-                  rows={5}
-                  placeholder={'front term, back definition\nphotosynthesis, process plants use to make food\nmitosis, cell division producing two identical cells\n\nAlso supports tab-separated (Quizlet export) and plain text.'}
-                  style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'#e2e8f0', fontFamily:'inherit', fontSize:12, lineHeight:1.7, padding:'0 16px 12px', resize:'none', display:'block' }}
-                />
+              {/* Top shimmer */}
+              <div style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.08) 20%,rgba(255,255,255,0.2) 50%,rgba(255,255,255,0.08) 80%,transparent)', zIndex:10, pointerEvents:'none' }}/>
 
-                <div style={{ padding:'8px 14px 10px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', gap:6, flexWrap:'wrap' }}>
-                  {[['CSV','front, back'],['Quizlet','front\\tback'],['Anki','.txt export'],['Plain text','Nova extracts']].map(([fmt,hint])=>(
-                    <div key={fmt} style={{ padding:'3px 9px', borderRadius:20, fontSize:10, fontWeight:600, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.3)' }}>
-                      <span style={{ color:'rgba(255,255,255,0.5)' }}>{fmt}</span> · {hint}
-                    </div>
-                  ))}
-                </div>
-
-                {importError && <div style={{ padding:'6px 14px 8px', fontSize:11, color:'#f87171' }}>{importError}</div>}
+              {/* Tabs */}
+              <div style={{ display:'flex', gap:2, padding:'18px 24px 0' }}>
+                {[['topic','By topic'],['notes','Paste notes'],['import','Import']].map(([id,label])=>(
+                  <button key={id} className={'fc-tab'+(inputTab===id?' fc-tab-on':'')} onClick={()=>setInputTab(id)}>{label}</button>
+                ))}
               </div>
-            ) : (
-              <textarea
-                value={topic}
-                onChange={e=>setTopic(e.target.value)}
-                onKeyDown={e=>{ if (e.key==='Enter'&&e.metaKey) generate() }}
-                rows={5}
-                placeholder={inputTab==='notes' ? 'Paste your lecture notes, textbook excerpt, or any text here — Nova will extract the key concepts...' : 'e.g. The causes and key events of World War I...'}
-                style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'#e2e8f0', fontFamily:'inherit', fontSize:13, lineHeight:1.7, padding:'14px 16px', resize:'none', display:'block' }}
-              />
-            )}
 
-            {/* ── Slider — PERMANENT FIX: CSS-variable fill, always in sync with counter ── */}
-            {inputTab !== 'import' && (
-              <div style={{ padding:'10px 14px 12px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:7 }}>
-                  <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.28)', textTransform:'uppercase', letterSpacing:'.05em' }}>Cards to generate</span>
-                  <span style={{ fontSize:16, fontWeight:800, color:'#60a5fa' }}>{count}</span>
-                </div>
-                <>
-                  <style>{`
-                    .fc-slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;outline:none;cursor:pointer;display:block}
-                    .fc-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.5);cursor:pointer;border:none}
-                    .fc-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.5);cursor:pointer;border:none}
-                    .fc-slider::-moz-range-track{height:4px;border-radius:2px;background:transparent}
-                  `}</style>
-                  <input
-                    type="range"
-                    className="fc-slider"
-                    min={5} max={40} step={1}
-                    value={count}
-                    onChange={e => setCount(Number(e.target.value))}
-                    style={{ background:`linear-gradient(to right,#3b82f6 ${((count-5)/35*100).toFixed(1)}%,rgba(255,255,255,0.15) ${((count-5)/35*100).toFixed(1)}%)` }}
+              {/* Topic / Notes textarea */}
+              {inputTab !== 'import' && (
+                <div style={{ padding:'14px 24px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                  <textarea
+                    value={topic}
+                    onChange={e=>setTopic(e.target.value)}
+                    onKeyDown={e=>{ if(e.key==='Enter'&&e.metaKey) generate() }}
+                    rows={3}
+                    placeholder={inputTab==='notes' ? 'Paste your lecture notes, textbook excerpt, or any text here — Nova will extract the key concepts...' : 'e.g. The causes and key events of World War I...'}
+                    style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'rgba(255,255,255,0.78)', fontFamily:'inherit', fontSize:15, lineHeight:1.65, resize:'none', display:'block', caretColor:'rgba(255,255,255,0.5)' }}
                   />
-                </>
-                <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, color:'rgba(255,255,255,0.2)', marginTop:5 }}>
-                  <span>5</span><span>20</span><span>40</span>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div style={{ padding:'9px 14px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-              <span style={{ fontSize:11, color:'rgba(255,255,255,0.18)' }}>Includes spaced repetition review</span>
-              <span style={{ fontSize:11, color:'rgba(255,255,255,0.15)' }}>⌘↵ generate</span>
+              {/* Import zone */}
+              {inputTab === 'import' && (
+                <div style={{ padding:'14px 24px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                  <div onClick={()=>fileInputRef.current?.click()} style={{ padding:'14px', border:'1.5px dashed rgba(59,130,246,0.25)', borderRadius:12, display:'flex', alignItems:'center', gap:12, cursor:'pointer', background:'rgba(59,130,246,0.04)', transition:'all .15s', marginBottom:12 }}>
+                    <div style={{ width:32, height:32, borderRadius:8, background:'rgba(59,130,246,0.1)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.65)' }}>Upload a file</div>
+                      <div style={{ fontSize:10, color:'rgba(255,255,255,0.28)', marginTop:1 }}>.csv · .tsv · .txt · .md</div>
+                    </div>
+                    <div style={{ marginLeft:'auto', fontSize:11, fontWeight:600, color:'rgba(96,165,250,0.6)', padding:'4px 10px', border:'1px solid rgba(59,130,246,0.25)', borderRadius:6 }}>Browse</div>
+                  </div>
+                  <input ref={fileInputRef} type="file" accept=".csv,.tsv,.txt,.md" onChange={handleFileUpload} style={{ display:'none' }}/>
+                  <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+                    <div style={{ flex:1, height:1, background:'rgba(255,255,255,0.07)' }}/>
+                    <span style={{ fontSize:10, color:'rgba(255,255,255,0.2)', fontWeight:600 }}>OR PASTE BELOW</span>
+                    <div style={{ flex:1, height:1, background:'rgba(255,255,255,0.07)' }}/>
+                  </div>
+                  <textarea value={importText} onChange={e=>{ setImportText(e.target.value); setImportError('') }} rows={4} placeholder={'front term, back definition\nphotosynthesis, process plants use to make food\n\nAlso supports tab-separated (Quizlet export) and plain text.'} style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, outline:'none', color:'rgba(255,255,255,0.65)', fontFamily:'inherit', fontSize:13, lineHeight:1.65, padding:'12px 14px', resize:'none', display:'block', caretColor:'rgba(255,255,255,0.5)' }}/>
+                  <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:10 }}>
+                    {[['CSV','front, back'],['Quizlet','front\\tback'],['Anki','.txt export'],['Plain text','Nova extracts']].map(([fmt,hint])=>(
+                      <div key={fmt} style={{ padding:'3px 9px', borderRadius:20, fontSize:10, fontWeight:600, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.3)' }}>
+                        <span style={{ color:'rgba(255,255,255,0.5)' }}>{fmt}</span> · {hint}
+                      </div>
+                    ))}
+                  </div>
+                  {importError && <div style={{ fontSize:11, color:'#f87171', marginTop:6 }}>{importError}</div>}
+                </div>
+              )}
+
+              {/* Count selector — replaces slider, hidden in import mode */}
+              {inputTab !== 'import' && (
+                <div style={{ display:'grid', gridTemplateColumns:'1fr auto', alignItems:'center', padding:'20px 24px', gap:16 }}>
+                  <div>
+                    <div style={{ fontSize:10, fontWeight:600, letterSpacing:'.12em', textTransform:'uppercase', color:'rgba(255,255,255,0.2)', marginBottom:8 }}>Cards to generate</div>
+                    <div style={{ display:'flex', alignItems:'baseline', gap:8 }}>
+                      <div
+                        contentEditable
+                        suppressContentEditableWarning
+                        inputMode="numeric"
+                        role="spinbutton"
+                        aria-label="Number of cards"
+                        aria-valuenow={count}
+                        aria-valuemin={1}
+                        aria-valuemax={100}
+                        onBlur={e=>{
+                          const v=Math.max(1,Math.min(100,parseInt(e.currentTarget.textContent)||1))
+                          setCount(v); e.currentTarget.textContent=v
+                        }}
+                        onKeyDown={e=>{
+                          if(e.key==='Enter'){e.preventDefault();e.currentTarget.blur()}
+                          if(e.key==='ArrowUp'){e.preventDefault();setCount(c=>Math.min(100,c+1));e.currentTarget.textContent=Math.min(100,count+1)}
+                          if(e.key==='ArrowDown'){e.preventDefault();setCount(c=>Math.max(1,c-1));e.currentTarget.textContent=Math.max(1,count-1)}
+                        }}
+                        style={{ fontSize:68, fontWeight:900, letterSpacing:-4, lineHeight:1, background:'linear-gradient(160deg,#fff 0%,rgba(255,255,255,0.55) 100%)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', cursor:'text', outline:'none', minWidth:84, display:'inline-block', transition:'opacity .1s' }}
+                      >{count}</div>
+                      <div style={{ fontSize:13, fontWeight:400, color:'rgba(255,255,255,0.22)', paddingBottom:8, WebkitTextFillColor:'rgba(255,255,255,0.22)' }}>cards</div>
+                    </div>
+                    <div style={{ display:'flex', gap:8, marginTop:10, flexWrap:'wrap' }}>
+                      {[5,10,15,20,30,40].map(n=>(
+                        <button key={n} className={'fc-pre'+(count===n?' fc-pre-on':'')} onClick={()=>setCount(n)}>{n}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    <button className="fc-arrow" onClick={()=>setCount(c=>Math.min(100,c+1))}>↑</button>
+                    <button className="fc-arrow" onClick={()=>setCount(c=>Math.max(1,c-1))}>↓</button>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ padding:'10px 24px 16px', borderTop:'1px solid rgba(255,255,255,0.05)', display:'flex', justifyContent:'space-between' }}>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.18)' }}>Includes spaced repetition review</span>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.13)' }}>⌘↵ generate</span>
+              </div>
             </div>
           </div>
 
           {error && <div style={{ fontSize:12, color:'#f87171', marginTop:8 }}>{error}</div>}
 
           <button
+            className="fc-genbtn"
             onClick={()=> inputTab==='import' ? handleImport() : generate()}
             disabled={loading||(inputTab==='import' ? !importText.trim() : !topic.trim())}
-            style={{ width:'100%', padding:'13px', borderRadius:11, border:'none', background:'linear-gradient(135deg,#2563eb,#4f46e5)', color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer', opacity:loading||(inputTab==='import'?!importText.trim():!topic.trim())?0.55:1, marginTop:11, fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:9, letterSpacing:'-.01em', boxShadow:'0 4px 18px rgba(37,99,235,0.28)', transition:'all .15s' }}>
+            style={{ marginTop:12 }}
+          >
             {loading ? (
               <>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation:'_fcspin .7s linear infinite', flexShrink:0 }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
                 {inputTab==='import' ? 'Importing…' : 'Generating…'}
               </>
-            ) : inputTab==='import' ? 'Import cards →' : 'Generate flashcards →'}
+            ) : inputTab==='import' ? 'Import cards →' : `Generate ${count} flashcards →`}
           </button>
         </div>
 
