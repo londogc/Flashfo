@@ -4,10 +4,6 @@ import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
-const THEMES = [
-  { id:'dark',   label:'Dark',   icon:'M13 8.5A5.5 5.5 0 016 2a6 6 0 100 12 5.5 5.5 0 007-5.5z' },
-  { id:'system', label:'System', icon:'M2 3h12v10H2zm0 10h12M8 13v2' },
-]
 
 const GRADE_OPTIONS = ['K','1','2','3','4','5','6','7','8','9','10','11','12','College / University','Graduate School','Other']
 
@@ -16,7 +12,6 @@ export default function SettingsPage() {
   const router = useRouter()
 
   const [profile,    setProfile]    = useState({ full_name:'', grade_level:'', role:'student', plan:'free' })
-  const [theme,      setTheme]      = useState('system')
   const [saving,     setSaving]     = useState(false)
   const [saved,      setSaved]      = useState(false)
   const [saveError,  setSaveError]  = useState('')
@@ -37,9 +32,6 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (user) loadProfile()
-    const saved = localStorage.getItem('flashfo-theme') || 'system'
-    setTheme(saved)
-    applyTheme(saved, false)
   }, [user])
 
   async function loadProfile() {
@@ -76,16 +68,6 @@ export default function SettingsPage() {
     setRegen(false)
   }
 
-  function applyTheme(t, store = true) {
-    const root = document.documentElement
-    if (t === 'dark')        root.classList.add('dark')
-    else if (t === 'light')  root.classList.remove('dark')
-    else {
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) root.classList.add('dark')
-      else root.classList.remove('dark')
-    }
-    if (store) { localStorage.setItem('flashfo-theme', t); setTheme(t) }
-  }
 
   async function save() {
     if (!user) return
@@ -256,19 +238,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Appearance */}
-      <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
-        <h2 className="text-[11px] font-bold text-t3 uppercase tracking-wider mb-4">Appearance</h2>
-        <div className="flex gap-2">
-          {THEMES.map(t => (
-            <button key={t.id} onClick={() => applyTheme(t.id)}
-              className={'flex-1 flex flex-col items-center gap-2 py-3 rounded-xl border transition-all ' + (theme===t.id ? 'bg-blue-700 border-blue-700 text-white' : 'bg-surface2 border-line text-t2 hover:border-blue-500')}>
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d={t.icon}/></svg>
-              <span className="text-[11px] font-semibold">{t.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Profile & Avatar */}
       <div className="bg-surface border border-line rounded-2xl p-5 mb-4">
