@@ -358,18 +358,23 @@ export default function StudyGuidePage() {
             </div>
           </div>
           {!isMobile && <div>
-            <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>Guide structure</div>
+            <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>Writing your guide…</div>
+            <style>{`.sg-skel{background:linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.09) 50%,rgba(255,255,255,0.04) 75%);background-size:1200px 100%;animation:sgSkelShimmer 1.8s ease-in-out infinite;border-radius:8px;}@keyframes sgSkelShimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}`}</style>
             <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
               {OUTLINE_SECTIONS.map((s,i) => (
-                <div key={i} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:9, padding:'9px 12px', display:'flex', alignItems:'center', gap:10, opacity:0.5 }}>
-                  <div style={{ width:26, height:26, borderRadius:6, background:s.iconColor, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{s.icon}</div>
+                <div key={i} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:9, padding:'9px 12px', display:'flex', alignItems:'center', gap:10, animationDelay:`${i*0.1}s` }}>
+                  <div style={{ width:26, height:26, borderRadius:6, background:s.iconColor, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, opacity:0.5 }}>{s.icon}</div>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.65)' }}>{s.title}</div>
-                    <div style={{ fontSize:10, color:'rgba(255,255,255,0.25)', marginTop:1 }}>{s.sub}</div>
+                    <div className="sg-skel" style={{ height:9, width:'55%', marginBottom:6, animationDelay:`${i*0.12}s` }}/>
+                    <div className="sg-skel" style={{ height:7, width:'35%', animationDelay:`${i*0.12+0.06}s` }}/>
                   </div>
-                  <div style={{ fontSize:10, fontWeight:600, color:'rgba(255,255,255,0.18)', flexShrink:0 }}>{s.count}</div>
+                  <div className="sg-skel" style={{ height:7, width:28, animationDelay:`${i*0.12+0.1}s` }}/>
                 </div>
               ))}
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:'rgba(52,211,153,0.05)', border:'1px solid rgba(52,211,153,0.14)', borderRadius:10, marginTop:10 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0, animation:'_fcspin .9s linear infinite' }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.32)', lineHeight:1.5 }}>Nova is writing your study guide…</span>
             </div>
           </div>}
         </div>
