@@ -258,7 +258,6 @@ export default function Shell({ children }) {
   // Always dark
   useEffect(() => {
     document.documentElement.classList.add('dark')
-    localStorage.setItem('ff-theme', 'dark')
   }, [])
 
   const [cmdOpen, setCmdOpen]   = useState(false)
