@@ -935,6 +935,7 @@ export default function QuizPage() {
               <div style={{ fontSize:12, fontWeight:800, color:'#a5b4fc', marginBottom:2 }}>Print ready</div>
               <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>Answer key included</div>
             </div>
+          </div>
           </div>}
         </div>}
       </div>
