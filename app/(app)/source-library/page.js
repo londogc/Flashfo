@@ -97,7 +97,7 @@ const SOURCE_TYPES = [
 
 const STYLES = ['APA', 'MLA', 'Chicago']
 
-const ACCENT = { h:'#ec4899', r:'236,72,153' }
+const ACCENT = { h:'#a21caf', r:'162,28,175' }
 
 const emptySource = () => ({
   id: Math.random().toString(36).slice(2),
@@ -272,7 +272,7 @@ export default function SourceLibraryPage() {
         @keyframes sl-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
         .sl-card{animation:sl-in 0.25s ease both}
         .sl-btn:hover{opacity:0.85}
-        .sl-input:focus{border-color:rgba(236,72,153,0.5)!important;box-shadow:0 0 0 3px rgba(236,72,153,0.1)}
+        .sl-input:focus{border-color:rgba(162,28,175,0.5)!important;box-shadow:0 0 0 3px rgba(162,28,175,0.1)}
         .sl-source-row:hover .sl-row-actions{opacity:1!important}
         em{font-style:italic}
       `}</style>
