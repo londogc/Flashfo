@@ -146,15 +146,39 @@ export default function MyStuffPage() {
       {loading ? (
         <div className="space-y-3">{[...Array(3)].map((_,i) => <div key={i} className="bg-surface border border-line rounded-xl p-5 animate-pulse h-20"/>)}</div>
       ) : filtered.length === 0 ? (
-        <div className="bg-surface border border-line rounded-xl p-10 text-center">
-          <div style={{ display:'flex', justifyContent:'center', marginBottom:14 }}>
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.3" strokeLinecap="round">
-              <path d="M1 4h5l2 2h7v8H1z"/><rect x="1" y="4" width="22" height="16" rx="2"/>
-            </svg>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'56px 24px 64px',textAlign:'center'}}>
+          <div style={{width:56,height:56,borderRadius:16,background:'rgba(99,102,241,0.1)',border:'1px solid rgba(99,102,241,0.2)',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:18}}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(99,102,241,0.7)" strokeWidth="1.5" strokeLinecap="round"><path d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/><path d="M3 7l9 6 9-6"/></svg>
           </div>
-          <p className="text-t2 text-sm">
-            {filter === 'all' ? 'Nothing saved yet. Generate something and save it!' : 'No ' + TYPE_META[filter]?.label + ' saved yet.'}
+          <p style={{fontSize:17,fontWeight:700,color:'rgba(255,255,255,0.9)',marginBottom:8,letterSpacing:'-.2px'}}>
+            {filter === 'all' ? 'Nothing saved yet' : 'No ' + TYPE_META[filter]?.label + ' saved yet'}
           </p>
+          <p style={{fontSize:13,color:'rgba(255,255,255,0.35)',lineHeight:1.6,maxWidth:320,marginBottom:filter==='all'?28:0}}>
+            {filter === 'all'
+              ? 'Generate flashcards, quizzes, study guides, or summaries — then save them to find everything in one place.'
+              : 'Head to ' + (TYPE_META[filter]?.label||'the generate page') + ' to create and save your first one.'}
+          </p>
+          {filter === 'all' && (
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,width:'100%',maxWidth:520}}>
+              {[
+                {href:'/flashcards', label:'Flashcards', color:'rgba(99,102,241,0.12)', stroke:'rgba(99,102,241,0.8)',
+                  icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(99,102,241,0.8)" strokeWidth="2" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>},
+                {href:'/quiz', label:'Quiz', color:'rgba(16,185,129,0.12)', stroke:'rgba(16,185,129,0.8)',
+                  icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(16,185,129,0.8)" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>},
+                {href:'/study-guide', label:'Study guide', color:'rgba(245,158,11,0.12)', stroke:'rgba(245,158,11,0.8)',
+                  icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(245,158,11,0.8)" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>},
+                {href:'/summarize', label:'Summarise', color:'rgba(168,85,247,0.12)', stroke:'rgba(168,85,247,0.8)',
+                  icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,0.8)" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>},
+              ].map(({href,label,color,icon}) => (
+                <a key={href} href={href} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,padding:'14px 10px',borderRadius:12,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',cursor:'pointer',textDecoration:'none',transition:'all .15s'}}
+                  onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)';e.currentTarget.style.borderColor='rgba(255,255,255,0.12)'}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.03)';e.currentTarget.style.borderColor='rgba(255,255,255,0.07)'}}>
+                  <div style={{width:32,height:32,borderRadius:9,background:color,display:'flex',alignItems:'center',justifyContent:'center'}}>{icon}</div>
+                  <span style={{fontSize:11,fontWeight:600,color:'rgba(255,255,255,0.5)'}}>{label}</span>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
