@@ -883,7 +883,29 @@ export default function QuizPage() {
         </div>
 
         {!isMobile && <div>
-          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>Live preview</div>
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>{loading ? 'Generating questions…' : 'Live preview'}</div>
+
+          {/* Skeleton */}
+          {loading && (
+            <div>
+              <style>{`.qz-skel{background:linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.09) 50%,rgba(255,255,255,0.04) 75%);background-size:1200px 100%;animation:qzSkelShimmer 1.8s ease-in-out infinite;border-radius:8px;}@keyframes qzSkelShimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}`}</style>
+              <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:16 }}>
+                <div className="qz-skel" style={{ height:8, width:'35%', marginBottom:14 }}/>
+                <div className="qz-skel" style={{ height:11, width:'95%', marginBottom:6 }}/>
+                <div className="qz-skel" style={{ height:11, width:'75%', marginBottom:16 }}/>
+                {[0,1,2,3].map(i => (
+                  <div key={i} className="qz-skel" style={{ height:32, borderRadius:7, marginBottom:6, animationDelay:`${i*0.1}s` }}/>
+                ))}
+                <div className="qz-skel" style={{ height:52, borderRadius:8, marginTop:10 }}/>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:'rgba(99,102,241,0.05)', border:'1px solid rgba(99,102,241,0.14)', borderRadius:10, marginTop:10 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0, animation:'_fcspin .9s linear infinite' }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.32)', lineHeight:1.5 }}>Nova is generating your questions and preparing explanations…</span>
+              </div>
+            </div>
+          )}
+
+          {!loading && <div>
           <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:16 }}>
             <div style={{ marginBottom:10 }}>
               <span style={{ fontSize:9, fontWeight:800, background:'rgba(99,102,241,0.1)', color:'#a5b4fc', padding:'3px 8px', borderRadius:20, textTransform:'uppercase', letterSpacing:'.05em' }}>Multiple Choice</span>
@@ -913,7 +935,7 @@ export default function QuizPage() {
               <div style={{ fontSize:12, fontWeight:800, color:'#a5b4fc', marginBottom:2 }}>Print ready</div>
               <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>Answer key included</div>
             </div>
-          </div>
+          </div>}
         </div>}
       </div>
     </div>
