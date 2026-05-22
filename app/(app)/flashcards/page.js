@@ -795,7 +795,46 @@ function FlashcardsPageInner() {
         </div>
 
         {!isMobile && <div>
-          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>What you'll get</div>
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}>{loading ? 'Building your deck…' : "What you'll get"}</div>
+
+          {/* ── Skeleton loader ── */}
+          {loading && (() => {
+            const skCount = Math.min(count, 6)
+            return (
+              <div>
+                <style>{`
+                  @keyframes fcSkelShimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+                  .fc-skel-card{background:linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.09) 50%,rgba(255,255,255,0.04) 75%);background-size:1200px 100%;animation:fcSkelShimmer 1.8s ease-in-out infinite;border-radius:14px;border:1px solid rgba(255,255,255,0.06);overflow:hidden;position:relative;}
+                  .fc-skel-line{border-radius:6px;background:rgba(255,255,255,0.07);}
+                `}</style>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:14 }}>
+                  {Array.from({length: skCount}).map((_,i) => (
+                    <div key={i} className="fc-skel-card" style={{ height:110, padding:'14px 14px', animationDelay:`${i*0.12}s`, display:'flex', flexDirection:'column', gap:8, justifyContent:'space-between' }}>
+                      <div>
+                        <div className="fc-skel-line" style={{ height:8, width:'45%', marginBottom:10 }}/>
+                        <div className="fc-skel-line" style={{ height:10, width:'90%', marginBottom:6 }}/>
+                        <div className="fc-skel-line" style={{ height:10, width:'70%' }}/>
+                      </div>
+                      <div className="fc-skel-line" style={{ height:7, width:'30%', opacity:0.5 }}/>
+                    </div>
+                  ))}
+                </div>
+                {count > 6 && (
+                  <div style={{ textAlign:'center', fontSize:11, color:'rgba(255,255,255,0.2)', marginBottom:10 }}>
+                    + {count - 6} more cards generating…
+                  </div>
+                )}
+                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px', background:'rgba(37,99,235,0.06)', border:'1px solid rgba(59,130,246,0.15)', borderRadius:12 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0, animation:'_fcspin .9s linear infinite' }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)', lineHeight:1.5 }}>Nova is reading your topic and building cards optimised for spaced repetition…</span>
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* ── Normal preview ── */}
+          {!loading && <div>
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}></div>
 
           <div style={{ position:'relative', height:168, margin:'0 auto 14px', width:210 }}>
             <div style={{ position:'absolute', top:14, left:8, right:-8, height:132, background:'rgba(37,99,235,0.05)', border:'1px solid rgba(59,130,246,0.1)', borderRadius:11, transform:'rotate(3.5deg)' }}/>
@@ -831,6 +870,7 @@ function FlashcardsPageInner() {
             </div>
             <div style={{ fontSize:11, color:'rgba(255,255,255,0.27)', lineHeight:1.6 }}>After your session, Nova identifies which cards you struggled with and offers to drill just those concepts.</div>
           </div>
+          </div>}
         </div>}
       </div>
     </div>
