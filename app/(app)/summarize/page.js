@@ -235,7 +235,6 @@ export default function SummarizePage() {
             </div>
           )}
 
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 24px 1fr', gap:8, alignItems:'start', marginBottom:14 }}>
           {!loading && <div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 24px 1fr', gap:8, alignItems:'start', marginBottom:14 }}>
             <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:12 }}>
@@ -250,7 +249,6 @@ export default function SummarizePage() {
               <div style={{ fontSize:11, lineHeight:1.7, color:'rgba(251,191,36,0.75)', fontWeight:500 }}>Photosynthesis converts sunlight, CO₂, and water into glucose using chlorophyll. Two stages: light-dependent reactions (thylakoid) produce ATP and NADPH; the Calvin cycle (stroma) uses those to make glucose. Oxygen is released as a byproduct.</div>
             </div>
           </div>
-
           <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
             <span style={{ fontSize:11, color:'rgba(255,255,255,0.22)', fontWeight:600 }}>Also available:</span>
             {['Bullet points','ELI5 version','Listen aloud','Save to My Stuff'].map(label => (
