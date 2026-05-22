@@ -418,7 +418,8 @@ export default function DashboardPage() {
               style={{ ...card, marginBottom:12, animationDelay:'0.05s', position:'relative', minHeight:110, cursor:'grab' }}>
         <canvas id="dash-particle-canvas" style={{ position:'absolute', inset:0, width:'100%', height:'100%', borderRadius:16 }}/>
         <div style={{ position:'relative', zIndex:1, padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
-          <div style={{ flex:1, minWidth:0 }}>
+          <div key={continueIdx} style={{ flex:1, minWidth:0, animation:'ccFadeIn .35s ease' }}>
+            <style>{`@keyframes ccFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}`}</style>
             <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:'rgba(255,255,255,0.1)', border:'0.5px solid rgba(255,255,255,0.18)', borderRadius:20, padding:'3px 9px', marginBottom:8 }}>
               <div style={{ width:5, height:5, borderRadius:'50%', background:'#c4b5fd', boxShadow:'0 0 5px #c4b5fd' }}/>
               <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'rgba(255,255,255,0.8)' }}>{cc.badge}</span>
