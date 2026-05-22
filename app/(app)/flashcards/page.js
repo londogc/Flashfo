@@ -837,8 +837,8 @@ function FlashcardsPageInner() {
           <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:12 }}></div>
 
           <div style={{ position:'relative', height:168, margin:'0 auto 14px', width:210 }}>
-            <div style={{ position:'absolute', top:14, left:-8, right:8, height:132, background:'rgba(37,99,235,0.05)', border:'1px solid rgba(59,130,246,0.1)', borderRadius:11, transform:'rotate(-3.5deg)' }}/>
-            <div style={{ position:'absolute', top:7, left:-4, right:4, height:140, background:'rgba(37,99,235,0.07)', border:'1px solid rgba(59,130,246,0.14)', borderRadius:11, transform:'rotate(-1.5deg)' }}/>
+            <div style={{ position:'absolute', top:14, left:8, right:-8, height:132, background:'rgba(37,99,235,0.05)', border:'1px solid rgba(59,130,246,0.1)', borderRadius:11, transform:'rotate(3.5deg)' }}/>
+            <div style={{ position:'absolute', top:7, left:4, right:-4, height:140, background:'rgba(37,99,235,0.07)', border:'1px solid rgba(59,130,246,0.14)', borderRadius:11, transform:'rotate(1.5deg)' }}/>
             <div style={{ position:'absolute', top:0, left:0, right:0, height:150, background:'rgba(8,16,42,0.9)', border:'1.5px solid rgba(59,130,246,0.36)', borderRadius:11, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:18, gap:9, boxShadow:'0 6px 28px rgba(37,99,235,0.16)' }}>
               <div style={{ fontSize:9, fontWeight:800, letterSpacing:'.09em', textTransform:'uppercase', padding:'3px 9px', borderRadius:20, background:'rgba(59,130,246,0.1)', color:'#60a5fa', border:'1px solid rgba(59,130,246,0.18)' }}>Question</div>
               <div style={{ fontSize:12, fontWeight:600, color:'#e2e8f0', textAlign:'center', lineHeight:1.5 }}>{getPreviewQuestion(topic)}</div>
@@ -1007,8 +1007,8 @@ function FlashcardsPageInner() {
       </div>
 
       <div style={{position:'relative',width:'100%',maxWidth:560,margin:'0 auto',height:isMobile?220:250}}>
-        <div style={{position:'absolute',inset:0,borderRadius:16,border:'1px solid rgba(255,255,255,0.06)',background:'rgba(255,255,255,0.03)',transform:'rotate(2.5deg)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',inset:0,borderRadius:16,border:'1px solid rgba(255,255,255,0.08)',background:'rgba(255,255,255,0.05)',transform:'rotate(1.2deg)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',inset:0,borderRadius:16,border:'1px solid rgba(255,255,255,0.06)',background:'rgba(255,255,255,0.03)',transform:'translateX(8px) translateY(6px) rotate(2.5deg)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',inset:0,borderRadius:16,border:'1px solid rgba(255,255,255,0.08)',background:'rgba(255,255,255,0.05)',transform:'translateX(4px) translateY(3px) rotate(1.2deg)',pointerEvents:'none'}}/>
         <div ref={cardDragRef} style={{position:'absolute',inset:0,cursor:flipped?'grab':'pointer',willChange:'transform'}}>
           <div style={{width:'100%',height:'100%',transformStyle:'preserve-3d',transition:'transform .52s cubic-bezier(.4,0,.2,1)',transform:flipped?'rotateY(180deg)':'none'}}>
             <div onClick={()=>{if(!flipped)setFlipped(true)}} style={{position:'absolute',inset:0,borderRadius:16,border:`1.5px solid ${cardTheme.border}`,background:cardTheme.cardBg,backfaceVisibility:'hidden',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,padding:28}}>
