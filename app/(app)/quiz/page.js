@@ -719,97 +719,166 @@ export default function QuizPage() {
       <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:20, alignItems:'start' }}>
 
         <div>
-          <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, overflow:'hidden' }}>
-            <textarea
-              value={topic}
-              onChange={e=>setTopic(e.target.value)}
-              onKeyDown={e=>{ if (e.key==='Enter'&&e.metaKey) generate() }}
-              rows={4}
-              placeholder="Enter a topic or paste your notes to generate quiz questions from-"
-              style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'#e2e8f0', fontFamily:'inherit', fontSize:13, lineHeight:1.7, padding:'14px 16px', resize:'none', display:'block' }}
-            />
+          {/* ── Premium quiz input card ── */}
+          <div style={{ position:'relative' }}>
 
-            <div style={{ padding:'0 12px 8px' }}>
-              <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.06em', textTransform:'uppercase', color:'rgba(255,255,255,0.22)', marginBottom:7, paddingTop:2 }}>Question type</div>
-              <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-                {BASE_TYPES.map(t => (
-                  <button key={t.id} onClick={()=>{ setTypeId(t.id); if (t.id==='mixed') setBreakdown({mcq:0,tf:0,sa:0,fitb:0,match:0}) }}
-                    style={{ padding:'5px 11px', borderRadius:8, fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .15s', border:'1px solid '+(typeId===t.id?'rgba(99,102,241,0.4)':'rgba(255,255,255,0.09)'), background:typeId===t.id?'rgba(99,102,241,0.13)':'rgba(255,255,255,0.03)', color:typeId===t.id?'#a5b4fc':'rgba(255,255,255,0.4)' }}>
-                    {t.label}
-                  </button>
-                ))}
-              </div>
+            {/* Animated orb layer behind card */}
+            <div style={{ position:'absolute', inset:-50, pointerEvents:'none', zIndex:0, overflow:'hidden', borderRadius:60, filter:'blur(35px)', opacity:0.5 }}>
+              <div style={{ position:'absolute', width:240, height:240, borderRadius:'50%', background:'radial-gradient(circle,#6366f1,transparent 70%)', top:-30, left:-30, animation:'qzOrb1 12s ease-in-out infinite' }}/>
+              <div style={{ position:'absolute', width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle,#a855f7,transparent 70%)', bottom:-10, right:-10, animation:'qzOrb2 15s ease-in-out infinite' }}/>
+              <div id="qz-orb3" style={{ position:'absolute', width:160, height:160, borderRadius:'50%', background:'radial-gradient(circle,#6366f1,transparent 70%)', top:'50%', left:'50%', transform:'translate(-50%,-50%)', animation:'qzOrb3 10s ease-in-out infinite', transition:'background 0.8s ease' }}/>
             </div>
 
-            {typeId==='mixed' && (
-              <div style={{ margin:'4px 12px 8px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:'10px 12px' }}>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-                  <span style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.25)', textTransform:'uppercase', letterSpacing:'.05em' }}>Breakdown</span>
-                  <span style={{ fontSize:13, fontWeight:700, color:breakdownTotal>0?'#a5b4fc':'rgba(255,255,255,0.25)' }}>{breakdownTotal} question{breakdownTotal!==1?'s':''}</span>
+            <style>{`
+              @keyframes qzOrb1{0%,100%{transform:translate(0,0) scale(1)}40%{transform:translate(28px,18px) scale(1.1)}70%{transform:translate(-12px,30px) scale(0.95)}}
+              @keyframes qzOrb2{0%,100%{transform:translate(0,0) scale(1)}35%{transform:translate(-22px,-18px) scale(1.08)}65%{transform:translate(18px,-30px) scale(0.92)}}
+              @keyframes qzOrb3{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.2)}}
+              @keyframes qzBtnGrad{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+              @keyframes qzShine{0%,100%{left:-60%}50%{left:120%}}
+              .qz-tile{padding:12px 8px;border-radius:12px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.3);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center;transform:translateY(0) scale(1);box-shadow:0 1px 3px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.04) inset;position:relative;overflow:hidden;transition:all .2s cubic-bezier(.2,.8,.2,1);}
+              .qz-tile::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:rgba(255,255,255,0.07);}
+              .qz-tile:hover{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.14);color:rgba(255,255,255,0.7);transform:translateY(-3px) scale(1.02);box-shadow:0 8px 20px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.08) inset;}
+              .qz-tile.qz-tile-on{background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.45);color:#fff;transform:translateY(-3px) scale(1.02);box-shadow:0 8px 24px rgba(99,102,241,0.25),0 0 0 1px rgba(99,102,241,0.2) inset,0 0 20px rgba(99,102,241,0.1) inset;}
+              .qz-tile.qz-tile-on::before{background:rgba(139,142,255,0.25);}
+              .qz-arrow{width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);color:rgba(255,255,255,0.35);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.2,.8,.2,1);box-shadow:0 2px 6px rgba(0,0,0,0.4);}
+              .qz-arrow:hover{background:rgba(255,255,255,0.09);color:#fff;border-color:rgba(255,255,255,0.16);transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,0.5);}
+              .qz-arrow:active{transform:translateY(1px);}
+              .qz-pre{font-size:12px;font-weight:600;color:rgba(255,255,255,0.2);background:none;border:none;border-bottom:1px solid transparent;padding:2px 0;cursor:pointer;font-family:inherit;transition:all .12s;}
+              .qz-pre:hover{color:rgba(255,255,255,0.55);}
+              .qz-pre.qz-pre-on{color:rgba(255,255,255,0.85);border-bottom-color:rgba(255,255,255,0.4);}
+              .qz-genbtn{width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(110deg,#4f46e5 0%,#6366f1 35%,#818cf8 50%,#6366f1 65%,#4338ca 100%);background-size:200% 100%;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:-.3px;box-shadow:0 4px 24px rgba(99,102,241,0.4),0 1px 0 rgba(255,255,255,0.15) inset;transition:all .2s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden;animation:qzBtnGrad 4s linear infinite;}
+              .qz-genbtn::after{content:'';position:absolute;top:-50%;left:-60%;width:40%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transform:skewX(-20deg);animation:qzShine 3.5s ease-in-out infinite;}
+              .qz-genbtn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(99,102,241,0.55),0 1px 0 rgba(255,255,255,0.2) inset;}
+              .qz-genbtn:active{transform:translateY(1px);}
+              .qz-genbtn:disabled{opacity:0.45;cursor:not-allowed;transform:none;}
+            `}</style>
+
+            {/* Card */}
+            <div style={{ position:'relative', zIndex:1, borderRadius:24, background:'rgba(12,10,22,0.85)', backdropFilter:'blur(40px) saturate(1.5)', WebkitBackdropFilter:'blur(40px) saturate(1.5)', border:'1px solid rgba(255,255,255,0.09)', boxShadow:'0 0 0 1px rgba(255,255,255,0.04) inset, 0 40px 80px rgba(0,0,0,0.6)', overflow:'hidden' }}>
+
+              {/* Top shimmer */}
+              <div style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.08) 20%,rgba(255,255,255,0.2) 50%,rgba(255,255,255,0.08) 80%,transparent)', zIndex:10, pointerEvents:'none' }}/>
+
+              {/* Textarea */}
+              <div style={{ padding:'24px 24px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                <textarea
+                  value={topic}
+                  onChange={e=>setTopic(e.target.value)}
+                  onKeyDown={e=>{ if (e.key==='Enter'&&e.metaKey) generate() }}
+                  rows={3}
+                  placeholder="Enter a topic or paste your notes…"
+                  style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'rgba(255,255,255,0.78)', fontFamily:'inherit', fontSize:15, lineHeight:1.65, resize:'none', display:'block', caretColor:'rgba(255,255,255,0.5)' }}
+                />
+              </div>
+
+              {/* Question type tiles */}
+              <div style={{ padding:'18px 24px', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize:10, fontWeight:600, letterSpacing:'.12em', textTransform:'uppercase', color:'rgba(255,255,255,0.2)', marginBottom:12 }}>Question type</div>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:7 }}>
+                  {BASE_TYPES.map(t => (
+                    <button
+                      key={t.id}
+                      className={'qz-tile' + (typeId===t.id ? ' qz-tile-on' : '')}
+                      onClick={()=>{
+                        setTypeId(t.id)
+                        if (t.id==='mixed') setBreakdown({mcq:0,tf:0,sa:0,fitb:0,match:0})
+                        const orb = document.getElementById('qz-orb3')
+                        const cols = { mcq:'#6366f1', true_false:'#06b6d4', short_answer:'#10b981', fill_blank:'#f59e0b', matching:'#ec4899', mixed:'#a855f7' }
+                        if (orb) orb.style.background = `radial-gradient(circle,${cols[t.id]||'#6366f1'},transparent 70%)`
+                      }}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
                 </div>
-                {[{k:'mcq',label:'Multiple Choice'},{k:'tf',label:'True / False'},{k:'sa',label:'Short Answer'},{k:'fitb',label:'Fill in the Blank'},{k:'match',label:'Matching'}].map(({k,label})=>{
-                  const val = breakdown[k]||0; const active = val>0
-                  return (
-                    <div key={k} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:active?'rgba(99,102,241,0.07)':'rgba(255,255,255,0.02)', border:'1px solid '+(active?'rgba(99,102,241,0.25)':'rgba(255,255,255,0.06)'), borderRadius:9, padding:'0 8px 0 12px', height:44, marginBottom:5, transition:'all .15s' }}>
-                      <span style={{ fontSize:13, fontWeight:500, color:active?'#a5b4fc':'var(--c-t1)', flex:1 }}>{label}</span>
-                      <div style={{ display:'flex', alignItems:'center', gap:2, flexShrink:0 }}>
-                        <button onClick={()=>setBreakdown(b=>({...b,[k]:Math.max(0,(b[k]||0)-1)}))} style={{ width:36,height:36,borderRadius:8,border:'none',background:'none',color:active?'#6366f1':'var(--c-t3)',fontSize:20,cursor:'pointer',fontFamily:'inherit' }}>-</button>
-                        <span style={{ fontSize:16,fontWeight:700,color:active?'#6366f1':'rgba(255,255,255,0.2)',minWidth:24,textAlign:'center' }}>{val}</span>
-                        <button onClick={()=>setBreakdown(b=>({...b,[k]:(b[k]||0)+1}))} style={{ width:36,height:36,borderRadius:8,border:'none',background:'none',color:active?'#6366f1':'var(--c-t3)',fontSize:20,cursor:'pointer',fontFamily:'inherit' }}>+</button>
+              </div>
+
+              {/* Mixed breakdown */}
+              {typeId==='mixed' && (
+                <div style={{ margin:'4px 24px 0', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'12px 14px' }}>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                    <span style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.25)', textTransform:'uppercase', letterSpacing:'.05em' }}>Breakdown</span>
+                    <span style={{ fontSize:13, fontWeight:700, color:breakdownTotal>0?'#a5b4fc':'rgba(255,255,255,0.25)' }}>{breakdownTotal} question{breakdownTotal!==1?'s':''}</span>
+                  </div>
+                  {[{k:'mcq',label:'Multiple Choice'},{k:'tf',label:'True / False'},{k:'sa',label:'Short Answer'},{k:'fitb',label:'Fill in the Blank'},{k:'match',label:'Matching'}].map(({k,label})=>{
+                    const val=breakdown[k]||0; const active=val>0
+                    return (
+                      <div key={k} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:active?'rgba(99,102,241,0.07)':'rgba(255,255,255,0.02)', border:'1px solid '+(active?'rgba(99,102,241,0.25)':'rgba(255,255,255,0.06)'), borderRadius:9, padding:'0 8px 0 12px', height:44, marginBottom:5, transition:'all .15s' }}>
+                        <span style={{ fontSize:13, fontWeight:500, color:active?'#a5b4fc':'var(--c-t1)', flex:1 }}>{label}</span>
+                        <div style={{ display:'flex', alignItems:'center', gap:2 }}>
+                          <button onClick={()=>setBreakdown(b=>({...b,[k]:Math.max(0,(b[k]||0)-1)}))} style={{ width:36,height:36,borderRadius:8,border:'none',background:'none',color:active?'#6366f1':'var(--c-t3)',fontSize:20,cursor:'pointer',fontFamily:'inherit' }}>-</button>
+                          <span style={{ fontSize:16,fontWeight:700,color:active?'#6366f1':'rgba(255,255,255,0.2)',minWidth:24,textAlign:'center' }}>{val}</span>
+                          <button onClick={()=>setBreakdown(b=>({...b,[k]:(b[k]||0)+1}))} style={{ width:36,height:36,borderRadius:8,border:'none',background:'none',color:active?'#6366f1':'var(--c-t3)',fontSize:20,cursor:'pointer',fontFamily:'inherit' }}>+</button>
+                        </div>
                       </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Count selector — replaces slider */}
+              {typeId!=='mixed' && (
+                <div style={{ display:'grid', gridTemplateColumns:'1fr auto', alignItems:'center', padding:'20px 24px', gap:16 }}>
+                  <div>
+                    <div style={{ fontSize:10, fontWeight:600, letterSpacing:'.12em', textTransform:'uppercase', color:'rgba(255,255,255,0.2)', marginBottom:8 }}>Questions</div>
+                    <div style={{ display:'flex', alignItems:'baseline', gap:8 }}>
+                      <div
+                        contentEditable
+                        suppressContentEditableWarning
+                        inputMode="numeric"
+                        role="spinbutton"
+                        aria-label="Number of questions"
+                        aria-valuenow={count}
+                        aria-valuemin={1}
+                        aria-valuemax={100}
+                        onBlur={e=>{
+                          const v=Math.max(1,Math.min(100,parseInt(e.currentTarget.textContent)||1))
+                          setCount(v)
+                          e.currentTarget.textContent=v
+                        }}
+                        onKeyDown={e=>{
+                          if(e.key==='Enter'){e.preventDefault();e.currentTarget.blur()}
+                          if(e.key==='ArrowUp'){e.preventDefault();setCount(c=>Math.min(100,c+1));e.currentTarget.textContent=Math.min(100,count+1)}
+                          if(e.key==='ArrowDown'){e.preventDefault();setCount(c=>Math.max(1,c-1));e.currentTarget.textContent=Math.max(1,count-1)}
+                        }}
+                        style={{ fontSize:68, fontWeight:900, letterSpacing:-4, lineHeight:1, background:'linear-gradient(160deg,#fff 0%,rgba(255,255,255,0.55) 100%)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', cursor:'text', outline:'none', minWidth:84, display:'inline-block', transition:'opacity .1s' }}
+                      >{count}</div>
+                      <div style={{ fontSize:13, fontWeight:400, color:'rgba(255,255,255,0.22)', paddingBottom:8, WebkitTextFillColor:'rgba(255,255,255,0.22)' }}>questions</div>
                     </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* - Slider - PERMANENT FIX: CSS-variable fill, always in sync with counter - */}
-            {typeId!=='mixed' && (
-              <div style={{ padding:'10px 14px 12px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:7 }}>
-                  <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.28)', textTransform:'uppercase', letterSpacing:'.05em' }}>Questions</span>
-                  <span style={{ fontSize:16, fontWeight:800, color:'#a5b4fc' }}>{count}</span>
+                    <div style={{ display:'flex', gap:8, marginTop:10, flexWrap:'wrap' }}>
+                      {[5,10,15,20,30,40].map(n=>(
+                        <button key={n} className={'qz-pre'+(count===n?' qz-pre-on':'')} onClick={()=>setCount(n)}>{n}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    <button className="qz-arrow" onClick={()=>setCount(c=>Math.min(100,c+1))}>↑</button>
+                    <button className="qz-arrow" onClick={()=>setCount(c=>Math.max(1,c-1))}>↓</button>
+                  </div>
                 </div>
-                <>
-                  <style>{`
-                    .qz-slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;outline:none;cursor:pointer;display:block}
-                    .qz-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.5);cursor:pointer;border:none}
-                    .qz-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.5);cursor:pointer;border:none}
-                    .qz-slider::-moz-range-track{height:4px;border-radius:2px;background:transparent}
-                  `}</style>
-                  <input
-                    type="range"
-                    className="qz-slider"
-                    min={5} max={35} step={1}
-                    value={count}
-                    onChange={e=>setCount(Number(e.target.value))}
-                    style={{ background:`linear-gradient(to right,#6366f1 ${((count-5)/30*100).toFixed(1)}%,rgba(255,255,255,0.15) ${((count-5)/30*100).toFixed(1)}%)` }}
-                  />
-                </>
-                <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, color:'rgba(255,255,255,0.2)', marginTop:5 }}>
-                  <span>5</span><span>20</span><span>35</span>
-                </div>
-              </div>
-            )}
+              )}
 
-            <div style={{ padding:'9px 14px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between' }}>
-              <span style={{ fontSize:11, color:'rgba(255,255,255,0.18)' }}>Nova explains every wrong answer</span>
-              <span style={{ fontSize:11, color:'rgba(255,255,255,0.15)' }}>- generate</span>
+              <div style={{ padding:'10px 24px 16px', borderTop:'1px solid rgba(255,255,255,0.05)', display:'flex', justifyContent:'space-between' }}>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.18)' }}>Nova explains every wrong answer</span>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.13)' }}>⌘↵ generate</span>
+              </div>
             </div>
           </div>
 
           {error && <div style={{ fontSize:12, color:'#f87171', marginTop:8 }}>{error}</div>}
 
           <button
+            className="qz-genbtn"
             onClick={generate}
             disabled={loading||!topic.trim()||(typeId==='mixed'&&breakdownTotal===0)}
-            style={{ width:'100%', padding:'13px', borderRadius:11, border:'none', background:'linear-gradient(135deg,#4f46e5,#7c3aed)', color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer', marginTop:11, fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:9, letterSpacing:'-.01em', boxShadow:'0 4px 18px rgba(99,102,241,0.28)', transition:'all .15s', opacity:loading||!topic.trim()||(typeId==='mixed'&&breakdownTotal===0)?0.55:1 }}>
+            style={{ marginTop:12 }}
+          >
             {loading ? (
-              <>
+              <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:9 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation:'_fcspin .7s linear infinite', flexShrink:0 }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
-                Generating-
-              </>
-            ) : `Generate ${typeId==='mixed'?breakdownTotal:count} question${(typeId==='mixed'?breakdownTotal:count)!==1?'s':''} -`}
+                Generating…
+              </span>
+            ) : `Generate ${typeId==='mixed'?breakdownTotal:count} question${(typeId==='mixed'?breakdownTotal:count)!==1?'s':''}`}
           </button>
         </div>
 
