@@ -231,40 +231,89 @@ export default function StudyGuidePage() {
 
           {/* Left — input */}
           <div>
-            <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, overflow:'hidden' }}>
-              <textarea
-                value={topic}
-                onChange={e=>setTopic(e.target.value)}
-                onKeyDown={e=>{ if (e.key==='Enter'&&e.metaKey&&topic.trim()) generate() }}
-                rows={4}
-                placeholder="Enter a topic, paste your syllabus, or describe what you need to cover…"
-                style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'#e2e8f0', fontFamily:'inherit', fontSize:13, lineHeight:1.7, padding:'14px 16px', resize:'none', display:'block' }}
-              />
+            <div style={{ position:'relative' }}>
 
-              {/* Depth selector */}
-              <div style={{ display:'flex', gap:5, padding:'9px 11px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
-                {DEPTH_OPTIONS.map(d => (
-                  <button key={d.id} onClick={()=>setDepth(d.id)}
-                    style={{ flex:1, padding:'7px 5px', borderRadius:8, fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', textAlign:'center', border:'1px solid '+(depth===d.id?'rgba(52,211,153,0.28)':'rgba(255,255,255,0.08)'), background:depth===d.id?'rgba(52,211,153,0.09)':'rgba(255,255,255,0.03)', color:depth===d.id?'#34d399':'rgba(255,255,255,0.3)', transition:'all .15s' }}>
-                    {d.label}
-                    <span style={{ display:'block', fontSize:9, fontWeight:400, marginTop:2, color:depth===d.id?'rgba(52,211,153,0.5)':'rgba(255,255,255,0.18)' }}>{d.sub}</span>
-                  </button>
-                ))}
+              {/* Animated orb layer */}
+              <div style={{ position:'absolute', inset:-50, pointerEvents:'none', zIndex:0, overflow:'hidden', borderRadius:60, filter:'blur(35px)', opacity:0.45 }}>
+                <div style={{ position:'absolute', width:230, height:230, borderRadius:'50%', background:'radial-gradient(circle,#059669,transparent 70%)', top:-30, left:-30, animation:'sgOrb1 13s ease-in-out infinite' }}/>
+                <div style={{ position:'absolute', width:180, height:180, borderRadius:'50%', background:'radial-gradient(circle,#0d9488,transparent 70%)', bottom:-10, right:-10, animation:'sgOrb2 16s ease-in-out infinite' }}/>
+                <div style={{ position:'absolute', width:150, height:150, borderRadius:'50%', background:'radial-gradient(circle,#34d399,transparent 70%)', top:'50%', left:'50%', transform:'translate(-50%,-50%)', animation:'sgOrb3 11s ease-in-out infinite' }}/>
               </div>
 
-              <div style={{ padding:'9px 14px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between' }}>
-                <span style={{ fontSize:11, color:'rgba(255,255,255,0.18)' }}>Written in plain, student-friendly language</span>
-                <span style={{ fontSize:11, color:'rgba(255,255,255,0.15)' }}>⌘↵ generate</span>
+              <style>{`
+                @keyframes sgOrb1{0%,100%{transform:translate(0,0) scale(1)}40%{transform:translate(26px,18px) scale(1.1)}70%{transform:translate(-12px,28px) scale(0.94)}}
+                @keyframes sgOrb2{0%,100%{transform:translate(0,0) scale(1)}35%{transform:translate(-22px,-16px) scale(1.08)}65%{transform:translate(18px,-26px) scale(0.93)}}
+                @keyframes sgOrb3{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.2)}}
+                @keyframes sgBtnGrad{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+                @keyframes sgShine{0%,100%{left:-60%}50%{left:120%}}
+                .sg-tile{padding:14px 8px;border-radius:12px;background:rgba(255,255,255,0.035);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.3);cursor:pointer;font-family:inherit;text-align:center;transform:translateY(0) scale(1);box-shadow:0 1px 3px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.04) inset;position:relative;overflow:hidden;transition:all .2s cubic-bezier(.2,.8,.2,1);}
+                .sg-tile::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:rgba(255,255,255,0.07);}
+                .sg-tile:hover{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.14);color:rgba(255,255,255,0.7);transform:translateY(-3px) scale(1.02);box-shadow:0 8px 20px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.08) inset;}
+                .sg-tile.sg-tile-on{background:rgba(52,211,153,0.12);border-color:rgba(52,211,153,0.4);color:#6ee7b7;transform:translateY(-3px) scale(1.02);box-shadow:0 8px 24px rgba(52,211,153,0.18),0 0 0 1px rgba(52,211,153,0.18) inset;}
+                .sg-tile.sg-tile-on::before{background:rgba(52,211,153,0.2);}
+                .sg-genbtn{width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(110deg,#047857 0%,#059669 35%,#34d399 50%,#059669 65%,#065f46 100%);background-size:200% 100%;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:-.3px;box-shadow:0 4px 24px rgba(5,150,105,0.35),0 1px 0 rgba(255,255,255,0.15) inset;transition:all .2s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden;animation:sgBtnGrad 4s linear infinite;display:flex;align-items:center;justify-content:center;gap:9;}
+                .sg-genbtn::after{content:'';position:absolute;top:-50%;left:-60%;width:40%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transform:skewX(-20deg);animation:sgShine 3.5s ease-in-out infinite;}
+                .sg-genbtn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(5,150,105,0.5),0 1px 0 rgba(255,255,255,0.2) inset;}
+                .sg-genbtn:active{transform:translateY(1px);}
+                .sg-genbtn:disabled{opacity:0.45;cursor:not-allowed;transform:none;animation:none;}
+              `}</style>
+
+              {/* Card */}
+              <div style={{ position:'relative', zIndex:1, borderRadius:24, background:'rgba(12,10,22,0.88)', backdropFilter:'blur(40px) saturate(1.5)', WebkitBackdropFilter:'blur(40px) saturate(1.5)', border:'1px solid rgba(255,255,255,0.09)', boxShadow:'0 0 0 1px rgba(255,255,255,0.04) inset, 0 40px 80px rgba(0,0,0,0.6)', overflow:'hidden' }}>
+
+                {/* Top shimmer */}
+                <div style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.08) 20%,rgba(255,255,255,0.2) 50%,rgba(255,255,255,0.08) 80%,transparent)', zIndex:10, pointerEvents:'none' }}/>
+
+                {/* Textarea */}
+                <div style={{ padding:'24px 24px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                  <textarea
+                    value={topic}
+                    onChange={e=>setTopic(e.target.value)}
+                    onKeyDown={e=>{ if (e.key==='Enter'&&e.metaKey&&topic.trim()) generate() }}
+                    rows={3}
+                    placeholder="Enter a topic, paste your syllabus, or describe what you need to cover…"
+                    style={{ width:'100%', background:'transparent', border:'none', outline:'none', color:'rgba(255,255,255,0.78)', fontFamily:'inherit', fontSize:15, lineHeight:1.65, resize:'none', display:'block', caretColor:'rgba(255,255,255,0.5)' }}
+                  />
+                </div>
+
+                {/* Depth tiles */}
+                <div style={{ padding:'18px 24px', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ fontSize:10, fontWeight:600, letterSpacing:'.12em', textTransform:'uppercase', color:'rgba(255,255,255,0.2)', marginBottom:12 }}>Depth</div>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:7 }}>
+                    {DEPTH_OPTIONS.map(d => (
+                      <button
+                        key={d.id}
+                        className={'sg-tile'+(depth===d.id?' sg-tile-on':'')}
+                        onClick={()=>setDepth(d.id)}
+                      >
+                        <span style={{ fontSize:12, fontWeight:700, display:'block', marginBottom:4 }}>{d.label}</span>
+                        <span style={{ fontSize:10, fontWeight:400, display:'block', opacity:0.65 }}>{d.sub}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ padding:'10px 24px 16px', borderTop:'1px solid rgba(255,255,255,0.05)', display:'flex', justifyContent:'space-between' }}>
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.18)' }}>Written in plain, student-friendly language</span>
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.13)' }}>⌘↵ generate</span>
+                </div>
               </div>
             </div>
 
             {error && <div style={{ fontSize:12, color:'#f87171', marginTop:8 }}>{error}</div>}
 
             <button
+              className="sg-genbtn"
               onClick={generate}
               disabled={!topic.trim()}
-              style={{ width:'100%', padding:'13px', borderRadius:11, border:'none', background:'linear-gradient(135deg,#059669,#0d9488)', color:'#fff', fontSize:13, fontWeight:800, cursor:!topic.trim()?'not-allowed':'pointer', marginTop:11, fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:9, letterSpacing:'-.01em', boxShadow:'0 4px 18px rgba(5,150,105,0.25)', transition:'all .15s', opacity:!topic.trim()?.55:1 }}>
-              Generate study guide →
+              style={{ marginTop:12 }}
+            >
+              {loading ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation:'_fcspin .7s linear infinite', flexShrink:0 }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                  Generating…
+                </>
+              ) : 'Generate study guide →'}
             </button>
           </div>
 
