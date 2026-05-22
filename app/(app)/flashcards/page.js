@@ -136,10 +136,10 @@ function SessionComplete({ cards, topic, hardCards, againCards, sessionRatings, 
 // ── Card themes ───────────────────────────────────────────────────────────────
 
 const CARD_THEMES = {
-  default:  { accent:'#6366f1', glow:'rgba(99,102,241,0.12)',  tint:'rgba(99,102,241,0.03)'  },
-  midnight: { accent:'#3b82f6', glow:'rgba(37,99,235,0.12)',   tint:'rgba(37,99,235,0.03)'   },
-  forest:   { accent:'#10b981', glow:'rgba(16,185,129,0.12)',  tint:'rgba(16,185,129,0.03)'  },
-  ember:    { accent:'#f97316', glow:'rgba(249,115,22,0.12)',  tint:'rgba(249,115,22,0.03)'  },
+  default:  { accent:'#6366f1', glow:'rgba(99,102,241,0.12)',  tint:'rgba(99,102,241,0.03)',  cardBg:'rgba(16,18,48,0.97)',  border:'rgba(99,102,241,0.45)'  },
+  midnight: { accent:'#3b82f6', glow:'rgba(37,99,235,0.12)',   tint:'rgba(37,99,235,0.03)',   cardBg:'rgba(8,18,46,0.97)',   border:'rgba(59,130,246,0.45)'  },
+  forest:   { accent:'#10b981', glow:'rgba(16,185,129,0.12)',  tint:'rgba(16,185,129,0.03)',  cardBg:'rgba(8,28,22,0.97)',   border:'rgba(16,185,129,0.45)'  },
+  ember:    { accent:'#f97316', glow:'rgba(249,115,22,0.12)',  tint:'rgba(249,115,22,0.03)',  cardBg:'rgba(32,16,8,0.97)',   border:'rgba(249,115,22,0.45)'  },
 }
 
 // ── Quick-start chips ─────────────────────────────────────────────────────────
